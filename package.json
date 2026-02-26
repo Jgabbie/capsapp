@@ -1,0 +1,31 @@
+{
+  "name": "capsapp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo-google-fonts/montserrat": "^0.4.2",
+    "@expo-google-fonts/roboto": "^0.4.3",
+    "@react-navigation/native": "^7.1.31",
+    "@react-navigation/native-stack": "^7.14.2",
+    "axios": "^1.13.5",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "expo": "~55.0.2",
+    "expo-font": "~55.0.4",
+    "expo-status-bar": "~55.0.4",
+    "express": "^5.2.1",
+    "mongoose": "^9.2.2",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-web": "^0.21.0"
+  },
+  "private": true
+}
