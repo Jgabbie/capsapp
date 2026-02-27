@@ -13,7 +13,7 @@ const modalDetails = {
   "1": {
     dateDetails: {
       packageLine: "3 Days 2 Nights land arrangement package.",
-      startingDate: "May 18, 2025",
+      startingDate: "2025-05-18",
       availableTime: "9:00 am",
     },
     availableDates: [
@@ -69,7 +69,7 @@ const modalDetails = {
   "2": {
     dateDetails: {
       packageLine: "5 Days 4 Nights international package.",
-      startingDate: "June 12, 2025",
+      startingDate: "2025-06-12",
       availableTime: "8:00 am",
     },
     availableDates: [
@@ -123,7 +123,7 @@ const modalDetails = {
   "3": {
     dateDetails: {
       packageLine: "4 Days 3 Nights island-hopping package.",
-      startingDate: "July 22, 2025",
+      startingDate: "2025-07-22",
       availableTime: "10:00 am",
     },
     availableDates: [
