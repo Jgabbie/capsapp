@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 // CREATE USER
 export const createUser = async (req, res) => {
     try {
-        const { username, email, password, firstname, lastname, phonenum } = req.body;
+        const { username, email, password, firstname, lastname, phonenum, role, isVerified } = req.body;
 
         // Basic validation
         if (!username || !email || !password) {
@@ -28,7 +28,9 @@ export const createUser = async (req, res) => {
             lastname,
             email,
             phonenum,
-            password: hashedPassword
+            password: hashedPassword,
+            role: role || "user",
+            isVerified: typeof isVerified === "boolean" ? isVerified : false
         });
 
         const savedUser = await user.save();
@@ -75,5 +77,20 @@ export const getUsers = async (req, res) => {
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedUser = await User.findByIdAndDelete(id);
+
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, message: "User deleted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };
