@@ -4,10 +4,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Signup from './screens/Signup';
 import Login from './screens/Login';
+import Home from './screens/Home';
 
 import UserManagement from './screens/admin/UserManagement';
 import Packages from './screens/Packages';
 import PackageDetails from './screens/PackageDetails';
+
 
 
 export default function App() {
@@ -19,7 +21,7 @@ export default function App() {
       <MyScreen.Navigator initialRouteName='packagedetails'>
         <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
         <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
-
+        <MyScreen.Screen name="home" component={Home} options={{ headerShown: false }} />
 
         <MyScreen.Screen name="usermanagement" component={UserManagement} options={{ headerShown: false }} />
         <MyScreen.Screen name="packages" component={Packages} options={{ headerShown: false }} />
