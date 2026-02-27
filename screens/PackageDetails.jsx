@@ -196,8 +196,6 @@ const defaultTravelers = {
 
 export default function PackageDetails({ route }) {
 
-  const getData = useContext(UserContext)
-  const { setBookings } = getData
 
   const [modalReviewVisible, setModalReviewVisible] = useState(false)
   const [modalWishlistVisible, setModalWishlistVisible] = useState(false)
@@ -215,9 +213,7 @@ export default function PackageDetails({ route }) {
       status: "Paid"
     }
 
-    setBookings((bookings) => [...bookings, booking])
-    setActiveModal("approval")
-    console.log("Booking saved!")
+
   }
 
   const [isSidebarVisible, setSidebarVisible] = useState(false)
