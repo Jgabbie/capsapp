@@ -43,7 +43,7 @@ export default function Signup() {
         setLoading(true)
 
         try {
-            const response = await axios.post('http://10.0.2.2:5000/api/create-user', { //http://localhost/api/create-user
+            const response = await axios.post('http://localhost:5000/api/create-user', { //http://localhost/api/create-user
                 username,
                 firstname,
                 lastname,
