@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Platform, Alert, Modal, Pressable } from 'react-native'
 import axios from 'axios'
 import { Ionicons } from '@expo/vector-icons'
+import Header from '../../components/Header'
 import UserManagementStyle from '../../styles/adminstyles/UserManagementStyle'
 
 export default function UserManagement() {
@@ -90,16 +91,7 @@ export default function UserManagement() {
 
   return (
     <ScrollView style={UserManagementStyle.container} contentContainerStyle={UserManagementStyle.contentContainer}>
-      <View style={UserManagementStyle.topBar}>
-        <View style={UserManagementStyle.menuCircle}>
-          <Ionicons name="menu" size={24} color="#3A3A3A" />
-        </View>
-        <Text style={UserManagementStyle.logoText}>MRC</Text>
-        <View style={UserManagementStyle.rightIcons}>
-          <Ionicons name="notifications" size={22} color="#1F4E95" />
-          <Ionicons name="person-circle" size={28} color="#000" />
-        </View>
-      </View>
+      <Header openSidebar={() => {}} />
 
       <Text style={UserManagementStyle.title}>User Management</Text>
 

@@ -16,7 +16,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <MyScreen.Navigator initialRouteName='packages'>
+      <MyScreen.Navigator initialRouteName='usermanagement'>
         <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
         <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
 
