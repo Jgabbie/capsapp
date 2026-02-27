@@ -3,27 +3,68 @@ import { StyleSheet } from "react-native";
 const HomeStyle = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 15, // Reduced slightly for better mobile fit
         backgroundColor: "#fff",
     },
     title: {
-        fontSize: 22,
+        fontSize: 20, // Slightly smaller for better scaling
         fontWeight: "bold",
-        marginBottom: 15,
+        marginBottom: 12,
         color: "#305797",
-        paddingLeft: 20
+        paddingLeft: 5 // Reduced to align better with the search row
     },
-    SearchBar: {
+    searchRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 20,
+        width: '100%',
+    },
+    searchBar: {
+        flex: 2, // Gives the search bar more priority
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#f6f8fc",
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 6, // CHANGED: Reduced from 10 to make it thinner
         borderWidth: 1,
-        backgroundColor: "#fff",
-        fontFamily: "Montserrat_400Regular",
-        borderColor: "#6d6d6d",
-        borderRadius: 10,
-        margin: 10,
-        padding: 10
+        borderColor: "#dbe3ef",
+        height: 40, // FIXED HEIGHT: Keeps it consistent
+    },
+    searchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 14,
+        color: "#333",
+        paddingVertical: 0, // CRITICAL: Stops text from shifting vertically
+    },
+    dropdownGroup: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5
+    },
+    dropdownButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#eef3fb",
+        borderRadius: 15,
+        paddingHorizontal: 8,
+        paddingVertical: 6, // Match search bar height
+        borderWidth: 1,
+        borderColor: "#d6e0f0",
+        height: 40, // Match search bar height
+    },
+    dropdownText: {
+        fontSize: 11, // Smaller text to prevent "lumalagpas" inside buttons
+        color: "#305797",
+        fontFamily: "Roboto_400Regular",
+    },
+    dropdownIcon: {
+        marginLeft: 4
     },
     card: {
-        marginLeft: 30,
+        marginRight: 15, // Changed from marginLeft to handle horizontal scroll better
         width: 150
     },
     cardImage: {
@@ -43,113 +84,68 @@ const HomeStyle = StyleSheet.create({
         gap: 5,
         marginTop: 2
     },
-    infoIcon: {
-        width: 12,
-        height: 12
-    },
     infoText: {
         fontFamily: "Roboto_400Regular",
-        fontSize: 12,
+        fontSize: 11,
         color: '#555'
     },
     priceText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginTop: 5
+        fontFamily: "Roboto_700Bold",
+        fontSize: 13,
+        color: "#333",
+        marginTop: 3
     },
     bannerCard: {
-        marginLeft: 30,
-        marginRight: 30,
-        width: 320,
+        width: '95%', // Scale relative to screen instead of fixed 320
+        alignSelf: 'center',
         backgroundColor: "#fff",
         borderRadius: 15,
-        elevation: 5,
-        boxShadow: "2px 0px 8px rgba(0,0,0,0.3)",
-        marginBottom: 30
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        marginBottom: 25,
+        overflow: 'hidden' // Keeps image corners rounded
     },
     bannerImage: {
         width: "100%",
-        height: 200,
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15
+        height: 180,
     },
     bannerFooter: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 15
+        padding: 15,
+        backgroundColor: "#fff"
     },
     bannerTitle: {
-        fontFamily: 'Montserrat_500Medium',
-        fontSize: 18,
-        fontWeight: "bold",
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 16,
         color: "#305797"
     },
     bannerSub: {
         fontFamily: 'Roboto_400Regular',
-        fontSize: 14,
-        color: '#555'
+        fontSize: 13,
+        color: '#777',
+        marginTop: 2
     },
     viewAllButton: {
         backgroundColor: "#305797",
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 5
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderBottomLeftRadius: 15,
+        borderBottomRightRadius: 15,
+        gap: 8
     },
     viewAllText: {
         color: '#fff',
-        fontSize: 12,
-        fontWeight: '500'
+        fontSize: 13,
+        fontWeight: 'bold'
     },
     arrowIcon: {
-        width: 12,
-        height: 12,
-    },
-    searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        marginBottom: 16
-    },
-    searchBar: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 22,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderWidth: 1,
-        borderColor: "#dbe3ef"
-    },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 13,
-        color: "#333",
-    },
-    dropdownGroup: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8
-    },
-    dropdownButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 18,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderWidth: 1,
-        borderColor: "#d6e0f0"
-    },
-    dropdownIcon: {
-        marginLeft: 6
-    },
-})
+        width: 14,
+        height: 14,
+    }
+});
 
-export default HomeStyle
+export default HomeStyle;
