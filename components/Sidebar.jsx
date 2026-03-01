@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import ModalStyle from '../styles/ModalStyle'
-import SidebarStyle from '../styles/SidebarStyle'
+import ModalStyle from '../styles/componentstyles/ModalStyle'
+import SidebarStyle from '../styles/componentstyles/SidebarStyle'
 
 
 export default function Sidebar({ visible, onClose }) {
@@ -71,7 +71,7 @@ export default function Sidebar({ visible, onClose }) {
                         icon={require('../assets/images/booking_icon.png')}
                         onPress={() => {
                             onClose()
-                            cs.navigate("userbooking")
+                            cs.navigate("userbookings")
                         }}
                     />
 
@@ -98,7 +98,7 @@ export default function Sidebar({ visible, onClose }) {
                         icon={require('../assets/images/transactions_icon.png')}
                         onPress={() => {
                             onClose()
-                            cs.navigate("usertransaction")
+                            cs.navigate("usertransactions")
                         }}
                     />
 

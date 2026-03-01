@@ -80,6 +80,7 @@ export const getUsers = async (req, res) => {
     }
 };
 
+// DELETE USER
 export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -90,6 +91,32 @@ export const deleteUser = async (req, res) => {
         }
 
         res.status(200).json({ success: true, message: "User deleted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// UPDATE USER
+export const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { username, email, firstname, lastname, phonenum, } = req.body;
+
+        const updateData = {
+            username,
+            email,
+            firstname,
+            lastname,
+            phonenum,
+        };
+
+        const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        res.status(200).json({ success: true, user: updatedUser });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

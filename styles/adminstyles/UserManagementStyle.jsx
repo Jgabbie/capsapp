@@ -43,6 +43,42 @@ const UserManagementStyle = StyleSheet.create({
 		fontWeight: '700',
 		color: '#1F4E95'
 	},
+	statsContainer: {
+		marginBottom: 15,
+		padding: 20
+	},
+	statsRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	card: {
+		backgroundColor: '#fff',
+		width: '48%',
+		padding: 16,
+		borderRadius: 10,
+		elevation: 3,
+		alignItems: 'center',
+	},
+	valueRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	statsIcon: {
+		width: 24,
+		height: 24,
+		resizeMode: 'contain',
+	},
+	cardValue: {
+		fontSize: 22,
+		fontWeight: '700',
+		color: '#000',
+	},
+	cardLabel: {
+		marginTop: 4,
+		color: '#777',
+		fontSize: 12,
+	},
 	summaryGrid: {
 		marginTop: 16,
 		marginHorizontal: 18,
@@ -129,48 +165,6 @@ const UserManagementStyle = StyleSheet.create({
 		borderRadius: 8,
 		overflow: 'hidden'
 	},
-	tableHeader: {
-		backgroundColor: '#1F4E95',
-		flexDirection: 'row',
-		alignItems: 'center',
-		minHeight: 40,
-		paddingHorizontal: 8
-	},
-	tableHeaderText: {
-		color: '#FFFFFF',
-		fontWeight: '700',
-		fontSize: 13
-	},
-	tableRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		minHeight: 52,
-		paddingHorizontal: 8,
-		borderBottomWidth: 1,
-		borderBottomColor: '#E5E5E5'
-	},
-	tableCell: {
-		fontSize: 12,
-		color: '#1A1A1A'
-	},
-	nameCol: {
-		width: '24%'
-	},
-	usernameCol: {
-		width: '22%'
-	},
-	emailCol: {
-		width: '27%'
-	},
-	roleCol: {
-		width: '11%'
-	},
-	actionCol: {
-		width: '16%'
-	},
-	actionCell: {
-		alignItems: 'flex-start'
-	},
 	editText: {
 		color: '#1F4E95',
 		fontWeight: '600',
@@ -212,6 +206,73 @@ const UserManagementStyle = StyleSheet.create({
 	dropdownItemText: {
 		fontSize: 14,
 		color: '#222'
+	},
+	userCard: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginBottom: 16,
+		shadowColor: "#000",
+		shadowOpacity: 0.08,
+		shadowRadius: 6,
+		elevation: 3
+	},
+
+	cardHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		marginBottom: 10
+	},
+
+	userName: {
+		fontFamily: "Montserrat_700Bold",
+		fontSize: 16,
+		color: "#305797"
+	},
+
+	userStatus: {
+		fontFamily: "Montserrat_500Medium",
+		fontSize: 13
+	},
+
+	cardBody: {
+		marginBottom: 12
+	},
+
+	userDetail: {
+		fontFamily: "Montserrat_400Regular",
+		fontSize: 14,
+		marginBottom: 4
+	},
+
+	cardActions: {
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		gap: 10
+	},
+
+	editButton: {
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		backgroundColor: "#1F4E95",
+		borderRadius: 6
+	},
+
+	removeButton: {
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		backgroundColor: "#E74C3C",
+		borderRadius: 6
+	},
+
+	editText: {
+		color: "#fff",
+		fontFamily: "Roboto_500Medium"
+	},
+
+	removeText: {
+		color: "#fff",
+		fontFamily: "Roboto_500Medium"
 	}
 })
 

@@ -90,27 +90,24 @@ export default function UserManagement() {
   }, [normalizedUsers, searchText, roleFilter, statusFilter])
 
   return (
-    <ScrollView style={UserManagementStyle.container} contentContainerStyle={UserManagementStyle.contentContainer}>
-      <Header openSidebar={() => {}} />
-
+    <View style={UserManagementStyle.container} contentContainerStyle={UserManagementStyle.contentContainer}>
+      <Header openSidebar={() => { }} />
       <Text style={UserManagementStyle.title}>User Management</Text>
 
-      <View style={UserManagementStyle.summaryGrid}>
-        <View style={UserManagementStyle.summaryCard}>
-          <Text style={UserManagementStyle.summaryValue}>{stats.total}</Text>
-          <Text style={UserManagementStyle.summaryLabel}>Users</Text>
-        </View>
-        <View style={UserManagementStyle.summaryCard}>
-          <Text style={UserManagementStyle.summaryValue}>{stats.verified}</Text>
-          <Text style={UserManagementStyle.summaryLabel}>Verified</Text>
-        </View>
-        <View style={UserManagementStyle.summaryCard}>
-          <Text style={UserManagementStyle.summaryValue}>{stats.unverified}</Text>
-          <Text style={UserManagementStyle.summaryLabel}>Unverified</Text>
-        </View>
-        <View style={UserManagementStyle.summaryCard}>
-          <Text style={UserManagementStyle.summaryValue}>{stats.admins}</Text>
-          <Text style={UserManagementStyle.summaryLabel}>Admins</Text>
+      <View style={UserManagementStyle.statsContainer}>
+        <View style={UserManagementStyle.statsRow}>
+          <View style={UserManagementStyle.card}>
+            <View style={UserManagementStyle.valueRow}>
+              <Text style={UserManagementStyle.cardValue}>25</Text>
+            </View>
+            <Text style={UserManagementStyle.cardLabel}>Total Packages</Text>
+          </View>
+          <View style={UserManagementStyle.card}>
+            <View style={UserManagementStyle.valueRow}>
+              <Text style={UserManagementStyle.cardValue}>12</Text>
+            </View>
+            <Text style={UserManagementStyle.cardLabel}>Available Packages</Text>
+          </View>
         </View>
       </View>
 
@@ -126,18 +123,12 @@ export default function UserManagement() {
           />
         </View>
 
-        <TouchableOpacity
-          style={UserManagementStyle.filterButton}
-          onPress={() => setOpenDropdown('role')}
-        >
+        <TouchableOpacity style={UserManagementStyle.filterButton} onPress={() => setOpenDropdown('role')}>
           <Text style={UserManagementStyle.filterButtonText}>{roleFilter}</Text>
           <Ionicons name="chevron-down" size={16} color="#1F4E95" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={UserManagementStyle.filterButton}
-          onPress={() => setOpenDropdown('status')}
-        >
+        <TouchableOpacity style={UserManagementStyle.filterButton} onPress={() => setOpenDropdown('status')}>
           <Text style={UserManagementStyle.filterButtonText}>{statusFilter}</Text>
           <Ionicons name="chevron-down" size={16} color="#1F4E95" />
         </TouchableOpacity>
@@ -147,15 +138,7 @@ export default function UserManagement() {
         </TouchableOpacity>
       </View>
 
-      <View style={UserManagementStyle.tableContainer}>
-        <View style={UserManagementStyle.tableHeader}>
-          <Text style={[UserManagementStyle.tableHeaderText, UserManagementStyle.nameCol]}>Name</Text>
-          <Text style={[UserManagementStyle.tableHeaderText, UserManagementStyle.usernameCol]}>Username</Text>
-          <Text style={[UserManagementStyle.tableHeaderText, UserManagementStyle.emailCol]}>Email</Text>
-          <Text style={[UserManagementStyle.tableHeaderText, UserManagementStyle.roleCol]}>Role</Text>
-          <Text style={[UserManagementStyle.tableHeaderText, UserManagementStyle.actionCol]}>Action</Text>
-        </View>
-
+      <ScrollView style={{ marginTop: 10, padding: 20 }}>
         {loading ? (
           <View style={UserManagementStyle.loadingBox}>
             <ActivityIndicator size="small" color="#1F4E95" />
@@ -166,19 +149,35 @@ export default function UserManagement() {
           </View>
         ) : (
           filteredUsers.map((user) => (
-            <View key={user._id} style={UserManagementStyle.tableRow}>
-              <Text style={[UserManagementStyle.tableCell, UserManagementStyle.nameCol]} numberOfLines={1}>{user.fullName}</Text>
-              <Text style={[UserManagementStyle.tableCell, UserManagementStyle.usernameCol]} numberOfLines={1}>{user.username}</Text>
-              <Text style={[UserManagementStyle.tableCell, UserManagementStyle.emailCol]} numberOfLines={1}>{user.email}</Text>
-              <Text style={[UserManagementStyle.tableCell, UserManagementStyle.roleCol]}>{user.role === 'admin' ? 'Admin' : 'User'}</Text>
-              <View style={[UserManagementStyle.actionCol, UserManagementStyle.actionCell]}>
-                <Text style={UserManagementStyle.editText}>Edit</Text>
-                <Text style={UserManagementStyle.removeText} onPress={() => handleRemoveUser(user._id)}>Remove</Text>
+            <View key={user._id} style={UserManagementStyle.userCard}>
+              <View style={UserManagementStyle.cardHeader}>
+                <Text style={UserManagementStyle.userName}>{user.fullName}</Text>
+                <Text style={[
+                  UserManagementStyle.userStatus,
+                  user.isVerified ? { color: "#2ecc71" } : { color: "#f1c40f" }
+                ]}>
+                  {user.isVerified ? "Verified" : "Unverified"}
+                </Text>
+              </View>
+
+              <View style={UserManagementStyle.cardBody}>
+                <Text style={UserManagementStyle.userDetail}><Text style={{ fontWeight: 'bold' }}>Username:</Text> {user.username}</Text>
+                <Text style={UserManagementStyle.userDetail}><Text style={{ fontWeight: 'bold' }}>Email:</Text> {user.email}</Text>
+                <Text style={UserManagementStyle.userDetail}><Text style={{ fontWeight: 'bold' }}>Role:</Text> {user.role === 'admin' ? 'Admin' : 'User'}</Text>
+              </View>
+
+              <View style={UserManagementStyle.cardActions}>
+                <TouchableOpacity style={UserManagementStyle.editButton}>
+                  <Text style={UserManagementStyle.editText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={UserManagementStyle.removeButton} onPress={() => handleRemoveUser(user._id)}>
+                  <Text style={UserManagementStyle.removeText}>Remove</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))
         )}
-      </View>
+      </ScrollView>
 
       <Modal transparent visible={openDropdown === 'role'} animationType="fade">
         <Pressable style={UserManagementStyle.dropdownOverlay} onPress={() => setOpenDropdown(null)}>
@@ -217,6 +216,6 @@ export default function UserManagement() {
           </View>
         </Pressable>
       </Modal>
-    </ScrollView>
+    </View>
   )
 }

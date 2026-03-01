@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 
 import { useNavigation } from '@react-navigation/native'
-import HeaderStyle from '../styles/HeaderStyle'
+import HeaderStyle from '../styles/componentstyles/HeaderStyle'
 
 
 export default function Header({ openSidebar }) {

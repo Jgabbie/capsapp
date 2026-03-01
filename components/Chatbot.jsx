@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image, TextInput } from 'react-native'
 import React, { useState } from 'react'
-import ChatbotStyle from '../styles/ChatbotStyle'
+import ChatbotStyle from '../styles/componentstyles/ChatbotStyle'
 
 
 export default function Chatbot() {
