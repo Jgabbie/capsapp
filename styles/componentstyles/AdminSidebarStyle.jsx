@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native'
 
-const SidebarStyle = StyleSheet.create({
+const AdminSidebarStyle = StyleSheet.create({
     overlay: {
         position: 'absolute',
         backgroundColor: "rgba(0,0,0,0.5)",
@@ -64,12 +64,10 @@ const SidebarStyle = StyleSheet.create({
     navText: {
         color: "#fff",
         fontFamily: 'Montserrat_500Medium',
-        fontWeight: '500',
         fontSize: 18,
         marginLeft: 12,
-        width: '100%',
-
+        fontWeight: '500'
     },
 })
 
-export default SidebarStyle
+export default AdminSidebarStyle

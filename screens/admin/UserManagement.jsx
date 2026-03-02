@@ -3,9 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView,
 import axios from 'axios'
 import { Ionicons } from '@expo/vector-icons'
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import UserManagementStyle from '../../styles/adminstyles/UserManagementStyle'
 
 export default function UserManagement() {
+
+  const [isSidebarVisible, setSidebarVisible] = useState(false)
+
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchText, setSearchText] = useState('')
@@ -91,7 +95,9 @@ export default function UserManagement() {
 
   return (
     <View style={UserManagementStyle.container} contentContainerStyle={UserManagementStyle.contentContainer}>
-      <Header openSidebar={() => { }} />
+      <Header openSidebar={() => setSidebarVisible(true)} />
+      <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+
       <Text style={UserManagementStyle.title}>User Management</Text>
 
       <View style={UserManagementStyle.statsContainer}>

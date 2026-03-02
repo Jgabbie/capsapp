@@ -2,6 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from 'reac
 import React, { useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import TransactionManagementStyle from '../../styles/adminstyles/TransactionManagementStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 
@@ -23,6 +24,7 @@ export default function TransactionManagement() {
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
+            <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView
                 contentContainerStyle={TransactionManagementStyle.container}

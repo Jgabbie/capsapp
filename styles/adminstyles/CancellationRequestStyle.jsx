@@ -1,10 +1,11 @@
 import { StyleSheet } from "react-native";
 
-const VisaApplicationsStyle = StyleSheet.create({
+const CancellationRequestStyle = StyleSheet.create({
 
     container: {
+        flex: 1,
         padding: 20,
-        backgroundColor: "#fff",
+        backgroundColor: "#f6f6ff",
     },
     header: {
         fontSize: 22,
@@ -16,9 +17,9 @@ const VisaApplicationsStyle = StyleSheet.create({
         marginBottom: 15,
     },
     statsRow: {
+        marginBottom: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
     },
     card: {
         backgroundColor: '#fff',
@@ -61,7 +62,6 @@ const VisaApplicationsStyle = StyleSheet.create({
         backgroundColor: "#f6f8fc",
         borderRadius: 22,
         paddingHorizontal: 14,
-        paddingVertical: 10,
         borderWidth: 1,
         borderColor: "#dbe3ef"
     },
@@ -89,59 +89,57 @@ const VisaApplicationsStyle = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 6
     },
-    userCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
+    requestCard: {
+        backgroundColor: "#fff",
         padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
+        borderRadius: 14,
+        marginBottom: 15,
         elevation: 3,
     },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 10,
+    cardTopRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 8,
     },
-    userName: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#305797',
+    cardRef: {
+        fontWeight: "bold",
+        color: "#305797",
     },
-    cardBody: {
-        marginBottom: 12,
+    cardDate: {
+        fontSize: 12,
+        color: "#777",
     },
-    userDetail: {
-        fontSize: 14,
+    cardLabel: {
+        fontSize: 13,
+        color: "#555",
         marginBottom: 4,
-        color: '#333',
     },
-    cardActions: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 10,
+    cardValue: {
+        fontWeight: "600",
+        color: "#222",
     },
-    editButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        backgroundColor: '#1F4E95',
-        borderRadius: 6,
+    cardButtonRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 12,
     },
-    removeButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        backgroundColor: '#E74C3C',
-        borderRadius: 6,
+    approveButton: {
+        backgroundColor: "#2ecc71",
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 8,
     },
-    editText: {
-        color: '#fff',
-        fontWeight: '600',
+    denyButton: {
+        backgroundColor: "#e74c3c",
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 8,
     },
-    removeText: {
-        color: '#fff',
-        fontWeight: '600',
-    },
+    buttonText: {
+        color: "#fff",
+        fontWeight: "600",
+    }
+
 })
 
-export default VisaApplicationsStyle
+export default CancellationRequestStyle

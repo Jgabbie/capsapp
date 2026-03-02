@@ -39,7 +39,7 @@ const UserManagementStyle = StyleSheet.create({
 	title: {
 		marginTop: 20,
 		marginHorizontal: 20,
-		fontSize: 34,
+		fontSize: 22,
 		fontWeight: '700',
 		color: '#1F4E95'
 	},

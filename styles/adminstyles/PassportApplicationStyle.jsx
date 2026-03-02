@@ -18,6 +18,7 @@ const PassportApplicationsStyle = StyleSheet.create({
     statsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 10,
     },
     card: {
         backgroundColor: '#fff',

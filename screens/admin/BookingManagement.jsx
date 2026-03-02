@@ -2,12 +2,12 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from 'reac
 import React, { useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import BookingManagementStyle from '../../styles/adminstyles/BookingManagementStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 
 
 export default function BookingManagement() {
-
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
     const [modalOkVisible, setModalOkVisible] = useState(false)
@@ -23,6 +23,7 @@ export default function BookingManagement() {
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => { setSidebarVisible(true) }} />
+            <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <View style={{ flex: 1 }}>
                 <ScrollView

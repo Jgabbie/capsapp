@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import PassportApplicationsStyle from '../../styles/adminstyles/PassportApplicationStyle'
 
 export default function PassportApplications() {
@@ -20,6 +21,7 @@ export default function PassportApplications() {
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
+            <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PassportApplicationsStyle.container} showsVerticalScrollIndicator={false}>
                 <Text style={PassportApplicationsStyle.header}>Passport Applications</Text>

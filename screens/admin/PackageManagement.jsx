@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import PackageManagementStyles from '../../styles/adminstyles/PackageManagementStyles'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 
@@ -100,6 +101,7 @@ export default function PackageManagement() {
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => { setSidebarVisible(true) }} />
+            <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <View style={PackageManagementStyles.container}>
                 <Text style={PackageManagementStyles.header}>Package Management</Text>

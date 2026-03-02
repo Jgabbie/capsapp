@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
 import Header from '../../components/Header'
+import AdminSidebar from '../../components/AdminSidebar'
 import VisaApplicationsStyle from '../../styles/adminstyles/VisaApplicationsStyle'
 
 
@@ -21,6 +22,7 @@ export default function VisaApplications() {
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
+            <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={VisaApplicationsStyle.container} showsVerticalScrollIndicator={false}>
                 <Text style={VisaApplicationsStyle.header}>Visa Applications</Text>

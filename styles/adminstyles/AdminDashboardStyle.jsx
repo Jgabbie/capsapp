@@ -1,16 +1,9 @@
 import { StyleSheet } from "react-native";
 
-const BookingManagementStyle = StyleSheet.create({
+const AdminDashboardStyles = StyleSheet.create({
     container: {
-        flex: 1,
         padding: 20,
-        backgroundColor: "#fff",
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 15,
-        color: "#305797",
+        backgroundColor: "#f6f6ff",
     },
     header: {
         fontSize: 22,
@@ -24,6 +17,7 @@ const BookingManagementStyle = StyleSheet.create({
     statsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 15
     },
     card: {
         backgroundColor: '#fff',
@@ -53,45 +47,12 @@ const BookingManagementStyle = StyleSheet.create({
         color: '#777',
         fontSize: 12,
     },
-    searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        marginBottom: 16
-    },
-    searchBar: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 22,
-        paddingHorizontal: 14,
-        borderWidth: 1,
-        borderColor: "#dbe3ef"
-    },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 13,
-        color: "#333",
-    },
-    dropdownGroup: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8
-    },
-    dropdownButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 18,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderWidth: 1,
-        borderColor: "#d6e0f0"
-    },
-    dropdownIcon: {
-        marginLeft: 6
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#305797",
+        marginTop: 12,
+        marginBottom: 8
     },
     bookingCard: {
         backgroundColor: "#fff",
@@ -165,8 +126,20 @@ const BookingManagementStyle = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontFamily: "Roboto_500Medium"
+    },
+    cardChart: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 5,
+        paddingTop: 30,
+        marginLeft: 20,
+        marginRight: 20,
+        marginBottom: 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 3
     }
-
 })
 
-export default BookingManagementStyle
+export default AdminDashboardStyles

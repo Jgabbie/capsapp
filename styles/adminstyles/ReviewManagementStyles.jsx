@@ -1,24 +1,28 @@
 import { StyleSheet } from "react-native";
 
-const VisaApplicationsStyle = StyleSheet.create({
+
+const ReviewManagementStyles = StyleSheet.create({
 
     container: {
-        padding: 20,
-        backgroundColor: "#fff",
+        flex: 1,
+        padding: 16,
+        backgroundColor: "#f5f5f5",
+        paddingHorizontal: 16,
+        paddingTop: 16
     },
     header: {
         fontSize: 22,
         color: "#305797",
-        fontWeight: "bold",
-        marginBottom: 16
+        fontWeight: '700',
+        marginBottom: 16,
     },
     statsContainer: {
         marginBottom: 15,
     },
     statsRow: {
+        marginBottom: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
     },
     card: {
         backgroundColor: '#fff',
@@ -61,7 +65,6 @@ const VisaApplicationsStyle = StyleSheet.create({
         backgroundColor: "#f6f8fc",
         borderRadius: 22,
         paddingHorizontal: 14,
-        paddingVertical: 10,
         borderWidth: 1,
         borderColor: "#dbe3ef"
     },
@@ -89,59 +92,50 @@ const VisaApplicationsStyle = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 6
     },
-    userCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 3,
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#305797',
+        marginBottom: 12
     },
-    cardHeader: {
+    reviewCard: {
+        backgroundColor: '#fff',
+        padding: 14,
+        borderRadius: 10,
+        marginBottom: 12,
+        elevation: 2
+    },
+    reviewHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
+        marginBottom: 6
     },
-    userName: {
-        fontSize: 16,
+    username: {
         fontWeight: '700',
-        color: '#305797',
+        color: '#305797'
     },
-    cardBody: {
-        marginBottom: 12,
+    package: {
+        fontSize: 12,
+        color: '#555',
+        marginBottom: 6
     },
-    userDetail: {
-        fontSize: 14,
-        marginBottom: 4,
-        color: '#333',
-    },
-    cardActions: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 10,
-    },
-    editButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        backgroundColor: '#1F4E95',
-        borderRadius: 6,
+    comment: {
+        fontSize: 13,
+        color: '#333'
     },
     removeButton: {
-        paddingHorizontal: 12,
+        marginTop: 10,
+        alignSelf: 'flex-end',
+        backgroundColor: '#9E2847',
         paddingVertical: 6,
-        backgroundColor: '#E74C3C',
-        borderRadius: 6,
+        paddingHorizontal: 14,
+        borderRadius: 8
     },
-    editText: {
+    removeButtonText: {
         color: '#fff',
-        fontWeight: '600',
-    },
-    removeText: {
-        color: '#fff',
-        fontWeight: '600',
+        fontSize: 12,
+        fontWeight: '600'
     },
 })
 
-export default VisaApplicationsStyle
+export default ReviewManagementStyles
