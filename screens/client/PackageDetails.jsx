@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useMemo, useState } from "react"
-import { View, Text, ScrollView, Image, TouchableOpacity, Modal, TextInput, } from "react-native"
+import React, { useEffect, useMemo, useState } from "react"
+import { View, Text, ScrollView, Image, TouchableOpacity, Modal, TextInput, Alert, Linking, Platform } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Calendar } from "react-native-calendars"
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles"
 import Header from "../../components/Header"
-import { UserContext } from "../../context/UserContext"
 import ModalStyle from "../../styles/componentstyles/ModalStyle"
 import Sidebar from "../../components/Sidebar"
+import { api, withUserHeader } from "../../utils/api"
+import { useUser } from "../../context/UserContext"
 
 
 const modalDetails = {
@@ -194,31 +195,58 @@ const defaultTravelers = {
   senior: 0,
 }
 
-export default function PackageDetails({ route }) {
+const toNumber = (value) => {
+  const parsed = Number(String(value ?? "").replace(/[^0-9.]/g, ""))
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const formatPeso = (value) => `₱${toNumber(value).toLocaleString("en-PH")}`
+
+const formatDateLabel = (value) => {
+  if (!value) return ""
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
+const normalizeTextArray = (value) =>
+  Array.isArray(value)
+    ? value
+      .map((item) => {
+        if (item == null) return ""
+        if (typeof item === "string" || typeof item === "number") return String(item).trim()
+        if (typeof item === "object") {
+          return String(
+            item.label ||
+            item.name ||
+            item.hotelName ||
+            item.airlineName ||
+            item.title ||
+            item.value ||
+            ""
+          ).trim()
+        }
+        return ""
+      })
+      .filter(Boolean)
+    : []
+
+export default function PackageDetails({ route, navigation }) {
 
 
   const [modalReviewVisible, setModalReviewVisible] = useState(false)
   const [modalWishlistVisible, setModalWishlistVisible] = useState(false)
-
-  const saveBooking = () => {
-    const booking = {
-      package: pkg.title,
-      date: pkg.isInternational ? availableDateId : selectedDate,
-      allInLand,
-      fixedCustom,
-      soloGrouped,
-      totalTravelers,
-      paymentMethod: selectedOption,
-      price: pkg.price,
-      status: "Paid"
-    }
-
-
-  }
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false)
+  const { user } = useUser()
 
   const [isSidebarVisible, setSidebarVisible] = useState(false)
 
-  const pkg = route?.params?.pkg ?? {
+  const routePackage = route?.params?.pkg ?? {}
+  const fallbackPackage = {
     id: "1",
     title: "Baguio City Tour",
     description:
@@ -226,112 +254,541 @@ export default function PackageDetails({ route }) {
     image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0e/7e/b0/b9/photo4jpg.jpg?w=900&h=500&s=1",
     price: "₱67,000",
     duration: "3 Days",
+    packagePricePerPax: 67000,
+    packageDuration: 3,
+    packageSpecificDate: [],
+    packageHotels: [],
+    packageAirlines: [],
+    packageInclusions: [],
+    packageExclusions: [],
+    packageTermsConditions: [],
+    packageItineraries: [],
     isInternational: false,
   }
 
+  const isInternationalFromPayload =
+    typeof routePackage?.isInternational === "boolean"
+      ? routePackage.isInternational
+      : String(routePackage?.packageType || "")
+        .toLowerCase()
+        .includes("international")
+
+  const resolvedDurationDays =
+    Number(routePackage?.packageDuration) || toNumber(routePackage?.duration) || fallbackPackage.packageDuration
+  const resolvedPricePerPax =
+    Number(routePackage?.packagePricePerPax) || toNumber(routePackage?.price) || fallbackPackage.packagePricePerPax
+
+  const pkg = {
+    ...fallbackPackage,
+    ...routePackage,
+    id: String(routePackage?.id || routePackage?._id || routePackage?.packageId || fallbackPackage.id),
+    title: routePackage?.title || routePackage?.packageName || fallbackPackage.title,
+    description: routePackage?.description || routePackage?.packageDescription || fallbackPackage.description,
+    image: routePackage?.image || routePackage?.images?.[0] || fallbackPackage.image,
+    packageDuration: resolvedDurationDays,
+    duration: `${resolvedDurationDays} Days`,
+    packagePricePerPax: resolvedPricePerPax,
+    price: formatPeso(resolvedPricePerPax),
+    packageSpecificDate: Array.isArray(routePackage?.packageSpecificDate)
+      ? routePackage.packageSpecificDate
+      : fallbackPackage.packageSpecificDate,
+    packageHotels: normalizeTextArray(routePackage?.packageHotels),
+    packageAirlines: normalizeTextArray(routePackage?.packageAirlines),
+    packageInclusions: normalizeTextArray(routePackage?.packageInclusions),
+    packageExclusions: normalizeTextArray(routePackage?.packageExclusions),
+    packageTermsConditions: normalizeTextArray(routePackage?.packageTermsConditions),
+    packageItineraries: normalizeTextArray(routePackage?.packageItineraries),
+    isInternational: isInternationalFromPayload,
+  }
+
   const modalContent = modalDetails[pkg.id] ?? modalDetails["1"]
+
+  const availableDates = pkg.packageSpecificDate.length
+    ? pkg.packageSpecificDate.map((option, index) => ({
+      id: String(index + 1),
+      range: `${formatDateLabel(option?.startdaterange)} - ${formatDateLabel(option?.enddaterange)}`,
+      note: `${Number(option?.slots || 0)} slots available${Number(option?.extrarate || 0) > 0 ? ` • Extra rate: ${formatPeso(option?.extrarate)}` : ""}`,
+    }))
+    : modalContent.availableDates
+
+  const defaultDate = pkg.packageSpecificDate[0]?.startdaterange
+    ? new Date(pkg.packageSpecificDate[0].startdaterange)
+    : new Date(modalContent.dateDetails.startingDate)
+
+  const defaultAirline = pkg.packageAirlines[0] || modalContent.customize.airline
+  const defaultHotel = pkg.packageHotels[0] || modalContent.customize.hotel
 
   const [activeTab, setActiveTab] = useState("itinerary")
   const [activeModal, setActiveModal] = useState(null)
 
   const [selectedDateKey, setSelectedDateKey] = useState(() =>
-    new Date(modalContent.dateDetails.startingDate).toISOString().slice(0, 10)
+    defaultDate.toISOString().slice(0, 10)
   )
   const [selectedDate, setSelectedDate] = useState(() =>
-    new Date(modalContent.dateDetails.startingDate).toLocaleDateString("en-US", {
+    defaultDate.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     })
   )
   const [availableDateId, setAvailableDateId] = useState(
-    () => modalContent.availableDates[0]?.id ?? "March 18, 2026"
+    () => availableDates[0]?.range ?? "March 18, 2026"
   )
   const [allInLand, setAllInLand] = useState("all-in")
   const [fixedCustom, setFixedCustom] = useState("fixed")
   const [soloGrouped, setSoloGrouped] = useState("solo")
   const [travelers, setTravelers] = useState(defaultTravelers)
-  const [airline, setAirline] = useState(() => modalContent.customize.airline)
-  const [hotel, setHotel] = useState(() => modalContent.customize.hotel)
+  const [airline, setAirline] = useState(() => defaultAirline)
+  const [hotel, setHotel] = useState(() => defaultHotel)
   const [addons, setAddons] = useState(["addon-1"])
   const [tours, setTours] = useState(["tour-1"])
   const [selectedOption, setSelectedOption] = useState('')
+  const [registration, setRegistration] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    passportNumber: "",
+  })
+  const [arrangementType, setArrangementType] = useState("")
+  const [quotationNotes, setQuotationNotes] = useState("")
+  const [passportUpload, setPassportUpload] = useState({
+    passportNumber: "",
+    passportFileUrl: "",
+  })
+  const [isSubmittingQuotation, setIsSubmittingQuotation] = useState(false)
+  const [approvalAction, setApprovalAction] = useState("booking")
+  const [approvalMessage, setApprovalMessage] = useState("Booking Successful")
+  const [latestBooking, setLatestBooking] = useState(null)
+  const [isQuotationSuccessVisible, setQuotationSuccessVisible] = useState(false)
+  const [hasHandledPaymentCallback, setHasHandledPaymentCallback] = useState(false)
+  const packageDays = useMemo(() => {
+    const parsed = Number(pkg.packageDuration || toNumber(pkg.duration))
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+  }, [pkg.packageDuration, pkg.duration])
+  const itineraryDayLabels = useMemo(
+    () => Array.from({ length: packageDays }, (_, index) => `Day ${index + 1}`),
+    [packageDays]
+  )
+  const [quotationTravelers, setQuotationTravelers] = useState(1)
+  const [quotationTravelersInput, setQuotationTravelersInput] = useState("1")
+  const [quotationBudgetMin, setQuotationBudgetMin] = useState(10000)
+  const [quotationBudgetMax, setQuotationBudgetMax] = useState(60000)
+  const [quotationItineraryNotes, setQuotationItineraryNotes] = useState({})
+  const [quotationAdditionalComments, setQuotationAdditionalComments] = useState("")
+  const [quotationSubmitError, setQuotationSubmitError] = useState("")
 
   useEffect(() => {
-    if (activeModal === "approval") {
-      saveBooking()
+    if (Platform.OS !== "web" || typeof window === "undefined") return
+    if (hasHandledPaymentCallback) return
+
+    const search = new URLSearchParams(window.location.search || "")
+    const bookingStatus = search.get("booking") || ""
+    const checkoutToken = search.get("checkoutToken") || ""
+
+    if (!bookingStatus) return
+
+    const clearCallbackParams = () => {
+      window.history.replaceState({}, "", "/packagedetails")
     }
-  }, [activeModal])
+
+    if (bookingStatus === "cancel") {
+      window.localStorage.removeItem(pendingBookingStorageKey)
+      setHasHandledPaymentCallback(true)
+      clearCallbackParams()
+      Alert.alert("Payment cancelled", "Your PayMongo payment was cancelled.")
+      return
+    }
+
+    if (bookingStatus !== "success" || !checkoutToken) return
+
+    const rawPending = window.localStorage.getItem(pendingBookingStorageKey)
+    if (!rawPending) {
+      setHasHandledPaymentCallback(true)
+      clearCallbackParams()
+      Alert.alert("Payment received", "No pending booking data was found. Please contact support.")
+      return
+    }
+
+    let pending
+    try {
+      pending = JSON.parse(rawPending)
+    } catch (_error) {
+      window.localStorage.removeItem(pendingBookingStorageKey)
+      setHasHandledPaymentCallback(true)
+      clearCallbackParams()
+      Alert.alert("Payment received", "Booking data is invalid. Please contact support.")
+      return
+    }
+
+    if (pending?.checkoutToken !== checkoutToken) {
+      setHasHandledPaymentCallback(true)
+      clearCallbackParams()
+      Alert.alert("Payment received", "Payment callback did not match pending booking data.")
+      return
+    }
+
+    const finalizeAfterSuccess = async () => {
+      setIsSubmittingPayment(true)
+      try {
+        const actingUserId = pending?.userId || user?._id
+        if (!actingUserId) {
+          throw new Error("User ID is required")
+        }
+
+        const bookingRes = await api.post(
+          "/booking/create-booking",
+          {
+            packageId: pending.packageId,
+            bookingDetails: pending.bookingDetails,
+            checkoutToken,
+          },
+          withUserHeader(actingUserId)
+        )
+
+        await api.post(
+          "/transaction/create-transaction",
+          {
+            bookingId: bookingRes.data._id,
+            amount: pending.totalPrice,
+            method: pending.paymentMethod,
+            status: "Paid",
+            packageName: pending.packageName,
+          },
+          withUserHeader(actingUserId)
+        )
+
+        setApprovalAction("booking")
+        setApprovalMessage("Booking Successful")
+        setLatestBooking(bookingRes.data)
+        setActiveModal("approval")
+      } catch (error) {
+        Alert.alert("Payment received", error.response?.data?.message || "Unable to finalize booking. Please contact support.")
+      } finally {
+        window.localStorage.removeItem(pendingBookingStorageKey)
+        setHasHandledPaymentCallback(true)
+        clearCallbackParams()
+        setIsSubmittingPayment(false)
+      }
+    }
+
+    finalizeAfterSuccess()
+  }, [hasHandledPaymentCallback, user?._id])
 
   const getModalTitle = () => {
-    if (activeModal === "date") return "Choose Date"
+    if (activeModal === "arrangement") return "Choose Package Type"
+    if (activeModal === "quotation") return pkg.isInternational ? "Package Quotation" : "Domestic Package Quotation"
     if (activeModal === "available") return "Available Dates"
-    if (activeModal === "allin") return "ALL IN OR LAND"
-    if (activeModal === "fixed") return "FIXED OR CUSTOMIZED"
     if (activeModal === "solo") return "SOLO OR GROUPED"
     if (activeModal === "travelers") return "Travelers"
-    if (activeModal === "customize") return "Customize"
-    if (activeModal === "addons") return "Add-ons"
     if (activeModal === "summary") return "Booking Summary"
+    if (activeModal === "registration") return "Booking Registration"
+    if (activeModal === "passport") return "Upload Passport"
+    if (activeModal === "invoice") return "Booking Invoice"
     if (activeModal === "payment") return "Payment"
-    if (activeModal === "approval") return "Booking for Approval"
+    if (activeModal === "approval") return "Confirmation"
     return ""
   }
 
   const startAvailability = () => {
-    setActiveModal(pkg.isInternational ? "available" : "date")
+    const initialTravelers = totalTravelers || 1
+    setArrangementType("")
+    setQuotationNotes("")
+    setQuotationTravelers(initialTravelers)
+    setQuotationTravelersInput(String(initialTravelers))
+    setQuotationBudgetMin(10000)
+    setQuotationBudgetMax(60000)
+    setQuotationItineraryNotes({})
+    setQuotationAdditionalComments("")
+    setQuotationSubmitError("")
+    setSelectedOption("")
+    setLatestBooking(null)
+    setActiveModal("arrangement")
+  }
+
+  const submitQuotationRequest = async () => {
+    setQuotationSubmitError("")
+
+    if (!user?._id) {
+      setQuotationSubmitError("Please login first to request a quotation.")
+      Alert.alert("Login required", "Please login first to request a quotation.", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("login"),
+        },
+      ])
+      return
+    }
+
+    setIsSubmittingQuotation(true)
+
+    try {
+      const parsedTravelers = Number((quotationTravelersInput || "").replace(/[^0-9]/g, ""))
+      const finalTravelers = Number.isFinite(parsedTravelers) ? parsedTravelers : 0
+
+      if (!finalTravelers || finalTravelers < 1) {
+        setQuotationSubmitError("Please enter the number of travelers.")
+        Alert.alert("Validation", "Please enter the number of travelers.")
+        setIsSubmittingQuotation(false)
+        return
+      }
+
+      setQuotationTravelers(finalTravelers)
+      setQuotationTravelersInput(String(finalTravelers))
+
+      if (quotationBudgetMin <= 0 || quotationBudgetMax <= 0 || quotationBudgetMax < quotationBudgetMin) {
+        setQuotationSubmitError("Please enter a valid budget range.")
+        Alert.alert("Validation", "Please enter a valid budget range.")
+        setIsSubmittingQuotation(false)
+        return
+      }
+
+      if (!arrangementType) {
+        setQuotationSubmitError("Please choose a package type first.")
+        Alert.alert("Validation", "Please choose a package type first.")
+        setIsSubmittingQuotation(false)
+        return
+      }
+
+      const resolvedPackageId = String(pkg?.id || pkg?._id || pkg?.packageId || "").trim()
+      const resolvedPackageName = String(pkg?.title || pkg?.packageName || "").trim()
+
+      if (!resolvedPackageId || !resolvedPackageName) {
+        setQuotationSubmitError("Package details are incomplete. Please reopen this package.")
+        Alert.alert("Validation", "Package details are incomplete. Please reopen this package.")
+        setIsSubmittingQuotation(false)
+        return
+      }
+
+      const preferredAirlines = (airline || "").trim() || "NONE"
+      const preferredHotels = (hotel || "").trim() || "NONE"
+
+      const itineraryNotesPayload = itineraryDayLabels.map((label, index) => {
+        const noteValue = (quotationItineraryNotes[index] || "").trim()
+        return noteValue || "NONE"
+      })
+
+      await api.post(
+        "/quotation/create-quotation",
+        {
+          packageId: resolvedPackageId,
+          packageName: resolvedPackageName,
+          travelDetails: {
+            arrangementType,
+            travelDate: pkg.isInternational ? availableDateId : selectedDate,
+            travelers: finalTravelers,
+            preferredAirlines,
+            preferredHotels,
+            budgetRange: [quotationBudgetMin, quotationBudgetMax],
+            itineraryNotes: itineraryNotesPayload,
+            fixedItinerary: itineraryDayLabels,
+            additionalComments: quotationAdditionalComments,
+            notes: quotationNotes,
+          },
+        },
+        withUserHeader(user._id)
+      )
+
+      setApprovalAction("quotation")
+      setApprovalMessage("Quotation submitted. Admin will receive your request.")
+      setActiveModal(null)
+      setQuotationSuccessVisible(true)
+    } catch (error) {
+      const serverMessage = error.response?.data?.message
+      const networkMessage = error.message
+      setQuotationSubmitError(serverMessage || networkMessage || "Unable to submit quotation request")
+      Alert.alert(
+        "Error",
+        serverMessage || networkMessage || "Unable to submit quotation request"
+      )
+    } finally {
+      setIsSubmittingQuotation(false)
+    }
+  }
+
+  const processBookingPayment = async () => {
+    if (isSubmittingPayment) return
+
+    if (!user?._id) {
+      Alert.alert("Login required", "Please login first to continue booking.")
+      return
+    }
+
+    if (!selectedOption) {
+      Alert.alert("Payment required", "Please select a payment method.")
+      return
+    }
+
+    const numericPricePerPax = Number(pkg.packagePricePerPax) || toNumber(pkg.price) || 0
+    const travelerCount = totalTravelers || 1
+    const totalPrice = numericPricePerPax * travelerCount
+    const travelDate = pkg.isInternational ? availableDateId : selectedDate
+
+    const bookingDetails = {
+      packageName: pkg.title,
+      travelDate,
+      arrangement: arrangementType,
+      groupType: soloGrouped,
+      travelers: travelerCount,
+      travelerBreakdown: travelers,
+      preferredAirlines: airline,
+      preferredHotels: hotel,
+      registration,
+      passportUpload,
+      paymentMethod: selectedOption,
+      pricePerPax: numericPricePerPax,
+      totalPrice,
+      paidAmount: totalPrice,
+    }
+
+    setIsSubmittingPayment(true)
+
+    try {
+      const tokenRes = await api.post(
+        "/payment/create-checkout-token",
+        { totalPrice },
+        withUserHeader(user._id)
+      )
+
+      const checkoutToken = tokenRes.data?.token
+
+      const sessionRes = await api.post(
+        "/payment/create-checkout-session",
+        {
+          checkoutToken,
+          totalPrice,
+          packageName: pkg.title,
+          travelersCount: travelerCount,
+          successUrl:
+            Platform.OS === "web" && typeof window !== "undefined"
+              ? `${window.location.origin}/packagedetails?booking=success&checkoutToken=${encodeURIComponent(checkoutToken || "")}`
+              : "https://example.com/payment-success",
+          cancelUrl:
+            Platform.OS === "web" && typeof window !== "undefined"
+              ? `${window.location.origin}/packagedetails?booking=cancel`
+              : "https://example.com/payment-cancel",
+        },
+        withUserHeader(user._id)
+      )
+
+      const checkoutUrl = sessionRes.data?.data?.attributes?.checkout_url
+      if (!checkoutUrl) {
+        setIsSubmittingPayment(false)
+        Alert.alert("Error", "Unable to redirect to PayMongo checkout.")
+        return
+      }
+
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.localStorage.setItem(
+          pendingBookingStorageKey,
+          JSON.stringify({
+            userId: user._id,
+            packageId: pkg.id,
+            bookingDetails,
+            checkoutToken,
+            totalPrice,
+            paymentMethod: selectedOption,
+            packageName: pkg.title,
+          })
+        )
+
+        window.location.href = checkoutUrl
+        return
+      }
+
+      await Linking.openURL(checkoutUrl)
+      setIsSubmittingPayment(false)
+    } catch (error) {
+      setIsSubmittingPayment(false)
+      Alert.alert("Error", error.response?.data?.message || "Unable to proceed to payment")
+    }
   }
 
   const nextModal = () => {
-    if (activeModal === "date" || activeModal === "available") {
-      setActiveModal("allin")
+    if (activeModal === "arrangement") {
+      if (!arrangementType) {
+        Alert.alert("Selection required", "Please choose a package type.")
+        return
+      }
+
+      if (!pkg.isInternational) {
+        setActiveModal("quotation")
+        return
+      }
+
+      if (arrangementType === "all-in") {
+        setActiveModal("available")
+        return
+      }
+
+      setActiveModal("quotation")
       return
     }
-    if (activeModal === "allin") {
-      setActiveModal("fixed")
+
+    if (activeModal === "quotation") {
+      if (isSubmittingQuotation) return
+      submitQuotationRequest()
       return
     }
-    if (activeModal === "fixed") {
+
+    if (activeModal === "available") {
       setActiveModal("solo")
       return
     }
+
     if (activeModal === "solo") {
       if (soloGrouped === "solo") {
         setTravelers(defaultTravelers)
-        setActiveModal("addons")
+        setActiveModal("summary")
       } else {
         setActiveModal("travelers")
       }
       return
     }
+
     if (activeModal === "travelers") {
-      if (fixedCustom === "custom") {
-        setActiveModal("customize")
-      } else {
-        setActiveModal("addons")
-      }
-      return
-    }
-    if (activeModal === "customize") {
-      if (fixedCustom === "custom") {
-        setActiveModal("addons")
-      } else {
-        setActiveModal("addons")
-      }
-      return
-    }
-    if (activeModal === "addons") {
       setActiveModal("summary")
       return
     }
+
     if (activeModal === "summary") {
+      setActiveModal("registration")
+      return
+    }
+
+    if (activeModal === "registration") {
+      if (!registration.fullName || !registration.email || !registration.phone) {
+        Alert.alert("Missing details", "Please complete your registration details.")
+        return
+      }
+
+      if (pkg.isInternational && arrangementType === "all-in") {
+        setActiveModal("passport")
+        return
+      }
+
+      setActiveModal("invoice")
+      return
+    }
+
+    if (activeModal === "passport") {
+      if (!passportUpload.passportNumber) {
+        Alert.alert("Passport required", "Please provide passport number.")
+        return
+      }
+      setActiveModal("invoice")
+      return
+    }
+
+    if (activeModal === "invoice") {
       setActiveModal("payment")
       return
     }
+
     if (activeModal === "payment") {
-      setActiveModal("approval")
+      processBookingPayment()
       return
     }
+
     if (activeModal === "approval") {
       setActiveModal(null)
     }
@@ -341,39 +798,57 @@ export default function PackageDetails({ route }) {
     if (activeModal === "approval") {
       return
     }
-    if (activeModal === "summary") {
-      setActiveModal("addons")
+
+    if (activeModal === "payment") {
+      setActiveModal("invoice")
       return
     }
-    if (activeModal === "addons") {
-      if (fixedCustom === "custom") {
-        setActiveModal("customize")
-      } else {
-        setActiveModal(soloGrouped === "solo" ? "solo" : "travelers")
+
+    if (activeModal === "invoice") {
+      if (pkg.isInternational && arrangementType === "all-in") {
+        setActiveModal("passport")
+        return
       }
+      setActiveModal("registration")
       return
     }
-    if (activeModal === "customize") {
-      setActiveModal("travelers")
+
+    if (activeModal === "passport") {
+      setActiveModal("registration")
       return
     }
+
+    if (activeModal === "registration") {
+      setActiveModal("summary")
+      return
+    }
+
+    if (activeModal === "summary") {
+      setActiveModal(soloGrouped === "solo" ? "solo" : "travelers")
+      return
+    }
+
     if (activeModal === "travelers") {
       setActiveModal("solo")
       return
     }
+
     if (activeModal === "solo") {
-      setActiveModal("fixed")
+      setActiveModal("available")
       return
     }
-    if (activeModal === "fixed") {
-      setActiveModal("allin")
+
+    if (activeModal === "available") {
+      setActiveModal("arrangement")
       return
     }
-    if (activeModal === "allin") {
-      setActiveModal(pkg.isInternational ? "available" : "date")
+
+    if (activeModal === "quotation") {
+      setActiveModal("arrangement")
       return
     }
-    if (activeModal === "date" || activeModal === "available") {
+
+    if (activeModal === "arrangement") {
       setActiveModal(null)
     }
   }
@@ -513,19 +988,29 @@ export default function PackageDetails({ route }) {
         <View style={DestinationStyles.sectionBody}>
           {activeTab === "itinerary" && (
             <>
-              <Text style={DestinationStyles.sectionTitle}>DAY 1</Text>
-              <Text style={DestinationStyles.sectionText}>
-                Arrive at the Destination and Check-in to the Hotel
-              </Text>
+                  {pkg.packageItineraries.length ? (
+                    pkg.packageItineraries.map((line, index) => (
+                      <View key={`itinerary-${index}`} style={{ marginBottom: 8 }}>
+                        <Text style={DestinationStyles.sectionTitle}>DAY {index + 1}</Text>
+                        <Text style={DestinationStyles.sectionText}>{line}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <>
+                      <Text style={DestinationStyles.sectionTitle}>DAY 1</Text>
+                      <Text style={DestinationStyles.sectionText}>
+                        Arrive at the Destination and Check-in to the Hotel
+                      </Text>
+                    </>
+                  )}
             </>
           )}
           {activeTab === "inclusions" && (
             <>
               <Text style={DestinationStyles.sectionTitle}>INCLUSIONS AND EXCLUSIONS</Text>
               <Text style={DestinationStyles.sectionText}>
-
-                Inclusions: Breakfast Buffet
-                Exclusions: Tips for the Tour Guide
+                Inclusions: {pkg.packageInclusions.length ? pkg.packageInclusions.join(", ") : "Breakfast Buffet"}{"\n"}
+                Exclusions: {pkg.packageExclusions.length ? pkg.packageExclusions.join(", ") : "Tips for the Tour Guide"}
               </Text>
             </>
           )}
@@ -533,7 +1018,9 @@ export default function PackageDetails({ route }) {
             <>
               <Text style={DestinationStyles.sectionTitle}>TERMS AND CONDITIONS</Text>
               <Text style={DestinationStyles.sectionText}>
-                No late cancellations
+                {pkg.packageTermsConditions.length
+                  ? pkg.packageTermsConditions.join("\n")
+                  : "No late cancellations"}
               </Text>
             </>
           )}
@@ -619,7 +1106,175 @@ export default function PackageDetails({ route }) {
               </TouchableOpacity>
             </View>
 
-            <View style={DestinationStyles.modalBody}>
+            <ScrollView
+              style={DestinationStyles.modalBody}
+              contentContainerStyle={DestinationStyles.modalBodyContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {activeModal === "arrangement" && (
+                <>
+                  {pkg.isInternational ? (
+                    <>
+                      <SelectableCard
+                        selected={arrangementType === "all-in"}
+                        onPress={() => setArrangementType("all-in")}
+                        image={modalContent.allIn.image}
+                        title="All in Package"
+                        text="Proceed directly to available dates and booking steps."
+                      />
+                      <SelectableCard
+                        selected={arrangementType === "custom-all-in"}
+                        onPress={() => setArrangementType("custom-all-in")}
+                        image={modalContent.custom.image}
+                        title="Customized All in Package"
+                        text="Send a quotation request for a customized all-in package."
+                      />
+                      <SelectableCard
+                        selected={arrangementType === "custom-land"}
+                        onPress={() => setArrangementType("custom-land")}
+                        image={modalContent.land.image}
+                        title="Customized Land Arrangement"
+                        text="Send a quotation request for a customized land arrangement."
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <SelectableCard
+                        selected={arrangementType === "custom-all-in"}
+                        onPress={() => setArrangementType("custom-all-in")}
+                        image={modalContent.custom.image}
+                        title="Customized All in Package"
+                        text="Send a domestic package quotation request to admin."
+                      />
+                      <SelectableCard
+                        selected={arrangementType === "custom-land"}
+                        onPress={() => setArrangementType("custom-land")}
+                        image={modalContent.land.image}
+                        title="Customized Land Arrangement"
+                        text="Send a domestic package quotation request to admin."
+                      />
+                    </>
+                  )}
+                </>
+              )}
+
+              {activeModal === "quotation" && (
+                <View style={DestinationStyles.modalBox}>
+                  <Text style={DestinationStyles.quotationIntro}>
+                    Kindly input your preferences and requests so that we can tailor your customized package.
+                  </Text>
+
+                  <View style={DestinationStyles.quotationRow}>
+                    <View style={DestinationStyles.quotationHalf}>
+                      <Text style={DestinationStyles.quotationLabel}>NUMBER OF TRAVELERS</Text>
+                      <TextInput
+                        style={DestinationStyles.quotationInput}
+                        keyboardType="number-pad"
+                        value={quotationTravelersInput}
+                        onChangeText={(value) => {
+                          const digitsOnly = value.replace(/[^0-9]/g, "")
+                          setQuotationTravelersInput(digitsOnly)
+                          if (digitsOnly) {
+                            setQuotationTravelers(Number(digitsOnly))
+                          }
+                        }}
+                      />
+                    </View>
+                    <View style={DestinationStyles.quotationHalf}>
+                      <Text style={DestinationStyles.quotationLabel}>PREFERRED AIRLINES</Text>
+                      <TextInput
+                        style={DestinationStyles.quotationInput}
+                        placeholder="Provide airline preferences"
+                        value={airline}
+                        onChangeText={setAirline}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={DestinationStyles.quotationSectionGap}>
+                    <Text style={DestinationStyles.quotationLabel}>PREFERRED HOTELS</Text>
+                    <TextInput
+                      style={DestinationStyles.quotationInput}
+                      placeholder="Provide hotel preferences"
+                      value={hotel}
+                      onChangeText={setHotel}
+                    />
+                  </View>
+
+                  <View style={DestinationStyles.quotationSectionGap}>
+                    <Text style={DestinationStyles.quotationLabel}>BUDGET RANGE (PER PAX)</Text>
+                    <View style={DestinationStyles.quotationBudgetValues}>
+                      <Text style={DestinationStyles.quotationBudgetValue}>₱ {quotationBudgetMin.toLocaleString()}</Text>
+                      <Text style={DestinationStyles.quotationBudgetValue}>₱ {quotationBudgetMax.toLocaleString()}</Text>
+                    </View>
+                    <View style={DestinationStyles.quotationRow}>
+                      <TextInput
+                        style={[DestinationStyles.quotationInput, DestinationStyles.quotationHalf]}
+                        keyboardType="number-pad"
+                        placeholder="Min"
+                        value={String(quotationBudgetMin)}
+                        onChangeText={(value) => setQuotationBudgetMin(Number(value.replace(/[^0-9]/g, "")) || 0)}
+                      />
+                      <TextInput
+                        style={[DestinationStyles.quotationInput, DestinationStyles.quotationHalf]}
+                        keyboardType="number-pad"
+                        placeholder="Max"
+                        value={String(quotationBudgetMax)}
+                        onChangeText={(value) => setQuotationBudgetMax(Number(value.replace(/[^0-9]/g, "")) || 0)}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={DestinationStyles.quotationItineraryCard}>
+                    <Text style={DestinationStyles.modalSubTitle}>Fixed Itinerary</Text>
+                    <View style={DestinationStyles.quotationItineraryGrid}>
+                      {itineraryDayLabels.map((label, index) => (
+                        <View key={label} style={DestinationStyles.quotationItineraryItem}>
+                          <Text style={DestinationStyles.quotationItineraryDay}>{label}</Text>
+                          <Text style={DestinationStyles.summaryText}>• {index + 1}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <Text style={DestinationStyles.modalSubTitle}>Itinerary Notes</Text>
+                  <View style={DestinationStyles.quotationNotesGrid}>
+                    {itineraryDayLabels.map((label, index) => (
+                      <View
+                        key={`note-${label}`}
+                        style={itineraryDayLabels.length === 1 ? DestinationStyles.quotationNotesItemFull : DestinationStyles.quotationNotesItem}
+                      >
+                        <Text style={DestinationStyles.modalSubTitle}>{label.toUpperCase()}</Text>
+                        <TextInput
+                          style={DestinationStyles.quotationTextArea}
+                          placeholder={`Notes for ${label}. Type 'NONE' if no changes`}
+                          multiline
+                          value={quotationItineraryNotes[index] || ""}
+                          onChangeText={(value) =>
+                            setQuotationItineraryNotes((prev) => ({
+                              ...prev,
+                              [index]: value,
+                            }))
+                          }
+                        />
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={DestinationStyles.quotationSectionGap}>
+                    <Text style={DestinationStyles.quotationLabel}>ADDITIONAL COMMENTS</Text>
+                    <TextInput
+                      style={DestinationStyles.quotationTextArea}
+                      placeholder="Anything else we should know?"
+                      multiline
+                      value={quotationAdditionalComments}
+                      onChangeText={setQuotationAdditionalComments}
+                    />
+                  </View>
+                </View>
+              )}
+
               {activeModal === "date" && (
                 <>
                   <View style={DestinationStyles.calendarBox}>
@@ -660,7 +1315,7 @@ export default function PackageDetails({ route }) {
 
               {activeModal === "available" && (
                 <>
-                  {modalContent.availableDates.map((option) => (
+                  {availableDates.map((option) => (
                     <TouchableOpacity
                       key={option.id}
                       style={DestinationStyles.cardOption}
@@ -706,8 +1361,8 @@ export default function PackageDetails({ route }) {
                     selected={fixedCustom === "fixed"}
                     onPress={() => {
                       setFixedCustom("fixed")
-                      setAirline(modalContent.customize.airline)
-                      setHotel(modalContent.customize.hotel)
+                      setAirline(defaultAirline)
+                      setHotel(defaultHotel)
                     }}
                     image={modalContent.fixed.image}
                     title={modalContent.fixed.title}
@@ -892,13 +1547,10 @@ export default function PackageDetails({ route }) {
                 <View style={DestinationStyles.modalBox}>
                   <Text style={DestinationStyles.summaryText}>Package: {pkg.title}</Text>
                   <Text style={DestinationStyles.summaryText}>
-                    Date: {pkg.isInternational ? "Jan. 21" : selectedDate}
+                    Date: {pkg.isInternational ? availableDateId : selectedDate}
                   </Text>
                   <Text style={DestinationStyles.summaryText}>
-                    All in or Land: {allInLand === "all-in" ? "All in" : "Land"}
-                  </Text>
-                  <Text style={DestinationStyles.summaryText}>
-                    Fixed or Custom: {fixedCustom === "fixed" ? "Fixed" : "Custom"}
+                    Arrangement: {arrangementType}
                   </Text>
                   <Text style={DestinationStyles.summaryText}>
                     Solo or Grouped: {soloGrouped === "solo" ? "Solo" : "Grouped"}
@@ -909,13 +1561,80 @@ export default function PackageDetails({ route }) {
                   <Text style={DestinationStyles.summaryText}>Airlines: {airline}</Text>
                   <Text style={DestinationStyles.summaryText}>Hotel: {hotel}</Text>
                   <Text style={DestinationStyles.summaryText}>
-                    Flight Add-ons: {addons.length} selected
-                  </Text>
-                  <Text style={DestinationStyles.summaryText}>
-                    Optional Tours: {tours.length} selected
+                    Estimated Total: ₱{((Number(pkg.packagePricePerPax) || 0) * (totalTravelers || 1)).toLocaleString()}
                   </Text>
                   <Text style={DestinationStyles.summaryWarning}>
                     MUST READ! Please double check everything before confirming.
+                  </Text>
+                </View>
+              )}
+
+              {activeModal === "registration" && (
+                <View style={DestinationStyles.modalBox}>
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Full Name"
+                    value={registration.fullName}
+                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, fullName: value }))}
+                  />
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={registration.email}
+                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, email: value }))}
+                  />
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Phone Number"
+                    keyboardType="phone-pad"
+                    value={registration.phone}
+                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, phone: value }))}
+                  />
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Passport Number (optional)"
+                    value={registration.passportNumber}
+                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, passportNumber: value }))}
+                  />
+                </View>
+              )}
+
+              {activeModal === "passport" && (
+                <View style={DestinationStyles.modalBox}>
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Passport Number"
+                    value={passportUpload.passportNumber}
+                    onChangeText={(value) => setPassportUpload((prev) => ({ ...prev, passportNumber: value }))}
+                  />
+                  <TextInput
+                    style={DestinationStyles.reviewInput}
+                    placeholder="Passport File URL (optional)"
+                    value={passportUpload.passportFileUrl}
+                    onChangeText={(value) => setPassportUpload((prev) => ({ ...prev, passportFileUrl: value }))}
+                    autoCapitalize="none"
+                  />
+                  <Text style={DestinationStyles.summaryText}>
+                    Provide passport details before continuing to invoice.
+                  </Text>
+                </View>
+              )}
+
+              {activeModal === "invoice" && (
+                <View style={DestinationStyles.modalBox}>
+                  <Text style={DestinationStyles.summaryText}>Reference: To be generated after payment</Text>
+                  <Text style={DestinationStyles.summaryText}>Package: {pkg.title}</Text>
+                  <Text style={DestinationStyles.summaryText}>
+                    Travel Date: {pkg.isInternational ? availableDateId : selectedDate}
+                  </Text>
+                  <Text style={DestinationStyles.summaryText}>Traveler Count: {totalTravelers || 1}</Text>
+                  <Text style={DestinationStyles.summaryText}>
+                    Price Per Pax: ₱{(Number(pkg.packagePricePerPax) || 0).toLocaleString()}
+                  </Text>
+                  <Text style={DestinationStyles.summaryText}>
+                    Total: ₱{((Number(pkg.packagePricePerPax) || 0) * (totalTravelers || 1)).toLocaleString()}
                   </Text>
                 </View>
               )}
@@ -976,7 +1695,7 @@ export default function PackageDetails({ route }) {
                     <View style={DestinationStyles.paymentDivider} />
 
                     <Text style={DestinationStyles.paymentSummaryAmount}>
-                      {pkg.price}
+                      ₱{((Number(pkg.packagePricePerPax) || 0) * (totalTravelers || 1)).toLocaleString()}
                     </Text>
 
                     <Text style={DestinationStyles.paymentSummarySubtext}>
@@ -991,25 +1710,56 @@ export default function PackageDetails({ route }) {
                   <View style={DestinationStyles.approvalIcon}>
                     <Ionicons name="checkmark" size={28} color="#fff" />
                   </View>
-                  <Text style={DestinationStyles.approvalText}>Booking Successful</Text>
+                  <Text style={DestinationStyles.approvalText}>{approvalMessage}</Text>
                 </View>
               )}
-            </View>
+            </ScrollView>
 
             {activeModal !== "approval" && (
               <View style={DestinationStyles.modalButtonRow}>
-                <TouchableOpacity style={DestinationStyles.primaryButton} onPress={nextModal}>
-                  <Text style={DestinationStyles.primaryText}>Proceed</Text>
+                <TouchableOpacity
+                  style={DestinationStyles.primaryButton}
+                  onPress={activeModal === "quotation" ? submitQuotationRequest : nextModal}
+                  disabled={isSubmittingQuotation || isSubmittingPayment}
+                >
+                  <Text style={DestinationStyles.primaryText}>
+                    {isSubmittingQuotation || isSubmittingPayment
+                      ? "Processing..."
+                      : activeModal === "quotation"
+                        ? "Submit Request"
+                        : "Proceed"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={DestinationStyles.dangerButton} onPress={prevModal}>
-                  <Text style={DestinationStyles.primaryText}>Back</Text>
+                  <Text style={DestinationStyles.primaryText}>
+                    {activeModal === "quotation" ? "Cancel" : "Back"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
 
+            {activeModal === "quotation" && !!quotationSubmitError && (
+              <Text style={{ color: "#c62828", fontSize: 12, marginTop: 6 }}>{quotationSubmitError}</Text>
+            )}
+
             {activeModal === "approval" && (
               <View style={DestinationStyles.modalButtonRow}>
-                <TouchableOpacity style={DestinationStyles.primaryButton} onPress={closeModal}>
+                <TouchableOpacity
+                  style={DestinationStyles.primaryButton}
+                  onPress={() => {
+                    closeModal()
+                    if (approvalAction === "quotation") {
+                      navigation.navigate("userquotations")
+                      return
+                    }
+
+                    if (latestBooking) {
+                      navigation.navigate("bookinginvoice", { booking: latestBooking })
+                      return
+                    }
+                    navigation.navigate("userbookings")
+                  }}
+                >
                   <Text style={DestinationStyles.primaryText}>Done</Text>
                 </TouchableOpacity>
               </View>
@@ -1070,7 +1820,41 @@ export default function PackageDetails({ route }) {
         </View>
       </Modal>
 
+      <Modal
+        transparent
+        animationType='fade'
+        visible={isQuotationSuccessVisible}
+        onRequestClose={() => setQuotationSuccessVisible(false)}
+      >
+        <View style={ModalStyle.modalOverlay}>
+          <View style={[ModalStyle.modalBox, { width: 330, alignItems: 'stretch', padding: 16 }]}> 
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[ModalStyle.modalTitle, { marginBottom: 6, fontSize: 20 }]}>Package Quotation Submitted</Text>
+              <TouchableOpacity onPress={() => setQuotationSuccessVisible(false)}>
+                <Ionicons name="close" size={18} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[ModalStyle.modalText, { textAlign: 'left', marginBottom: 14, fontSize: 12 }]}>Your package quotation request has been submitted successfully. Please wait for your quotation to be generated.</Text>
+
+            <View style={{ alignItems: 'flex-end' }}>
+              <TouchableOpacity
+                style={[ModalStyle.modalButton, { width: 52, height: 34, paddingVertical: 0, borderRadius: 8 }]}
+                onPress={() => {
+                  setQuotationSuccessVisible(false)
+                  setActiveModal(null)
+                }}
+              >
+                <Text style={[ModalStyle.modalButtonText, { fontSize: 13 }]}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
 
     </View>
   )
 }
+
+const pendingBookingStorageKey = "capsapp_pending_package_booking"

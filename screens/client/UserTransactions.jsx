@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -8,11 +8,15 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-googl
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import UserTransactionStyle from '../../styles/clientstyles/UserTransactionStyle'
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
 
 export default function UserTransactions() {
 
     const cs = useNavigation()
+    const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [searchText, setSearchText] = useState('')
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -23,9 +27,37 @@ export default function UserTransactions() {
         Roboto_700Bold
     })
 
-    const [getTransac, setTransac] = useState([
-        { id: "1", ref: "TR-0001", package: "Boracay Tour", status: "Paid", date: "09-14-2026", amount: 70000 },
-    ])
+    const [getTransac, setTransac] = useState([])
+
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            if (!user?._id) {
+                setTransac([])
+                return
+            }
+
+            try {
+                const response = await api.get('/transaction/my-transactions', withUserHeader(user._id))
+                setTransac(response.data || [])
+            } catch (_error) {
+                setTransac([])
+            }
+        }
+
+        fetchTransactions()
+    }, [user?._id])
+
+    const filteredTransactions = useMemo(() => {
+        if (!searchText.trim()) return getTransac
+        const text = searchText.trim().toLowerCase()
+
+        return getTransac.filter((item) => {
+            const packageName = item.packageName?.toLowerCase() || ''
+            const status = item.status?.toLowerCase() || ''
+            const bookingRef = item.bookingId?.reference?.toLowerCase() || ''
+            return packageName.includes(text) || status.includes(text) || bookingRef.includes(text)
+        })
+    }, [getTransac, searchText])
 
     return (
         <View style={{ flex: 1 }}>
@@ -45,6 +77,8 @@ export default function UserTransactions() {
                             style={UserTransactionStyle.searchInput}
                             placeholder='Search transaction'
                             placeholderTextColor="#777"
+                            value={searchText}
+                            onChangeText={setSearchText}
                         />
                     </View>
 
@@ -61,25 +95,25 @@ export default function UserTransactions() {
                 </View>
 
 
-                {getTransac.map((item) => (
-                    <View key={item.id} style={UserTransactionStyle.transactionCard}>
+                {filteredTransactions.map((item) => (
+                    <View key={item._id} style={UserTransactionStyle.transactionCard}>
 
                         <View style={UserTransactionStyle.cardHeader}>
-                            <Text style={UserTransactionStyle.transactionRef}>{item.ref}</Text>
+                            <Text style={UserTransactionStyle.transactionRef}>{item.bookingId?.reference || item._id}</Text>
                             <Text style={[
                                 UserTransactionStyle.transactionStatus,
-                                item.status === "Paid" ? { color: "#2ecc71" } : { color: "#f1c40f" }
+                                item.status === "Successful" ? { color: "#2ecc71" } : { color: "#f1c40f" }
                             ]}>
                                 {item.status}
                             </Text>
                         </View>
 
                         <View style={UserTransactionStyle.cardBody}>
-                            <Text style={UserTransactionStyle.packageName}>{item.package}</Text>
+                            <Text style={UserTransactionStyle.packageName}>{item.packageName}</Text>
 
                             <View style={UserTransactionStyle.detailRow}>
                                 <Text style={UserTransactionStyle.detailLabel}>Date:</Text>
-                                <Text style={UserTransactionStyle.detailValue}>{item.date}</Text>
+                                <Text style={UserTransactionStyle.detailValue}>{new Date(item.createdAt).toLocaleDateString()}</Text>
                             </View>
 
                             <View style={UserTransactionStyle.detailRow}>
@@ -90,7 +124,7 @@ export default function UserTransactions() {
 
                         <TouchableOpacity
                             style={UserTransactionStyle.viewButton}
-                            onPress={() => cs.navigate("transactionreceipt")}
+                            onPress={() => cs.navigate("bookinginvoice", { booking: item.bookingId })}
                         >
                             <Text style={UserTransactionStyle.buttonText}>View Receipt</Text>
                         </TouchableOpacity>

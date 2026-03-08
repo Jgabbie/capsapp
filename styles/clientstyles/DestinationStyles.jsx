@@ -297,8 +297,9 @@ const DestinationStyles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 14,
     padding: 14,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#305797",
+    maxHeight: "92%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -312,6 +313,10 @@ const DestinationStyles = StyleSheet.create({
   },
   modalBody: {
     marginTop: 12,
+    maxHeight: "76%",
+  },
+  modalBodyContent: {
+    paddingBottom: 8,
   },
   modalBox: {
     borderWidth: 2,
@@ -495,6 +500,92 @@ const DestinationStyles = StyleSheet.create({
     fontSize: 10,
     color: "#b91c1c",
     textAlign: "center",
+    marginTop: 8,
+  },
+  quotationIntro: {
+    fontSize: 12,
+    color: "#5b6472",
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  quotationRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+  quotationHalf: {
+    flex: 1,
+  },
+  quotationLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#305797",
+    marginBottom: 6,
+  },
+  quotationInput: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+    color: "#1f2937",
+    backgroundColor: "#fff",
+  },
+  quotationTextArea: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 84,
+    color: "#1f2937",
+    backgroundColor: "#fff",
+    textAlignVertical: "top",
+  },
+  quotationBudgetValues: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  quotationBudgetValue: {
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: "600",
+  },
+  quotationItineraryCard: {
+    backgroundColor: "#eef2f8",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  quotationItineraryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 10,
+  },
+  quotationItineraryItem: {
+    width: "50%",
+    paddingRight: 8,
+  },
+  quotationItineraryDay: {
+    fontWeight: "700",
+    color: "#305797",
+    marginBottom: 2,
+  },
+  quotationNotesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 10,
+    columnGap: 8,
+  },
+  quotationNotesItem: {
+    width: "48%",
+  },
+  quotationNotesItemFull: {
+    width: "100%",
+  },
+  quotationSectionGap: {
     marginTop: 8,
   },
   approvalCard: {
