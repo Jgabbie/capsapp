@@ -53,7 +53,7 @@ export default function Wishlist() {
                             <Ionicons name="search" size={16} />
                             <TextInput
                                 style={WishlistStyle.searchInput}
-                                placeholder="Search packages"
+                                placeholder="Search Packages"
                                 placeholderTextColor="#777"
                             />
                         </View>

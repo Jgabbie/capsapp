@@ -29,7 +29,7 @@ import PassportApplications from './screens/admin/PassportApplications';
 import VisaApplications from './screens/admin/VisaApplications';
 import Logging from './screens/admin/Logging';
 import Auditing from './screens/admin/Auditing';
-
+import AddPackages from './screens/admin/AddPackages';
 
 
 
@@ -40,7 +40,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <MyScreen.Navigator initialRouteName='visaguidance' screenOptions={{ headerShown: false }}>
+      <MyScreen.Navigator initialRouteName='admindashboard' screenOptions={{ headerShown: false }}>
 
 
         <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
@@ -70,7 +70,7 @@ export default function App() {
         <MyScreen.Screen name="visaapplications" component={VisaApplications} options={{ headerShown: false }} />
         <MyScreen.Screen name="logging" component={Logging} options={{ headerShown: false }} />
         <MyScreen.Screen name="auditing" component={Auditing} options={{ headerShown: false }} />
-
+        <MyScreen.Screen name="addpackages" component={AddPackages} options={{ headerShown: false }} />
 
       </MyScreen.Navigator>
     </NavigationContainer >
