@@ -42,7 +42,7 @@ export default function PassportGuidance() {
                         </Text>
                         <TouchableOpacity style={PassportGuidanceStyle.applyButton}
                             onPress={() => {
-                                cs.navigate("passportnewguidance")
+                                cs.navigate("passportguidancenew")
                             }}
                         >
                             <Text style={PassportGuidanceStyle.applyText}>Apply</Text>
@@ -60,7 +60,7 @@ export default function PassportGuidance() {
                         </Text>
                         <TouchableOpacity style={PassportGuidanceStyle.applyButton}
                             onPress={() => {
-                                cs.navigate("passportrenewguidance")
+                                cs.navigate("passportguidancerenew")
                             }}
                         >
                             <Text style={PassportGuidanceStyle.applyText}>Apply</Text>

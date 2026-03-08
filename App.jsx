@@ -13,6 +13,8 @@ import UserBookings from './screens/client/UserBookings';
 import UserTransactions from './screens/client/UserTransactions';
 import PassportGuidance from './screens/client/PassportGuidance';
 import VisaGuidance from './screens/client/VisaGuidance';
+import PassportGuidanceReNew from './screens/client/PassportGuidanceReNew';
+import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
 
 import AdminDashboard from './screens/admin/AdminDashboard';
 import UserManagement from './screens/admin/UserManagement';
@@ -27,13 +29,15 @@ import Logging from './screens/admin/Logging';
 import Auditing from './screens/admin/Auditing';
 
 
+
+
 export default function App() {
 
   const MyScreen = createNativeStackNavigator()
 
   return (
     <NavigationContainer>
-      <MyScreen.Navigator initialRouteName='reviewmanagement' screenOptions={{ headerShown: false }}>
+      <MyScreen.Navigator initialRouteName='passportguidance' screenOptions={{ headerShown: false }}>
 
 
         <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
@@ -47,6 +51,8 @@ export default function App() {
         <MyScreen.Screen name="userbookings" component={UserBookings} options={{ headerShown: false }} />
         <MyScreen.Screen name="passportguidance" component={PassportGuidance} options={{ headerShown: false }} />
         <MyScreen.Screen name="visaguidance" component={VisaGuidance} options={{ headerShown: false }} />
+        <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} options={{ headerShown: false }} />
+        <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} options={{ headerShown: false }} />
 
         <MyScreen.Screen name="admindashboard" component={AdminDashboard} options={{ headerShown: false }} />
         <MyScreen.Screen name="usermanagement" component={UserManagement} options={{ headerShown: false }} />
