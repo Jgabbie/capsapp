@@ -18,10 +18,6 @@ import VisaGuidance from './screens/client/VisaGuidance';
 import UserQuotations from './screens/client/UserQuotations';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
-import VisaDetailsGuidance from './screens/client/VisaDetailsGuidance';
-import VisaProgress from './screens/client/VisaProgress';
-import PassportGuidanceReNew from './screens/client/PassportGuidanceReNew';
-import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
 
 import AdminDashboard from './screens/admin/AdminDashboard';
 import UserManagement from './screens/admin/UserManagement';
@@ -37,8 +33,6 @@ import Auditing from './screens/admin/Auditing';
 import QuotationManagement from './screens/admin/QuotationManagement';
 import QuotationDetailsAdmin from './screens/admin/QuotationDetailsAdmin';
 import { UserProvider, useUser } from './context/UserContext';
-
-const MyScreen = createNativeStackNavigator();
 
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
@@ -74,54 +68,56 @@ function AppNavigator() {
 
   const initialRouteName = resolveInitialRoute(isUsers);
 
+  const MyScreen = createNativeStackNavigator()
+
   return (
     <NavigationContainer>
       <MyScreen.Navigator initialRouteName={initialRouteName} screenOptions={{ headerShown: false }}>
-        <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
-        <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
 
-        {isUsers && (
-          <>
-            <MyScreen.Screen name="profile" component={Profile} options={{ headerShown: false }} />
-            <MyScreen.Screen name="home" component={Home} options={{ headerShown: false }} />
-            <MyScreen.Screen name="packages" component={Packages} options={{ headerShown: false }} />
-            <MyScreen.Screen name="packagedetails" component={PackageDetails} options={{ headerShown: false }} />
-            <MyScreen.Screen name="wishlist" component={Wishlist} options={{ headerShown: false }} />
-            <MyScreen.Screen name="usertransactions" component={UserTransactions} options={{ headerShown: false }} />
-            <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} options={{ headerShown: false }} />
-            <MyScreen.Screen name="userbookings" component={UserBookings} options={{ headerShown: false }} />
-            <MyScreen.Screen name="userquotations" component={UserQuotations} options={{ headerShown: false }} />
-            <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} options={{ headerShown: false }} />
-            <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} options={{ headerShown: false }} />
-            <MyScreen.Screen name="passportguidance" component={PassportGuidance} options={{ headerShown: false }} />
-            <MyScreen.Screen name="visaguidance" component={VisaGuidance} options={{ headerShown: false }} />
-            <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} options={{ headerShown: false }} />
-            <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} options={{ headerShown: false }} />
-            <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} options={{ headerShown: false }} />
-            <MyScreen.Screen name="visaprogress" component={VisaProgress} options={{ headerShown: false }} />
-          </>
-        )}
 
-        {isAdmin && (
-          <>
-            <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} options={{ headerShown: false }} />
-            <MyScreen.Screen name="admindashboard" component={AdminDashboard} options={{ headerShown: false }} />
-            <MyScreen.Screen name="usermanagement" component={UserManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="bookingmanagement" component={BookingManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="transactionmanagement" component={TransactionManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="packagemanagement" component={PackageManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="reviewmanagement" component={ReviewManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="quotationmanagement" component={QuotationManagement} options={{ headerShown: false }} />
-            <MyScreen.Screen name="quotationdetailsadmin" component={QuotationDetailsAdmin} options={{ headerShown: false }} />
-            <MyScreen.Screen name="cancellationrequests" component={CancellationRequests} options={{ headerShown: false }} />
-            <MyScreen.Screen name="passportapplications" component={PassportApplications} options={{ headerShown: false }} />
-            <MyScreen.Screen name="visaapplications" component={VisaApplications} options={{ headerShown: false }} />
-            <MyScreen.Screen name="logging" component={Logging} options={{ headerShown: false }} />
-            <MyScreen.Screen name="auditing" component={Auditing} options={{ headerShown: false }} />
-          </>
-        )}
+      <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
+      <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
+
+      {isUsers && (
+        <>
+          <MyScreen.Screen name="profile" component={Profile} options={{ headerShown: false }} />
+          <MyScreen.Screen name="home" component={Home} options={{ headerShown: false }} />
+          <MyScreen.Screen name="packages" component={Packages} options={{ headerShown: false }} />
+          <MyScreen.Screen name="packagedetails" component={PackageDetails} options={{ headerShown: false }} />
+          <MyScreen.Screen name="wishlist" component={Wishlist} options={{ headerShown: false }} />
+          <MyScreen.Screen name="usertransactions" component={UserTransactions} options={{ headerShown: false }} />
+          <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} options={{ headerShown: false }} />
+          <MyScreen.Screen name="userbookings" component={UserBookings} options={{ headerShown: false }} />
+          <MyScreen.Screen name="userquotations" component={UserQuotations} options={{ headerShown: false }} />
+          <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} options={{ headerShown: false }} />
+          <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} options={{ headerShown: false }} />
+          <MyScreen.Screen name="passportguidance" component={PassportGuidance} options={{ headerShown: false }} />
+          <MyScreen.Screen name="visaguidance" component={VisaGuidance} options={{ headerShown: false }} />
+        </>
+      )}
+
+      {isAdmin && (
+        <>
+          <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} options={{ headerShown: false }} />
+          <MyScreen.Screen name="admindashboard" component={AdminDashboard} options={{ headerShown: false }} />
+          <MyScreen.Screen name="usermanagement" component={UserManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="bookingmanagement" component={BookingManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="transactionmanagement" component={TransactionManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="packagemanagement" component={PackageManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="reviewmanagement" component={ReviewManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="quotationmanagement" component={QuotationManagement} options={{ headerShown: false }} />
+          <MyScreen.Screen name="quotationdetailsadmin" component={QuotationDetailsAdmin} options={{ headerShown: false }} />
+          <MyScreen.Screen name="cancellationrequests" component={CancellationRequests} options={{ headerShown: false }} />
+          <MyScreen.Screen name="passportapplications" component={PassportApplications} options={{ headerShown: false }} />
+          <MyScreen.Screen name="visaapplications" component={VisaApplications} options={{ headerShown: false }} />
+          <MyScreen.Screen name="logging" component={Logging} options={{ headerShown: false }} />
+          <MyScreen.Screen name="auditing" component={Auditing} options={{ headerShown: false }} />
+        </>
+      )}
+
+
       </MyScreen.Navigator>
-    </NavigationContainer>
+    </NavigationContainer >
   );
 }
 

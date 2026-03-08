@@ -8,6 +8,7 @@ import ModalStyle from "../../styles/componentstyles/ModalStyle"
 import Sidebar from "../../components/Sidebar"
 import { api, withUserHeader } from "../../utils/api"
 import { useUser } from "../../context/UserContext"
+import { generateBookingInvoicePdf } from "../../utils/bookingInvoicePdf"
 
 
 const modalDetails = {
@@ -349,10 +350,11 @@ export default function PackageDetails({ route, navigation }) {
     phone: "",
     passportNumber: "",
   })
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
   const [arrangementType, setArrangementType] = useState("")
   const [quotationNotes, setQuotationNotes] = useState("")
   const [passportUpload, setPassportUpload] = useState({
-    passportNumber: "",
+    passportFileName: "",
     passportFileUrl: "",
   })
   const [isSubmittingQuotation, setIsSubmittingQuotation] = useState(false)
@@ -376,6 +378,107 @@ export default function PackageDetails({ route, navigation }) {
   const [quotationItineraryNotes, setQuotationItineraryNotes] = useState({})
   const [quotationAdditionalComments, setQuotationAdditionalComments] = useState("")
   const [quotationSubmitError, setQuotationSubmitError] = useState("")
+  const [isAirlineDropdownOpen, setIsAirlineDropdownOpen] = useState(false)
+  const [isHotelDropdownOpen, setIsHotelDropdownOpen] = useState(false)
+  const [invoicePdfUrl, setInvoicePdfUrl] = useState("")
+  const [hasAutoOpenedInvoicePdf, setHasAutoOpenedInvoicePdf] = useState(false)
+  const totalTravelersForInvoice = travelers.adult + travelers.child + travelers.infant + travelers.senior
+
+  const airlineChoices = useMemo(() => {
+    const source = Array.isArray(pkg.packageAirlines) ? pkg.packageAirlines : []
+    const unique = [...new Set(source.filter(Boolean))]
+    if (defaultAirline && !unique.includes(defaultAirline)) {
+      unique.push(defaultAirline)
+    }
+    return unique.length ? unique : ["NONE"]
+  }, [defaultAirline, pkg.packageAirlines])
+
+  const hotelChoices = useMemo(() => {
+    const source = Array.isArray(pkg.packageHotels) ? pkg.packageHotels : []
+    const unique = [...new Set(source.filter(Boolean))]
+    if (defaultHotel && !unique.includes(defaultHotel)) {
+      unique.push(defaultHotel)
+    }
+    return unique.length ? unique : ["NONE"]
+  }, [defaultHotel, pkg.packageHotels])
+
+  const invoiceData = useMemo(() => {
+    const travelerCount = totalTravelersForInvoice || 1
+    const subtotal = (Number(pkg.packagePricePerPax) || 0) * travelerCount
+    const tax = subtotal * 0.12
+    const totalWithTax = subtotal + tax
+    const issueDate = new Date()
+    const dueDate = new Date(issueDate)
+    dueDate.setDate(issueDate.getDate() + 14)
+
+    return {
+      company: {
+        name: "M&RC Travel and Tours",
+        address: "Paranaque City, Metro Manila, Philippines",
+        email: "info@mrc-travel.com",
+        phone: "+63 2 555 1234",
+      },
+      invoice: {
+        number: `INV-${String(pkg?.id || "").replace(/[^A-Z0-9-]/gi, "").slice(-8).toUpperCase() || "00000000"}`,
+        issueDate: issueDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+        dueDate: dueDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+        status: "Unpaid",
+      },
+      customer: {
+        name: registration.fullName || user?.username || "Customer",
+        email: registration.email || "N/A",
+        phone: registration.phone || "N/A",
+      },
+      booking: {
+        reference: "To be generated after payment",
+        packageName: pkg.title,
+        travelDates: pkg.isInternational ? availableDateId : selectedDate,
+        travelers: travelerCount,
+      },
+      items: [
+        {
+          description: "Tour Package",
+          qty: travelerCount,
+          rate: travelerCount > 0 ? subtotal / travelerCount : subtotal,
+          amount: subtotal,
+        },
+      ],
+      subtotal,
+      tax,
+      totalWithTax,
+    }
+  }, [availableDateId, pkg.id, pkg.isInternational, pkg.packagePricePerPax, pkg.title, registration.email, registration.fullName, registration.phone, selectedDate, totalTravelersForInvoice, user?.username])
+
+  useEffect(() => {
+    if (activeModal !== "invoice") return
+
+    try {
+      const { blob, dataUri } = generateBookingInvoicePdf(invoiceData)
+
+      if (Platform.OS === "web") {
+        const objectUrl = URL.createObjectURL(blob)
+        setInvoicePdfUrl(objectUrl)
+        return () => URL.revokeObjectURL(objectUrl)
+      }
+
+      setInvoicePdfUrl(dataUri)
+    } catch (_error) {
+      setInvoicePdfUrl("")
+    }
+  }, [activeModal, invoiceData])
+
+  useEffect(() => {
+    if (activeModal !== "invoice") {
+      setHasAutoOpenedInvoicePdf(false)
+      return
+    }
+
+    if (!invoicePdfUrl || hasAutoOpenedInvoicePdf) return
+
+    Linking.openURL(invoicePdfUrl)
+      .catch(() => {})
+      .finally(() => setHasAutoOpenedInvoicePdf(true))
+  }, [activeModal, hasAutoOpenedInvoicePdf, invoicePdfUrl])
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return
@@ -501,8 +604,44 @@ export default function PackageDetails({ route, navigation }) {
     setQuotationAdditionalComments("")
     setQuotationSubmitError("")
     setSelectedOption("")
+    setHasAgreedToTerms(false)
+    setPassportUpload({ passportFileName: "", passportFileUrl: "" })
     setLatestBooking(null)
     setActiveModal("arrangement")
+  }
+
+  const selectPassportFile = () => {
+    if (Platform.OS !== "web" || typeof window === "undefined" || !window.document) {
+      Alert.alert("Unsupported", "Passport upload is currently available on web.")
+      return
+    }
+
+    const input = window.document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*,.pdf"
+
+    input.onchange = () => {
+      const selectedFile = input.files?.[0]
+      if (!selectedFile) return
+
+      const reader = new window.FileReader()
+
+      reader.onload = () => {
+        const dataUrl = typeof reader.result === "string" ? reader.result : ""
+        setPassportUpload({
+          passportFileName: selectedFile.name,
+          passportFileUrl: dataUrl,
+        })
+      }
+
+      reader.onerror = () => {
+        Alert.alert("Upload failed", "Unable to read the selected file. Please try again.")
+      }
+
+      reader.readAsDataURL(selectedFile)
+    }
+
+    input.click()
   }
 
   const submitQuotationRequest = async () => {
@@ -613,10 +752,7 @@ export default function PackageDetails({ route, navigation }) {
       return
     }
 
-    if (!selectedOption) {
-      Alert.alert("Payment required", "Please select a payment method.")
-      return
-    }
+    const resolvedPaymentMethod = selectedOption || "paymongo"
 
     const numericPricePerPax = Number(pkg.packagePricePerPax) || toNumber(pkg.price) || 0
     const travelerCount = totalTravelers || 1
@@ -634,7 +770,7 @@ export default function PackageDetails({ route, navigation }) {
       preferredHotels: hotel,
       registration,
       passportUpload,
-      paymentMethod: selectedOption,
+      paymentMethod: resolvedPaymentMethod,
       pricePerPax: numericPricePerPax,
       totalPrice,
       paidAmount: totalPrice,
@@ -686,7 +822,7 @@ export default function PackageDetails({ route, navigation }) {
             bookingDetails,
             checkoutToken,
             totalPrice,
-            paymentMethod: selectedOption,
+            paymentMethod: resolvedPaymentMethod,
             packageName: pkg.title,
           })
         )
@@ -756,8 +892,13 @@ export default function PackageDetails({ route, navigation }) {
     }
 
     if (activeModal === "registration") {
-      if (!registration.fullName || !registration.email || !registration.phone) {
+      if (!pkg.isInternational && (!registration.fullName || !registration.email || !registration.phone)) {
         Alert.alert("Missing details", "Please complete your registration details.")
+        return
+      }
+
+      if (!hasAgreedToTerms) {
+        Alert.alert("Agreement required", "Please agree to all terms and conditions first.")
         return
       }
 
@@ -771,8 +912,8 @@ export default function PackageDetails({ route, navigation }) {
     }
 
     if (activeModal === "passport") {
-      if (!passportUpload.passportNumber) {
-        Alert.alert("Passport required", "Please provide passport number.")
+      if (!passportUpload.passportFileUrl) {
+        Alert.alert("Passport required", "Please upload your passport file.")
         return
       }
       setActiveModal("invoice")
@@ -780,7 +921,7 @@ export default function PackageDetails({ route, navigation }) {
     }
 
     if (activeModal === "invoice") {
-      setActiveModal("payment")
+      processBookingPayment()
       return
     }
 
@@ -1183,23 +1324,87 @@ export default function PackageDetails({ route, navigation }) {
                     </View>
                     <View style={DestinationStyles.quotationHalf}>
                       <Text style={DestinationStyles.quotationLabel}>PREFERRED AIRLINES</Text>
-                      <TextInput
-                        style={DestinationStyles.quotationInput}
-                        placeholder="Provide airline preferences"
-                        value={airline}
-                        onChangeText={setAirline}
-                      />
+                      {arrangementType === "custom-all-in" ? (
+                        <View>
+                          <TouchableOpacity
+                            style={DestinationStyles.quotationDropdownTrigger}
+                            onPress={() => {
+                              setIsAirlineDropdownOpen((prev) => !prev)
+                              setIsHotelDropdownOpen(false)
+                            }}
+                          >
+                            <Text style={DestinationStyles.quotationDropdownText}>{airline || "Select preferred airline"}</Text>
+                            <Ionicons name={isAirlineDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#305797" />
+                          </TouchableOpacity>
+
+                          {isAirlineDropdownOpen && (
+                            <View style={DestinationStyles.quotationDropdownMenu}>
+                              {airlineChoices.map((option) => (
+                                <TouchableOpacity
+                                  key={`airline-${option}`}
+                                  style={DestinationStyles.quotationDropdownItem}
+                                  onPress={() => {
+                                    setAirline(option)
+                                    setIsAirlineDropdownOpen(false)
+                                  }}
+                                >
+                                  <Text style={DestinationStyles.quotationDropdownItemText}>{option}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      ) : (
+                        <TextInput
+                          style={DestinationStyles.quotationInput}
+                          placeholder="Provide airline preferences"
+                          value={airline}
+                          onChangeText={setAirline}
+                        />
+                      )}
                     </View>
                   </View>
 
                   <View style={DestinationStyles.quotationSectionGap}>
                     <Text style={DestinationStyles.quotationLabel}>PREFERRED HOTELS</Text>
-                    <TextInput
-                      style={DestinationStyles.quotationInput}
-                      placeholder="Provide hotel preferences"
-                      value={hotel}
-                      onChangeText={setHotel}
-                    />
+                    {arrangementType === "custom-all-in" ? (
+                      <View>
+                        <TouchableOpacity
+                          style={DestinationStyles.quotationDropdownTrigger}
+                          onPress={() => {
+                            setIsHotelDropdownOpen((prev) => !prev)
+                            setIsAirlineDropdownOpen(false)
+                          }}
+                        >
+                          <Text style={DestinationStyles.quotationDropdownText}>{hotel || "Select preferred hotel"}</Text>
+                          <Ionicons name={isHotelDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#305797" />
+                        </TouchableOpacity>
+
+                        {isHotelDropdownOpen && (
+                          <View style={DestinationStyles.quotationDropdownMenu}>
+                            {hotelChoices.map((option) => (
+                              <TouchableOpacity
+                                key={`hotel-${option}`}
+                                style={DestinationStyles.quotationDropdownItem}
+                                onPress={() => {
+                                  setHotel(option)
+                                  setIsHotelDropdownOpen(false)
+                                }}
+                              >
+                                <Text style={DestinationStyles.quotationDropdownItemText}>{option}</Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                      <TextInput
+                        style={DestinationStyles.quotationInput}
+                        placeholder="Provide hotel preferences"
+                        value={hotel}
+                        onChangeText={setHotel}
+                      />
+                    )}
                   </View>
 
                   <View style={DestinationStyles.quotationSectionGap}>
@@ -1571,54 +1776,93 @@ export default function PackageDetails({ route, navigation }) {
 
               {activeModal === "registration" && (
                 <View style={DestinationStyles.modalBox}>
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Full Name"
-                    value={registration.fullName}
-                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, fullName: value }))}
-                  />
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Email"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={registration.email}
-                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, email: value }))}
-                  />
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Phone Number"
-                    keyboardType="phone-pad"
-                    value={registration.phone}
-                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, phone: value }))}
-                  />
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Passport Number (optional)"
-                    value={registration.passportNumber}
-                    onChangeText={(value) => setRegistration((prev) => ({ ...prev, passportNumber: value }))}
-                  />
+                  {!pkg.isInternational ? (
+                    <>
+                      <TextInput
+                        style={DestinationStyles.reviewInput}
+                        placeholder="Full Name"
+                        value={registration.fullName}
+                        onChangeText={(value) => setRegistration((prev) => ({ ...prev, fullName: value }))}
+                      />
+                      <TextInput
+                        style={DestinationStyles.reviewInput}
+                        placeholder="Email"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={registration.email}
+                        onChangeText={(value) => setRegistration((prev) => ({ ...prev, email: value }))}
+                      />
+                      <TextInput
+                        style={DestinationStyles.reviewInput}
+                        placeholder="Phone Number"
+                        keyboardType="phone-pad"
+                        value={registration.phone}
+                        onChangeText={(value) => setRegistration((prev) => ({ ...prev, phone: value }))}
+                      />
+                      <TextInput
+                        style={DestinationStyles.reviewInput}
+                        placeholder="Passport Number (optional)"
+                        value={registration.passportNumber}
+                        onChangeText={(value) => setRegistration((prev) => ({ ...prev, passportNumber: value }))}
+                      />
+
+                      <Text style={DestinationStyles.summaryText}>
+                        Terms and Conditions: By booking this package, you agree to follow all rules and regulations set forth by our service.
+                      </Text>
+                      <TouchableOpacity
+                        style={DestinationStyles.checkboxRow}
+                        onPress={() => setHasAgreedToTerms((prev) => !prev)}
+                      >
+                        <View style={DestinationStyles.checkbox}>
+                          {hasAgreedToTerms && <View style={DestinationStyles.checkboxFill} />}
+                        </View>
+                        <Text style={DestinationStyles.checkboxLabel}>I have read and agree to all terms and conditions</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <View style={DestinationStyles.termsCard}>
+                        <Text style={DestinationStyles.termsTitle}>Terms and Conditions</Text>
+                        <Text style={DestinationStyles.termsText}>
+                          By booking this package, you agree to follow all rules and regulations set forth by our service. Please read carefully.
+                        </Text>
+                      </View>
+
+                      <View style={DestinationStyles.termsCard}>
+                        <Text style={DestinationStyles.termsTitle}>Cancellation Policy</Text>
+                        <Text style={DestinationStyles.termsText}>
+                          Cancellations within 24 hours of booking receive a full refund. Cancellations after that are non-refundable.
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={DestinationStyles.checkboxRow}
+                        onPress={() => setHasAgreedToTerms((prev) => !prev)}
+                      >
+                        <View style={DestinationStyles.checkbox}>
+                          {hasAgreedToTerms && <View style={DestinationStyles.checkboxFill} />}
+                        </View>
+                        <Text style={DestinationStyles.checkboxLabel}>I have read and agree to all terms and conditions</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               )}
 
               {activeModal === "passport" && (
                 <View style={DestinationStyles.modalBox}>
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Passport Number"
-                    value={passportUpload.passportNumber}
-                    onChangeText={(value) => setPassportUpload((prev) => ({ ...prev, passportNumber: value }))}
-                  />
-                  <TextInput
-                    style={DestinationStyles.reviewInput}
-                    placeholder="Passport File URL (optional)"
-                    value={passportUpload.passportFileUrl}
-                    onChangeText={(value) => setPassportUpload((prev) => ({ ...prev, passportFileUrl: value }))}
-                    autoCapitalize="none"
-                  />
-                  <Text style={DestinationStyles.summaryText}>
-                    Provide passport details before continuing to invoice.
-                  </Text>
+                  <Text style={DestinationStyles.uploadPassportIntro}>Please upload a clear image of your passport bio page.</Text>
+
+                  <View style={DestinationStyles.uploadPassportOuter}>
+                    <TouchableOpacity style={DestinationStyles.uploadPassportInner} onPress={selectPassportFile}>
+                      <Ionicons name="archive-outline" size={52} color="#305797" />
+                      <Text style={DestinationStyles.uploadPassportTitle}>Drag & drop your file here, or click to select</Text>
+                      <Text style={DestinationStyles.uploadPassportHint}>Only 1 file is allowed.</Text>
+                      {!!passportUpload.passportFileName && (
+                        <Text style={DestinationStyles.uploadPassportFileName}>{passportUpload.passportFileName}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
@@ -1636,6 +1880,15 @@ export default function PackageDetails({ route, navigation }) {
                   <Text style={DestinationStyles.summaryText}>
                     Total: ₱{((Number(pkg.packagePricePerPax) || 0) * (totalTravelers || 1)).toLocaleString()}
                   </Text>
+
+                  {!!invoicePdfUrl && (
+                    <TouchableOpacity
+                      style={[DestinationStyles.primaryButton, { marginTop: 12, alignSelf: "flex-start" }]}
+                      onPress={() => Linking.openURL(invoicePdfUrl)}
+                    >
+                      <Text style={DestinationStyles.primaryText}>Open Generated Invoice PDF</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
 
@@ -1717,10 +1970,17 @@ export default function PackageDetails({ route, navigation }) {
 
             {activeModal !== "approval" && (
               <View style={DestinationStyles.modalButtonRow}>
+                {(() => {
+                  const isProceedDisabled =
+                    (activeModal === "passport" && !passportUpload.passportFileUrl) ||
+                    isSubmittingQuotation ||
+                    isSubmittingPayment
+
+                  return (
                 <TouchableOpacity
-                  style={DestinationStyles.primaryButton}
+                  style={[DestinationStyles.primaryButton, isProceedDisabled && DestinationStyles.primaryButtonDisabled]}
                   onPress={activeModal === "quotation" ? submitQuotationRequest : nextModal}
-                  disabled={isSubmittingQuotation || isSubmittingPayment}
+                  disabled={isProceedDisabled}
                 >
                   <Text style={DestinationStyles.primaryText}>
                     {isSubmittingQuotation || isSubmittingPayment
@@ -1730,9 +1990,11 @@ export default function PackageDetails({ route, navigation }) {
                         : "Proceed"}
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={DestinationStyles.dangerButton} onPress={prevModal}>
+                  )
+                })()}
+                <TouchableOpacity style={DestinationStyles.dangerButton} onPress={activeModal === "passport" ? closeModal : prevModal}>
                   <Text style={DestinationStyles.primaryText}>
-                    {activeModal === "quotation" ? "Cancel" : "Back"}
+                    {activeModal === "quotation" || activeModal === "passport" ? "Cancel" : "Back"}
                   </Text>
                 </TouchableOpacity>
               </View>

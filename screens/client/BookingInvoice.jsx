@@ -2,15 +2,23 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Platform } from "react-native";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
+import AdminSidebar from "../../components/AdminSidebar";
 import { generateBookingInvoicePdf } from "../../utils/bookingInvoicePdf";
+import { useUser } from "../../context/UserContext";
 
 export default function BookingInvoice({ route, navigation }) {
+  const { user } = useUser();
   const booking = route?.params?.booking || null;
   const source = route?.params?.source || "user";
+  const role = String(user?.role || "").trim().toLowerCase();
+  const isAdminView = source === "admin" || role === "admin";
   const [isSidebarVisible, setSidebarVisible] = React.useState(false);
   const [invoicePdfUrl, setInvoicePdfUrl] = useState("");
 
   const bookingDetails = booking?.bookingDetails || {};
+  const passportUpload = bookingDetails?.passportUpload || {};
+  const passportFileName = passportUpload?.passportFileName || "";
+  const passportFileUrl = passportUpload?.passportFileUrl || "";
 
   const totals = useMemo(() => {
     const totalPrice = Number(bookingDetails.totalPrice || 0);
@@ -94,7 +102,11 @@ export default function BookingInvoice({ route, navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Header openSidebar={() => setSidebarVisible(true)} />
-      <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+      {isAdminView ? (
+        <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+      ) : (
+        <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+      )}
 
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Booking Invoice</Text>
@@ -115,6 +127,16 @@ export default function BookingInvoice({ route, navigation }) {
             </TouchableOpacity>
           ) : null}
         </View>
+
+        {!!passportFileUrl && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Uploaded Passport</Text>
+            <Text style={styles.meta}>File: {passportFileName || "Passport file"}</Text>
+            <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={() => Linking.openURL(passportFileUrl)}>
+              <Text style={styles.buttonText}>Open Passport File</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate(source === "admin" ? "bookingmanagement" : "userbookings")}> 
           <Text style={styles.buttonText}>{source === "admin" ? "Back to Booking Management" : "Back to Bookings"}</Text>
