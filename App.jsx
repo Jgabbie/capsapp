@@ -27,13 +27,16 @@ import PackageManagement from './screens/admin/PackageManagement';
 import ReviewManagement from './screens/admin/ReviewManagement';
 import CancellationRequests from './screens/admin/CancellationRequests';
 import PassportApplications from './screens/admin/PassportApplications';
+import PassportApplicationView from './screens/admin/PassportApplicationView'; //not checked yet
 import VisaApplications from './screens/admin/VisaApplications';
+import VisaApplicationView from './screens/admin/VisaApplicationView'; //not checked yet
 import Logging from './screens/admin/Logging';
 import Auditing from './screens/admin/Auditing';
 import AddPackages from './screens/admin/AddPackages';
 import QuotationManagement from './screens/admin/QuotationManagement';
 import QuotationDetailsAdmin from './screens/admin/QuotationDetailsAdmin';
 import { UserProvider, useUser } from './context/UserContext';
+
 
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
@@ -74,7 +77,7 @@ function AppNavigator() {
   return (
     <NavigationContainer>
       
-      <MyScreen.Navigator initialRouteName={initialRouteName} screenOptions={{ headerShown: false }}>
+      <MyScreen.Navigator initialRouteName={"passportapplications"} screenOptions={{ headerShown: false }}>
 
 
       <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
@@ -123,7 +126,9 @@ function AppNavigator() {
           <MyScreen.Screen name="quotationdetailsadmin" component={QuotationDetailsAdmin} options={{ headerShown: false }} />
           <MyScreen.Screen name="cancellationrequests" component={CancellationRequests} options={{ headerShown: false }} />
           <MyScreen.Screen name="passportapplications" component={PassportApplications} options={{ headerShown: false }} />
+          <MyScreen.Screen name="passportapplicationview" component={PassportApplicationView} options={{ headerShown: false }} /> {/*not checked yet */}
           <MyScreen.Screen name="visaapplications" component={VisaApplications} options={{ headerShown: false }} />
+          <MyScreen.Screen name="visaapplicationview" component={VisaApplicationView} options={{ headerShown: false }} /> {/*not checked yet */}
           <MyScreen.Screen name="logging" component={Logging} options={{ headerShown: false }} />
           <MyScreen.Screen name="auditing" component={Auditing} options={{ headerShown: false }} />
         </>
