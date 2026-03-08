@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, Modal, Pressable, TouchableWi, TouchableWithoutFeedback } from 'react-native'
+import { View, Text, Image, TouchableOpacity, Modal, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -6,12 +6,25 @@ import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from 
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
+import { useUser } from '../context/UserContext'
 
 
 export default function Sidebar({ visible, onClose }) {
 
     const cs = useNavigation()
     const [modalVisible, setModalVisible] = useState(false)
+    const { user, clearUser } = useUser()
+
+    const displayName = [user?.firstname, user?.lastname]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || user?.username || 'Guest User'
+
+    const displayEmail = user?.email || 'No email'
+
+    const profileImageSource = user?.profileImage
+        ? { uri: user.profileImage }
+        : require('../assets/images/profile_icon60.png')
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -36,13 +49,13 @@ export default function Sidebar({ visible, onClose }) {
                 <View style={SidebarStyle.sidebarContainer}>
                     <View style={SidebarStyle.profileSection}>
                         <Image
-                            source={require('../assets/images/profile_icon60.png')}
+                            source={profileImageSource}
                             style={SidebarStyle.profileImg}
 
                         />
                         <View style={SidebarStyle.nameContainer}>
-                            <Text style={SidebarStyle.userName}>Juan Gabriel Lanuza</Text>
-                            <Text style={SidebarStyle.userHandle}>jgablanuza@gmail.com</Text>
+                            <Text style={SidebarStyle.userName}>{displayName}</Text>
+                            <Text style={SidebarStyle.userHandle}>{displayEmail}</Text>
                         </View>
                     </View>
 
@@ -90,6 +103,15 @@ export default function Sidebar({ visible, onClose }) {
                         onPress={() => {
                             onClose()
                             cs.navigate("wishlist")
+                        }}
+                    />
+
+                    <MenuItem
+                        title="Quotations"
+                        icon={require('../assets/images/transactions_icon.png')}
+                        onPress={() => {
+                            onClose()
+                            cs.navigate("userquotations")
                         }}
                     />
 
@@ -158,6 +180,7 @@ export default function Sidebar({ visible, onClose }) {
                                 style={ModalStyle.modalCancelButton}
                                 onPress={() => {
                                     setModalVisible(false)
+                                    clearUser()
                                     onClose()
                                     cs.navigate("login")
                                 }}

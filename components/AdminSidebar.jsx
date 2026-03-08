@@ -75,6 +75,11 @@ const AdminSidebar = ({ visible, onClose }) => {
                             cs.navigate("reviewmanagement")
                         }}
                         />
+                        <MenuItem title="Quotation Management" onPress={() => {
+                            onClose()
+                            cs.navigate("quotationmanagement")
+                        }}
+                        />
                         <MenuItem title="Passport Applications" onPress={() => {
                             onClose()
                             cs.navigate("passportapplications")

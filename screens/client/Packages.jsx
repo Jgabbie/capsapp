@@ -1,44 +1,113 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Image, TouchableOpacity, TextInput, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+import { Platform } from "react-native";
+import Constants from "expo-constants";
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import Chatbot from "../../components/Chatbot";
 
-const packages = [
-    {
-        id: "1",
-        title: "Baguio City Tour",
-        description: "Explore the city of pines with scenic viewpoints, heritage stops, and cool mountain air.",
-        image: "https://res.klook.com/image/upload/fl_lossy.progressive,q_60/Mobile/City/dqm8q1e6jyqaxapkgqy3.jpg",
-        price: "₱67,000",
-        duration: "3 Days",
-        isInternational: false,
-    },
-    {
-        id: "2",
-        title: "Seoul City Escape",
-        description: "Experience vibrant markets, modern culture, and historic palaces in South Korea.",
-        image: "https://ik.imgkit.net/3vlqs5axxjf/external/http://images.ntmllc.com/v4/destination/South-Korea/Seoul/219740_SCN_Seoul_iStock521707831_ZC35CD.jpg?tr=w-1200%2Cfo-auto",
-        price: "₱95,000",
-        duration: "5 Days",
-        isInternational: true,
-    },
-    {
-        id: "3",
-        title: "Palawan Island Adventure",
-        description: "Crystal-clear lagoons, island hopping, and beachside relaxation.",
-        image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/e7/b0/ea/photo0jpg.jpg?w=1400&h=1400&s=1",
-        price: "₱82,000",
-        duration: "4 Days",
-        isInternational: false,
-    },
-]
+const normalizeBaseUrl = (url) => String(url || "").trim().replace(/\/$/, "");
+
+const getTravelSystemApiBase = () => {
+    const envUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_TRAVELSYSTEM_API_URL);
+    if (envUrl) return envUrl;
+
+    if (Platform.OS === "web") return "http://localhost:8000";
+
+    const hostUri =
+        Constants.expoConfig?.hostUri ||
+        Constants.linkingUri ||
+        Constants.manifest2?.extra?.expoGo?.debuggerHost ||
+        "";
+
+    const host = hostUri
+        .replace(/^https?:\/\//, "")
+        .replace(/^exp:\/\//, "")
+        .split(":")[0]
+        .split("/")[0];
+
+    if (host) return `http://${host}:8000`;
+
+    return Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
+};
+
+const packageApiBase = getTravelSystemApiBase();
+
+const formatPeso = (value) => {
+    const amount = Number(value) || 0;
+    return `₱${amount.toLocaleString("en-PH")}`;
+};
+
+const toImageUrl = (source) => {
+    if (!source) return "https://via.placeholder.com/800x500?text=No+Image";
+    const value = String(source);
+    if (value.startsWith("http") || value.startsWith("data:")) return value;
+    const clean = value.replace(/^\/+/, "");
+    return `${packageApiBase}/${clean}`;
+};
 
 export default function Packages({ navigation }) {
 
     const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [searchText, setSearchText] = useState("");
+    const [packages, setPackages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchPackages = async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const response = await axios.get(`${packageApiBase}/api/package/get-packages`);
+
+                const mapped = (response.data || []).map((item) => ({
+                    id: item._id,
+                    title: item.packageName || "Untitled Package",
+                    description: item.packageDescription || "No description available.",
+                    image: toImageUrl(item.images?.[0]),
+                    price: formatPeso(item.packagePricePerPax),
+                    duration: `${item.packageDuration || 0} Days`,
+                    isInternational: (item.packageType || "").toLowerCase().includes("international"),
+                    packageType: item.packageType,
+                    packageCode: item.packageCode,
+                    packagePricePerPax: item.packagePricePerPax,
+                    packageDuration: item.packageDuration,
+                    packageAvailableSlots: item.packageAvailableSlots,
+                    packageSpecificDate: item.packageSpecificDate || [],
+                    packageHotels: item.packageHotels || [],
+                    packageAirlines: item.packageAirlines || [],
+                    packageInclusions: item.packageInclusions || [],
+                    packageExclusions: item.packageExclusions || [],
+                    packageTermsConditions: item.packageTermsConditions || [],
+                    packageItineraries: item.packageItineraries || [],
+                    packageTags: item.packageTags || [],
+                    images: item.images || [],
+                }));
+
+                setPackages(mapped);
+            } catch (fetchError) {
+                setError("Unable to load packages right now.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPackages();
+    }, []);
+
+    const filteredPackages = useMemo(() => {
+        const q = searchText.trim().toLowerCase();
+        if (!q) return packages;
+        return packages.filter((item) =>
+            [item.title, item.description, item.packageType]
+                .filter(Boolean)
+                .some((value) => String(value).toLowerCase().includes(q))
+        );
+    }, [packages, searchText]);
 
     return (
         <View style={{ flex: 1 }}>
@@ -62,6 +131,8 @@ export default function Packages({ navigation }) {
                             style={DestinationStyles.searchInput}
                             placeholder="Search packages"
                             placeholderTextColor="#777"
+                            value={searchText}
+                            onChangeText={setSearchText}
                         />
                     </View>
                     <View style={DestinationStyles.dropdownGroup}>
@@ -76,7 +147,19 @@ export default function Packages({ navigation }) {
                     </View>
                 </View>
 
-                {packages.map((item) => (
+                {loading && (
+                    <Text style={{ color: "#305797", marginBottom: 12 }}>Loading packages...</Text>
+                )}
+
+                {!!error && (
+                    <Text style={{ color: "#d9534f", marginBottom: 12 }}>{error}</Text>
+                )}
+
+                {!loading && !error && filteredPackages.length === 0 && (
+                    <Text style={{ color: "#777", marginBottom: 12 }}>No packages found.</Text>
+                )}
+
+                {filteredPackages.map((item) => (
                     <View key={item.id} style={DestinationStyles.packageCard}>
                         <Image source={{ uri: item.image }} style={DestinationStyles.packageImage} />
                         <View style={DestinationStyles.packageContent}>
@@ -84,7 +167,7 @@ export default function Packages({ navigation }) {
                             <Text style={DestinationStyles.packageDescription}>{item.description}</Text>
                             <TouchableOpacity
                                 style={DestinationStyles.viewDetailsButton}
-                                onPress={() => navigation.navigate("package-details", { pkg: item })}
+                                onPress={() => navigation.navigate("packagedetails", { pkg: item })}
                             >
                                 <Text style={DestinationStyles.viewDetailsText}>View Details</Text>
                             </TouchableOpacity>

@@ -1,24 +1,58 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
+import { useNavigation } from '@react-navigation/native'
 import Header from '../../components/Header'
 import AdminSidebar from '../../components/AdminSidebar'
 import BookingManagementStyle from '../../styles/adminstyles/BookingManagementStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
 
 
 export default function BookingManagement() {
+    const navigation = useNavigation()
+    const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
-    const [modalOkVisible, setModalOkVisible] = useState(false)
+    const [searchText, setSearchText] = useState('')
 
-    const [getBookings, setBookings] = useState([
-        { id: "1", ref: "BR-0001", package: "Boracay Tour", pax: "4", date: "09-14-2026", amount: 70000 },
-    ])
+    const [getBookings, setBookings] = useState([])
 
-    const modalOK = () => {
-        setModalOkVisible(false)
+    const fetchBookings = async () => {
+        if (!user?._id) {
+            setBookings([])
+            return
+        }
+
+        try {
+            const response = await api.get('/booking/all-bookings', withUserHeader(user._id))
+            setBookings(response.data || [])
+        } catch (error) {
+            setBookings([])
+            Alert.alert('Error', error.response?.data?.message || 'Unable to load bookings')
+        }
     }
+
+    useEffect(() => {
+        fetchBookings()
+    }, [user?._id])
+
+    const filteredBookings = useMemo(() => {
+        const needle = searchText.trim().toLowerCase()
+        const successfulOnly = getBookings.filter((item) => String(item.status || '').toLowerCase() === 'successful')
+        if (!needle) return successfulOnly
+
+        return successfulOnly.filter((item) => {
+            const reference = item.reference?.toLowerCase() || ''
+            const packageName = item.bookingDetails?.packageName?.toLowerCase() || ''
+            const status = item.status?.toLowerCase() || ''
+            return reference.includes(needle) || packageName.includes(needle) || status.includes(needle)
+        })
+    }, [getBookings, searchText])
+
+    const totalBookings = getBookings.length
+    const successfulBookings = getBookings.filter((item) => String(item.status || '').toLowerCase() === 'successful').length
 
     return (
         <View style={{ flex: 1 }}>
@@ -36,17 +70,21 @@ export default function BookingManagement() {
                         <View style={BookingManagementStyle.statsRow}>
                             <View style={BookingManagementStyle.card}>
                                 <View style={BookingManagementStyle.valueRow}>
-                                    <Text style={BookingManagementStyle.cardValue}>25</Text>
+                                    <Text style={BookingManagementStyle.cardValue}>{totalBookings}</Text>
                                 </View>
-                                <Text style={BookingManagementStyle.cardLabel}>Total Packages</Text>
+                                <Text style={BookingManagementStyle.cardLabel}>Total Bookings</Text>
                             </View>
                             <View style={BookingManagementStyle.card}>
                                 <View style={BookingManagementStyle.valueRow}>
-                                    <Text style={BookingManagementStyle.cardValue}>12</Text>
+                                    <Text style={BookingManagementStyle.cardValue}>{successfulBookings}</Text>
                                 </View>
-                                <Text style={BookingManagementStyle.cardLabel}>Available Packages</Text>
+                                <Text style={BookingManagementStyle.cardLabel}>Successful Bookings</Text>
                             </View>
                         </View>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={{ color: '#305797', fontWeight: '700' }}>{totalBookings} bookings found</Text>
                     </View>
 
                     <View style={BookingManagementStyle.searchRow}>
@@ -56,6 +94,8 @@ export default function BookingManagement() {
                                 style={BookingManagementStyle.searchInput}
                                 placeholder='Search booking reference'
                                 placeholderTextColor="#777"
+                                value={searchText}
+                                onChangeText={setSearchText}
                             />
                         </View>
 
@@ -80,37 +120,37 @@ export default function BookingManagement() {
                         </View>
                     </View>
 
-                    {getBookings.map((item) => (
-                        <View key={item.id} style={BookingManagementStyle.bookingCard}>
+                    {filteredBookings.map((item) => (
+                        <View key={item._id} style={BookingManagementStyle.bookingCard}>
 
                             <View style={BookingManagementStyle.cardHeader}>
-                                <Text style={BookingManagementStyle.bookingRef}>{item.ref}</Text>
-                                <Text style={BookingManagementStyle.bookingStatus}>Confirmed</Text>
+                                <Text style={BookingManagementStyle.bookingRef}>{item.reference}</Text>
+                                <Text style={BookingManagementStyle.bookingStatus}>{item.status || 'Successful'}</Text>
                             </View>
 
                             <View style={BookingManagementStyle.cardBody}>
-                                <Text style={BookingManagementStyle.packageName}>{item.package}</Text>
+                                <Text style={BookingManagementStyle.packageName}>{item.bookingDetails?.packageName || 'Package'}</Text>
 
                                 <View style={BookingManagementStyle.detailRow}>
                                     <Text style={BookingManagementStyle.detailLabel}>Travelers:</Text>
-                                    <Text style={BookingManagementStyle.detailValue}>{item.pax}</Text>
+                                    <Text style={BookingManagementStyle.detailValue}>{item.bookingDetails?.travelers || 0}</Text>
                                 </View>
 
                                 <View style={BookingManagementStyle.detailRow}>
                                     <Text style={BookingManagementStyle.detailLabel}>Travel Date:</Text>
-                                    <Text style={BookingManagementStyle.detailValue}>{item.date}</Text>
+                                    <Text style={BookingManagementStyle.detailValue}>{item.bookingDetails?.travelDate || '--'}</Text>
                                 </View>
 
                                 <View style={BookingManagementStyle.detailRow}>
                                     <Text style={BookingManagementStyle.detailLabel}>Total Amount:</Text>
-                                    <Text style={BookingManagementStyle.price}>₱{item.price}</Text>
+                                    <Text style={BookingManagementStyle.price}>₱{item.bookingDetails?.totalPrice || 0}</Text>
                                 </View>
                             </View>
 
                             <View style={BookingManagementStyle.cardActions}>
                                 <TouchableOpacity
                                     style={BookingManagementStyle.viewButton}
-                                    onPress={() => cs.navigate("bookinginvoice")}
+                                    onPress={() => navigation.navigate("bookinginvoice", { booking: item, source: "admin" })}
                                 >
                                     <Text style={BookingManagementStyle.buttonText}>View Details</Text>
                                 </TouchableOpacity>
@@ -119,12 +159,16 @@ export default function BookingManagement() {
                                     style={BookingManagementStyle.cancelButton}
                                     onPress={() => setModalVisible(true)}
                                 >
-                                    <Text style={BookingManagementStyle.buttonText}>Cancel Booking</Text>
+                                    <Text style={BookingManagementStyle.buttonText}>Close</Text>
                                 </TouchableOpacity>
                             </View>
 
                         </View>
                     ))}
+
+                    {filteredBookings.length === 0 && (
+                        <Text style={{ color: '#666', marginTop: 8 }}>No bookings found.</Text>
+                    )}
 
                 </ScrollView>
             </View>
@@ -138,8 +182,8 @@ export default function BookingManagement() {
 
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Remove Booking</Text>
-                        <Text style={ModalStyle.modalText}>Are you sure you want to remove this Booking?</Text>
+                        <Text style={ModalStyle.modalTitle}>Booking Management</Text>
+                        <Text style={ModalStyle.modalText}>Use View Details to see booking summary and invoice.</Text>
 
                         <View style={ModalStyle.modalButtonContainer}>
                             <TouchableOpacity
@@ -148,45 +192,9 @@ export default function BookingManagement() {
                                     setModalVisible(false)
                                 }}
                             >
-                                <Text style={ModalStyle.modalButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={ModalStyle.modalCancelButton}
-                                onPress={() => {
-                                    setModalVisible(false)
-                                    setModalOkVisible(true)
-                                }}
-                            >
-                                <Text style={ModalStyle.modalButtonText}>Remove</Text>
+                                <Text style={ModalStyle.modalButtonText}>OK</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </View>
-            </Modal>
-
-            <Modal
-                transparent
-                animationType='fade'
-                visible={modalOkVisible}
-                onRequestClose={() => { setModalOkVisible }}
-            >
-
-                <View style={ModalStyle.modalOverlay}>
-                    <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Remove Successful</Text>
-                        <Text style={ModalStyle.modalText}>You have removed the booking successfully!</Text>
-
-
-                        <TouchableOpacity
-                            style={ModalStyle.modalButton}
-                            onPress={() => {
-                                modalOK()
-                            }}
-                        >
-                            <Text style={ModalStyle.modalButtonText}>OK</Text>
-                        </TouchableOpacity>
-
                     </View>
                 </View>
             </Modal>

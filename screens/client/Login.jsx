@@ -5,11 +5,13 @@ import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import LoginStyle from '../../styles/clientstyles/LoginStyle'
-import axios from 'axios'
+import { api } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
 
 export default function Login() {
 
     const cs = useNavigation()
+    const { setUser } = useUser()
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -25,6 +27,12 @@ export default function Login() {
     const [getPassword, setPassword] = useState("")
     const [getError, setError] = useState("")
 
+    const normalizeRole = (role) => {
+        const normalized = String(role || "").trim().toLowerCase()
+        if (normalized === "user") return "users"
+        return normalized
+    }
+
     const showMessage = (message) => {
         if (Platform.OS === "android") {
             ToastAndroid.show(message, ToastAndroid.SHORT);
@@ -34,7 +42,10 @@ export default function Login() {
     }
 
     const handleLogin = async () => {
-        if (!getUsername || !getPassword) {
+        const normalizedUsername = getUsername.trim();
+        const normalizedPassword = getPassword;
+
+        if (!normalizedUsername || !normalizedPassword) {
             setError("Fill in both fields");
             return;
         }
@@ -43,13 +54,48 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://10.0.2.2:5000/api/login-user', { // Android emulator http://10.0.2.2:5000/api/get-user
-                username: getUsername,
-                password: getPassword
+            const response = await api.post('/login-user', {
+                username: normalizedUsername,
+                password: normalizedPassword
             });
 
             if (response.data.success) {
+                const role = response.data.role
+                const normalizedRole = normalizeRole(role)
+                const canonicalRole = normalizedRole === "admin" ? "Admin" : "Users"
+
+                if (normalizedRole !== "admin" && normalizedRole !== "users") {
+                    setError("Unauthorized role. Only Users or Admin can sign in.")
+                    return
+                }
+
+                setUser({
+                    _id: response.data.userId,
+                    username: response.data.username,
+                    role: canonicalRole,
+                })
                 showMessage("Login successful!");
+                if (normalizedRole === "admin") {
+                    cs.navigate("admindashboard")
+                } else {
+                    if (Platform.OS === "web" && typeof window !== "undefined") {
+                        const pathname = String(window.location.pathname || "").toLowerCase()
+                        const search = new URLSearchParams(window.location.search || "")
+                        const bookingStatus = search.get("booking") || ""
+
+                        if (bookingStatus && pathname.includes("/packagedetails")) {
+                            cs.navigate("packagedetails")
+                            return
+                        }
+
+                        if (bookingStatus && pathname.includes("/quotationcheckout")) {
+                            cs.navigate("quotationcheckout")
+                            return
+                        }
+                    }
+
+                    cs.navigate("home")
+                }
             } else {
                 setError(response.data.message || "Invalid username or password");
             }

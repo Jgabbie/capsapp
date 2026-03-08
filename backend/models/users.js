@@ -8,15 +8,19 @@ const userSchema = new mongoose.Schema({
     },
     firstname: {
         type: String,
-        required: true
+        default: ""
     },
     lastname: {
         type: String,
-        required: true
+        default: ""
+    },
+    phone: {
+        type: String,
+        default: ""
     },
     phonenum: {
         type: String,
-        required: false
+        default: ""
     },
     email: {
         type: String,
@@ -25,12 +29,59 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        default: ""
+    },
+    hashedPassword: {
+        type: String,
+        default: ""
+    },
+    profileImage: {
+        type: String,
+        default: ""
+    },
+    homeAddress: {
+        type: String,
+        default: ""
+    },
+    gender: {
+        type: String,
+        default: ""
+    },
+    birthdate: {
+        type: String,
+        default: ""
+    },
+    nationality: {
+        type: String,
+        default: ""
     },
     role: {
         type: String,
-        enum: ["user", "admin"],
-        default: "user"
+        default: "Users"
+    },
+    verifyOtp: {
+        type: String,
+        default: ""
+    },
+    verifyOtpExpireAt: {
+        type: Number,
+        default: 0
+    },
+    isAccountVerified: {
+        type: Boolean,
+        default: false
+    },
+    resetOtp: {
+        type: String,
+        default: ""
+    },
+    resetOtpExpireAt: {
+        type: Number,
+        default: 0
+    },
+    refreshToken: {
+        type: String,
+        default: ""
     },
     isVerified: {
         type: Boolean,
@@ -40,8 +91,8 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
+}, { strict: false });
 
 // ES module export
-const User = mongoose.model("User", userSchema);
+const User = mongoose.models.users || mongoose.model("users", userSchema, "users");
 export default User;
