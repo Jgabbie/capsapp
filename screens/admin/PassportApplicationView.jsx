@@ -3,7 +3,7 @@ import React from 'react'
 import { useNavigation } from "@react-navigation/native";
 import PassportApplicationViewStyle from '../../styles/adminstyles/PassportApplicationViewStyle';
 import ProgressTracker from '../../components/ProgressTracker';
-import ProgressTrackerStyles from '../../styles/ProgressTrackerStyles';
+import ProgressTrackerStyles from '../../styles/componentstyles/ProgressTrackerStyles';
 
 export default function PassportApplicationView() {
     const cs = useNavigation()
