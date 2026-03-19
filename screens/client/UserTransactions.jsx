@@ -6,10 +6,10 @@ import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import Header from '../../components/Header'
-import Sidebar from '../../components/Sidebar'
 import UserTransactionStyle from '../../styles/clientstyles/UserTransactionStyle'
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
+import Sidebar from '../../components/Sidebar'
 
 export default function UserTransactions() {
 
@@ -61,6 +61,12 @@ export default function UserTransactions() {
 
     return (
         <View style={{ flex: 1 }}>
+            
+            <Sidebar 
+                visible={isSidebarVisible} 
+                onClose={() => setSidebarVisible(false)} 
+            />
+
             <Header openSidebar={() => setSidebarVisible(true)} />
 
             <ScrollView
@@ -68,7 +74,6 @@ export default function UserTransactions() {
                 showsVerticalScrollIndicator={false}
             >
                 <Text style={UserTransactionStyle.title}>My Transactions</Text>
-
 
                 <View style={UserTransactionStyle.searchRow}>
                     <View style={UserTransactionStyle.searchBar}>
@@ -93,7 +98,6 @@ export default function UserTransactions() {
                         </View>
                     </View>
                 </View>
-
 
                 {filteredTransactions.map((item) => (
                     <View key={item._id} style={UserTransactionStyle.transactionCard}>
@@ -133,8 +137,5 @@ export default function UserTransactions() {
                 ))}
             </ScrollView>
         </View>
-
     )
 }
-
-//https://www.youtube.com/watch?v=iMCM1NceGJY

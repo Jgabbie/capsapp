@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+// import { jsPDF } from "jspdf";
 
 const formatCurrency = (value) => `PHP ${Number(value || 0).toFixed(2)}`;
 

@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
 
 const ModalStyle = StyleSheet.create({
-
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.4)",
@@ -13,7 +12,12 @@ const ModalStyle = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: 15,
         padding: 20,
-        alignItems: "center"
+        alignItems: "center",
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     modalBoxEdit: {
         width: 350,
@@ -32,6 +36,7 @@ const ModalStyle = StyleSheet.create({
         fontSize: 16,
         fontFamily: "Roboto_400Regular",
         textAlign: "center",
+        color: "#333",
         marginBottom: 20
     },
     modalButtonContainer: {
@@ -41,10 +46,8 @@ const ModalStyle = StyleSheet.create({
     },
     modalButton: {
         backgroundColor: "#305797",
-        width: 100,
-        height: 40,
-        paddingVertical: 10,
-        paddingVertical: 20,
+        width: 110,
+        height: 45,
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center"
@@ -52,19 +55,15 @@ const ModalStyle = StyleSheet.create({
     modalEditButton: {
         backgroundColor: "#305797",
         width: 120,
-        height: 40,
-        paddingVertical: 10,
-        paddingVertical: 20,
+        height: 45,
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center"
     },
     modalCancelButton: {
         backgroundColor: "#9E2847",
-        width: 100,
-        height: 40,
-        paddingVertical: 10,
-        paddingVertical: 20,
+        width: 110,
+        height: 45,
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center"
@@ -75,46 +74,52 @@ const ModalStyle = StyleSheet.create({
         fontFamily: "Roboto_500Medium"
     },
     otpInput: {
-        ffontSize: 20,
+        fontSize: 20,
         borderWidth: 1,
         borderRadius: 10,
         borderColor: "#6d6d6d",
         padding: 10,
         marginBottom: 20,
         width: 150,
-        textAlign: "center"
+        textAlign: "center",
+        color: "#000"
     },
     userLabel: {
         fontSize: 12,
         color: "#305797",
-        textAlign: "left"
+        textAlign: "left",
+        alignSelf: 'flex-start',
+        marginBottom: 4,
+        marginLeft: 5
     },
     userInputs: {
         fontSize: 16,
         borderWidth: 1,
         borderRadius: 10,
-        borderColor: "#6d6d6d",
-        padding: 10,
+        borderColor: "#ccc",
+        paddingHorizontal: 10,
         marginBottom: 10,
-        width: 240,
-        height: 30
+        width: 280,
+        height: 45,
+        color: "#000"
     },
     fullNameContainer: {
-        display: "flex",
         flexDirection: "row",
-        gap: 10
+        gap: 10,
+        width: '100%',
+        justifyContent: 'center'
     },
     nameInputs: {
         fontSize: 16,
         borderWidth: 1,
         borderRadius: 10,
-        borderColor: "#6d6d6d",
-        padding: 10,
+        borderColor: "#ccc",
+        paddingHorizontal: 10,
         marginBottom: 10,
-        width: 115,
-        height: 30
+        width: 135,
+        height: 45,
+        color: "#000"
     },
+});
 
-})
-
-export default ModalStyle
+export default ModalStyle;

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -74,28 +74,25 @@ export default function Login() {
                     username: response.data.username,
                     role: canonicalRole,
                 })
+
                 showMessage("Login successful!");
-                if (normalizedRole === "admin") {
-                    cs.navigate("admindashboard")
-                } else {
-                    if (Platform.OS === "web" && typeof window !== "undefined") {
-                        const pathname = String(window.location.pathname || "").toLowerCase()
-                        const search = new URLSearchParams(window.location.search || "")
-                        const bookingStatus = search.get("booking") || ""
 
-                        if (bookingStatus && pathname.includes("/packagedetails")) {
-                            cs.navigate("packagedetails")
-                            return
-                        }
+                if (Platform.OS === "web" && typeof window !== "undefined") {
+                    const pathname = String(window.location.pathname || "").toLowerCase()
+                    const search = new URLSearchParams(window.location.search || "")
+                    const bookingStatus = search.get("booking") || ""
 
-                        if (bookingStatus && pathname.includes("/quotationcheckout")) {
-                            cs.navigate("quotationcheckout")
-                            return
-                        }
+                    if (bookingStatus && pathname.includes("/packagedetails")) {
+                        cs.navigate("packagedetails")
+                        return
                     }
 
-                    cs.navigate("home")
+                    if (bookingStatus && pathname.includes("/quotationcheckout")) {
+                        cs.navigate("quotationcheckout")
+                        return
+                    }
                 }
+
             } else {
                 setError(response.data.message || "Invalid username or password");
             }
@@ -131,8 +128,16 @@ export default function Login() {
                     <Text onPress={() => { cs.navigate("resetpassword") }} style={LoginStyle.loginLinks}>Forgot your password?</Text>
                 </View>
 
-                <TouchableOpacity style={LoginStyle.loginButton} onPress={handleLogin}>
-                    <Text style={LoginStyle.loginButtonText}>Login</Text>
+                <TouchableOpacity 
+                    style={[LoginStyle.loginButton, { opacity: loading ? 0.7 : 1 }]} 
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={LoginStyle.loginButtonText}>Login</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </ImageBackground>

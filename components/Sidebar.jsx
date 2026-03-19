@@ -158,7 +158,7 @@ export default function Sidebar({ visible, onClose }) {
                 transparent
                 animationType='fade'
                 visible={modalVisible}
-                onRequestClose={() => { setModalVisible }}
+                onRequestClose={() => { setModalVisible(false) }}
             >
 
                 <View style={ModalStyle.modalOverlay}>
@@ -179,10 +179,15 @@ export default function Sidebar({ visible, onClose }) {
                             <TouchableOpacity
                                 style={ModalStyle.modalCancelButton}
                                 onPress={() => {
+                                    // 1. Close the confirmation modal
                                     setModalVisible(false)
+                                    // 2. Clear the user state (This triggers the swap to Login in App.jsx)
                                     clearUser()
+                                    // 3. Close the sidebar
                                     onClose()
-                                    cs.navigate("login")
+                                    
+                                    // NOTE: cs.navigate("login") was removed to prevent the error.
+                                    // App.jsx will now show the login screen automatically.
                                 }}
                             >
                                 <Text style={ModalStyle.modalButtonText}>Logout</Text>
