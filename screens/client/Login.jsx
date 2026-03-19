@@ -1,15 +1,16 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator, Modal } from 'react-native'
+import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import { Ionicons } from '@expo/vector-icons'
 import LoginStyle from '../../styles/clientstyles/LoginStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
 export default function Login() {
-
     const cs = useNavigation()
     const { setUser } = useUser()
 
@@ -26,6 +27,24 @@ export default function Login() {
     const [getUsername, setUsername] = useState("")
     const [getPassword, setPassword] = useState("")
     const [getError, setError] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
+
+    // OTP Modal States
+    const [isOTPModalOpen, setIsOTPModalOpen] = useState(false)
+    const [otp, setOtp] = useState("")
+    const [errorOtp, setErrorOtp] = useState("")
+    const [timer, setTimer] = useState(0)
+    const [unverifiedEmail, setUnverifiedEmail] = useState("")
+
+    useEffect(() => {
+        let interval = null
+        if (timer > 0) {
+            interval = setInterval(() => setTimer(prev => prev - 1), 1000)
+        }
+        return () => clearInterval(interval)
+    }, [timer])
+
+    if (!fontsLoaded) return null; 
 
     const normalizeRole = (role) => {
         const normalized = String(role || "").trim().toLowerCase()
@@ -76,38 +95,73 @@ export default function Login() {
                 })
 
                 showMessage("Login successful!");
-
-                if (Platform.OS === "web" && typeof window !== "undefined") {
-                    const pathname = String(window.location.pathname || "").toLowerCase()
-                    const search = new URLSearchParams(window.location.search || "")
-                    const bookingStatus = search.get("booking") || ""
-
-                    if (bookingStatus && pathname.includes("/packagedetails")) {
-                        cs.navigate("packagedetails")
-                        return
-                    }
-
-                    if (bookingStatus && pathname.includes("/quotationcheckout")) {
-                        cs.navigate("quotationcheckout")
-                        return
-                    }
-                }
-
             } else {
                 setError(response.data.message || "Invalid username or password");
             }
 
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Network error");
+            const status = err.response?.status;
+            const data = err.response?.data;
+
+            // ---> HERE IS WHERE IT CATCHES THE 403 AND POPS THE MODAL <---
+            if (status === 403 && data?.email) {
+                try {
+                    const email = data.email;
+                    await api.post('/auth/send-verify-otp', { email: email });
+                    setUnverifiedEmail(email);
+                    setTimer(60);
+                    setIsOTPModalOpen(true);
+                } catch (otpErr) {
+                    setError(otpErr.response?.data?.message || "Failed to send verification email.");
+                }
+            } else {
+                setError(data?.message || err.message || "Network error");
+            }
         } finally {
             setLoading(false);
         }
     }
 
+    const handleVerifyOTP = async () => {
+        if (otp.length !== 6) {
+            setErrorOtp("OTP must be 6 digits.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await api.post('/auth/verify-account', { 
+                otp: otp, 
+                email: unverifiedEmail
+            });
+
+            if (response.data.success || response.status === 200) {
+                setIsOTPModalOpen(false);
+                setOtp("");
+                showMessage("Account verified successfully!");
+                // Re-trigger login to log them in now that they are verified
+                handleLogin(); 
+            }
+        } catch (err) {
+            setErrorOtp(err.response?.data?.message || "Verification failed");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const resendOTP = async () => {
+        try {
+            await api.post('/auth/send-verify-otp', { email: unverifiedEmail })
+            showMessage("OTP sent!");
+            setTimer(60);
+        } catch (err) {
+            showMessage(err.response?.data?.message || "Verification failed");
+        }
+    }
 
     return (
         <ImageBackground
-            source={require("../../assets/images/login_background.png")}
+            source={require("../../assets/images/Login BG Mobile.png")}
             style={LoginStyle.container}
             resizeMode='cover'
         >
@@ -116,12 +170,32 @@ export default function Login() {
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
                 <Text style={LoginStyle.loginLabel}>Username</Text>
-                <TextInput style={LoginStyle.loginInputs} onChangeText={(e) => { setUsername(e) }}></TextInput>
+                <TextInput 
+                    style={LoginStyle.loginInputs} 
+                    onChangeText={(e) => { 
+                        setUsername(e);
+                        setError(""); 
+                    }}
+                    value={getUsername}
+                />
 
                 <Text style={LoginStyle.loginLabel}>Password</Text>
-                <TextInput style={LoginStyle.loginInputs} onChangeText={(e) => { setPassword(e) }} secureTextEntry={true}></TextInput>
+                <View style={LoginStyle.passwordContainer}>
+                    <TextInput 
+                        style={LoginStyle.passwordInput} 
+                        onChangeText={(e) => { 
+                            setPassword(e);
+                            setError(""); 
+                        }} 
+                        secureTextEntry={!showPassword}
+                        value={getPassword}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={LoginStyle.eyeIcon}>
+                        <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
+                    </TouchableOpacity>
+                </View>
 
-                <Text style={LoginStyle.errorMessage}>{getError}</Text>
+                {getError ? <Text style={LoginStyle.errorMessage}>{getError}</Text> : null}
 
                 <View style={LoginStyle.loginLinksContainer}>
                     <Text onPress={() => { cs.navigate("signup") }} style={LoginStyle.loginLinks}>Don't have an account? Signup here</Text>
@@ -140,7 +214,44 @@ export default function Login() {
                     )}
                 </TouchableOpacity>
             </View>
-        </ImageBackground>
 
+            {/* OTP Verification Modal */}
+            <Modal transparent animationType='fade' visible={isOTPModalOpen}>
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <Text style={ModalStyle.modalTitle}>Verify OTP</Text>
+                        <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We've sent a verification code to your Email</Text>
+
+                        <TextInput
+                            style={LoginStyle.otpInput}
+                            keyboardType="numeric"
+                            maxLength={6}
+                            value={otp}
+                            onChangeText={(val) => {
+                                setOtp(val.replace(/[^0-9]/g, ''))
+                                setErrorOtp("")
+                            }}
+                        />
+                        {errorOtp ? <Text style={[LoginStyle.errorMessage, { marginLeft: 0, textAlign: 'center' }]}>{errorOtp}</Text> : null}
+
+                        <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}
+                        </TouchableOpacity>
+
+                        {timer > 0 ? (
+                            <Text style={LoginStyle.timerText}>Wait for <Text style={LoginStyle.timerHighlight}>{timer}</Text> sec to resend</Text>
+                        ) : (
+                            <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
+                                <Text style={LoginStyle.loginLinks}>Didn't get the code? Click here</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <TouchableOpacity onPress={() => setIsOTPModalOpen(false)} style={{ marginTop: 20 }}>
+                            <Text style={[LoginStyle.loginLinks, { color: '#992A46' }]}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </ImageBackground>
     )
 }

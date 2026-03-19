@@ -6,6 +6,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import SplashScreen from './screens/client/SplashScreen';
 import Signup from './screens/client/Signup';
 import Login from './screens/client/Login';
+// --- NEW IMPORTS ADDED HERE ---
+import PasswordReset from './screens/client/PasswordReset';
+import ResetPassConfirm from './screens/client/ResetPassConfirm';
+// ------------------------------
 import Home from './screens/client/Home';
 import Profile from './screens/client/Profile';
 import Packages from './screens/client/Packages';
@@ -38,8 +42,6 @@ import QuotationCheckout from './screens/client/QuotationCheckout';
 // import QuotationDetailsAdmin from './screens/admin/QuotationDetailsAdmin';
 import { UserProvider, useUser } from './context/UserContext';
 
-
-
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
   if (normalized === 'user') return 'users';
@@ -70,6 +72,10 @@ function AppNavigator() {
             <MyScreen.Screen name="splash" component={SplashScreen} />
             <MyScreen.Screen name="login" component={Login} />
             <MyScreen.Screen name="signup" component={Signup} />
+            {/* --- NEW SCREENS ADDED HERE --- */}
+            <MyScreen.Screen name="resetpassword" component={PasswordReset} />
+            <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
+            {/* ------------------------------ */}
           </>
         ) : (
           

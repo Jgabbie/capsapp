@@ -1,0 +1,170 @@
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { useFonts } from '@expo-google-fonts/montserrat'
+import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
+import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
+import axios from 'axios'
+
+export default function PasswordReset() {
+    const cs = useNavigation()
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
+    })
+
+    const [email, setEmail] = useState("")
+    const [errorEmail, setErrorEmail] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [otp, setOtp] = useState("")
+    const [errorOtp, setErrorOtp] = useState("")
+    const [timer, setTimer] = useState(0)
+
+    // OTP Timer effect
+    useEffect(() => {
+        let interval = null
+        if (timer > 0) {
+            interval = setInterval(() => setTimer(prev => prev - 1), 1000)
+        }
+        return () => clearInterval(interval)
+    }, [timer])
+
+    if (!fontsLoaded) return null;
+
+    const validateEmail = (val) => {
+        if (!val) return "Email is required.";
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) return "Invalid email address.";
+        return "";
+    }
+
+    const handleSendOTP = async () => {
+        const error = validateEmail(email)
+        setErrorEmail(error)
+        if (error) return;
+
+        setLoading(true)
+        try {
+            await axios.post('http://10.0.2.2:5000/api/auth/send-reset-otp', { email })
+            setTimer(60)
+            setIsModalOpen(true)
+        } catch (err) {
+            setErrorEmail(err.response?.data?.message || "Failed to send OTP")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleVerifyOTP = async () => {
+        if (otp.length !== 6) {
+            setErrorOtp("OTP must be 6 digits.");
+            return;
+        }
+
+        setLoading(true)
+        try {
+            const response = await axios.post('http://10.0.2.2:5000/api/auth/check-reset-otp', { email, otp })
+            if (response.data.success || response.status === 200) {
+                setIsModalOpen(false)
+                // Navigate to the next screen, passing the email and token!
+                cs.navigate("resetpassconfirm", { email: email, token: response.data.resetToken })
+            }
+        } catch (err) {
+            setErrorOtp(err.response?.data?.message || "Invalid OTP")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const resendOTP = async () => {
+        try {
+            await axios.post('http://10.0.2.2:5000/api/auth/send-reset-otp', { email })
+            ToastAndroid.show("OTP Sent!", ToastAndroid.SHORT)
+            setTimer(60)
+        } catch (err) {
+            ToastAndroid.show("Failed to resend OTP", ToastAndroid.SHORT)
+        }
+    }
+
+    return (
+        <ImageBackground
+            source={require("../../assets/images/Forgot BG Mobile.png")}
+            style={PasswordResetStyle.container}
+            resizeMode='cover'
+        >
+            <View>
+                <Text style={PasswordResetStyle.heading}>Reset Password</Text>
+                <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a verification code.</Text>
+
+                <Text style={PasswordResetStyle.label}>Email</Text>
+                <TextInput
+                    style={[PasswordResetStyle.input, errorEmail && PasswordResetStyle.inputErrorBorder]}
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={(val) => {
+                        setEmail(val)
+                        setErrorEmail(validateEmail(val))
+                    }}
+                />
+                {errorEmail ? <Text style={PasswordResetStyle.fieldError}>{errorEmail}</Text> : null}
+
+                <TouchableOpacity 
+                    style={[PasswordResetStyle.button, { opacity: loading ? 0.7 : 1 }]} 
+                    onPress={handleSendOTP} 
+                    disabled={loading}
+                >
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={PasswordResetStyle.buttonText}>Send OTP</Text>}
+                </TouchableOpacity>
+
+                <View style={PasswordResetStyle.linksContainer}>
+                    <Text onPress={() => cs.navigate("login")} style={PasswordResetStyle.linkText}>Remembered your password? Login</Text>
+                </View>
+            </View>
+
+            {/* OTP Verification Modal */}
+            <Modal transparent animationType='fade' visible={isModalOpen}>
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <Text style={ModalStyle.modalTitle}>Verify OTP</Text>
+                        <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We sent a code to your email.</Text>
+
+                        <TextInput
+                            style={PasswordResetStyle.otpInput}
+                            keyboardType="numeric"
+                            maxLength={6}
+                            value={otp}
+                            onChangeText={(val) => {
+                                setOtp(val.replace(/[^0-9]/g, ''))
+                                setErrorOtp("")
+                            }}
+                        />
+                        {errorOtp ? <Text style={[PasswordResetStyle.fieldError, { marginLeft: 0, textAlign: 'center' }]}>{errorOtp}</Text> : null}
+
+                        <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}
+                        </TouchableOpacity>
+
+                        {timer > 0 ? (
+                            <Text style={PasswordResetStyle.timerText}>Wait for <Text style={PasswordResetStyle.timerHighlight}>{timer}</Text> sec to resend</Text>
+                        ) : (
+                            <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
+                                <Text style={PasswordResetStyle.linkText}>Didn't get the code? Click here</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Cancel button to close modal */}
+                         <TouchableOpacity onPress={() => setIsModalOpen(false)} style={{ marginTop: 20 }}>
+                                <Text style={[PasswordResetStyle.linkText, { color: '#992A46' }]}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </ImageBackground>
+    )
+}
