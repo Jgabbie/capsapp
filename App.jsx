@@ -19,7 +19,12 @@ import UserBookings from './screens/client/UserBookings';
 import UserTransactions from './screens/client/UserTransactions';
 import BookingInvoice from './screens/client/BookingInvoice';
 import PassportGuidance from './screens/client/PassportGuidance';
+import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
+import PassportGuidanceReNew from './screens/client/PassportGuidanceReNew';
+import PassportProgress from './screens/client/PassportProgress';
 import VisaGuidance from './screens/client/VisaGuidance';
+import VisaDetailsGuidance from './screens/client/VisaDetailsGuidance';
+import VisaProgress from './screens/client/VisaProgress';
 import UserQuotations from './screens/client/UserQuotations';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
@@ -92,7 +97,12 @@ function AppNavigator() {
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
+            <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} />
+            <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} />
+            <MyScreen.Screen name="passportprogress" component={PassportProgress} />
             <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
+            <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
+            <MyScreen.Screen name="visaprogress" component={VisaProgress} />
 
             {/* {isAdmin && (
               <>

@@ -10,6 +10,9 @@ import quotationRoutes from "./routes/quotationRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from "./routes/packageRoutes.js"; // <--- NEW IMPORT
+import passportRoutes from "./routes/passportRoutes.js";
+import visaRoutes from "./routes/visaRoutes.js";
+import visaServiceRoutes from "./routes/visaServiceRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +37,9 @@ app.use("/api/quotation", quotationRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api", packageRoutes); // <--- NEW ROUTE
+app.use("/api/passport", passportRoutes);
+app.use("/api/visa", visaRoutes);
+app.use("/api/visa-services", visaServiceRoutes);
 
 app.get("/", (req, res) => {
     res.send("API running");
