@@ -1,12 +1,18 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native'
+import { View, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 
 import { useNavigation } from '@react-navigation/native'
 import HeaderStyle from '../styles/componentstyles/HeaderStyle'
-
+import { useUser } from '../context/UserContext' // <--- NEW
 
 export default function Header({ openSidebar }) {
     const cs = useNavigation()
+    const { user } = useUser() // <--- NEW
+
+    // <--- NEW: Determine which image to show
+    const profileImageSource = user?.profileImage
+        ? { uri: user.profileImage }
+        : require('../assets/images/profile_icon.png')
 
     return (
         <View style={HeaderStyle.headerContainer}>
@@ -37,9 +43,10 @@ export default function Header({ openSidebar }) {
                     />
                 </TouchableOpacity>
 
+                {/* <--- UPDATED: Using the dynamic image source and making it round */}
                 <Image
-                    source={require('../assets/images/profile_icon.png')}
-                    style={HeaderStyle.profileIcon}
+                    source={profileImageSource}
+                    style={[HeaderStyle.profileIcon, { borderRadius: 50 }]} 
                 />
             </View>
         </View>

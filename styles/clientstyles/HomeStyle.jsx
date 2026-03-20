@@ -3,15 +3,33 @@ import { StyleSheet } from "react-native";
 const HomeStyle = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 15, // Reduced slightly for better mobile fit
+        padding: 15, 
         backgroundColor: "#fff",
     },
+    mainTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        marginBottom: 12,
+        paddingLeft: 5
+    },
+    mainTitle: {
+        fontSize: 20, 
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+    },
+    byTravex: {
+        fontSize: 11,
+        fontFamily: "Montserrat_500Medium",
+        color: "#777",
+        marginLeft: 5,
+        fontStyle: "italic"
+    },
     title: {
-        fontSize: 20, // Slightly smaller for better scaling
-        fontWeight: "bold",
+        fontSize: 20, 
+        fontFamily: "Montserrat_700Bold",
         marginBottom: 12,
         color: "#305797",
-        paddingLeft: 5 // Reduced to align better with the search row
+        paddingLeft: 5 
     },
     searchRow: {
         flexDirection: "row",
@@ -21,23 +39,23 @@ const HomeStyle = StyleSheet.create({
         width: '100%',
     },
     searchBar: {
-        flex: 2, // Gives the search bar more priority
+        flex: 2, 
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "#f6f8fc",
         borderRadius: 20,
         paddingHorizontal: 12,
-        paddingVertical: 6, // CHANGED: Reduced from 10 to make it thinner
+        paddingVertical: 6, 
         borderWidth: 1,
         borderColor: "#dbe3ef",
-        height: 40, // FIXED HEIGHT: Keeps it consistent
+        height: 40, 
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
         fontSize: 14,
         color: "#333",
-        paddingVertical: 0, // CRITICAL: Stops text from shifting vertically
+        paddingVertical: 0, 
     },
     dropdownGroup: {
         flexDirection: "row",
@@ -49,29 +67,60 @@ const HomeStyle = StyleSheet.create({
         alignItems: "center",
         backgroundColor: "#eef3fb",
         borderRadius: 15,
-        paddingHorizontal: 8,
-        paddingVertical: 6, // Match search bar height
+        paddingHorizontal: 10,
+        paddingVertical: 6, 
         borderWidth: 1,
         borderColor: "#d6e0f0",
-        height: 40, // Match search bar height
+        height: 40, 
     },
     dropdownText: {
-        fontSize: 11, // Smaller text to prevent "lumalagpas" inside buttons
+        fontSize: 11, 
         color: "#305797",
         fontFamily: "Roboto_400Regular",
     },
     dropdownIcon: {
         marginLeft: 4
     },
+    // --- NEW MODAL DROPDOWN STYLES ---
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        width: '80%',
+        borderRadius: 15,
+        paddingVertical: 10,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    modalOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        alignItems: 'center'
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#305797',
+        fontFamily: 'Roboto_500Medium'
+    },
+    // ---------------------------------
     card: {
-        marginRight: 15, // Changed from marginLeft to handle horizontal scroll better
+        marginRight: 15, 
         width: 150
     },
     cardImage: {
         width: 150,
         height: 100,
         borderRadius: 10,
-        marginBottom: 5
+        marginBottom: 5,
+        backgroundColor: '#e0e0e0'
     },
     cardTitle: {
         fontFamily: "Montserrat_500Medium",
@@ -96,7 +145,7 @@ const HomeStyle = StyleSheet.create({
         marginTop: 3
     },
     bannerCard: {
-        width: '95%', // Scale relative to screen instead of fixed 320
+        width: '95%', 
         alignSelf: 'center',
         backgroundColor: "#fff",
         borderRadius: 15,
@@ -106,11 +155,12 @@ const HomeStyle = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         marginBottom: 25,
-        overflow: 'hidden' // Keeps image corners rounded
+        overflow: 'hidden' 
     },
     bannerImage: {
         width: "100%",
         height: 180,
+        backgroundColor: '#e0e0e0'
     },
     bannerFooter: {
         padding: 15,
@@ -145,6 +195,14 @@ const HomeStyle = StyleSheet.create({
     arrowIcon: {
         width: 14,
         height: 14,
+    },
+    noResultsText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#777",
+        textAlign: 'center',
+        marginTop: 20,
+        marginBottom: 20
     }
 });
 

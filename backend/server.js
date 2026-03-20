@@ -9,6 +9,7 @@ import bookingRoutes from "./routes/bookingRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
+import packageRoutes from "./routes/packageRoutes.js"; // <--- NEW IMPORT
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,7 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/quotation", quotationRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/transaction", transactionRoutes);
+app.use("/api", packageRoutes); // <--- NEW ROUTE
 
 app.get("/", (req, res) => {
     res.send("API running");

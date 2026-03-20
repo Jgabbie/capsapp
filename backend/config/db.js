@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 // MongoDB connection string
-const MONGO_URI = "mongodb://127.0.0.1:27017/travelsystem";
+const MONGO_URI = "mongodb+srv://jgablanuza_db_user:mtTMAbnveggSPF20@travelsystem.vpnslab.mongodb.net/?appName=TravelSystem";
 // For Atlas, you can use:
 // const MONGO_URI = process.env.MONGO_URI;
 

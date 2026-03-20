@@ -1,6 +1,6 @@
 import express from "express";
 import { 
-    createUser, deleteUser, getUsers, loginUser, updateUser, 
+    createUser, deleteUser, getUsers, loginUser, updateUser, getUserById,
     sendResetOtp, checkResetOtp, resetPassword,
     sendVerifyOtp, verifyAccount 
 } from "../controllers/userController.js"; 
@@ -12,7 +12,11 @@ router.post("/create-user", createUser);
 router.post("/login-user", loginUser);
 router.get("/get-user", getUsers);
 router.delete("/delete-user/:id", deleteUser);
-router.put("/update-user/:id", updateUser);
+
+// Updated & New Routes for Mobile Profile
+router.get("/users/:id", getUserById);
+router.put("/users/:id", updateUser); // Mobile app uses this
+router.put("/update-user/:id", updateUser); // Keep original just in case web relies on it
 
 // Password Reset Routes
 router.post("/auth/send-reset-otp", sendResetOtp);

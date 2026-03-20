@@ -85,12 +85,10 @@ export const loginUser = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
-        // ---> THIS IS THE MAGIC CHECK FOR UNVERIFIED USERS <---
         if (!user.isAccountVerified && !user.isVerified) {
             return res.status(403).json({ success: false, message: "Please verify your account", email: user.email });
         }
 
-        // Login successful
         res.status(200).json({ success: true, userId: user._id, username: user.username, role: canonicalRole(user.role) });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -107,6 +105,19 @@ export const getUsers = async (req, res) => {
     }
 };
 
+// NEW: GET SINGLE USER BY ID
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp");
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // DELETE USER
 export const deleteUser = async (req, res) => {
     try {
@@ -119,13 +130,23 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// UPDATE USER
+// UPDATE USER (Upgraded to handle mobile app profile fields)
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { username, email, firstname, lastname, phonenum, phone } = req.body;
-        const updateData = { username, email, firstname, lastname, phonenum, phone: phone || phonenum };
+        
+        // Grab all incoming data and remove sensitive fields just to be safe
+        const updateData = { ...req.body };
+        delete updateData.password;
+        delete updateData.hashedPassword;
+        delete updateData.verifyOtp;
+        delete updateData.resetOtp;
+        
+        // Keep phone strings in sync
+        if (req.body.phonenum) updateData.phone = req.body.phonenum;
+
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).select("-password -hashedPassword");
+        
         if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
         res.status(200).json({ success: true, user: updatedUser });
     } catch (error) {
@@ -213,7 +234,7 @@ export const resetPassword = async (req, res) => {
 };
 
 // =========================================================
-// NEW: ACCOUNT VERIFICATION OTP LOGIC
+// ACCOUNT VERIFICATION OTP LOGIC
 // =========================================================
 export const sendVerifyOtp = async (req, res) => {
     const { email } = req.body;
