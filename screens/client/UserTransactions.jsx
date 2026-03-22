@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Platform } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Platform, Image } from 'react-native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
@@ -74,7 +74,7 @@ export default function UserTransactions() {
 
             <ScrollView contentContainerStyle={UserTransactionStyle.container} showsVerticalScrollIndicator={false}>
                 
-                {/* --- M&RC Branding Header (As requested!) --- */}
+                {/* --- M&RC Branding Header --- */}
                 <View style={UserTransactionStyle.brandingContainer}>
                     <Text style={UserTransactionStyle.mainTitle}>M&RC Travel and Tours</Text>
                     <Text style={UserTransactionStyle.byTravex}>by travex</Text>
@@ -96,7 +96,6 @@ export default function UserTransactions() {
                     </View>
 
                     <View style={UserTransactionStyle.dropdownGroup}>
-                        {/* Status Filter Button */}
                         <TouchableOpacity 
                             style={UserTransactionStyle.dropdownButton} 
                             onPress={() => setStatusModalVisible(true)}
@@ -105,7 +104,6 @@ export default function UserTransactions() {
                             <Ionicons name="chevron-down" size={12} color="#305797" />
                         </TouchableOpacity>
 
-                        {/* Date Filter Button */}
                         <TouchableOpacity 
                             style={UserTransactionStyle.dropdownButton} 
                             onPress={() => setShowDatePicker(true)}
@@ -125,8 +123,17 @@ export default function UserTransactions() {
                     </TouchableOpacity>
                 )}
 
+                {/* --- LIST / EMPTY STATE RENDERING --- */}
                 {loading ? (
                     <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
+                ) : filteredTransactions.length === 0 ? (
+                    <View style={UserTransactionStyle.emptyContainer}>
+                        <Image 
+                            source={require('../../assets/images/empty_logo.png')} 
+                            style={UserTransactionStyle.emptyImage}
+                        />
+                        <Text style={UserTransactionStyle.emptyText}>No Data yet</Text>
+                    </View>
                 ) : (
                     filteredTransactions.map((item) => (
                         <View key={item._id} style={UserTransactionStyle.transactionCard}>

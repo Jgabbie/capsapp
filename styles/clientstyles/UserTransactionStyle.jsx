@@ -3,7 +3,8 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
     container: {
         padding: 20,
-        backgroundColor: "#fff"
+        backgroundColor: "#fff",
+        flexGrow: 1, // Added to ensure empty state centers vertically
     },
     // Branding Section
     brandingContainer: {
@@ -153,5 +154,23 @@ export default StyleSheet.create({
     modalOptionText: {
         fontFamily: "Roboto_500Medium",
         color: "#305797"
+    },
+    // --- EMPTY STATE STYLES ---
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 40,
+    },
+    emptyImage: {
+        width: 150, 
+        height: 150,
+        resizeMode: 'contain',
+        opacity: 0.8,
+    },
+    emptyText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 16,
+        color: '#999',
+        marginTop: 15,
     }
 });

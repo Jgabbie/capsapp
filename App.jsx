@@ -33,6 +33,7 @@ import QuotationCheckout from './screens/client/QuotationCheckout';
 import QuotationForm from './screens/client/QuotationForm';
 
 import { UserProvider, useUser } from './context/UserContext';
+import Notifications from './screens/client/Notifications';
 
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
@@ -78,6 +79,7 @@ function AppNavigator() {
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />
             <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
             <MyScreen.Screen name="userbookings" component={UserBookings} />
+            <MyScreen.Screen name="notifications" component={Notifications} />
             
             {/* Quotation Screens */}
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />

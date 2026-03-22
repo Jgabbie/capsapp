@@ -16,6 +16,7 @@ import wishlistRoutes from "./routes/wishlistRoutes.js";
 import passportRoutes from "./routes/passportRoutes.js";
 import visaRoutes from "./routes/visaRoutes.js";
 import visaServiceRoutes from "./routes/visaServiceRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- API Routes ---
 app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/quotation", quotationRoutes);
 app.use("/api/payment", paymentRoutes);

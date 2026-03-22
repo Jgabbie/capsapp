@@ -1,40 +1,41 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 const UserBookingsStyle = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: "#f5f7fa", // Light background to make white cards pop
+        padding: 15,
+        backgroundColor: "#fff", 
     },
     title: {
-        fontSize: 24,
+        fontSize: 20, 
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         marginBottom: 5,
+        paddingLeft: 5,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontFamily: "Roboto_400Regular",
         color: "#777",
         marginBottom: 20,
+        paddingLeft: 5,
     },
 
-    // --- SEARCH & FILTERS (CLONED FROM HOME/WISHLIST) ---
+    // --- SEARCH & FILTERS ---
     searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
+        flexDirection: "column", 
+        gap: 12,
         marginBottom: 20,
         width: '100%',
     },
     searchBar: {
-        flex: 2, 
+        width: '100%',
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 20,
+        backgroundColor: "#f6f8fc", 
+        borderRadius: 20, 
         paddingHorizontal: 12,
-        height: 40,
+        height: 40, 
         borderWidth: 1,
         borderColor: "#dbe3ef",
     },
@@ -44,36 +45,60 @@ const UserBookingsStyle = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Roboto_400Regular",
         color: "#333",
+        paddingVertical: 0,
     },
-    dropdownGroup: {
+    filterRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 5
+        gap: 8, 
     },
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 20,
+        backgroundColor: "#eef3fb", 
+        borderRadius: 15, 
         paddingHorizontal: 10,
-        paddingVertical: 8,
+        height: 40, 
         borderWidth: 1,
-        borderColor: "#dbe3ef",
-        minWidth: 100,
-        justifyContent: 'space-between'
-    },
-    modalOption: {
-        paddingVertical: 12,
-        width: '100%',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0'
+        borderColor: "#d6e0f0", 
+        justifyContent: 'space-between',
+        minWidth: 90,
     },
     dropdownText: {
         fontSize: 11, 
         color: "#305797",
-        fontFamily: "Montserrat_700Bold",
-        marginRight: 4
+        fontFamily: "Roboto_400Regular", 
+    },
+
+    // --- MODAL STYLES ---
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        width: '80%',
+        borderRadius: 15,
+        paddingVertical: 10,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    modalOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        alignItems: 'center',
+        width: '100%'
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#305797',
+        fontFamily: 'Roboto_500Medium'
     },
 
     // --- BOOKING CARDS ---
@@ -82,8 +107,8 @@ const UserBookingsStyle = StyleSheet.create({
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
-        elevation: 3, // Android shadow
-        shadowColor: "#000", // iOS shadow
+        elevation: 3,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -94,60 +119,42 @@ const UserBookingsStyle = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 12,
         borderBottomWidth: 1,
         borderBottomColor: "#f0f0f0",
-        paddingBottom: 8,
+        paddingBottom: 10,
+        marginBottom: 12,
     },
     bookingRef: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 13,
+        fontSize: 12,
         color: "#777",
+        textTransform: 'uppercase',
     },
     statusBadge: {
         paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 12,
-        backgroundColor: "#ecfdf5", // Default light green bg
+        borderRadius: 8,
     },
     bookingStatus: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 11,
-        color: "#10b981", // Default green
-        textTransform: "uppercase",
-    },
-    cardBody: {
-        marginBottom: 15,
     },
     packageName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18,
+        fontSize: 16,
         color: "#305797",
-        marginBottom: 10,
-    },
-    detailRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: 6,
+        marginBottom: 8,
     },
     detailText: {
         fontFamily: "Roboto_400Regular",
         fontSize: 13,
         color: "#555",
+        marginBottom: 4,
     },
-    priceLabel: {
-        fontFamily: "Montserrat_700Bold",
-        fontSize: 14,
-        color: "#333",
-        marginTop: 5,
-    },
-
-    // --- ACTIONS ---
     cardActions: {
         flexDirection: "row",
         gap: 10,
-        marginTop: 5,
+        marginTop: 10,
     },
     viewButton: {
         flex: 1,
@@ -168,25 +175,31 @@ const UserBookingsStyle = StyleSheet.create({
     viewButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_700Bold",
-        fontSize: 13,
+        fontSize: 12,
     },
     cancelButtonText: {
         color: "#ff4d4f",
         fontFamily: "Montserrat_700Bold",
-        fontSize: 13,
+        fontSize: 12,
     },
-
-    // --- EMPTY STATE ---
-    emptyState: {
+    
+    // --- EMPTY STATE STYLES ---
+    emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 60,
     },
+    emptyImage: {
+        width: 150, 
+        height: 150,
+        resizeMode: 'contain',
+        opacity: 0.8,
+    },
     emptyText: {
-        fontFamily: "Montserrat_500Medium",
+        fontFamily: "Roboto_400Regular",
         fontSize: 16,
         color: '#999',
-        marginTop: 10,
+        marginTop: 15,
     }
 });
 
