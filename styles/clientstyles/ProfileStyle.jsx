@@ -1,100 +1,231 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet } from "react-native";
 
 const ProfileStyle = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
         paddingBottom: 40,
+        backgroundColor: "#f5f7fa"
     },
-
     profileHeading: {
-        fontSize: 26,
-        fontFamily: "Montserrat_700Bold",
-        color: "#305797",
-        marginBottom: 25,
-        textAlign: "center",
-    },
-
-    profileSecondHeading: {
         fontSize: 24,
         fontFamily: "Montserrat_700Bold",
-        color: "#305797",
-        marginVertical: 20,
-        textAlign: "center",
-    },
-
-    profileLabel: {
-        fontSize: 14,
-        color: "#305797",
-        marginBottom: 6,
+        color: "#333",
+        marginBottom: 20,
         marginTop: 10,
     },
-
+    profileImageContainer: {
+        alignItems: "center",
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    profileAvatarWrapper: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: "#eef2f7",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        borderWidth: 3,
+        borderColor: "#fff",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+    },
+    profileImage: {
+        width: "100%",
+        height: "100%",
+    },
+    profileAvatarPlaceholder: {
+        fontSize: 36,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+    },
+    changePhotoButton: {
+        backgroundColor: "#305797",
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginTop: 12,
+    },
+    changePhotoText: {
+        color: "#fff",
+        fontFamily: "Roboto_500Medium",
+        fontSize: 14,
+    },
+    photoHelpText: {
+        fontSize: 12,
+        color: "#6b7280",
+        fontFamily: "Roboto_400Regular",
+        marginTop: 6,
+    },
+    card: {
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 20,
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        marginBottom: 20,
+    },
+    profileLabel: {
+        fontSize: 13,
+        fontFamily: "Montserrat_500Medium",
+        color: "#2f3a4a",
+        marginBottom: 6,
+        marginTop: 12,
+    },
     profileInputs: {
-        fontSize: 16,
+        fontSize: 15,
         borderWidth: 1,
-        borderRadius: 10,
-        borderColor: "#d0d0d0",
+        borderRadius: 8,
+        borderColor: "#dbe3ef",
         paddingHorizontal: 12,
         height: 45,
         width: "100%",
         backgroundColor: "#fff",
+        color: "#333",
+        fontFamily: "Roboto_400Regular"
     },
-
+    profileInputsDisabled: {
+        backgroundColor: "#f3f4f6",
+        color: "#6b7280",
+    },
+    profileInputsError: {
+        borderColor: "#d9534f",
+    },
+    phoneInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderRadius: 8,
+        borderColor: "#dbe3ef",
+        height: 45,
+        width: "100%",
+        backgroundColor: "#fff",
+        overflow: 'hidden'
+    },
+    phonePrefix: {
+        paddingHorizontal: 12,
+        backgroundColor: '#f3f4f6',
+        height: '100%',
+        textAlignVertical: 'center',
+        color: '#6b7280',
+        fontFamily: "Roboto_400Regular",
+        borderRightWidth: 1,
+        borderRightColor: '#dbe3ef'
+    },
+    phoneInput: {
+        flex: 1,
+        paddingHorizontal: 12,
+        fontSize: 15,
+        fontFamily: "Roboto_400Regular",
+        color: "#333",
+    },
     fullNameContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
-        gap: 10,
+        gap: 12,
     },
-
-    nameInputs: {
-        fontSize: 16,
-        borderWidth: 1,
-        borderRadius: 10,
-        borderColor: "#d0d0d0",
-        paddingHorizontal: 12,
-        width: 180,
-        height: 45,
-        backgroundColor: "#fff",
+    halfInput: {
         flex: 1,
     },
-
-    profileLinksContainer: {
+    errorMessage: {
+        color: "#d9534f",
+        fontSize: 11,
+        fontFamily: "Roboto_400Regular",
+        marginTop: 4,
+    },
+    verifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f6ffed',
+        borderWidth: 1,
+        borderColor: '#b7eb8f',
+        padding: 12,
+        borderRadius: 8,
         marginTop: 20,
     },
-
-    profileLinks: {
+    verifiedText: {
+        color: '#52c41a',
+        fontFamily: "Montserrat_500Medium",
         fontSize: 14,
-        color: "#305797",
     },
-
-    profileButton: {
+    actionContainer: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 25,
+    },
+    editButton: {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#305797",
-        height: 48,
-        marginTop: 25,
-        borderRadius: 10,
+        height: 45,
+        borderRadius: 8,
         width: "100%",
     },
-
-    profileButtonText: {
+    saveButton: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#305797",
+        height: 45,
+        borderRadius: 8,
+    },
+    cancelButton: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#992A46",
+        height: 45,
+        borderRadius: 8,
+    },
+    buttonText: {
         color: "#fff",
-        fontSize: 16,
+        fontSize: 15,
         fontFamily: "Roboto_500Medium",
     },
-
-    profileImageContainer: {
+    dropdownButton: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
-        marginTop: 40,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontFamily: "Montserrat_700Bold",
+        color: "#333",
+        marginTop: 10,
+        marginBottom: 15,
+        marginLeft: 5,
+    },
+    emptyStateCard: {
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 30,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
         marginBottom: 20,
+        alignItems: "center",
+        justifyContent: "center",
     },
-
-    profileImage: {
-        width: 110,
-        height: 110,
-        borderRadius: 55,
+    emptyStateText: {
+        color: "#6b7280",
+        fontFamily: "Roboto_400Regular",
+        fontSize: 15,
     },
+    datePickerText: {
+        flex: 1,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 15,
+    }
 });
 
 export default ProfileStyle;

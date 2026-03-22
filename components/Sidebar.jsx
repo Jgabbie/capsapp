@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, Modal, Pressable, TouchableWi, TouchableWithoutFeedback } from 'react-native'
+import { View, Text, Image, TouchableOpacity, Modal, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -6,12 +6,25 @@ import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from 
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
+import { useUser } from '../context/UserContext'
 
 
 export default function Sidebar({ visible, onClose }) {
 
     const cs = useNavigation()
     const [modalVisible, setModalVisible] = useState(false)
+    const { user, clearUser } = useUser()
+
+    const displayName = [user?.firstname, user?.lastname]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || user?.username || 'Guest User'
+
+    const displayEmail = user?.email || 'No email'
+
+    const profileImageSource = user?.profileImage
+        ? { uri: user.profileImage }
+        : require('../assets/images/profile_icon60.png')
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -36,13 +49,13 @@ export default function Sidebar({ visible, onClose }) {
                 <View style={SidebarStyle.sidebarContainer}>
                     <View style={SidebarStyle.profileSection}>
                         <Image
-                            source={require('../assets/images/profile_icon60.png')}
+                            source={profileImageSource}
                             style={SidebarStyle.profileImg}
 
                         />
                         <View style={SidebarStyle.nameContainer}>
-                            <Text style={SidebarStyle.userName}>Juan Gabriel Lanuza</Text>
-                            <Text style={SidebarStyle.userHandle}>jgablanuza@gmail.com</Text>
+                            <Text style={SidebarStyle.userName}>{displayName}</Text>
+                            <Text style={SidebarStyle.userHandle}>{displayEmail}</Text>
                         </View>
                     </View>
 
@@ -94,6 +107,15 @@ export default function Sidebar({ visible, onClose }) {
                     />
 
                     <MenuItem
+                        title="Quotations"
+                        icon={require('../assets/images/transactions_icon.png')}
+                        onPress={() => {
+                            onClose()
+                            cs.navigate("userquotations")
+                        }}
+                    />
+
+                    <MenuItem
                         title="Transactions"
                         icon={require('../assets/images/transactions_icon.png')}
                         onPress={() => {
@@ -136,7 +158,7 @@ export default function Sidebar({ visible, onClose }) {
                 transparent
                 animationType='fade'
                 visible={modalVisible}
-                onRequestClose={() => { setModalVisible }}
+                onRequestClose={() => { setModalVisible(false) }}
             >
 
                 <View style={ModalStyle.modalOverlay}>
@@ -157,9 +179,15 @@ export default function Sidebar({ visible, onClose }) {
                             <TouchableOpacity
                                 style={ModalStyle.modalCancelButton}
                                 onPress={() => {
+                                    // 1. Close the confirmation modal
                                     setModalVisible(false)
+                                    // 2. Clear the user state (This triggers the swap to Login in App.jsx)
+                                    clearUser()
+                                    // 3. Close the sidebar
                                     onClose()
-                                    cs.navigate("login")
+                                    
+                                    // NOTE: cs.navigate("login") was removed to prevent the error.
+                                    // App.jsx will now show the login screen automatically.
                                 }}
                             >
                                 <Text style={ModalStyle.modalButtonText}>Logout</Text>

@@ -18,24 +18,15 @@ const PackageManagementStyles = StyleSheet.create({
     statsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        gap: 8,
     },
-    card: {
+    statsCard: {
         backgroundColor: '#fff',
-        width: '48%',
-        padding: 16,
+        flex: 1,
+        paddingVertical: 15,
         borderRadius: 10,
         elevation: 3,
         alignItems: 'center',
-    },
-    valueRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    statsIcon: {
-        width: 24,
-        height: 24,
-        resizeMode: 'contain',
     },
     cardValue: {
         fontSize: 22,
@@ -45,50 +36,110 @@ const PackageManagementStyles = StyleSheet.create({
     cardLabel: {
         marginTop: 4,
         color: '#777',
-        fontSize: 12,
+        fontSize: 10,
+        textAlign: 'center',
     },
-    searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    filterWrapper: {
         marginBottom: 15,
     },
     searchBar: {
-        flex: 1,
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 22,
+        backgroundColor: "#fff",
+        borderRadius: 10,
         paddingHorizontal: 14,
+        height: 45,
         borderWidth: 1,
-        borderColor: "#dbe3ef"
+        borderColor: "#dbe3ef",
+        marginBottom: 10,
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 13,
+        fontSize: 14,
         color: "#333",
+    },
+    dropdownRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 5,
+    },
+    dropdownButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+        paddingHorizontal: 8,
+        height: 40,
+        borderRadius: 8,
+    },
+    dropdownText: {
+        fontSize: 11,
+        color: '#777',
     },
     addPackageBtn: {
         flexDirection: 'row',
         backgroundColor: '#305797',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 10,
+        paddingHorizontal: 10,
+        height: 40,
+        borderRadius: 8,
         alignItems: 'center',
-        width: '35%',
-        justifyContent: 'center'
-    },
-    plusIcon: {
-        width: 15,
-        height: 15,
-        marginRight: 5,
+        justifyContent: 'center',
     },
     addBtnText: {
         color: '#fff',
         fontFamily: 'Roboto_500Medium',
-        fontSize: 12
+        fontSize: 11,
+        marginLeft: 2,
     },
+    
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingTop: 40,
+    },
+    emptyLogo: {
+        width: 140,
+        height: 140,
+        resizeMode: 'contain',
+        opacity: 0.5,
+    },
+    emptyText: {
+        marginTop: 5,
+        fontSize: 16,
+        color: '#999',
+        fontFamily: 'Roboto_500Medium',
+    },
+    
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dropdownMenu: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        paddingVertical: 10,
+        elevation: 5,
+    },
+    menuItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    menuText: {
+        fontSize: 14,
+        color: '#333',
+    },
+    
     packageCard: {
         backgroundColor: '#fff',
         borderRadius: 10,
@@ -124,13 +175,11 @@ const PackageManagementStyles = StyleSheet.create({
         fontSize: 11,
         color: '#333',
         marginVertical: 5,
-        fontFamily: 'Roboto_400Regular',
     },
     cardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 5
     },
     priceText: {
         fontSize: 14,
@@ -156,62 +205,6 @@ const PackageManagementStyles = StyleSheet.create({
     btnText: {
         color: '#fff',
         fontSize: 10,
-        fontFamily: 'Roboto_500Medium'
-    },
-
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        width: '85%',
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        padding: 30,
-        alignItems: 'center',
-        elevation: 10,
-    },
-    modalText: {
-        fontSize: 18,
-        fontFamily: 'Roboto_700Bold',
-        color: '#305797',
-        textAlign: 'center',
-        marginBottom: 30,
-        lineHeight: 24,
-    },
-    modalButtonRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    modalCancelBtn: {
-        flex: 1,
-        backgroundColor: '#305797',
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    modalRemoveBtn: {
-        flex: 1,
-        backgroundColor: '#992A46',
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    modalOkBtn: {
-        backgroundColor: '#305797',
-        paddingVertical: 12,
-        width: '100%',
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    modalButtonText: {
-        color: '#fff',
-        fontFamily: 'Roboto_700Bold',
-        fontSize: 16,
     },
 });
 

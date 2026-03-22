@@ -6,7 +6,7 @@ const HeaderStyle = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         paddingHorizontal: 30,
-        paddingTop: 25,
+        paddingTop: 60,
         paddingBottom: 20
     },
     sideBarButton: {

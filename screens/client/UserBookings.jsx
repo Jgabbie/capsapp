@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, Alert } from 'react-native'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -9,15 +9,20 @@ import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import UserBookingsStyle from '../../styles/clientstyles/UserBookingsStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
 
 
 
 export default function UserBookings() {
 
     const cs = useNavigation()
+    const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
     const [modalOkVisible, setModalOkVisible] = useState(false)
+    const [selectedBookingId, setSelectedBookingId] = useState(null)
+    const [searchText, setSearchText] = useState('')
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -28,12 +33,53 @@ export default function UserBookings() {
         Roboto_700Bold
     })
 
-    const [getBookings, setBookings] = useState([
-        { id: "1", ref: "BR-0001", package: "Boracay Tour", pax: "4", date: "09-14-2026", price: 70000 },
-    ])
+    const [getBookings, setBookings] = useState([])
+
+    const fetchBookings = async () => {
+        if (!user?._id) {
+            setBookings([])
+            return
+        }
+
+        try {
+            const response = await api.get('/booking/my-bookings', withUserHeader(user._id))
+            setBookings(response.data || [])
+        } catch (_error) {
+            setBookings([])
+        }
+    }
+
+    useEffect(() => {
+        fetchBookings()
+    }, [user?._id])
+
+    const filteredBookings = useMemo(() => {
+        if (!searchText.trim()) return getBookings
+
+        const needle = searchText.trim().toLowerCase()
+        return getBookings.filter((item) => {
+            const reference = item.reference?.toLowerCase() || ''
+            const packageName = item.bookingDetails?.packageName?.toLowerCase() || ''
+            const status = item.status?.toLowerCase() || ''
+            return reference.includes(needle) || packageName.includes(needle) || status.includes(needle)
+        })
+    }, [getBookings, searchText])
 
     const modalOK = () => {
         setModalOkVisible(false)
+        fetchBookings()
+    }
+
+    const handleCancelBooking = async () => {
+        if (!selectedBookingId || !user?._id) return
+
+        try {
+            await api.post(`/booking/cancel/${selectedBookingId}`, { reason: 'User requested cancellation' }, withUserHeader(user._id))
+            setModalVisible(false)
+            setModalOkVisible(true)
+        } catch (_error) {
+            setModalVisible(false)
+        }
     }
 
     return (
@@ -55,6 +101,8 @@ export default function UserBookings() {
                                 style={UserBookingsStyle.searchInput}
                                 placeholder='Search booking reference'
                                 placeholderTextColor="#777"
+                                value={searchText}
+                                onChangeText={setSearchText}
                             />
                         </View>
 
@@ -79,44 +127,47 @@ export default function UserBookings() {
                         </View>
                     </View>
 
-                    {getBookings.map((item) => (
-                        <View key={item.id} style={UserBookingsStyle.bookingCard}>
+                    {filteredBookings.map((item) => (
+                        <View key={item._id} style={UserBookingsStyle.bookingCard}>
 
                             <View style={UserBookingsStyle.cardHeader}>
-                                <Text style={UserBookingsStyle.bookingRef}>{item.ref}</Text>
-                                <Text style={UserBookingsStyle.bookingStatus}>Confirmed</Text>
+                                <Text style={UserBookingsStyle.bookingRef}>{item.reference}</Text>
+                                <Text style={UserBookingsStyle.bookingStatus}>{item.status || 'Successful'}</Text>
                             </View>
 
                             <View style={UserBookingsStyle.cardBody}>
-                                <Text style={UserBookingsStyle.packageName}>{item.package}</Text>
+                                <Text style={UserBookingsStyle.packageName}>{item.bookingDetails?.packageName || 'Package'}</Text>
 
                                 <View style={UserBookingsStyle.detailRow}>
                                     <Text style={UserBookingsStyle.detailLabel}>Travelers:</Text>
-                                    <Text style={UserBookingsStyle.detailValue}>{item.pax}</Text>
+                                    <Text style={UserBookingsStyle.detailValue}>{item.bookingDetails?.travelers || 0}</Text>
                                 </View>
 
                                 <View style={UserBookingsStyle.detailRow}>
                                     <Text style={UserBookingsStyle.detailLabel}>Travel Date:</Text>
-                                    <Text style={UserBookingsStyle.detailValue}>{item.date}</Text>
+                                    <Text style={UserBookingsStyle.detailValue}>{item.bookingDetails?.travelDate || '--'}</Text>
                                 </View>
 
                                 <View style={UserBookingsStyle.detailRow}>
                                     <Text style={UserBookingsStyle.detailLabel}>Total Amount:</Text>
-                                    <Text style={UserBookingsStyle.price}>₱{item.price}</Text>
+                                    <Text style={UserBookingsStyle.price}>₱{item.bookingDetails?.totalPrice || 0}</Text>
                                 </View>
                             </View>
 
                             <View style={UserBookingsStyle.cardActions}>
                                 <TouchableOpacity
                                     style={UserBookingsStyle.viewButton}
-                                    onPress={() => cs.navigate("bookinginvoice")}
+                                    onPress={() => cs.navigate('bookinginvoice', { booking: item })}
                                 >
                                     <Text style={UserBookingsStyle.buttonText}>View Details</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={UserBookingsStyle.cancelButton}
-                                    onPress={() => setModalVisible(true)}
+                                    onPress={() => {
+                                        setSelectedBookingId(item._id)
+                                        setModalVisible(true)
+                                    }}
                                 >
                                     <Text style={UserBookingsStyle.buttonText}>Cancel Booking</Text>
                                 </TouchableOpacity>
@@ -143,10 +194,7 @@ export default function UserBookings() {
                         <View style={ModalStyle.modalButtonContainer}>
                             <TouchableOpacity
                                 style={ModalStyle.modalButton}
-                                onPress={() => {
-                                    setModalVisible(false)
-                                    setModalOkVisible(true)
-                                }}
+                                onPress={handleCancelBooking}
                             >
                                 <Text style={ModalStyle.modalButtonText}>Yes</Text>
                             </TouchableOpacity>
