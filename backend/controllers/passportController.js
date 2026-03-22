@@ -4,6 +4,18 @@ import UserModel from "../models/users.js";
 const randomApplicationNumber = () =>
   `APP-${Math.random().toString(36).slice(2, 11).toUpperCase()}`;
 
+const getUploadedFileMeta = (req, fieldName) => {
+  const file = req.files?.[fieldName]?.[0];
+  if (!file) return null;
+
+  return {
+    fileName: file.originalname,
+    fileUrl: `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`,
+    mimeType: file.mimetype,
+    uploadedAt: new Date(),
+  };
+};
+
 export const applyPassport = async (req, res) => {
   try {
     const userId = req.userId;
@@ -18,6 +30,34 @@ export const applyPassport = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const documents = {
+      passportPhoto: getUploadedFileMeta(req, "passportPhoto"),
+      applicationForm: getUploadedFileMeta(req, "applicationForm"),
+      psaBirthCertificate: getUploadedFileMeta(req, "psaBirthCertificate"),
+      validGovernmentId: getUploadedFileMeta(req, "validGovernmentId"),
+      oldPassport: getUploadedFileMeta(req, "oldPassport"),
+    };
+
+    const hasAllDocuments =
+      documents.passportPhoto &&
+      documents.applicationForm &&
+      documents.psaBirthCertificate &&
+      documents.validGovernmentId;
+
+    if (!hasAllDocuments) {
+      return res.status(400).json({
+        message:
+          "Please upload all passport requirements: 2x2 photo, application form, PSA birth certificate, and valid government ID",
+      });
+    }
+
+    const isRenewApplication = String(applicationType || "").toLowerCase().includes("renew");
+    if (isRenewApplication && !documents.oldPassport) {
+      return res.status(400).json({
+        message: "Please upload your old passport for renew passport applications",
+      });
+    }
+
     const application = await PassportModel.create({
       userId,
       username: user.username,
@@ -26,6 +66,7 @@ export const applyPassport = async (req, res) => {
       preferredTime,
       applicationType,
       applicationId: randomApplicationNumber(),
+      documents,
     });
 
     return res.status(201).json({
