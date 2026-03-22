@@ -156,12 +156,11 @@ export default function Profile() {
     }
 
     const getInitials = () => {
-        const first = userData.firstname?.trim() || ''
-        const last = userData.lastname?.trim() || ''
-        const fallback = userData.username?.trim() || ''
-
-        if (first || last) return `${first.charAt(0).toUpperCase()}${last.charAt(0).toUpperCase()}`
-        return fallback ? fallback.charAt(0).toUpperCase() : 'U'
+        // Grab the username from state, or fallback to the global user context just in case
+        const currentUsername = userData.username?.trim() || user?.username?.trim() || "";
+        
+        // Return the first letter capitalized, or "U" if the database hasn't loaded it yet
+        return currentUsername ? currentUsername.charAt(0).toUpperCase() : "U";
     }
 
     const pickImage = async () => {

@@ -2,142 +2,192 @@ import { StyleSheet } from "react-native";
 
 const UserBookingsStyle = StyleSheet.create({
     container: {
+        flex: 1,
         padding: 20,
-        backgroundColor: "#fff"
+        backgroundColor: "#f5f7fa", // Light background to make white cards pop
     },
     title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 15,
+        fontSize: 24,
+        fontFamily: "Montserrat_700Bold",
         color: "#305797",
+        marginBottom: 5,
     },
+    subtitle: {
+        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
+        color: "#777",
+        marginBottom: 20,
+    },
+
+    // --- SEARCH & FILTERS (CLONED FROM HOME/WISHLIST) ---
     searchRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 10,
-        marginBottom: 16
+        gap: 8,
+        marginBottom: 20,
+        width: '100%',
     },
     searchBar: {
-        flex: 1,
+        flex: 2, 
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "#f6f8fc",
-        borderRadius: 22,
-        paddingHorizontal: 14,
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        height: 40,
         borderWidth: 1,
-        borderColor: "#dbe3ef"
+        borderColor: "#dbe3ef",
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 13,
+        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
         color: "#333",
     },
     dropdownGroup: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8
+        gap: 5
     },
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 18,
-        paddingHorizontal: 12,
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        paddingHorizontal: 10,
         paddingVertical: 8,
         borderWidth: 1,
-        borderColor: "#d6e0f0"
+        borderColor: "#dbe3ef",
+        minWidth: 100,
+        justifyContent: 'space-between'
     },
-    dropdownIcon: {
-        marginLeft: 6
+    modalOption: {
+        paddingVertical: 12,
+        width: '100%',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0'
     },
+    dropdownText: {
+        fontSize: 11, 
+        color: "#305797",
+        fontFamily: "Montserrat_700Bold",
+        marginRight: 4
+    },
+
+    // --- BOOKING CARDS ---
     bookingCard: {
         backgroundColor: "#fff",
         borderRadius: 16,
-        padding: 18,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 3
+        padding: 16,
+        marginBottom: 16,
+        elevation: 3, // Android shadow
+        shadowColor: "#000", // iOS shadow
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        borderWidth: 1,
+        borderColor: "#eee",
     },
-
     cardHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 10
+        alignItems: "center",
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+        paddingBottom: 8,
     },
-
     bookingRef: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 16,
-        color: "#305797"
-    },
-
-    bookingStatus: {
-        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
-        color: "#2ecc71"
+        color: "#777",
     },
-
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        backgroundColor: "#ecfdf5", // Default light green bg
+    },
+    bookingStatus: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 11,
+        color: "#10b981", // Default green
+        textTransform: "uppercase",
+    },
     cardBody: {
-        marginBottom: 15
+        marginBottom: 15,
     },
-
     packageName: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 18,
-        marginBottom: 10
+        color: "#305797",
+        marginBottom: 10,
     },
-
     detailRow: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 6
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 6,
     },
-
-    detailLabel: {
-        fontFamily: "Montserrat_400Regular",
-        color: "#555"
+    detailText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#555",
     },
-
-    detailValue: {
-        fontFamily: "Montserrat_500Medium",
-        color: "#000"
-    },
-
-    price: {
+    priceLabel: {
         fontFamily: "Montserrat_700Bold",
-        color: "#305797"
+        fontSize: 14,
+        color: "#333",
+        marginTop: 5,
     },
 
+    // --- ACTIONS ---
     cardActions: {
         flexDirection: "row",
-        justifyContent: "space-between"
+        gap: 10,
+        marginTop: 5,
     },
-
     viewButton: {
         flex: 1,
         backgroundColor: "#305797",
-        padding: 10,
+        paddingVertical: 10,
         borderRadius: 8,
         alignItems: "center",
-        marginRight: 8
     },
-
     cancelButton: {
         flex: 1,
-        backgroundColor: "#e74c3c",
-        padding: 10,
+        backgroundColor: "#fff",
+        paddingVertical: 10,
         borderRadius: 8,
-        alignItems: "center"
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#ff4d4f",
+    },
+    viewButtonText: {
+        color: "#fff",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 13,
+    },
+    cancelButtonText: {
+        color: "#ff4d4f",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 13,
     },
 
-    buttonText: {
-        color: "#fff",
-        fontFamily: "Roboto_500Medium"
+    // --- EMPTY STATE ---
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 60,
+    },
+    emptyText: {
+        fontFamily: "Montserrat_500Medium",
+        fontSize: 16,
+        color: '#999',
+        marginTop: 10,
     }
+});
 
-})
-
-export default UserBookingsStyle
+export default UserBookingsStyle;

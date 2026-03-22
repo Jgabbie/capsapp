@@ -23,7 +23,7 @@ import VisaGuidance from './screens/client/VisaGuidance';
 import UserQuotations from './screens/client/UserQuotations';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
-
+import QuotationForm from './screens/client/QuotationForm';
 // import AdminDashboard from './screens/admin/AdminDashboard';
 // import UserManagement from './screens/admin/UserManagement';
 // import BookingManagement from './screens/admin/BookingManagement';
@@ -41,6 +41,7 @@ import QuotationCheckout from './screens/client/QuotationCheckout';
 // import QuotationManagement from './screens/admin/QuotationManagement';
 // import QuotationDetailsAdmin from './screens/admin/QuotationDetailsAdmin';
 import { UserProvider, useUser } from './context/UserContext';
+
 
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
@@ -75,6 +76,7 @@ function AppNavigator() {
             {/* --- NEW SCREENS ADDED HERE --- */}
             <MyScreen.Screen name="resetpassword" component={PasswordReset} />
             <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
+            
             {/* ------------------------------ */}
           </>
         ) : (
@@ -93,6 +95,7 @@ function AppNavigator() {
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
             <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
+            <MyScreen.Screen name="quotationform" component={QuotationForm} />
 
             {/* {isAdmin && (
               <>

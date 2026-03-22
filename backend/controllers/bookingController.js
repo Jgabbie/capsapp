@@ -2,6 +2,7 @@ import Booking from "../models/booking.js";
 import Cancellation from "../models/cancellation.js";
 import Transaction from "../models/transaction.js";
 
+// Helper to generate unique reference numbers
 const generateBookingReference = () => {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
@@ -17,15 +18,22 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Check if this specific checkout has already been processed
     const existingBooking = await Booking.findOne({ checkoutToken });
     if (existingBooking) {
       return res.status(200).json(existingBooking);
     }
 
+    // Create the booking using the new model structure we just made
     const booking = await Booking.create({
-      packageId: String(packageId),
+      packageId,
       userId,
-      bookingDetails,
+      // We extract these from bookingDetails to keep the DB flat and searchable
+      bookingDate: bookingDetails.bookingDate,
+      travelDate: bookingDetails.travelDate,
+      travelers: bookingDetails.travelers,
+      
+      bookingDetails, // Keep the original object just in case
       checkoutToken,
       reference: generateBookingReference(),
       status: "Successful",
@@ -33,22 +41,28 @@ export const createBooking = async (req, res) => {
 
     return res.status(201).json(booking);
   } catch (error) {
+    console.error("Create Booking Error:", error);
     return res.status(500).json({ message: "Error creating booking", error: error.message });
   }
 };
 
 export const getUserBookings = async (req, res) => {
   try {
+    // 1. Find all successful transaction IDs for this user
     const paidBookingIds = await Transaction.distinct("bookingId", {
       userId: req.userId,
       status: { $in: ["Paid", "Successful"] },
     });
 
+    // 2. Fetch the bookings that match those transactions
+    // We use .populate('packageId') so the mobile app gets the Tour Name and Image
     const bookings = await Booking.find({
       userId: req.userId,
       _id: { $in: paidBookingIds },
       status: { $ne: "Cancelled" },
-    }).sort({ createdAt: -1 });
+    })
+    .populate("packageId") 
+    .sort({ createdAt: -1 });
 
     return res.status(200).json(bookings);
   } catch (error) {
@@ -62,10 +76,14 @@ export const getAllBookings = async (_req, res) => {
       status: { $in: ["Paid", "Successful"] },
     });
 
+    // Admin view: include user details too
     const bookings = await Booking.find({
       _id: { $in: paidBookingIds },
       status: { $ne: "Cancelled" },
-    }).sort({ createdAt: -1 });
+    })
+    .populate("packageId")
+    .populate("userId", "username email")
+    .sort({ createdAt: -1 });
 
     return res.status(200).json(bookings);
   } catch (error) {
@@ -83,6 +101,7 @@ export const cancelBooking = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    // Security check
     if (booking.userId.toString() !== req.userId) {
       return res.status(403).json({ message: "Unauthorized to cancel this booking" });
     }
@@ -90,6 +109,7 @@ export const cancelBooking = async (req, res) => {
     booking.status = "Cancelled";
     await booking.save();
 
+    // Create record in the cancellation collection
     await Cancellation.create({
       bookingId: booking._id,
       userId: req.userId,
