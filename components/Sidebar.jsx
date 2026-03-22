@@ -107,15 +107,6 @@ export default function Sidebar({ visible, onClose }) {
                     />
 
                     <MenuItem
-                        title="Quotations"
-                        icon={require('../assets/images/transactions_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("userquotations")
-                        }}
-                    />
-
-                    <MenuItem
                         title="Transactions"
                         icon={require('../assets/images/transactions_icon.png')}
                         onPress={() => {
