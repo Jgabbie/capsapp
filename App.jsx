@@ -33,8 +33,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <MyScreen.Navigator initialRouteName='reviewmanagement' screenOptions={{ headerShown: false }}>
-
+      <MyScreen.Navigator initialRouteName='home' screenOptions={{ headerShown: false }}>y
 
         <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
         <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
