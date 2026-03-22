@@ -7,7 +7,7 @@ import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import Chatbot from "../../components/Chatbot";
-import { api } from "../../utils/api"; // <-- Using your working API utility!
+import { api } from "../../utils/api";
 
 const { width } = Dimensions.get('window');
 
@@ -34,8 +34,8 @@ export default function Packages({ navigation }) {
                 setLoading(true);
                 setError("");
                 
-                // Fetch exactly like Home.jsx does!
-                const response = await api.get('/get-packages');
+                // FIXED PATH: Added /package/ here!
+                const response = await api.get('/package/get-packages');
                 
                 const mapped = response.data.map((item) => ({
                     id: item._id,
@@ -48,7 +48,6 @@ export default function Packages({ navigation }) {
                     packageType: item.packageType || "Domestic",
                     packageAvailableSlots: item.packageAvailableSlots || 0,
                     packageTags: item.packageTags || [],
-                    // Keep raw data for details page
                     rawItem: item 
                 }));
                 setPackages(mapped);
@@ -116,7 +115,6 @@ export default function Packages({ navigation }) {
                                         <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
                                         <TouchableOpacity 
                                             style={DestinationStyles.viewDetailsButton} 
-                                            // Passing the raw data to the details screen!
                                             onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
                                         >
                                             <Text style={DestinationStyles.viewDetailsText}>View Details</Text>

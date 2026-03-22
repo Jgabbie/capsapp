@@ -27,7 +27,7 @@ import VisaGuidance from './screens/client/VisaGuidance';
 import VisaDetailsGuidance from './screens/client/VisaDetailsGuidance';
 import VisaProgress from './screens/client/VisaProgress';
 
-import UserQuotations from './screens/client/UserQuotations';
+import UserPackageQuotation from './screens/client/UserPackageQuotation';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
 import QuotationForm from './screens/client/QuotationForm';
@@ -80,7 +80,7 @@ function AppNavigator() {
             <MyScreen.Screen name="userbookings" component={UserBookings} />
             
             {/* Quotation Screens */}
-            <MyScreen.Screen name="userquotations" component={UserQuotations} />
+            <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="quotationform" component={QuotationForm} />

@@ -61,7 +61,8 @@ export default function Profile() {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await api.get(`/users/${user._id}`)
+                // FIXED PATH: The Double Prefix (/users/users/)
+                const response = await api.get(`/users/users/${user._id}`)
                 const currentUser = response.data.user || response.data
 
                 if (currentUser) {
@@ -156,10 +157,7 @@ export default function Profile() {
     }
 
     const getInitials = () => {
-        // Grab the username from state, or fallback to the global user context just in case
         const currentUsername = userData.username?.trim() || user?.username?.trim() || "";
-        
-        // Return the first letter capitalized, or "U" if the database hasn't loaded it yet
         return currentUsername ? currentUsername.charAt(0).toUpperCase() : "U";
     }
 
@@ -215,7 +213,8 @@ export default function Profile() {
 
     const confirmSave = async () => {
         try {
-            const response = await api.put(`/users/${user._id}`, {
+            // FIXED PATH: The Double Prefix (/users/users/)
+            const response = await api.put(`/users/users/${user._id}`, {
                 ...userData,
                 phone: userData.phonenum, 
                 homeAddress: userData.address,
@@ -423,7 +422,7 @@ export default function Profile() {
                     )}
                 </View>
 
-                {/* --- NEW: REVIEWS & BOOKINGS --- */}
+                {/* --- REVIEWS & BOOKINGS --- */}
                 <Text style={ProfileStyle.sectionTitle}>My Recent Reviews</Text>
                 <View style={ProfileStyle.emptyStateCard}>
                     <Text style={ProfileStyle.emptyStateText}>No reviews yet.</Text>

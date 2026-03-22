@@ -1,32 +1,44 @@
 import { StyleSheet } from "react-native";
 
-const UserTransactionStyle = StyleSheet.create({
+export default StyleSheet.create({
     container: {
-        flex: 1,
         padding: 20,
         backgroundColor: "#fff"
     },
-    title: {
+    // Branding Section
+    brandingContainer: {
+        marginBottom: 20,
+    },
+    mainTitle: {
         fontSize: 22,
-        fontWeight: "bold",
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+    },
+    byTravex: {
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
+        color: "#305797",
+        marginTop: -4,
+    },
+    pageTitle: {
+        fontSize: 18,
+        fontFamily: "Montserrat_700Bold",
         marginBottom: 15,
-        color: "#305797"
+        color: "#333"
     },
     searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
         marginBottom: 16
     },
     searchBar: {
-        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "#f6f8fc",
-        borderRadius: 22,
+        borderRadius: 12,
         paddingHorizontal: 14,
         borderWidth: 1,
-        borderColor: "#dbe3ef"
+        borderColor: "#dbe3ef",
+        height: 45,
+        marginBottom: 10
     },
     searchInput: {
         flex: 1,
@@ -36,93 +48,110 @@ const UserTransactionStyle = StyleSheet.create({
     },
     dropdownGroup: {
         flexDirection: "row",
-        alignItems: "center",
-        gap: 8
+        justifyContent: "space-between",
+        gap: 10
     },
     dropdownButton: {
+        flex: 1,
         flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
         backgroundColor: "#eef3fb",
-        borderRadius: 18,
+        borderRadius: 10,
         paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingVertical: 10,
         borderWidth: 1,
         borderColor: "#d6e0f0"
     },
-    dropdownIcon: {
-        marginLeft: 6
+    dropdownText: {
+        fontSize: 12,
+        color: "#305797",
+        fontFamily: "Roboto_500Medium"
     },
+    // Cards
     transactionCard: {
         backgroundColor: "#fff",
         borderRadius: 16,
         padding: 18,
-        marginBottom: 20,
+        marginBottom: 16,
+        elevation: 3,
         shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 3
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
     },
-
     cardHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 10
+        marginBottom: 12
     },
-
     transactionRef: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 16,
+        fontSize: 14,
         color: "#305797"
     },
-
     transactionStatus: {
-        fontFamily: "Montserrat_500Medium",
-        fontSize: 13
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 12
     },
-
-    cardBody: {
-        marginBottom: 15
-    },
-
     packageName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18,
-        marginBottom: 10
+        fontSize: 16,
+        marginBottom: 8,
+        color: "#333"
     },
-
     detailRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 6
+        marginBottom: 4
     },
-
     detailLabel: {
-        fontFamily: "Montserrat_400Regular",
-        color: "#555"
+        fontFamily: "Roboto_400Regular",
+        color: "#777",
+        fontSize: 13
     },
-
     detailValue: {
-        fontFamily: "Montserrat_500Medium",
-        color: "#000"
+        fontFamily: "Roboto_500Medium",
+        color: "#333",
+        fontSize: 13
     },
-
     amount: {
         fontFamily: "Montserrat_700Bold",
-        color: "#305797"
+        color: "#305797",
+        fontSize: 15
     },
-
     viewButton: {
         backgroundColor: "#305797",
         padding: 12,
-        borderRadius: 8,
-        alignItems: "center"
+        borderRadius: 10,
+        alignItems: "center",
+        marginTop: 10
     },
-
     buttonText: {
         color: "#fff",
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 13
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        width: '80%',
+        borderRadius: 15,
+        padding: 10
+    },
+    modalOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        alignItems: 'center'
+    },
+    modalOptionText: {
+        fontFamily: "Roboto_500Medium",
+        color: "#305797"
     }
-
-})
-
-export default UserTransactionStyle
+});

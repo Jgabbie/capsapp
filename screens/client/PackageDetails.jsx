@@ -10,9 +10,9 @@ import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import ModalStyle from "../../styles/componentstyles/ModalStyle";
+
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
-// Helper to grab the correct image URL
 const getImageUrl = (img) => {
     if (!img) return "https://via.placeholder.com/800x500?text=No+Image";
     if (img.startsWith("http") || img.startsWith("data:")) return img;
@@ -43,7 +43,6 @@ export default function PackageDetails({ route, navigation }) {
     const [isArrangementModalOpen, setIsArrangementModalOpen] = useState(false);
     const [isDateModalOpen, setIsDateModalOpen] = useState(false);
 
-    // Get parameters from navigation safely
     const passedPkg = route?.params?.pkg;
     const packageId = route?.params?.id || passedPkg?._id || passedPkg?.id;
 
@@ -58,9 +57,9 @@ export default function PackageDetails({ route, navigation }) {
             }
 
             try {
-                // If we ONLY got an ID (from Home screen), fetch the package list to find it
                 if (!currentPkg || Object.keys(currentPkg).length === 0) {
-                    const response = await api.get("/get-packages");
+                    // FIXED PATH: Added /package/ here!
+                    const response = await api.get("/package/get-packages");
                     currentPkg = response.data.find(p => p._id === packageId || p.id === packageId);
                     
                     if (!currentPkg) {
@@ -70,7 +69,6 @@ export default function PackageDetails({ route, navigation }) {
                     }
                 }
 
-                // Set the full package data
                 setFullPkg({
                     ...currentPkg,
                     id: packageId,
@@ -86,7 +84,6 @@ export default function PackageDetails({ route, navigation }) {
                 console.log("Error loading package data:", err.message);
             }
 
-            // Fetch Reviews safely with the user header!
             try {
                 const reviewResponse = await api.get(`/rating/package/${packageId}/ratings`, withUserHeader(user?._id));
                 setReviews(reviewResponse.data || []);
@@ -94,7 +91,7 @@ export default function PackageDetails({ route, navigation }) {
                 console.log("No reviews yet or unauthorized to view reviews.");
             }
 
-            setLoading(false); // Done loading!
+            setLoading(false); 
         };
 
         loadData();
@@ -124,7 +121,6 @@ export default function PackageDetails({ route, navigation }) {
             return;
         }
         try {
-            // ADDED THE HEADER HERE
             await api.post('/wishlist/add', { packageId: fullPkg.id }, withUserHeader(user?._id));
             setIsWishlistModalOpen(true);
         } catch (error) {
@@ -149,7 +145,6 @@ export default function PackageDetails({ route, navigation }) {
 
         setIsSubmittingReview(true);
         try {
-            // ADDED THE HEADER HERE
             await api.post('/rating/submit-rating', {
                 packageId: fullPkg.id,
                 rating: reviewForm.rating,
@@ -159,7 +154,6 @@ export default function PackageDetails({ route, navigation }) {
             Alert.alert("Success", "Your review has been submitted!");
             setReviewForm({ rating: 0, comment: "" });
             
-            // Re-fetch reviews with header
             const reviewResponse = await api.get(`/rating/package/${packageId}/ratings`, withUserHeader(user?._id));
             setReviews(reviewResponse.data || []);
         } catch (error) {

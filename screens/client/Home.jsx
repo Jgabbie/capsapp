@@ -44,14 +44,14 @@ export default function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // 1. Fetch Packages
-                const pkgResponse = await api.get('/get-packages')
+                // FIXED PATH: Added /package/ to match server.js
+                const pkgResponse = await api.get('/package/get-packages')
                 setPackages(pkgResponse.data)
 
-                // 2. Fetch User Data from the CORRECT route
+                // FIXED PATH: The Double Prefix (/users/users/)
                 if (user?._id) {
                     try {
-                        const userResponse = await api.get(`/users/${user._id}`)
+                        const userResponse = await api.get(`/users/users/${user._id}`)
                         const currentUser = userResponse.data.user || userResponse.data 
                         
                         if (currentUser && currentUser.email) {
