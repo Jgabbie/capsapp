@@ -1,143 +1,206 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 const UserBookingsStyle = StyleSheet.create({
     container: {
-        padding: 20,
-        backgroundColor: "#fff"
+        flex: 1,
+        padding: 15,
+        backgroundColor: "#fff", 
     },
     title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 15,
+        fontSize: 20, 
+        fontFamily: "Montserrat_700Bold",
         color: "#305797",
+        marginBottom: 5,
+        paddingLeft: 5,
     },
+    subtitle: {
+        fontSize: 13,
+        fontFamily: "Roboto_400Regular",
+        color: "#777",
+        marginBottom: 20,
+        paddingLeft: 5,
+    },
+
+    // --- SEARCH & FILTERS ---
     searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        marginBottom: 16
+        flexDirection: "column", 
+        gap: 12,
+        marginBottom: 20,
+        width: '100%',
     },
     searchBar: {
-        flex: 1,
+        width: '100%',
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 22,
-        paddingHorizontal: 14,
+        backgroundColor: "#f6f8fc", 
+        borderRadius: 20, 
+        paddingHorizontal: 12,
+        height: 40, 
         borderWidth: 1,
-        borderColor: "#dbe3ef"
+        borderColor: "#dbe3ef",
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 13,
+        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
         color: "#333",
+        paddingVertical: 0,
     },
-    dropdownGroup: {
+    filterRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8
+        gap: 8, 
     },
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 18,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        backgroundColor: "#eef3fb", 
+        borderRadius: 15, 
+        paddingHorizontal: 10,
+        height: 40, 
         borderWidth: 1,
-        borderColor: "#d6e0f0"
+        borderColor: "#d6e0f0", 
+        justifyContent: 'space-between',
+        minWidth: 90,
     },
-    dropdownIcon: {
-        marginLeft: 6
+    dropdownText: {
+        fontSize: 11, 
+        color: "#305797",
+        fontFamily: "Roboto_400Regular", 
     },
+
+    // --- MODAL STYLES ---
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        width: '80%',
+        borderRadius: 15,
+        paddingVertical: 10,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    modalOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        alignItems: 'center',
+        width: '100%'
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#305797',
+        fontFamily: 'Roboto_500Medium'
+    },
+
+    // --- BOOKING CARDS ---
     bookingCard: {
         backgroundColor: "#fff",
         borderRadius: 16,
-        padding: 18,
-        marginBottom: 20,
+        padding: 16,
+        marginBottom: 16,
+        elevation: 3,
         shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 3
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        borderWidth: 1,
+        borderColor: "#eee",
     },
-
     cardHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 10
+        alignItems: "center",
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+        paddingBottom: 10,
+        marginBottom: 12,
     },
-
     bookingRef: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 16,
-        color: "#305797"
+        fontSize: 12,
+        color: "#777",
+        textTransform: 'uppercase',
     },
-
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
     bookingStatus: {
-        fontFamily: "Montserrat_500Medium",
-        fontSize: 13,
-        color: "#2ecc71"
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 11,
     },
-
-    cardBody: {
-        marginBottom: 15
-    },
-
     packageName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18,
-        marginBottom: 10
+        fontSize: 16,
+        color: "#305797",
+        marginBottom: 8,
     },
-
-    detailRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 6
+    detailText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#555",
+        marginBottom: 4,
     },
-
-    detailLabel: {
-        fontFamily: "Montserrat_400Regular",
-        color: "#555"
-    },
-
-    detailValue: {
-        fontFamily: "Montserrat_500Medium",
-        color: "#000"
-    },
-
-    price: {
-        fontFamily: "Montserrat_700Bold",
-        color: "#305797"
-    },
-
     cardActions: {
         flexDirection: "row",
-        justifyContent: "space-between"
+        gap: 10,
+        marginTop: 10,
     },
-
     viewButton: {
         flex: 1,
         backgroundColor: "#305797",
-        padding: 10,
+        paddingVertical: 10,
         borderRadius: 8,
         alignItems: "center",
-        marginRight: 8
     },
-
     cancelButton: {
         flex: 1,
-        backgroundColor: "#e74c3c",
-        padding: 10,
+        backgroundColor: "#fff",
+        paddingVertical: 10,
         borderRadius: 8,
-        alignItems: "center"
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#ff4d4f",
     },
-
-    buttonText: {
+    viewButtonText: {
         color: "#fff",
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 12,
+    },
+    cancelButtonText: {
+        color: "#ff4d4f",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 12,
+    },
+    
+    // --- EMPTY STATE STYLES ---
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 60,
+    },
+    emptyImage: {
+        width: 150, 
+        height: 150,
+        resizeMode: 'contain',
+        opacity: 0.8,
+    },
+    emptyText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 16,
+        color: '#999',
+        marginTop: 15,
     }
+});
 
-})
-
-export default UserBookingsStyle
+export default UserBookingsStyle;

@@ -73,7 +73,8 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const response = await api.post('/login-user', {
+            // FIXED PATH: Added /users/
+            const response = await api.post('/users/login-user', {
                 username: normalizedUsername,
                 password: normalizedPassword
             });
@@ -103,11 +104,11 @@ export default function Login() {
             const status = err.response?.status;
             const data = err.response?.data;
 
-            // ---> HERE IS WHERE IT CATCHES THE 403 AND POPS THE MODAL <---
             if (status === 403 && data?.email) {
                 try {
                     const email = data.email;
-                    await api.post('/auth/send-verify-otp', { email: email });
+                    // FIXED PATH: Changed /auth/ to /users/
+                    await api.post('/users/send-verify-otp', { email: email });
                     setUnverifiedEmail(email);
                     setTimer(60);
                     setIsOTPModalOpen(true);
@@ -130,7 +131,8 @@ export default function Login() {
 
         setLoading(true);
         try {
-            const response = await api.post('/auth/verify-account', { 
+            // FIXED PATH: Changed /auth/ to /users/
+            const response = await api.post('/users/verify-account', { 
                 otp: otp, 
                 email: unverifiedEmail
             });
@@ -139,7 +141,6 @@ export default function Login() {
                 setIsOTPModalOpen(false);
                 setOtp("");
                 showMessage("Account verified successfully!");
-                // Re-trigger login to log them in now that they are verified
                 handleLogin(); 
             }
         } catch (err) {
@@ -151,7 +152,8 @@ export default function Login() {
 
     const resendOTP = async () => {
         try {
-            await api.post('/auth/send-verify-otp', { email: unverifiedEmail })
+            // FIXED PATH: Changed /auth/ to /users/
+            await api.post('/users/send-verify-otp', { email: unverifiedEmail })
             showMessage("OTP sent!");
             setTimer(60);
         } catch (err) {

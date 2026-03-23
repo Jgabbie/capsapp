@@ -8,9 +8,7 @@ import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
 import { useUser } from '../context/UserContext'
 
-
 export default function Sidebar({ visible, onClose }) {
-
     const cs = useNavigation()
     const [modalVisible, setModalVisible] = useState(false)
     const { user, clearUser } = useUser()
@@ -27,12 +25,8 @@ export default function Sidebar({ visible, onClose }) {
         : require('../assets/images/profile_icon60.png')
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular,
-        Montserrat_500Medium,
-        Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
+        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     })
 
     const MenuItem = ({ icon, title, onPress }) => (
@@ -41,6 +35,8 @@ export default function Sidebar({ visible, onClose }) {
             <Text style={SidebarStyle.navText}>{title}</Text>
         </TouchableOpacity>
     )
+
+    if (!fontsLoaded) return null;
 
     return (
         <Modal transparent={true} visible={visible} animationType='none'>
@@ -51,7 +47,6 @@ export default function Sidebar({ visible, onClose }) {
                         <Image
                             source={profileImageSource}
                             style={SidebarStyle.profileImg}
-
                         />
                         <View style={SidebarStyle.nameContainer}>
                             <Text style={SidebarStyle.userName}>{displayName}</Text>
@@ -64,82 +59,59 @@ export default function Sidebar({ visible, onClose }) {
                     <MenuItem
                         title="Home Page"
                         icon={require('../assets/images/home_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("home")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("home") }}
                     />
 
                     <MenuItem
                         title="User Profile"
                         icon={require('../assets/images/user_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("profile")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("profile") }}
                     />
 
                     <MenuItem
                         title="Bookings"
                         icon={require('../assets/images/booking_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("userbookings")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("userbookings") }}
                     />
 
                     <MenuItem
                         title="Destinations"
                         icon={require('../assets/images/destination_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("packages")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("packages") }}
                     />
 
                     <MenuItem
                         title="Wishlist"
                         icon={require('../assets/images/wishlist_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("wishlist")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("wishlist") }}
                     />
 
                     <MenuItem
                         title="Quotations"
-                        icon={require('../assets/images/transactions_icon.png')}
+                        // Use booking_icon temporarily so the app doesn't crash!
+                        icon={require('../assets/images/transactions_icon.png')} 
                         onPress={() => {
-                            onClose()
-                            cs.navigate("userquotations")
+                        onClose();
+                        cs.navigate("userquotations");
                         }}
                     />
 
                     <MenuItem
                         title="Transactions"
                         icon={require('../assets/images/transactions_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("usertransactions")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("usertransactions") }}
                     />
 
                     <MenuItem
                         title="Visa Assistance"
                         icon={require('../assets/images/visa_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("visaguidance")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("visaguidance") }}
                     />
 
                     <MenuItem
                         title="Passport Assistance"
                         icon={require('../assets/images/passport_icon.png')}
-                        onPress={() => {
-                            onClose()
-                            cs.navigate("passportguidance")
-                        }}
+                        onPress={() => { onClose(); cs.navigate("passportguidance") }}
                     />
 
                     <View style={SidebarStyle.divider} />
@@ -147,47 +119,27 @@ export default function Sidebar({ visible, onClose }) {
                     <MenuItem
                         title="Logout"
                         icon={require('../assets/images/logout_icon.png')}
-                        onPress={() => {
-                            setModalVisible(true)
-                        }}
+                        onPress={() => setModalVisible(true)}
                     />
                 </View>
             </View>
 
-            <Modal
-                transparent
-                animationType='fade'
-                visible={modalVisible}
-                onRequestClose={() => { setModalVisible(false) }}
-            >
-
+            {/* Logout Confirmation Modal */}
+            <Modal transparent animationType='fade' visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
                         <Text style={ModalStyle.modalTitle}>Confirm Logout</Text>
                         <Text style={ModalStyle.modalText}>Are you sure you want to Logout?</Text>
-
                         <View style={ModalStyle.modalButtonContainer}>
-                            <TouchableOpacity
-                                style={ModalStyle.modalButton}
-                                onPress={() => {
-                                    setModalVisible(false)
-                                }}
-                            >
+                            <TouchableOpacity style={ModalStyle.modalButton} onPress={() => setModalVisible(false)}>
                                 <Text style={ModalStyle.modalButtonText}>Cancel</Text>
                             </TouchableOpacity>
-
                             <TouchableOpacity
                                 style={ModalStyle.modalCancelButton}
                                 onPress={() => {
-                                    // 1. Close the confirmation modal
-                                    setModalVisible(false)
-                                    // 2. Clear the user state (This triggers the swap to Login in App.jsx)
-                                    clearUser()
-                                    // 3. Close the sidebar
-                                    onClose()
-                                    
-                                    // NOTE: cs.navigate("login") was removed to prevent the error.
-                                    // App.jsx will now show the login screen automatically.
+                                    setModalVisible(false);
+                                    clearUser();
+                                    onClose();
                                 }}
                             >
                                 <Text style={ModalStyle.modalButtonText}>Logout</Text>
@@ -197,6 +149,5 @@ export default function Sidebar({ visible, onClose }) {
                 </View>
             </Modal>
         </Modal>
-
     )
 }

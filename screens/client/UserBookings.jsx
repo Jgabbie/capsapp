@@ -1,243 +1,239 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, Alert } from 'react-native'
-import React, { useEffect, useMemo, useState } from 'react'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, Pressable, TouchableWithoutFeedback, Image } from 'react-native'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
-import { useNavigation } from '@react-navigation/native'
-import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { Calendar } from 'react-native-calendars'
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import UserBookingsStyle from '../../styles/clientstyles/UserBookingsStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
-
-
+import dayjs from 'dayjs'
 
 export default function UserBookings() {
-
-    const cs = useNavigation()
+    const navigation = useNavigation()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
-    const [modalVisible, setModalVisible] = useState(false)
-    const [modalOkVisible, setModalOkVisible] = useState(false)
-    const [selectedBookingId, setSelectedBookingId] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [bookings, setBookings] = useState([])
+
+    // Filter States
     const [searchText, setSearchText] = useState('')
+    const [statusFilter, setStatusFilter] = useState('All')
+    const [bookingDateFilter, setBookingDateFilter] = useState(null)
+    const [travelDateFilter, setTravelDateFilter] = useState(null)
 
-    const [fontsLoaded] = useFonts({
-        Montserrat_400Regular,
-        Montserrat_500Medium,
-        Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
-    })
-
-    const [getBookings, setBookings] = useState([])
+    // Modal Visibility States
+    const [isStatusModalOpen, setStatusModalOpen] = useState(false)
+    const [isBookingDateOpen, setBookingDateOpen] = useState(false)
+    const [isTravelDateOpen, setTravelDateOpen] = useState(false)
+    const [isCancelModalOpen, setCancelModalOpen] = useState(false)
+    const [selectedBookingId, setSelectedBookingId] = useState(null)
 
     const fetchBookings = async () => {
-        if (!user?._id) {
-            setBookings([])
-            return
-        }
-
+        if (!user?._id) return;
         try {
+            setLoading(true)
             const response = await api.get('/booking/my-bookings', withUserHeader(user._id))
             setBookings(response.data || [])
-        } catch (_error) {
+        } catch (error) {
             setBookings([])
+        } finally {
+            setLoading(false)
         }
     }
 
-    useEffect(() => {
-        fetchBookings()
-    }, [user?._id])
+    useFocusEffect(useCallback(() => { fetchBookings() }, [user?._id]))
 
     const filteredBookings = useMemo(() => {
-        if (!searchText.trim()) return getBookings
+        return bookings.filter((item) => {
+            const needle = searchText.trim().toLowerCase()
+            const matchesSearch = !needle || 
+                item.reference?.toLowerCase().includes(needle) || 
+                (item.packageId?.packageName || '').toLowerCase().includes(needle);
+            
+            const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+            const matchesBookingDate = !bookingDateFilter || dayjs(item.createdAt).format('YYYY-MM-DD') === bookingDateFilter;
+            const matchesTravelDate = !travelDateFilter || item.travelDate === travelDateFilter;
 
-        const needle = searchText.trim().toLowerCase()
-        return getBookings.filter((item) => {
-            const reference = item.reference?.toLowerCase() || ''
-            const packageName = item.bookingDetails?.packageName?.toLowerCase() || ''
-            const status = item.status?.toLowerCase() || ''
-            return reference.includes(needle) || packageName.includes(needle) || status.includes(needle)
+            return matchesSearch && matchesStatus && matchesBookingDate && matchesTravelDate;
         })
-    }, [getBookings, searchText])
-
-    const modalOK = () => {
-        setModalOkVisible(false)
-        fetchBookings()
-    }
+    }, [bookings, searchText, statusFilter, bookingDateFilter, travelDateFilter])
 
     const handleCancelBooking = async () => {
-        if (!selectedBookingId || !user?._id) return
-
         try {
             await api.post(`/booking/cancel/${selectedBookingId}`, { reason: 'User requested cancellation' }, withUserHeader(user._id))
-            setModalVisible(false)
-            setModalOkVisible(true)
-        } catch (_error) {
-            setModalVisible(false)
+            setCancelModalOpen(false)
+            fetchBookings()
+            Alert.alert("Success", "Cancellation request sent!")
+        } catch (error) {
+            setCancelModalOpen(false)
         }
     }
 
     return (
-        <View style={{ flex: 1 }}>
-            <Header openSidebar={() => { setSidebarVisible(true) }} />
+        <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
+            <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <View style={{ flex: 1 }}>
-                <ScrollView
-                    contentContainerStyle={UserBookingsStyle.container}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <Text style={UserBookingsStyle.title}>My Bookings</Text>
+            <ScrollView contentContainerStyle={UserBookingsStyle.container} showsVerticalScrollIndicator={false}>
+                <Text style={UserBookingsStyle.title}>My Bookings</Text>
+                <Text style={UserBookingsStyle.subtitle}>Track your latest reservations and status.</Text>
 
-                    <View style={UserBookingsStyle.searchRow}>
-                        <View style={UserBookingsStyle.searchBar}>
-                            <Ionicons name="search" size={16} />
-                            <TextInput
-                                style={UserBookingsStyle.searchInput}
-                                placeholder='Search booking reference'
-                                placeholderTextColor="#777"
-                                value={searchText}
-                                onChangeText={setSearchText}
-                            />
-                        </View>
-
-                        <View style={UserBookingsStyle.dropdownGroup}>
-                            <View style={UserBookingsStyle.dropdownButton}>
-                                <Text style={UserBookingsStyle.dropdownText}>Status</Text>
-                                <Ionicons
-                                    name="chevron-down"
-                                    size={12}
-                                    color="#305797"
-                                />
-                            </View>
-
-                            <View style={UserBookingsStyle.dropdownButton}>
-                                <Text style={UserBookingsStyle.dropdownText}>Date</Text>
-                                <Ionicons
-                                    name="chevron-down"
-                                    size={12}
-                                    color="#305797"
-                                />
-                            </View>
-                        </View>
+                {/* --- CONSOLIDATED SEARCH & FILTER AREA --- */}
+                <View style={UserBookingsStyle.searchRow}>
+                    <View style={UserBookingsStyle.searchBar}>
+                        <Ionicons name="search" size={16} color="#777" />
+                        <TextInput
+                            style={UserBookingsStyle.searchInput}
+                            placeholder='Search reference or package...'
+                            value={searchText}
+                            onChangeText={setSearchText}
+                        />
                     </View>
 
-                    {filteredBookings.map((item) => (
-                        <View key={item._id} style={UserBookingsStyle.bookingCard}>
+                    <View style={UserBookingsStyle.filterRow}>
+                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setStatusModalOpen(true)}>
+                            <Text style={UserBookingsStyle.dropdownText}>{statusFilter === 'All' ? 'Status' : statusFilter}</Text>
+                            <Ionicons name="chevron-down" size={12} color="#305797" />
+                        </TouchableOpacity>
 
+                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setBookingDateOpen(true)}>
+                            <Text style={UserBookingsStyle.dropdownText}>
+                                {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM D') : 'Booking'}
+                            </Text>
+                            <Ionicons name="calendar-outline" size={12} color="#305797" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setTravelDateOpen(true)}>
+                            <Text style={UserBookingsStyle.dropdownText}>
+                                {travelDateFilter ? dayjs(travelDateFilter).format('MMM D') : 'Travel'}
+                            </Text>
+                            <Ionicons name="airplane-outline" size={12} color="#305797" />
+                        </TouchableOpacity>
+
+                        {(statusFilter !== 'All' || bookingDateFilter || travelDateFilter) && (
+                            <TouchableOpacity onPress={() => { setStatusFilter('All'); setBookingDateFilter(null); setTravelDateFilter(null); }}>
+                                <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+
+                {/* --- LIST / EMPTY STATE RENDERING --- */}
+                {loading ? (
+                    <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
+                ) : filteredBookings.length === 0 ? (
+                    <View style={UserBookingsStyle.emptyContainer}>
+                        <Image 
+                            source={require('../../assets/images/empty_logo.png')} 
+                            style={UserBookingsStyle.emptyImage}
+                        />
+                        <Text style={UserBookingsStyle.emptyText}>No Data yet</Text>
+                    </View>
+                ) : (
+                    filteredBookings.map((item) => (
+                        <View key={item._id} style={UserBookingsStyle.bookingCard}>
                             <View style={UserBookingsStyle.cardHeader}>
                                 <Text style={UserBookingsStyle.bookingRef}>{item.reference}</Text>
-                                <Text style={UserBookingsStyle.bookingStatus}>{item.status || 'Successful'}</Text>
+                                <View style={[UserBookingsStyle.statusBadge, { backgroundColor: item.status === 'Cancelled' ? '#fff1f0' : '#f6ffed' }]}>
+                                    <Text style={[UserBookingsStyle.bookingStatus, { color: item.status === 'Cancelled' ? '#cf1322' : '#389e0d' }]}>
+                                        {item.status || 'Successful'}
+                                    </Text>
+                                </View>
                             </View>
-
                             <View style={UserBookingsStyle.cardBody}>
-                                <Text style={UserBookingsStyle.packageName}>{item.bookingDetails?.packageName || 'Package'}</Text>
-
-                                <View style={UserBookingsStyle.detailRow}>
-                                    <Text style={UserBookingsStyle.detailLabel}>Travelers:</Text>
-                                    <Text style={UserBookingsStyle.detailValue}>{item.bookingDetails?.travelers || 0}</Text>
-                                </View>
-
-                                <View style={UserBookingsStyle.detailRow}>
-                                    <Text style={UserBookingsStyle.detailLabel}>Travel Date:</Text>
-                                    <Text style={UserBookingsStyle.detailValue}>{item.bookingDetails?.travelDate || '--'}</Text>
-                                </View>
-
-                                <View style={UserBookingsStyle.detailRow}>
-                                    <Text style={UserBookingsStyle.detailLabel}>Total Amount:</Text>
-                                    <Text style={UserBookingsStyle.price}>₱{item.bookingDetails?.totalPrice || 0}</Text>
-                                </View>
+                                <Text style={UserBookingsStyle.packageName}>{item.packageId?.packageName || 'Tour Package'}</Text>
+                                <Text style={UserBookingsStyle.detailText}>📅 Travel: {item.travelDate || '--'}</Text>
+                                <Text style={UserBookingsStyle.detailText}>👥 Travelers: {item.travelers || 0}</Text>
                             </View>
-
                             <View style={UserBookingsStyle.cardActions}>
-                                <TouchableOpacity
-                                    style={UserBookingsStyle.viewButton}
-                                    onPress={() => cs.navigate('bookinginvoice', { booking: item })}
-                                >
-                                    <Text style={UserBookingsStyle.buttonText}>View Details</Text>
+                                <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
+                                    <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
                                 </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={UserBookingsStyle.cancelButton}
-                                    onPress={() => {
-                                        setSelectedBookingId(item._id)
-                                        setModalVisible(true)
-                                    }}
-                                >
-                                    <Text style={UserBookingsStyle.buttonText}>Cancel Booking</Text>
-                                </TouchableOpacity>
+                                {item.status !== 'Cancelled' && (
+                                    <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelModalOpen(true); }}>
+                                        <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
-
                         </View>
-                    ))}
+                    ))
+                )}
+            </ScrollView>
 
-                </ScrollView>
-            </View>
+            {/* --- MODALS --- */}
+            <Modal visible={isStatusModalOpen} transparent animationType="fade">
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setStatusModalOpen(false)}>
+                    <TouchableWithoutFeedback>
+                        <View style={[ModalStyle.modalBox, { width: '85%', paddingVertical: 10 }]}>
+                            <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
+                                Select Status
+                            </Text>
+                            {['All', 'Successful', 'Pending', 'Cancelled'].map((status, index) => (
+                                <TouchableOpacity 
+                                    key={status} 
+                                    style={[
+                                        UserBookingsStyle.modalOption,
+                                        { borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#f0f0f0' } // Adding dividers
+                                    ]} 
+                                    onPress={() => { setStatusFilter(status); setStatusModalOpen(false); }}
+                                >
+                                    <Text style={{ 
+                                        fontSize: 16, 
+                                        color: statusFilter === status ? '#305797' : '#555',
+                                        fontFamily: statusFilter === status ? 'Montserrat_700Bold' : 'Roboto_400Regular'
+                                    }}>
+                                        {status}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
 
-            <Modal
-                transparent
-                animationType='fade'
-                visible={modalVisible}
-                onRequestClose={() => { setModalVisible }}
-            >
+            <Modal visible={isBookingDateOpen} transparent animationType="fade">
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setBookingDateOpen(false)}>
+                    <TouchableWithoutFeedback>
+                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
+                            <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Booking Date</Text>
+                            <Calendar 
+                                onDayPress={(day) => { setBookingDateFilter(day.dateString); setBookingDateOpen(false); }} 
+                                theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
+                            />
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
 
+            <Modal visible={isTravelDateOpen} transparent animationType="fade">
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setTravelDateOpen(false)}>
+                    <TouchableWithoutFeedback>
+                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
+                            <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Travel Date</Text>
+                            <Calendar 
+                                onDayPress={(day) => { setTravelDateFilter(day.dateString); setTravelDateOpen(false); }} 
+                                theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
+                            />
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal transparent visible={isCancelModalOpen} animationType="fade">
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
                         <Text style={ModalStyle.modalTitle}>Cancel Booking</Text>
-                        <Text style={ModalStyle.modalText}>Are you sure you want to cancel this booking?</Text>
-
+                        <Text style={ModalStyle.modalText}>Are you sure you want to cancel this booking? This action cannot be undone.</Text>
                         <View style={ModalStyle.modalButtonContainer}>
-                            <TouchableOpacity
-                                style={ModalStyle.modalButton}
-                                onPress={handleCancelBooking}
-                            >
-                                <Text style={ModalStyle.modalButtonText}>Yes</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={ModalStyle.modalCancelButton}
-                                onPress={() => {
-                                    setModalVisible(false)
-                                }}
-                            >
-                                <Text style={ModalStyle.modalButtonText}>Cancel</Text>
-                            </TouchableOpacity>
+                            <TouchableOpacity style={ModalStyle.modalButton} onPress={handleCancelBooking}><Text style={ModalStyle.modalButtonText}>Yes</Text></TouchableOpacity>
+                            <TouchableOpacity style={ModalStyle.modalCancelButton} onPress={() => setCancelModalOpen(false)}><Text style={ModalStyle.modalButtonText}>No</Text></TouchableOpacity>
                         </View>
-                    </View>
-                </View>
-            </Modal>
-
-            <Modal
-                transparent
-                animationType='fade'
-                visible={modalOkVisible}
-                onRequestClose={() => { setModalOkVisible }}
-            >
-
-                <View style={ModalStyle.modalOverlay}>
-                    <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Cancel Request</Text>
-                        <Text style={ModalStyle.modalText}>A cancellation request for the booking has been sent!</Text>
-
-
-                        <TouchableOpacity
-                            style={ModalStyle.modalButton}
-                            onPress={() => {
-                                modalOK()
-                            }}
-                        >
-                            <Text style={ModalStyle.modalButtonText}>OK</Text>
-                        </TouchableOpacity>
-
                     </View>
                 </View>
             </Modal>
         </View>
-
     )
 }

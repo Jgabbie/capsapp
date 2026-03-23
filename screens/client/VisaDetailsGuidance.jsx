@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native'
 import React, { useMemo, useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
+import * as DocumentPicker from 'expo-document-picker'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -16,8 +17,15 @@ export default function VisaDetailsGuidance() {
     const { user } = useUser()
     const selectedService = route.params?.service
     const [preferredDate, setPreferredDate] = useState('')
+    const [preferredTime, setPreferredTime] = useState('')
     const [purposeOfTravel, setPurposeOfTravel] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [uploadedFiles, setUploadedFiles] = useState({
+        validPassport: null,
+        completedVisaApplicationForm: null,
+        passportSizePhoto: null,
+        bankCertificateAndStatement: null,
+    })
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -38,6 +46,16 @@ export default function VisaDetailsGuidance() {
                     'Proof of financial capacity',
                 ],
         [selectedService]
+    )
+
+    const requiredVisaDocuments = useMemo(
+        () => [
+            { key: 'validPassport', label: 'Valid passport' },
+            { key: 'completedVisaApplicationForm', label: 'Completed visa application form' },
+            { key: 'passportSizePhoto', label: 'Recent passport-size photo' },
+            { key: 'bankCertificateAndStatement', label: 'Bank certificate and statement' },
+        ],
+        []
     )
 
     const steps = useMemo(
@@ -64,20 +82,53 @@ export default function VisaDetailsGuidance() {
             return
         }
 
-        if (!preferredDate || !purposeOfTravel.trim()) {
-            Alert.alert('Missing details', 'Please provide your preferred date and purpose of travel.')
+        if (!preferredDate || !preferredTime || !purposeOfTravel.trim()) {
+            Alert.alert('Missing details', 'Please provide your preferred date, preferred time, and purpose of travel.')
             return
         }
+
+        const hasAllDocuments =
+            uploadedFiles.validPassport &&
+            uploadedFiles.completedVisaApplicationForm &&
+            uploadedFiles.passportSizePhoto &&
+            uploadedFiles.bankCertificateAndStatement
+
+        if (!hasAllDocuments) {
+            Alert.alert('Missing files', 'Please upload all required visa documents before submitting.')
+            return
+        }
+
+        const formData = new FormData()
+        formData.append('serviceId', selectedService._id)
+        formData.append('preferredDate', preferredDate)
+        formData.append('preferredTime', preferredTime)
+        formData.append('purposeOfTravel', purposeOfTravel.trim())
+
+        const appendFile = (fieldName, file) => {
+            if (!file?.uri) return
+
+            if (Platform.OS === 'web' && file.file) {
+                formData.append(fieldName, file.file, file.name || `${fieldName}-${Date.now()}.pdf`)
+                return
+            }
+
+            formData.append(fieldName, {
+                uri: file.uri,
+                name: file.name || `${fieldName}-${Date.now()}.pdf`,
+                type: file.mimeType || 'application/octet-stream',
+            })
+        }
+
+        appendFile('validPassport', uploadedFiles.validPassport)
+        appendFile('completedVisaApplicationForm', uploadedFiles.completedVisaApplicationForm)
+        appendFile('passportSizePhoto', uploadedFiles.passportSizePhoto)
+        appendFile('bankCertificateAndStatement', uploadedFiles.bankCertificateAndStatement)
 
         try {
             setIsSubmitting(true)
             await api.post(
                 '/visa/apply',
-                {
-                    serviceId: selectedService._id,
-                    preferredDate,
-                    purposeOfTravel: purposeOfTravel.trim(),
-                },
+                formData,
                 withUserHeader(user._id)
             )
 
@@ -91,6 +142,30 @@ export default function VisaDetailsGuidance() {
         }
     }
 
+    const handlePickDocument = async (fieldName) => {
+        try {
+            const picked = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            })
+
+            if (picked.canceled) return
+
+            const selected = picked.assets?.[0]
+            if (!selected?.uri) {
+                Alert.alert('Upload failed', 'No file selected.')
+                return
+            }
+
+            setUploadedFiles((prev) => ({ ...prev, [fieldName]: selected }))
+        } catch (_error) {
+            Alert.alert('Upload failed', 'Unable to select file right now.')
+        }
+    }
+
+
+
     return (
         <ScrollView>
             <View style={VisaDetailsGuidanceStyle.container}>
@@ -103,6 +178,28 @@ export default function VisaDetailsGuidance() {
                 {requirements.map((item, index) => (
                     <View key={`${item}-${index}`} style={VisaDetailsGuidanceStyle.uploadRow}>
                         <Text style={VisaDetailsGuidanceStyle.listItem}>{index + 1}. {item}</Text>
+                    </View>
+                ))}
+
+                <Text style={[VisaDetailsGuidanceStyle.sectionTitle, { fontSize: 16, marginTop: 12 }]}>Upload Files</Text>
+
+                {requiredVisaDocuments.map((doc) => (
+                    <View key={doc.key} style={{ marginBottom: 10 }}>
+                        <View style={VisaDetailsGuidanceStyle.uploadRow}>
+                            <Text style={VisaDetailsGuidanceStyle.listItem}>{doc.label}</Text>
+                            <TouchableOpacity
+                                style={VisaDetailsGuidanceStyle.uploadButton}
+                                onPress={() => handlePickDocument(doc.key)}
+                            >
+                                <Text style={VisaDetailsGuidanceStyle.uploadButtonText}>Upload</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {!!uploadedFiles[doc.key]?.name && (
+                            <Text style={{ fontSize: 12, color: '#2d5fb8', marginTop: 4 }}>
+                                Uploaded: {uploadedFiles[doc.key].name}
+                            </Text>
+                        )}
                     </View>
                 ))}
 
@@ -127,6 +224,12 @@ export default function VisaDetailsGuidance() {
                     value={preferredDate}
                     onChangeText={setPreferredDate}
                     placeholder="Preferred submission date (YYYY-MM-DD)"
+                    style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 10, marginBottom: 10 }}
+                />
+                <TextInput
+                    value={preferredTime}
+                    onChangeText={setPreferredTime}
+                    placeholder="Preferred time (HH:MM)"
                     style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 10, marginBottom: 10 }}
                 />
                 <TextInput

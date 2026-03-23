@@ -8,11 +8,23 @@ const generateApplicationNumber = () => {
   return `APP-${timestamp}-${randomPart}`;
 };
 
+const getUploadedFileMeta = (req, fieldName) => {
+  const file = req.files?.[fieldName]?.[0];
+  if (!file) return null;
+
+  return {
+    fileName: file.originalname,
+    fileUrl: `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`,
+    mimeType: file.mimetype,
+    uploadedAt: new Date(),
+  };
+};
+
 export const applyVisa = async (req, res) => {
-  const { serviceId, preferredDate, purposeOfTravel } = req.body;
+  const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
   const userId = req.userId;
 
-  if (!serviceId || !preferredDate || !purposeOfTravel) {
+  if (!serviceId || !preferredDate || !preferredTime || !purposeOfTravel) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -28,6 +40,26 @@ export const applyVisa = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const documents = {
+      validPassport: getUploadedFileMeta(req, "validPassport"),
+      completedVisaApplicationForm: getUploadedFileMeta(req, "completedVisaApplicationForm"),
+      passportSizePhoto: getUploadedFileMeta(req, "passportSizePhoto"),
+      bankCertificateAndStatement: getUploadedFileMeta(req, "bankCertificateAndStatement"),
+    };
+
+    const hasAllDocuments =
+      documents.validPassport &&
+      documents.completedVisaApplicationForm &&
+      documents.passportSizePhoto &&
+      documents.bankCertificateAndStatement;
+
+    if (!hasAllDocuments) {
+      return res.status(400).json({
+        message:
+          "Please upload all visa requirements: valid passport, completed visa application form, recent passport-size photo, and bank certificate/statement",
+      });
+    }
+
     const applicantName = `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.username;
 
     const application = await VisaApplicationModel.create({
@@ -37,7 +69,9 @@ export const applyVisa = async (req, res) => {
       serviceName: service.visaName,
       applicantName,
       preferredDate,
+      preferredTime,
       purposeOfTravel,
+      documents,
     });
 
     return res.status(201).json({
