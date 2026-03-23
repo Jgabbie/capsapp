@@ -69,37 +69,10 @@ function AppNavigator() {
 
   return (
     <NavigationContainer>
-<<<<<<< HEAD
-      <MyScreen.Navigator initialRouteName='home' screenOptions={{ headerShown: false }}>y
-
-        <MyScreen.Screen name="login" component={Login} options={{ headerShown: false }} />
-        <MyScreen.Screen name="signup" component={Signup} options={{ headerShown: false }} />
-        <MyScreen.Screen name="profile" component={Profile} options={{ headerShown: false }} />
-        <MyScreen.Screen name="home" component={Home} options={{ headerShown: false }} />
-        <MyScreen.Screen name="packages" component={Packages} options={{ headerShown: false }} />
-        <MyScreen.Screen name="packagedetails" component={PackageDetails} options={{ headerShown: false }} />
-        <MyScreen.Screen name="wishlist" component={Wishlist} options={{ headerShown: false }} />
-        <MyScreen.Screen name="usertransactions" component={UserTransactions} options={{ headerShown: false }} />
-        <MyScreen.Screen name="userbookings" component={UserBookings} options={{ headerShown: false }} />
-        <MyScreen.Screen name="passportguidance" component={PassportGuidance} options={{ headerShown: false }} />
-        <MyScreen.Screen name="visaguidance" component={VisaGuidance} options={{ headerShown: false }} />
-
-        <MyScreen.Screen name="admindashboard" component={AdminDashboard} options={{ headerShown: false }} />
-        <MyScreen.Screen name="usermanagement" component={UserManagement} options={{ headerShown: false }} />
-        <MyScreen.Screen name="bookingmanagement" component={BookingManagement} options={{ headerShown: false }} />
-        <MyScreen.Screen name="transactionmanagement" component={TransactionManagement} options={{ headerShown: false }} />
-        <MyScreen.Screen name="packagemanagement" component={PackageManagement} options={{ headerShown: false }} />
-        <MyScreen.Screen name="reviewmanagement" component={ReviewManagement} options={{ headerShown: false }} />
-        <MyScreen.Screen name="cancellationrequests" component={CancellationRequests} options={{ headerShown: false }} />
-        <MyScreen.Screen name="passportapplications" component={PassportApplications} options={{ headerShown: false }} />
-        <MyScreen.Screen name="visaapplications" component={VisaApplications} options={{ headerShown: false }} />
-        <MyScreen.Screen name="logging" component={Logging} options={{ headerShown: false }} />
-        <MyScreen.Screen name="auditing" component={Auditing} options={{ headerShown: false }} />
-=======
       <MyScreen.Navigator screenOptions={{ headerShown: false }}>
-        
+
         {!user?._id ? (
-          
+
           <>
             <MyScreen.Screen name="splash" component={SplashScreen} />
             <MyScreen.Screen name="login" component={Login} />
@@ -110,7 +83,7 @@ function AppNavigator() {
             {/* ------------------------------ */}
           </>
         ) : (
-          
+
           <>
             <MyScreen.Screen name="home" component={Home} />
             <MyScreen.Screen name="profile" component={Profile} />
@@ -130,7 +103,6 @@ function AppNavigator() {
             <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
             <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
             <MyScreen.Screen name="visaprogress" component={VisaProgress} />
->>>>>>> e1318fbd4944764da2d7d378fae1f2520eafe5cb
 
             {/* {isAdmin && (
               <>
