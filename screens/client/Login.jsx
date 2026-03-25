@@ -108,7 +108,7 @@ export default function Login() {
                 try {
                     const email = data.email;
                     // FIXED PATH: Changed /auth/ to /users/
-                    await api.post('/users/send-verify-otp', { email: email });
+                    await api.post('/users/auth/send-verify-otp', { email: email });
                     setUnverifiedEmail(email);
                     setTimer(60);
                     setIsOTPModalOpen(true);
@@ -132,7 +132,7 @@ export default function Login() {
         setLoading(true);
         try {
             // FIXED PATH: Changed /auth/ to /users/
-            const response = await api.post('/users/verify-account', { 
+            const response = await api.post('/users/auth/verify-account', { 
                 otp: otp, 
                 email: unverifiedEmail
             });
@@ -153,7 +153,7 @@ export default function Login() {
     const resendOTP = async () => {
         try {
             // FIXED PATH: Changed /auth/ to /users/
-            await api.post('/users/send-verify-otp', { email: unverifiedEmail })
+            await api.post('/users/auth/send-verify-otp', { email: unverifiedEmail })
             showMessage("OTP sent!");
             setTimer(60);
         } catch (err) {

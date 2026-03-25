@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -6,7 +6,9 @@ import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
-import axios from 'axios'
+
+// 1. IMPORT OUR DYNAMIC API
+import { api } from '../../utils/api' 
 
 export default function ResetPassConfirm() {
     const cs = useNavigation()
@@ -31,6 +33,15 @@ export default function ResetPassConfirm() {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
 
     if (!fontsLoaded) return null;
+
+    // Helper to safely show messages on both Android and Web
+    const showMessage = (message) => {
+        if (Platform.OS === "android") {
+            ToastAndroid.show(message, ToastAndroid.LONG);
+        } else {
+            alert(message); // Standard browser alert for Web
+        }
+    }
 
     const validatePassword = (val) => {
         if (!val) return "Password is required.";
@@ -58,7 +69,8 @@ export default function ResetPassConfirm() {
 
         setLoading(true)
         try {
-            const response = await axios.post('http://10.0.2.2:5000/api/auth/reset-password', { 
+            // 2. FIXED API ENDPOINT
+            const response = await api.post('/users/auth/reset-password', { 
                 newPassword: password, 
                 token: token 
             })
@@ -66,7 +78,8 @@ export default function ResetPassConfirm() {
                 setIsSuccessModalOpen(true)
             }
         } catch (err) {
-            ToastAndroid.show(err.response?.data?.message || "Failed to reset password", ToastAndroid.LONG)
+            // 3. SAFE ERROR DISPLAY FOR WEB AND MOBILE
+            showMessage(err.response?.data?.message || "Failed to reset password")
         } finally {
             setLoading(false)
         }

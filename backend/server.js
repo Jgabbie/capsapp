@@ -56,4 +56,6 @@ app.get("/", (req, res) => {
 // Start server
 // Using process.env.PORT allows flexibility for deployment
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server exfiltrated and running on port ${PORT}`));
+
+// ADDED '0.0.0.0' HERE: This tells the server to accept connections from the Android emulator.
+app.listen(PORT, '0.0.0.0', () => console.log(`Server exfiltrated and running on port ${PORT}`));

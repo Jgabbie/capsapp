@@ -12,6 +12,37 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
+// --- HELPER FUNCTION: Modern HTML Email Template ---
+const generateOTPEmailTemplate = (otp, type) => {
+    const messageText = type === 'reset' 
+        ? "Reset your password using the OTP below"
+        : "Verify your account using the OTP below";
+
+    return `
+    <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 40px 20px; text-align: center;">
+        <div style="background-color: #ffffff; max-width: 500px; margin: 0 auto; padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h2 style="color: #305797; margin-top: 0; margin-bottom: 20px; font-size: 24px;">M&RC Travel and Tours</h2>
+            
+            <p style="color: #4b5563; font-size: 16px; margin-bottom: 30px;">
+                ${messageText}
+            </p>
+            
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: inline-block; min-width: 250px;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 12px; color: #b91c1c; margin-left: 12px;">${otp}</span>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 30px;">
+                This OTP will expire in <strong>1 minute</strong>.
+            </p>
+            
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                If you did not request this, please ignore this email.
+            </p>
+        </div>
+    </div>
+    `;
+};
+
 // CREATE USER
 export const createUser = async (req, res) => {
     try {
@@ -105,7 +136,7 @@ export const getUsers = async (req, res) => {
     }
 };
 
-// NEW: GET SINGLE USER BY ID
+// GET SINGLE USER BY ID
 export const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp");
@@ -130,19 +161,17 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// UPDATE USER (Upgraded to handle mobile app profile fields)
+// UPDATE USER
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Grab all incoming data and remove sensitive fields just to be safe
         const updateData = { ...req.body };
         delete updateData.password;
         delete updateData.hashedPassword;
         delete updateData.verifyOtp;
         delete updateData.resetOtp;
         
-        // Keep phone strings in sync
         if (req.body.phonenum) updateData.phone = req.body.phonenum;
 
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).select("-password -hashedPassword");
@@ -165,7 +194,8 @@ export const sendResetOtp = async (req, res) => {
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOtp = otp;
-        user.resetOtpExpireAt = Date.now() + 10 * 60 * 1000;
+        // Changed to 1 minute
+        user.resetOtpExpireAt = Date.now() + 1 * 60 * 1000; 
         await user.save();
 
         const transporter = nodemailer.createTransport({
@@ -177,14 +207,7 @@ export const sendResetOtp = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'M&RC Travel and Tours - Password Reset OTP',
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-                    <h2>M&RC Travel and Tours</h2>
-                    <p>You requested a password reset. Here is your OTP:</p>
-                    <h1 style="color: #305797; letter-spacing: 5px;">${otp}</h1>
-                    <p>This code will expire in 10 minutes.</p>
-                </div>
-            `
+            html: generateOTPEmailTemplate(otp, 'reset')
         };
         await transporter.sendMail(mailOptions);
         res.status(200).json({ success: true, message: "OTP sent successfully" });
@@ -245,7 +268,8 @@ export const sendVerifyOtp = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
         user.verifyOtp = otp;
-        user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; 
+        // Changed to 1 minute
+        user.verifyOtpExpireAt = Date.now() + 1 * 60 * 1000; 
         await user.save();
 
         const transporter = nodemailer.createTransport({
@@ -257,14 +281,7 @@ export const sendVerifyOtp = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'M&RC Travel and Tours - Account Verification',
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-                    <h2>Welcome to M&RC Travel and Tours!</h2>
-                    <p>Please use the following code to verify your account:</p>
-                    <h1 style="color: #305797; letter-spacing: 5px;">${otp}</h1>
-                    <p>This code will expire in 10 minutes.</p>
-                </div>
-            `
+            html: generateOTPEmailTemplate(otp, 'verify')
         };
         await transporter.sendMail(mailOptions);
         res.status(200).json({ success: true, message: "Verification OTP sent" });

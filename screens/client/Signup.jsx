@@ -7,7 +7,9 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-googl
 import { Ionicons } from '@expo/vector-icons' 
 import SignupStyle from '../../styles/clientstyles/SignupStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
-import axios from 'axios'
+
+// IMPORT OUR SMART API INSTEAD OF RAW AXIOS!
+import { api } from '../../utils/api' 
 
 export default function Signup() {
     const cs = useNavigation()
@@ -137,7 +139,7 @@ export default function Signup() {
         });
 
         setErrors(newErrors);
-        setBackendError(""); // Clear any old backend error before trying again
+        setBackendError(""); 
 
         if (hasError) {
             ToastAndroid.show("Please fix the errors above.", ToastAndroid.SHORT);
@@ -149,7 +151,11 @@ export default function Signup() {
         try {
             const fullPhoneNumber = `+63${user.phonenum}`;
             
-            const response = await axios.post('http://10.0.2.2:5000/api/create-user', { 
+            // 🔥 CHANGED THIS LINE! 🔥
+            // Uses our smart 'api' variable instead of hardcoded 10.0.2.2
+            // Note: Since your old code went to /api/create-user and our api.js base URL ends with /api, 
+            // we just need to append /create-user here.
+            const response = await api.post('/users/create-user', { 
                 username: user.username,
                 firstname: user.firstname,
                 lastname: user.lastname,
@@ -161,11 +167,9 @@ export default function Signup() {
             if (response.data.success) {
                 setModalVisible(true);
             } else {
-                // Show the error text instead of a toast
                 setBackendError(response.data.message || "Signup failed");
             }
         } catch (err) {
-            // Show the error text instead of a toast
             setBackendError(err.response?.data?.message || "Network Error");
         } finally {
             setLoading(false);

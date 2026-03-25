@@ -137,12 +137,18 @@ const UserPackageQuotationStyle = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: "center",
-    marginTop: 60,
+    marginTop: 80, // Pushed down a bit more to match Bookings centering
+  },
+  // Added Image Style
+  emptyImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 5,
+    opacity: 0.9, 
   },
   emptyText: {
-    marginTop: 10,
-    color: "#999",
-    fontSize: 15,
+    color: "#a0aab5", // Lighter grayish-blue to match Bookings text
+    fontSize: 16,
     fontFamily: "Roboto_400Regular",
   },
 });

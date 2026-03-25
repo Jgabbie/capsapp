@@ -6,7 +6,9 @@ import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
-import axios from 'axios'
+
+// 1. IMPORT OUR DYNAMIC API INSTEAD OF AXIOS
+import { api } from '../../utils/api' 
 
 export default function PasswordReset() {
     const cs = useNavigation()
@@ -51,7 +53,8 @@ export default function PasswordReset() {
 
         setLoading(true)
         try {
-            await axios.post('http://10.0.2.2:5000/api/auth/send-reset-otp', { email })
+            // 2. FIXED ENDPOINT AND API CALL
+            await api.post('/users/auth/send-reset-otp', { email })
             setTimer(60)
             setIsModalOpen(true)
         } catch (err) {
@@ -69,7 +72,8 @@ export default function PasswordReset() {
 
         setLoading(true)
         try {
-            const response = await axios.post('http://10.0.2.2:5000/api/auth/check-reset-otp', { email, otp })
+            // 3. FIXED ENDPOINT AND API CALL
+            const response = await api.post('/users/auth/check-reset-otp', { email, otp })
             if (response.data.success || response.status === 200) {
                 setIsModalOpen(false)
                 // Navigate to the next screen, passing the email and token!
@@ -84,7 +88,8 @@ export default function PasswordReset() {
 
     const resendOTP = async () => {
         try {
-            await axios.post('http://10.0.2.2:5000/api/auth/send-reset-otp', { email })
+            // 4. FIXED ENDPOINT AND API CALL
+            await api.post('/users/auth/send-reset-otp', { email })
             ToastAndroid.show("OTP Sent!", ToastAndroid.SHORT)
             setTimer(60)
         } catch (err) {

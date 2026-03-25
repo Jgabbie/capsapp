@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Image,
   TouchableWithoutFeedback, // Required for the "shield" logic
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -150,8 +151,13 @@ export default function UserPackageQuotation() {
 
         {!loading && filteredQuotations.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={50} color="#ccc" />
-            <Text style={styles.emptyText}>No matching quotations found.</Text>
+            {/* NOTE: Change "no-data.png" to the exact filename used in your Bookings screen! */}
+            <Image 
+                source={require("../../assets/images/empty_logo.png")} 
+                style={styles.emptyImage}
+                resizeMode="contain"
+            />
+            <Text style={styles.emptyText}>No Data yet</Text>
           </View>
         )}
         <View style={{ height: 40 }} />
