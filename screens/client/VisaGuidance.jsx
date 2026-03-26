@@ -11,12 +11,12 @@ import Chatbot from '../../components/Chatbot'
 import VisaGuidanceStyle from '../../styles/clientstyles/VisaGuidanceStyle'
 import { api } from '../../utils/api'
 
-// --- Tactical Helper: Prefixes the local server IP to your database image paths ---
-const getImageUrl = (img) => {
-    if (!img) return 'https://images.unsplash.com/photo-1526481280695-3c4699d38b51?auto=format&fit=crop&w=1000&q=80';
-    if (img.startsWith("http") || img.startsWith("data:")) return img;
-    // Ensure this IP matches the "AXIOS TARGET URL" in your terminal!
-    return `http://10.20.66.178:5000/${img.replace(/^\/+/, "")}`;
+// --- LOCAL IMAGE MAPPING FOR PRESENTATION ---
+// This maps the exact 'visaName' from your database to your local files
+const localImages = {
+    "Korea Visa": require('../../assets/images/Korea_Visa.jpg'),
+    "Japan Visa": require('../../assets/images/Japan_Visa.jpg'),
+    // Add more here in the future if needed!
 };
 
 export default function VisaGuidance() {
@@ -53,7 +53,6 @@ export default function VisaGuidance() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            {/* Changed to ScrollView to match the working Passport Guidance structure */}
             <ScrollView 
                 style={VisaGuidanceStyle.container}
                 contentContainerStyle={{ paddingBottom: 30 }}
@@ -68,12 +67,14 @@ export default function VisaGuidance() {
                 ) : (
                     services.map((item) => (
                         <View key={item._id} style={VisaGuidanceStyle.card}>
-                            {/* FIXED: Using the getImageUrl helper for dynamic rendering */}
+                            
+                            {/* FIXED: Using the local mapping dictionary based on visaName */}
                             <Image 
-                                source={{ uri: getImageUrl(item.visaImage) }} 
+                                source={localImages[item.visaName]} 
                                 style={VisaGuidanceStyle.cardImage} 
                                 resizeMode="cover"
                             />
+
                             <View style={VisaGuidanceStyle.cardContent}>
                                 <Text style={VisaGuidanceStyle.visaTitle}>{item.visaName}</Text>
                                 <Text style={VisaGuidanceStyle.description} numberOfLines={3}>

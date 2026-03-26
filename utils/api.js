@@ -7,8 +7,8 @@ const getApiBaseUrl = () => {
     return "http://localhost:5000/api";
   }
   
-  // 2. Fallback for physical phones
-  return "http://192.168.1.7:5000/api";
+  // 2. Bulletproof Android Emulator IP (Never changes!)
+  return "http://10.0.2.2:5000/api";
 };
 
 const API_BASE_URL = getApiBaseUrl();
