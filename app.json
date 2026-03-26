@@ -3,6 +3,7 @@
     "name": "capsapp",
     "slug": "capsapp",
     "version": "1.0.0",
+    "scheme": "travex",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

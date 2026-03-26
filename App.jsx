@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 
 import SplashScreen from './screens/client/SplashScreen';
 import Signup from './screens/client/Signup';
@@ -55,8 +56,23 @@ function AppNavigator() {
 
   const MyScreen = createNativeStackNavigator();
 
+  // --- 🔗 DEEP LINKING CONFIGURATION 🔗 ---
+  const prefix = Linking.createURL('/');
+  
+  const linking = {
+    prefixes: [prefix, 'travex://'], // Listens for your custom scheme
+    config: {
+      screens: {
+        // Maps the incoming URL 'travex://login' to your 'login' screen
+        login: 'login', 
+        // Note: You can add more later, like resetpassconfirm: 'resetpassconfirm'
+      },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    // Pass the linking object into the NavigationContainer
+    <NavigationContainer linking={linking}>
       <MyScreen.Navigator screenOptions={{ headerShown: false }}>
 
         {!user?._id ? (

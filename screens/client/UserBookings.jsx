@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, Pressable, TouchableWithoutFeedback, Image } from 'react-native'
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Calendar } from 'react-native-calendars'
@@ -36,8 +36,29 @@ export default function UserBookings() {
         try {
             setLoading(true)
             const response = await api.get('/booking/my-bookings', withUserHeader(user._id))
-            setBookings(response.data || [])
+            
+            // 🔥 DEBUGGER LOG (You can delete this line later if you want)
+            console.log("📦 RAW RESPONSE TYPE:", typeof response.data, "IS ARRAY?", Array.isArray(response.data));
+
+            // 🛡️ The Ultimate Extraction 🛡️
+            let fetchedBookings = [];
+            
+            if (Array.isArray(response.data)) {
+                // If it's already a clean array, use it directly
+                fetchedBookings = response.data;
+            } else if (response.data && Array.isArray(response.data.bookings)) {
+                // If the backend wrapped it inside an object like { bookings: [...] }
+                fetchedBookings = response.data.bookings;
+            } else if (response.data && typeof response.data === 'object') {
+                 // Extreme fallback: If it's a single object, wrap it in an array so .map() doesn't crash
+                 fetchedBookings = [response.data];
+            }
+
+            // Finally, set the state with the guaranteed array
+            setBookings(fetchedBookings);
+            
         } catch (error) {
+            console.log("BOOKING CRASH REASON:", error.response?.data || error.message);
             setBookings([])
         } finally {
             setLoading(false)
@@ -72,12 +93,31 @@ export default function UserBookings() {
         }
     }
 
+    // --- HELPER FUNCTION: Get Status Colors ---
+    const getStatusStyle = (status) => {
+        const normalized = String(status || 'Successful').trim();
+        switch (normalized) {
+            case 'Cancelled':
+                return { bg: '#fff1f0', text: '#cf1322' }; // Red
+            case 'Pending':
+                return { bg: '#fffbe6', text: '#d48806' }; // Yellow/Orange
+            case 'Successful':
+            default:
+                return { bg: '#f6ffed', text: '#389e0d' }; // Green
+        }
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={UserBookingsStyle.container} showsVerticalScrollIndicator={false}>
+            {/* FIXED SCROLLING: Moved container to style, added padding to contentContainerStyle */}
+            <ScrollView 
+                style={UserBookingsStyle.container} 
+                contentContainerStyle={{ paddingBottom: 40 }} // Ensures you can scroll past the bottom card
+                showsVerticalScrollIndicator={false}
+            >
                 <Text style={UserBookingsStyle.title}>My Bookings</Text>
                 <Text style={UserBookingsStyle.subtitle}>Track your latest reservations and status.</Text>
 
@@ -133,33 +173,38 @@ export default function UserBookings() {
                         <Text style={UserBookingsStyle.emptyText}>No Data yet</Text>
                     </View>
                 ) : (
-                    filteredBookings.map((item) => (
-                        <View key={item._id} style={UserBookingsStyle.bookingCard}>
-                            <View style={UserBookingsStyle.cardHeader}>
-                                <Text style={UserBookingsStyle.bookingRef}>{item.reference}</Text>
-                                <View style={[UserBookingsStyle.statusBadge, { backgroundColor: item.status === 'Cancelled' ? '#fff1f0' : '#f6ffed' }]}>
-                                    <Text style={[UserBookingsStyle.bookingStatus, { color: item.status === 'Cancelled' ? '#cf1322' : '#389e0d' }]}>
-                                        {item.status || 'Successful'}
-                                    </Text>
+                    filteredBookings.map((item) => {
+                        const statusStyle = getStatusStyle(item.status);
+                        return (
+                            <View key={item._id} style={UserBookingsStyle.bookingCard}>
+                                <View style={UserBookingsStyle.cardHeader}>
+                                    <Text style={UserBookingsStyle.bookingRef}>{item.reference}</Text>
+                                    
+                                    {/* FIXED STATUS COLORS */}
+                                    <View style={[UserBookingsStyle.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                                        <Text style={[UserBookingsStyle.bookingStatus, { color: statusStyle.text }]}>
+                                            {item.status || 'Successful'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <View style={UserBookingsStyle.cardBody}>
+                                    <Text style={UserBookingsStyle.packageName}>{item.packageId?.packageName || 'Tour Package'}</Text>
+                                    <Text style={UserBookingsStyle.detailText}>📅 Travel: {item.travelDate || '--'}</Text>
+                                    <Text style={UserBookingsStyle.detailText}>👥 Travelers: {item.travelers || 0}</Text>
+                                </View>
+                                <View style={UserBookingsStyle.cardActions}>
+                                    <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
+                                        <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
+                                    </TouchableOpacity>
+                                    {item.status !== 'Cancelled' && (
+                                        <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelModalOpen(true); }}>
+                                            <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             </View>
-                            <View style={UserBookingsStyle.cardBody}>
-                                <Text style={UserBookingsStyle.packageName}>{item.packageId?.packageName || 'Tour Package'}</Text>
-                                <Text style={UserBookingsStyle.detailText}>📅 Travel: {item.travelDate || '--'}</Text>
-                                <Text style={UserBookingsStyle.detailText}>👥 Travelers: {item.travelers || 0}</Text>
-                            </View>
-                            <View style={UserBookingsStyle.cardActions}>
-                                <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
-                                    <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
-                                </TouchableOpacity>
-                                {item.status !== 'Cancelled' && (
-                                    <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelModalOpen(true); }}>
-                                        <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
             </ScrollView>
 

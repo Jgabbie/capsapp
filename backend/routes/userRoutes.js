@@ -2,7 +2,7 @@ import express from "express";
 import { 
     createUser, deleteUser, getUsers, loginUser, updateUser, getUserById,
     sendResetOtp, checkResetOtp, resetPassword,
-    sendVerifyOtp, verifyAccount 
+    sendVerifyOtp, verifyAccount, redirectToApp // <-- ADDED redirectToApp here
 } from "../controllers/userController.js"; 
 
 const router = express.Router();
@@ -26,5 +26,8 @@ router.post("/auth/reset-password", resetPassword);
 // Account Verification Routes
 router.post("/auth/send-verify-otp", sendVerifyOtp);
 router.post("/auth/verify-account", verifyAccount);
+
+// --- Deep Link Redirect Route ---
+router.get("/redirect-to-app", redirectToApp);
 
 export default router;

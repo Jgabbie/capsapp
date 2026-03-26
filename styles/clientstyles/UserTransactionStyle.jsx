@@ -2,103 +2,120 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
     container: {
-        padding: 20,
-        backgroundColor: "#fff",
-        flexGrow: 1, // Added to ensure empty state centers vertically
+        padding: 15,
+        backgroundColor: "#f5f7fa", // Matched Bookings background
+        flexGrow: 1, 
+        paddingBottom: 40,
     },
-    // Branding Section
-    brandingContainer: {
+    // --- REDESIGNED HEADER TO MATCH BOOKINGS ---
+    title: {
+        fontSize: 20, 
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        marginBottom: 5,
+        paddingLeft: 5,
+    },
+    subtitle: {
+        fontSize: 13,
+        fontFamily: "Roboto_400Regular",
+        color: "#777",
         marginBottom: 20,
+        paddingLeft: 5,
     },
-    mainTitle: {
-        fontSize: 22,
-        fontFamily: "Montserrat_700Bold",
-        color: "#305797",
-    },
-    byTravex: {
-        fontSize: 12,
-        fontFamily: "Montserrat_500Medium",
-        color: "#305797",
-        marginTop: -4,
-    },
-    pageTitle: {
-        fontSize: 18,
-        fontFamily: "Montserrat_700Bold",
-        marginBottom: 15,
-        color: "#333"
-    },
+
+    // --- SEARCH & FILTERS ---
     searchRow: {
-        marginBottom: 16
+        flexDirection: "column", 
+        gap: 12,
+        marginBottom: 20,
+        width: '100%',
     },
     searchBar: {
+        width: '100%',
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 12,
-        paddingHorizontal: 14,
+        backgroundColor: "#f6f8fc", 
+        borderRadius: 20, 
+        paddingHorizontal: 12,
+        height: 40, 
         borderWidth: 1,
         borderColor: "#dbe3ef",
-        height: 45,
-        marginBottom: 10
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 13,
+        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
         color: "#333",
+        paddingVertical: 0,
     },
     dropdownGroup: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 10
+        alignItems: "center",
+        gap: 8, 
     },
     dropdownButton: {
-        flex: 1,
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
+        backgroundColor: "#eef3fb", 
+        borderRadius: 15, 
+        paddingHorizontal: 10,
+        height: 40, 
         borderWidth: 1,
-        borderColor: "#d6e0f0"
+        borderColor: "#d6e0f0", 
+        justifyContent: 'space-between',
+        minWidth: 90,
     },
     dropdownText: {
-        fontSize: 12,
+        fontSize: 11, 
         color: "#305797",
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Roboto_400Regular", 
+        marginRight: 8,
     },
-    // Cards
+
+    // --- CARDS ---
     transactionCard: {
         backgroundColor: "#fff",
         borderRadius: 16,
-        padding: 18,
+        padding: 16,
         marginBottom: 16,
         elevation: 3,
         shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 5,
+        shadowRadius: 4,
+        borderWidth: 1,
+        borderColor: "#eee",
     },
     cardHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 12
+        alignItems: "center",
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+        paddingBottom: 10,
+        marginBottom: 12,
     },
     transactionRef: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 14,
-        color: "#305797"
+        fontSize: 12,
+        color: "#777",
+        textTransform: 'uppercase',
+    },
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
     },
     transactionStatus: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 12
+        fontSize: 11,
     },
     packageName: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 16,
+        color: "#305797",
         marginBottom: 8,
-        color: "#333"
     },
     detailRow: {
         flexDirection: "row",
@@ -132,10 +149,11 @@ export default StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         fontSize: 13
     },
-    // Modal Styles
+
+    // --- MODAL STYLES ---
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -143,23 +161,31 @@ export default StyleSheet.create({
         backgroundColor: '#fff',
         width: '80%',
         borderRadius: 15,
-        padding: 10
+        paddingVertical: 10,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     modalOption: {
         paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-        alignItems: 'center'
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+        alignItems: 'center',
+        width: '100%'
     },
     modalOptionText: {
-        fontFamily: "Roboto_500Medium",
-        color: "#305797"
+        fontSize: 16,
+        color: '#305797',
+        fontFamily: 'Roboto_500Medium'
     },
+
     // --- EMPTY STATE STYLES ---
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 40,
+        marginTop: 60,
     },
     emptyImage: {
         width: 150, 

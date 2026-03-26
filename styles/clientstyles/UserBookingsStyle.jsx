@@ -1,8 +1,8 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet } from "react-native";
 
 const UserBookingsStyle = StyleSheet.create({
     container: {
-        flex: 1,
+        // REMOVED flex: 1 to fix the scrolling issue!
         padding: 15,
         backgroundColor: "#fff", 
     },

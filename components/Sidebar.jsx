@@ -13,10 +13,9 @@ export default function Sidebar({ visible, onClose }) {
     const [modalVisible, setModalVisible] = useState(false)
     const { user, clearUser } = useUser()
 
-    const displayName = [user?.firstname, user?.lastname]
-        .filter(Boolean)
-        .join(' ')
-        .trim() || user?.username || 'Guest User'
+    // Forces the sidebar to display the username. 
+    // If no username is found, it safely falls back to "Guest User"
+    const displayName = user?.username || 'Guest User'
 
     const displayEmail = user?.email || 'No email'
 

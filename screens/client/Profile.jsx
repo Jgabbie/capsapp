@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, Image, Modal, ScrollView, Platform, ToastAndroid, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Image, Modal, ScrollView, Platform, ToastAndroid, Alert, ActivityIndicator } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useFonts } from 'expo-font'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from "@expo-google-fonts/montserrat"
@@ -11,7 +11,9 @@ import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import ProfileStyle from '../../styles/clientstyles/ProfileStyle'
-import { api } from '../../utils/api' 
+
+// IMPORTED withUserHeader for our new API calls
+import { api, withUserHeader } from '../../utils/api' 
 import { useUser } from '../../context/UserContext'
 
 export default function Profile() {
@@ -57,11 +59,15 @@ export default function Profile() {
         phonenum: ""
     })
 
+    // --- NEW: State for Recent Activity ---
+    const [recentBookings, setRecentBookings] = useState([])
+    const [recentReviews, setRecentReviews] = useState([])
+    const [loadingExtra, setLoadingExtra] = useState(false)
+
     // --- FETCH USER DATA ---
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                // FIXED PATH: The Double Prefix (/users/users/)
                 const response = await api.get(`/users/users/${user._id}`)
                 const currentUser = response.data.user || response.data
 
@@ -102,6 +108,31 @@ export default function Profile() {
         }
         if (user?._id) fetchUserData()
     }, [user?._id])
+
+    // --- FETCH RECENT ACTIVITY (Bookings & Reviews) ---
+    useEffect(() => {
+        const fetchRecentActivity = async () => {
+            if (!user?._id) return;
+            setLoadingExtra(true);
+            try {
+                // We use Promise.all to fetch both databases at the exact same time to save loading time!
+                const [bookingsRes, reviewsRes] = await Promise.all([
+                    api.get('/booking/my-bookings', withUserHeader(user._id)).catch(() => ({ data: [] })),
+                    // Note: If your backend endpoint for a user's ratings is named differently, update '/rating/my-ratings' here!
+                    api.get('/rating/my-ratings', withUserHeader(user._id)).catch(() => ({ data: [] })) 
+                ]);
+
+                // Safely grab the arrays and sort/slice them later
+                setRecentBookings(bookingsRes.data?.bookings || bookingsRes.data || []);
+                setRecentReviews(reviewsRes.data?.ratings || reviewsRes.data || []);
+            } catch (error) {
+                console.log("Error fetching recent activity:", error.message);
+            } finally {
+                setLoadingExtra(false);
+            }
+        };
+        fetchRecentActivity();
+    }, [user?._id]);
 
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
@@ -213,7 +244,6 @@ export default function Profile() {
 
     const confirmSave = async () => {
         try {
-            // FIXED PATH: The Double Prefix (/users/users/)
             const response = await api.put(`/users/users/${user._id}`, {
                 ...userData,
                 phone: userData.phonenum, 
@@ -250,7 +280,7 @@ export default function Profile() {
     if (!fontsLoaded) return null;
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
+        <ScrollView style={{ flex: 1, backgroundColor: '#f5f7fa' }} showsVerticalScrollIndicator={false}>
             <Header openSidebar={() => { setSidebarVisible(true) }} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
@@ -375,7 +405,7 @@ export default function Profile() {
                             value={userData.birthdate ? new Date(userData.birthdate) : new Date()}
                             mode="date"
                             display="default"
-                            maximumDate={new Date()} // Prevent future birthdates
+                            maximumDate={new Date()} 
                             onChange={handleDateChange}
                         />
                     )}
@@ -422,16 +452,56 @@ export default function Profile() {
                     )}
                 </View>
 
-                {/* --- REVIEWS & BOOKINGS --- */}
+                {/* --- DYNAMIC REVIEWS & BOOKINGS --- */}
                 <Text style={ProfileStyle.sectionTitle}>My Recent Reviews</Text>
-                <View style={ProfileStyle.emptyStateCard}>
-                    <Text style={ProfileStyle.emptyStateText}>No reviews yet.</Text>
-                </View>
+                {loadingExtra ? (
+                    <ActivityIndicator size="small" color="#305797" style={{ marginTop: 10, marginBottom: 20 }} />
+                ) : recentReviews.length === 0 ? (
+                    <View style={ProfileStyle.emptyStateCard}>
+                        <Text style={ProfileStyle.emptyStateText}>No reviews yet.</Text>
+                    </View>
+                ) : (
+                    // Only map over the 3 most recent reviews
+                    recentReviews.slice(0, 3).map((review, index) => (
+                        <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#fadb14', fontSize: 16 }}>
+                                {/* Renders literal stars based on the rating number */}
+                                {'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}
+                            </Text>
+                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#555', marginTop: 8 }} numberOfLines={2}>
+                                "{review.review}"
+                            </Text>
+                        </View>
+                    ))
+                )}
 
                 <Text style={ProfileStyle.sectionTitle}>My Recent Bookings</Text>
-                <View style={ProfileStyle.emptyStateCard}>
-                    <Text style={ProfileStyle.emptyStateText}>No bookings yet.</Text>
-                </View>
+                {loadingExtra ? (
+                    <ActivityIndicator size="small" color="#305797" style={{ marginTop: 10, marginBottom: 20 }} />
+                ) : recentBookings.length === 0 ? (
+                    <View style={ProfileStyle.emptyStateCard}>
+                        <Text style={ProfileStyle.emptyStateText}>No bookings yet.</Text>
+                    </View>
+                ) : (
+                    // Only map over the 3 most recent bookings
+                    recentBookings.slice(0, 3).map((booking, index) => (
+                        <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#333' }}>
+                                    {booking.bookingReference || booking.reference || "Booking"}
+                                </Text>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 12 }}>
+                                    {booking.status || "Pending"}
+                                </Text>
+                            </View>
+                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#777', marginTop: 5 }}>
+                                {booking.package?.packageName || booking.packageName || "Custom Package"}
+                            </Text>
+                        </View>
+                    ))
+                )}
+                {/* Extra padding at the bottom for smooth scrolling */}
+                <View style={{ height: 30 }} />
 
                 {/* Modals */}
                 <Modal visible={genderModalVisible} transparent={true} animationType="fade">

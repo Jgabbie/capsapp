@@ -2,13 +2,13 @@ import axios from "axios";
 import { Platform } from "react-native";
 
 const getApiBaseUrl = () => {
-  // 1. If running in the web browser, use localhost safely
   if (Platform.OS === "web") {
     return "http://localhost:5000/api";
   }
   
-  // 2. Bulletproof Android Emulator IP (Never changes!)
-  return "http://10.0.2.2:5000/api";
+  // 🔥 BYPASSING THE EMULATOR BRIDGE 🔥
+  // Using your laptop's actual Wi-Fi IP address instead of 10.0.2.2
+  return "http://192.168.1.8:5000/api";
 };
 
 const API_BASE_URL = getApiBaseUrl();

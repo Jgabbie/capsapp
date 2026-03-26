@@ -12,7 +12,7 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
-// --- HELPER FUNCTION: Modern HTML Email Template ---
+// --- HELPER FUNCTION: Modern HTML Email Template (OTP) ---
 const generateOTPEmailTemplate = (otp, type) => {
     const messageText = type === 'reset' 
         ? "Reset your password using the OTP below"
@@ -37,6 +37,38 @@ const generateOTPEmailTemplate = (otp, type) => {
             
             <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
                 If you did not request this, please ignore this email.
+            </p>
+        </div>
+    </div>
+    `;
+};
+
+// --- HELPER FUNCTION: Welcome Email Template with Deep Link ---
+const generateWelcomeEmailTemplate = (username) => {
+    // NOTE: Change this IP to your laptop's Wi-Fi IP for local testing, 
+    // or your live Render/Railway URL when you deploy to production!
+    const redirectUrl = "http://192.168.1.7:5000/api/users/redirect-to-app";
+
+    return `
+    <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 40px 20px; text-align: center;">
+        <div style="background-color: #ffffff; max-width: 500px; margin: 0 auto; padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h2 style="color: #305797; margin-top: 0; margin-bottom: 20px; font-size: 24px;">Welcome to M&RC Travel and Tours</h2>
+            
+            <p style="color: #4b5563; font-size: 16px; margin-bottom: 20px;">
+                Hello <strong>${username}</strong>,
+            </p>
+
+            <p style="color: #4b5563; font-size: 14px; margin-bottom: 30px;">
+                Your account has been successfully created!<br><br>
+                Kindly log in to verify your account and start browsing our travel packages, tours, and exclusive offers.
+            </p>
+            
+            <a href="${redirectUrl}" style="background-color: #305797; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-bottom: 30px;">
+                Log In to Your Account
+            </a>
+            
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                If you did not create this account, please ignore this email.
             </p>
         </div>
     </div>
@@ -78,6 +110,28 @@ export const createUser = async (req, res) => {
         });
 
         const savedUser = await user.save();
+
+        // --- Send Welcome Email ---
+        try {
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Welcome to M&RC Travel and Tours',
+                html: generateWelcomeEmailTemplate(username)
+            };
+            
+            await transporter.sendMail(mailOptions);
+            console.log("Welcome email sent to:", email);
+        } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+            // We don't return an error here so the account creation still succeeds
+        }
+
         res.status(201).json({ success: true, userId: savedUser._id });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -194,7 +248,6 @@ export const sendResetOtp = async (req, res) => {
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOtp = otp;
-        // Changed to 1 minute
         user.resetOtpExpireAt = Date.now() + 1 * 60 * 1000; 
         await user.save();
 
@@ -268,7 +321,6 @@ export const sendVerifyOtp = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
         user.verifyOtp = otp;
-        // Changed to 1 minute
         user.verifyOtpExpireAt = Date.now() + 1 * 60 * 1000; 
         await user.save();
 
@@ -309,4 +361,33 @@ export const verifyAccount = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+// =========================================================
+// DEEP LINK REDIRECT LOGIC
+// =========================================================
+export const redirectToApp = (req, res) => {
+    // This sends a tiny webpage that automatically triggers the mobile app
+    res.send(`
+        <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Opening Travex...</title>
+            </head>
+            <body style="text-align: center; padding-top: 50px; font-family: sans-serif; color: #305797;">
+                <h2>Opening Travex App...</h2>
+                <p>Please wait while we redirect you to the Login screen.</p>
+                <script>
+                    // 1. Try to open the Mobile App
+                    window.location.href = "travex://login";
+                    
+                    // 2. Fallback: If they open this on a PC or don't have the app, 
+                    // redirect to the web login after 2.5 seconds.
+                    setTimeout(() => {
+                        window.location.href = "http://localhost:3000/login"; // Update to live URL when deployed
+                    }, 2500);
+                </script>
+            </body>
+        </html>
+    `);
 };

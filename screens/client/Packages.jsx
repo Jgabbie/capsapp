@@ -34,7 +34,6 @@ export default function Packages({ navigation }) {
                 setLoading(true);
                 setError("");
                 
-                // FIXED PATH: Added /package/ here!
                 const response = await api.get('/package/get-packages');
                 
                 const mapped = response.data.map((item) => ({
@@ -105,14 +104,41 @@ export default function Packages({ navigation }) {
                     filteredPackages.map((item) => {
                         const tv = Number(travelersValue);
                         const displayPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
+                        
                         return (
                             <View key={item.id} style={DestinationStyles.packageCard}>
                                 <Image source={{ uri: item.image }} style={DestinationStyles.packageImage} />
                                 <View style={DestinationStyles.packageContent}>
                                     <Text style={DestinationStyles.packageTitle}>{item.title}</Text>
                                     <Text style={DestinationStyles.packageTypeLabel}>{item.packageType} • {item.duration}</Text>
+                                    
+                                    {/* 1. NEW FEATURE: Render Tags dynamically */}
+                                    {item.packageTags && item.packageTags.length > 0 && (
+                                        <View style={DestinationStyles.packageTagsRow}>
+                                            {/* We slice to 4 so it doesn't overflow the card and look messy */}
+                                            {item.packageTags.slice(0, 4).map((tag, index) => (
+                                                <View key={index} style={DestinationStyles.tagPill}>
+                                                    <Text style={DestinationStyles.tagText}>{tag}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
                                     <View style={DestinationStyles.packageFooter}>
-                                        <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
+                                        <View style={DestinationStyles.priceContainer}>
+                                            {/* 2. NEW FEATURE: Dynamic Computation Display */}
+                                            {tv > 1 ? (
+                                                <>
+                                                    <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
+                                                        {formatPeso(item.packagePricePerPax)} x {tv} pax =
+                                                    </Text>
+                                                    <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
+                                                </>
+                                            ) : (
+                                                <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
+                                            )}
+                                        </View>
+
                                         <TouchableOpacity 
                                             style={DestinationStyles.viewDetailsButton} 
                                             onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
@@ -156,7 +182,14 @@ export default function Packages({ navigation }) {
                             </View>
 
                             <Text style={DestinationStyles.filterLabel}>Group Size</Text>
-                            <TextInput style={DestinationStyles.searchBar} placeholder="Number of travelers" keyboardType="numeric" value={travelersValue} onChangeText={setTravelersValue} />
+                            <TextInput 
+                                style={DestinationStyles.searchBar} 
+                                placeholder="Number of travelers" 
+                                keyboardType="numeric" 
+                                value={travelersValue} 
+                                // 3. NEW FEATURE: Regex blocks non-numbers instantly
+                                onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))} 
+                            />
                             
                             {tagOptions.length > 0 && (
                                 <>

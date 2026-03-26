@@ -1,4 +1,5 @@
 import Transaction from "../models/transaction.js";
+import Booking from "../models/booking.js"; // 🔥 THIS IS THE FIX! Mongoose now knows what a Booking is.
 import logAction from "../utils/logger.js"; // Assuming you have this utility
 
 // --- Utility: Generate TX- Reference Number ---
@@ -49,15 +50,23 @@ export const createTransaction = async (req, res) => {
     }
 };
 
+
 // --- CLIENT: Get User's Own History ---
 export const getUserTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({ userId: req.userId })
             .sort({ createdAt: -1 })
-            .populate("bookingId", "reference bookingDetails");
+            // 🔥 THE JEDI MIND TRICK 🔥
+            // By passing 'model: Booking', we bypass the string name check entirely!
+            .populate({
+                path: "bookingId",
+                model: Booking, 
+                select: "reference bookingDetails packageName packageId status"
+            });
 
         return res.status(200).json(transactions);
     } catch (error) {
+        console.log("TRANSACTION CRASH REASON:", error.message);
         return res.status(500).json({ message: "Error fetching transactions", error: error.message });
     }
 };
