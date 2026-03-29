@@ -5,7 +5,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from "expo-constants";
 
 import { useFonts } from '@expo-google-fonts/montserrat';
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
+import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
 
 import Header from '../../components/Header';
@@ -13,7 +13,6 @@ import Sidebar from '../../components/Sidebar';
 import Chatbot from '../../components/Chatbot';
 import WishlistStyle from '../../styles/clientstyles/WishlistStyle';
 import ModalStyle from '../../styles/componentstyles/ModalStyle';
-// ADDED THE IMPORT HERE
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
@@ -42,33 +41,37 @@ export default function Wishlist() {
     
     // Modal States
     const [modalVisible, setModalVisible] = useState(false);
-    const [modalOkVisible, setModalOkVisible] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
 
-    // Filter States
+    // 🔥 NEW FILTER STATES (Matched to Web)
     const [searchText, setSearchText] = useState("");
-    const [isActivityOpen, setIsActivityOpen] = useState(false);
-    const [isDurationOpen, setIsDurationOpen] = useState(false);
-    const [selectedActivity, setSelectedActivity] = useState("Activities");
-    const [selectedDuration, setSelectedDuration] = useState("Duration");
+    const [activeDropdown, setActiveDropdown] = useState(null); // 'category', 'availability', 'price' or null
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [selectedAvailability, setSelectedAvailability] = useState("All");
+    const [selectedPrice, setSelectedPrice] = useState("All");
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
+        Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold,
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     });
 
-    // Fetch Wishlist Data every time screen is focused
+    // Helper to determine availability status
+    const getAvailabilityStatus = (slots) => {
+        if (slots === undefined || slots === null) return "Available"; // Fallback
+        if (slots <= 0) return "Sold out";
+        if (slots <= 5) return "Few slots";
+        return "Available";
+    };
+
     useFocusEffect(
         useCallback(() => {
             const fetchWishlist = async () => {
-                if (!user?._id) return; // Ensure we have a user ID
+                if (!user?._id) return;
                 try {
                     setLoading(true);
-                    // ADDED THE HEADER HERE
                     const response = await api.get('/wishlist', withUserHeader(user._id));
                     let items = response.data.wishlist || response.data;
                     
-                    // Safely extract the package data
                     const mapped = items.map(item => {
                         const pkg = item.packageId || item.package || item; 
                         return {
@@ -76,10 +79,12 @@ export default function Wishlist() {
                             title: pkg.packageName,
                             image: toImageUrl(pkg.images?.[0]),
                             packagePricePerPax: pkg.packagePricePerPax || 0,
-                            duration: `${pkg.packageDuration || 0} Days`,
+                            duration: `${pkg.packageDuration || 0} DAYS`,
                             packageDuration: pkg.packageDuration || 0,
-                            packageTags: pkg.packageTags || [],
-                            rawPackage: pkg // Pass this to the details page
+                            packageType: pkg.packageType || "Domestic", 
+                            availability: getAvailabilityStatus(pkg.slots ?? 10),
+                            reference: pkg.reference || `PKG-${pkg._id.substring(0, 8).toUpperCase()}`,
+                            rawPackage: pkg 
                         };
                     });
                     setPackages(mapped);
@@ -93,36 +98,30 @@ export default function Wishlist() {
         }, [user?._id]) 
     );
 
-    // Extract Unique Activities for Dropdown
-    const activitiesList = useMemo(() => {
-        const unique = new Set();
-        packages.forEach(p => p.packageTags?.forEach(t => unique.add(t)));
-        return ["All", ...Array.from(unique)];
-    }, [packages]);
+    // Dropdown Lists
+    const categoriesList = ["All", "Domestic", "International"];
+    const availabilitiesList = ["All", "Available", "Few slots", "Sold out"];
+    const pricesList = ["All", "Under 4000", "4000-7000", "7000+"];
 
-    const durationList = ["All", "1-3 Days", "4-7 Days", "8+ Days"];
-
-    // Filtering Logic
+    // 🔥 NEW FILTERING LOGIC
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
-            const matchesSearch = !q || item.title?.toLowerCase().includes(q) || item.packageTags?.some(t => t.toLowerCase().includes(q));
+            const matchesSearch = !q || item.title?.toLowerCase().includes(q) || item.packageType?.toLowerCase().includes(q);
             
-            const matchesActivity = selectedActivity === "Activities" || selectedActivity === "All" || item.packageTags?.includes(selectedActivity);
+            const matchesCategory = selectedCategory === "All" || item.packageType?.toLowerCase() === selectedCategory.toLowerCase();
+            const matchesAvailability = selectedAvailability === "All" || item.availability === selectedAvailability;
             
-            let matchesDuration = true;
-            if (selectedDuration !== "Duration" && selectedDuration !== "All") {
-                const days = item.packageDuration;
-                if (selectedDuration === "1-3 Days") matchesDuration = days >= 1 && days <= 3;
-                if (selectedDuration === "4-7 Days") matchesDuration = days >= 4 && days <= 7;
-                if (selectedDuration === "8+ Days") matchesDuration = days >= 8;
-            }
+            let matchesPrice = true;
+            const price = item.packagePricePerPax;
+            if (selectedPrice === "Under 4000") matchesPrice = price < 4000;
+            if (selectedPrice === "4000-7000") matchesPrice = price >= 4000 && price <= 7000;
+            if (selectedPrice === "7000+") matchesPrice = price > 7000;
 
-            return matchesSearch && matchesActivity && matchesDuration;
+            return matchesSearch && matchesCategory && matchesAvailability && matchesPrice;
         });
-    }, [packages, searchText, selectedActivity, selectedDuration]);
+    }, [packages, searchText, selectedCategory, selectedAvailability, selectedPrice]);
 
-    // Remove Action
     const handleRemoveConfirm = async () => {
         if (!itemToRemove) return;
         try {
@@ -130,89 +129,109 @@ export default function Wishlist() {
                 data: { packageId: itemToRemove.id }, 
                 ...withUserHeader(user?._id) 
             });
-            
-            setPackages(prev => prev.filter(p => p.id !== itemToRemove.id)); // Remove locally
-            setModalVisible(false); // Close the 'Are you sure?' modal and do nothing else!
+            setPackages(prev => prev.filter(p => p.id !== itemToRemove.id));
+            setModalVisible(false);
         } catch (err) {
             Alert.alert("Error", "Could not remove package from wishlist.");
             setModalVisible(false);
         }
     };
 
+    const toggleDropdown = (type) => {
+        setActiveDropdown(activeDropdown === type ? null : type);
+    };
+
     if (!fontsLoaded) return null;
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={WishlistStyle.container} showsVerticalScrollIndicator={false}>
-                <Text style={WishlistStyle.title}>My Wishlist</Text>
+                
+                <Text style={WishlistStyle.title}>Your Wishlist</Text>
+                <Text style={WishlistStyle.subtitle}>Search and filter the packages you saved for later.</Text>
 
-                {/* --- SEARCH & DROPDOWNS --- */}
-                <View style={WishlistStyle.searchRow}>
+                {/* --- FILTERS CONTAINER --- */}
+                <View style={WishlistStyle.filterBox}>
+                    <Text style={WishlistStyle.filterLabel}>Search</Text>
                     <View style={WishlistStyle.searchBar}>
-                        <Ionicons name="search" size={16} color="#777" />
                         <TextInput
                             style={WishlistStyle.searchInput}
-                            placeholder="Search Packages"
-                            placeholderTextColor="#777"
+                            placeholder="Search by destination or package name"
+                            placeholderTextColor="#9ca3af"
                             value={searchText}
                             onChangeText={setSearchText}
                         />
                     </View>
 
-                    <View style={WishlistStyle.dropdownGroup}>
-                        <TouchableOpacity 
-                            style={WishlistStyle.dropdownButton} 
-                            onPress={() => { setIsActivityOpen(!isActivityOpen); setIsDurationOpen(false); }}
-                        >
-                            <Text style={WishlistStyle.dropdownText} numberOfLines={1}>
-                                {selectedActivity === "Activities" || selectedActivity === "All" ? "Activities" : selectedActivity}
-                            </Text>
-                            <Ionicons name={isActivityOpen ? "chevron-up" : "chevron-down"} size={12} color="#305797" />
-                        </TouchableOpacity>
+                    <View style={WishlistStyle.dropdownRow}>
+                        {/* Category */}
+                        <View style={{flex: 1}}>
+                            <Text style={WishlistStyle.filterLabel}>Category</Text>
+                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('category')}>
+                                <Text style={WishlistStyle.dropdownText}>{selectedCategory}</Text>
+                                <Ionicons name="chevron-down" size={14} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        {/* Availability */}
+                        <View style={{flex: 1, marginHorizontal: 8}}>
+                            <Text style={WishlistStyle.filterLabel}>Availability</Text>
+                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('availability')}>
+                                <Text style={WishlistStyle.dropdownText}>{selectedAvailability}</Text>
+                                <Ionicons name="chevron-down" size={14} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
 
-                        <TouchableOpacity 
-                            style={WishlistStyle.dropdownButton} 
-                            onPress={() => { setIsDurationOpen(!isDurationOpen); setIsActivityOpen(false); }}
-                        >
-                            <Text style={WishlistStyle.dropdownText} numberOfLines={1}>
-                                {selectedDuration === "Duration" || selectedDuration === "All" ? "Duration" : selectedDuration}
-                            </Text>
-                            <Ionicons name={isDurationOpen ? "chevron-up" : "chevron-down"} size={12} color="#305797" />
-                        </TouchableOpacity>
+                        {/* Price */}
+                        <View style={{flex: 1}}>
+                            <Text style={WishlistStyle.filterLabel}>Price</Text>
+                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('price')}>
+                                <Text style={WishlistStyle.dropdownText}>{selectedPrice}</Text>
+                                <Ionicons name="chevron-down" size={14} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
 
-                {/* --- RENDER DROPDOWN MENUS --- */}
-                {isActivityOpen && (
-                    <View style={WishlistStyle.dropdownMenu}>
-                        {activitiesList.map(activity => (
-                            <TouchableOpacity 
-                                key={activity} 
-                                style={WishlistStyle.dropdownMenuItem}
-                                onPress={() => { setSelectedActivity(activity); setIsActivityOpen(false); }}
-                            >
-                                <Text style={WishlistStyle.dropdownMenuItemText}>{activity}</Text>
+                {/* DROPDOWN MENUS OVERLAYS */}
+                {activeDropdown === 'category' && (
+                    <View style={[WishlistStyle.dropdownMenu, { left: 20 }]}>
+                        {categoriesList.map(cat => (
+                            <TouchableOpacity key={cat} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedCategory(cat); setActiveDropdown(null); }}>
+                                <Text style={WishlistStyle.dropdownMenuItemText}>{cat}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+                {activeDropdown === 'availability' && (
+                    <View style={[WishlistStyle.dropdownMenu, { left: '35%' }]}>
+                        {availabilitiesList.map(avail => (
+                            <TouchableOpacity key={avail} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedAvailability(avail); setActiveDropdown(null); }}>
+                                <Text style={WishlistStyle.dropdownMenuItemText}>{avail}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+                {activeDropdown === 'price' && (
+                    <View style={[WishlistStyle.dropdownMenu, { right: 20 }]}>
+                        {pricesList.map(price => (
+                            <TouchableOpacity key={price} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedPrice(price); setActiveDropdown(null); }}>
+                                <Text style={WishlistStyle.dropdownMenuItemText}>{price}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
                 )}
 
-                {isDurationOpen && (
-                    <View style={[WishlistStyle.dropdownMenu, { right: 20 }]}>
-                        {durationList.map(duration => (
-                            <TouchableOpacity 
-                                key={duration} 
-                                style={WishlistStyle.dropdownMenuItem}
-                                onPress={() => { setSelectedDuration(duration); setIsDurationOpen(false); }}
-                            >
-                                <Text style={WishlistStyle.dropdownMenuItemText}>{duration}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                {/* --- PACKAGES HEADER --- */}
+                <View style={WishlistStyle.packagesHeader}>
+                    <Text style={WishlistStyle.packagesTitle}>Packages</Text>
+                    <Text style={WishlistStyle.foundText}>
+                        {filteredPackages.length === 1 ? '1 found' : `${filteredPackages.length} found`}
+                    </Text>
+                </View>
 
                 {/* --- RENDER CONTENT --- */}
                 {loading ? (
@@ -220,7 +239,7 @@ export default function Wishlist() {
                 ) : filteredPackages.length === 0 ? (
                     <View style={WishlistStyle.emptyStateContainer}>
                         <Image source={require('../../assets/images/empty_logo.png')} style={WishlistStyle.emptyStateImage} />
-                        <Text style={WishlistStyle.emptyStateText}>No wishlisted packages yet.</Text>
+                        <Text style={WishlistStyle.emptyStateText}>No packages found.</Text>
                     </View>
                 ) : (
                     filteredPackages.map((item) => (
@@ -228,29 +247,54 @@ export default function Wishlist() {
                             <Image style={WishlistStyle.cardImage} source={{ uri: item.image }} />
 
                             <View style={WishlistStyle.cardContent}>
-                                <Text style={WishlistStyle.packageName}>{item.title}</Text>
-                                <View style={WishlistStyle.priceRow}>
-                                    <Text style={WishlistStyle.newPrice}>{formatPeso(item.packagePricePerPax)}</Text>
-                                    <Text style={{fontSize: 11, color: '#777'}}>/ Pax</Text>
+                                {/* Title and Category Tag */}
+                                <View style={WishlistStyle.rowBetween}>
+                                    <Text style={WishlistStyle.packageName} numberOfLines={1}>{item.title}</Text>
+                                    <View style={[WishlistStyle.tag, { backgroundColor: item.packageType?.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
+                                        <Text style={[WishlistStyle.tagText, { color: item.packageType?.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
+                                            {item.packageType?.toUpperCase()}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Text style={WishlistStyle.refText}>{item.reference}</Text>
+
+                                {/* Duration and Availability Tag */}
+                                <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 15 }]}>
+                                    <Text style={WishlistStyle.durationText}>{item.duration}</Text>
+                                    <View style={[
+                                        WishlistStyle.tag, 
+                                        { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }
+                                    ]}>
+                                        <Text style={[
+                                            WishlistStyle.tagText, 
+                                            { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }
+                                        ]}>
+                                            {item.availability.toUpperCase()}
+                                        </Text>
+                                    </View>
                                 </View>
 
-                                <View style={WishlistStyle.buttonRow}>
-                                    <TouchableOpacity
-                                        style={WishlistStyle.viewButton}
-                                        onPress={() => cs.navigate("packagedetails", { pkg: item.rawPackage, id: item.id })}
-                                    >
-                                        <Text style={WishlistStyle.viewButtonText}>View</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={WishlistStyle.removeButton}
-                                        onPress={() => {
-                                            setItemToRemove(item);
-                                            setModalVisible(true);
-                                        }}
-                                    >
-                                        <Text style={WishlistStyle.viewButtonText}>Remove</Text>
-                                    </TouchableOpacity>
+                                {/* Price and Buttons */}
+                                <View style={WishlistStyle.rowBetween}>
+                                    <Text style={WishlistStyle.priceText}>{formatPeso(item.packagePricePerPax)}</Text>
+                                    <View style={WishlistStyle.actionButtons}>
+                                        <TouchableOpacity 
+                                            style={WishlistStyle.btnView} 
+                                            onPress={() => cs.navigate("packagedetails", { pkg: item.rawPackage, id: item.id })}
+                                        >
+                                            <Text style={WishlistStyle.btnViewText}>View details</Text>
+                                        </TouchableOpacity>
+                                        
+                                        <TouchableOpacity 
+                                            style={WishlistStyle.btnRemove} 
+                                            onPress={() => {
+                                                setItemToRemove(item);
+                                                setModalVisible(true);
+                                            }}
+                                        >
+                                            <Text style={WishlistStyle.btnRemoveText}>Remove</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
                         </View>
@@ -278,7 +322,6 @@ export default function Wishlist() {
                     </View>
                 </View>
             </Modal>
-
         </View>
     );
 }

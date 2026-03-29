@@ -4,165 +4,218 @@ const WishlistStyle = StyleSheet.create({
     container: {
         padding: 20,
         paddingBottom: 120,
-        backgroundColor: "#f5f7fa",
+        backgroundColor: "#f9fafb",
         flexGrow: 1
     },
     title: {
         fontSize: 24,
         fontFamily: "Montserrat_700Bold",
-        color: "#305797",
+        color: "#1e293b",
+        marginBottom: 5
+    },
+    subtitle: {
+        fontSize: 13,
+        color: "#64748b",
+        fontFamily: "Roboto_400Regular",
+        marginBottom: 20
+    },
+
+    // --- FILTER BOX (Matches Web) ---
+    filterBox: {
+        backgroundColor: "#fff",
+        padding: 15,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#e2e8f0",
+        marginBottom: 25,
+        zIndex: 10
+    },
+    filterLabel: {
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#1e293b",
+        marginBottom: 5
+    },
+    searchBar: {
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: "#cbd5e1",
+        height: 42,
+        justifyContent: 'center',
         marginBottom: 15
     },
+    searchInput: {
+        fontSize: 14,
+        color: "#333",
+        fontFamily: "Roboto_400Regular"
+    },
+    dropdownRow: {
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
+    dropdownButton: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: "#cbd5e1",
+        height: 40,
+    },
+    dropdownText: {
+        fontSize: 12,
+        color: "#475569",
+        fontFamily: "Roboto_400Regular",
+    },
+    dropdownMenu: {
+        position: 'absolute',
+        top: 245, 
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 5,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        zIndex: 20,
+        width: 130
+    },
+    dropdownMenuItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9'
+    },
+    dropdownMenuItemText: {
+        fontSize: 13,
+        color: '#334155',
+        fontFamily: 'Roboto_400Regular'
+    },
+
+    // --- PACKAGES HEADER ---
+    packagesHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        marginBottom: 15
+    },
+    packagesTitle: {
+        fontSize: 18,
+        fontFamily: "Montserrat_700Bold",
+        color: "#1e293b",
+    },
+    foundText: {
+        fontSize: 12,
+        color: "#94a3b8",
+        fontFamily: "Roboto_400Regular"
+    },
+
+    // --- CARD (Matches Web) ---
     card: {
         backgroundColor: "#fff",
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#eee",
+        borderColor: "#e2e8f0",
         marginBottom: 20,
         overflow: "hidden",
-        elevation: 3
+        elevation: 1 // slight shadow
     },
     cardImage: {
         width: "100%",
-        height: 180,
+        height: 200,
         resizeMode: "cover"
     },
     cardContent: {
         padding: 16
     },
+    rowBetween: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
     packageName: {
-        fontSize: 18,
+        fontSize: 16,
         fontFamily: "Montserrat_700Bold",
-        color: "#305797",
-        marginBottom: 5
-    },
-    priceRow: {
-        flexDirection: "row",
-        alignItems: "baseline",
-        marginBottom: 15
-    },
-    newPrice: {
-        fontSize: 20,
-        fontFamily: "Montserrat_700Bold",
-        color: "#222",
-        marginRight: 5
-    },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-between"
-    },
-    viewButton: {
-        backgroundColor: "#305797",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
+        color: "#1e293b",
         flex: 1,
-        alignItems: "center",
         marginRight: 10
     },
-    removeButton: {
-        backgroundColor: "#992A46",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        flex: 1,
-        alignItems: "center"
+    refText: {
+        fontSize: 12,
+        color: "#94a3b8",
+        fontFamily: "Roboto_400Regular",
+        marginTop: 2
     },
-    viewButtonText: {
-        color: "#fff",
-        fontSize: 14,
-        fontFamily: "Montserrat_700Bold"
+    durationText: {
+        fontSize: 13,
+        color: "#64748b",
+        fontFamily: "Roboto_400Regular",
+    },
+    priceText: {
+        fontSize: 18,
+        fontFamily: "Montserrat_700Bold",
+        color: "#1e293b",
     },
     
-    // --- PERFECTLY MATCHED HOME SCREEN SEARCH & FILTERS ---
-    searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: 20,
-        width: '100%',
-        zIndex: 10, 
+    // --- TAGS ---
+    tag: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
     },
-    searchBar: {
-        flex: 2, 
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#f6f8fc",
-        borderRadius: 20,
-        paddingHorizontal: 12,
-        paddingVertical: 6, 
+    tagText: {
+        fontSize: 10,
+        fontFamily: "Montserrat_700Bold",
+    },
+
+    // --- BUTTONS ---
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 8
+    },
+    btnView: {
+        backgroundColor: "#305797",
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+    },
+    btnViewText: {
+        color: "#fff",
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold"
+    },
+    btnRemove: {
+        backgroundColor: "#fff",
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
         borderWidth: 1,
-        borderColor: "#dbe3ef",
-        height: 40, 
+        borderColor: "#cbd5e1"
     },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 14,
-        color: "#333",
-        paddingVertical: 0, 
-    },
-    dropdownGroup: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 5
-    },
-    dropdownButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#eef3fb",
-        borderRadius: 15,
-        paddingHorizontal: 10,
-        paddingVertical: 6, 
-        borderWidth: 1,
-        borderColor: "#d6e0f0",
-        height: 40, 
-    },
-    dropdownText: {
-        fontSize: 11, 
-        color: "#305797",
-        fontFamily: "Roboto_400Regular",
-        marginRight: 4
-    },
-    dropdownMenu: {
-        position: 'absolute',
-        top: 130, 
-        right: 20, 
-        backgroundColor: '#fff',
-        borderRadius: 12, 
-        padding: 5,
-        elevation: 5,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        zIndex: 20,
-        minWidth: 120
-    },
-    dropdownMenuItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0'
-    },
-    dropdownMenuItemText: {
-        fontSize: 13,
-        color: '#333'
+    btnRemoveText: {
+        color: "#475569",
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold"
     },
 
     // --- EMPTY STATE ---
     emptyStateContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 60,
+        marginTop: 40,
     },
     emptyStateImage: {
-        width: 150,
-        height: 150,
+        width: 120,
+        height: 120,
         resizeMode: 'contain',
         opacity: 0.5,
-        marginBottom: 20
+        marginBottom: 15
     },
     emptyStateText: {
-        fontSize: 16,
-        color: '#777',
+        fontSize: 15,
+        color: '#94a3b8',
         fontFamily: 'Montserrat_500Medium'
     }
 });
