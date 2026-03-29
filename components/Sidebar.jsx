@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import { Ionicons } from '@expo/vector-icons' // 🔥 ADDED VECTOR ICONS
+
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
 import { useUser } from '../context/UserContext'
@@ -13,10 +15,7 @@ export default function Sidebar({ visible, onClose }) {
     const [modalVisible, setModalVisible] = useState(false)
     const { user, clearUser } = useUser()
 
-    // Forces the sidebar to display the username. 
-    // If no username is found, it safely falls back to "Guest User"
     const displayName = user?.username || 'Guest User'
-
     const displayEmail = user?.email || 'No email'
 
     const profileImageSource = user?.profileImage
@@ -28,9 +27,20 @@ export default function Sidebar({ visible, onClose }) {
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     })
 
+    // Standard Image-based Menu Item
     const MenuItem = ({ icon, title, onPress }) => (
         <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
             <Image source={icon} style={SidebarStyle.navIcon} resizeMode='contain' />
+            <Text style={SidebarStyle.navText}>{title}</Text>
+        </TouchableOpacity>
+    )
+
+    // 🔥 NEW Vector-based Menu Item 🔥
+    const MenuVectorItem = ({ iconName, title, onPress }) => (
+        <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
+            <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
+                <Ionicons name={iconName} size={24} color="#fff" />
+            </View>
             <Text style={SidebarStyle.navText}>{title}</Text>
         </TouchableOpacity>
     )
@@ -87,12 +97,8 @@ export default function Sidebar({ visible, onClose }) {
 
                     <MenuItem
                         title="Quotations"
-                        // Use booking_icon temporarily so the app doesn't crash!
                         icon={require('../assets/images/transactions_icon.png')} 
-                        onPress={() => {
-                        onClose();
-                        cs.navigate("userquotations");
-                        }}
+                        onPress={() => { onClose(); cs.navigate("userquotations"); }}
                     />
 
                     <MenuItem
@@ -111,6 +117,13 @@ export default function Sidebar({ visible, onClose }) {
                         title="Passport Assistance"
                         icon={require('../assets/images/passport_icon.png')}
                         onPress={() => { onClose(); cs.navigate("passportguidance") }}
+                    />
+
+                    {/* 🔥 NEW ABOUT US BUTTON HERE 🔥 */}
+                    <MenuVectorItem
+                        title="About Us"
+                        iconName="information-circle-outline"
+                        onPress={() => { onClose(); cs.navigate("aboutus") }}
                     />
 
                     <View style={SidebarStyle.divider} />

@@ -27,6 +27,7 @@
     "expo-image-picker": "~55.0.14",
     "expo-linking": "~55.0.9",
     "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "~55.0.10",
     "express": "^5.2.1",
     "mongoose": "^9.2.3",
     "multer": "^2.1.1",

@@ -15,7 +15,7 @@ const requireUser = (req, res, next) => {
     return res.status(400).json({ message: "Invalid user ID" });
   }
 
-  req.userId = userId;
+  req.userId = userId; // This is the key!
   next();
 };
 

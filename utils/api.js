@@ -1,19 +1,16 @@
 import axios from "axios";
 import { Platform } from "react-native";
 
-const DEPLOYED_URL = "https://travexmobile.onrender.com/api";
 
-//"http://localhost:5000/api"
-//"http://192.168.1.56:5000/api"
+const DEPLOYED_URL = "https://travexmobile.onrender.com/api";
 
 const getApiBaseUrl = () => {
   if (Platform.OS === "web") {
-    return DEPLOYED_URL;
+    return "http://localhost:5000/api";
   }
 
-  // 🔥 BYPASSING THE EMULATOR BRIDGE 🔥
-  // Using your laptop's actual Wi-Fi IP address instead of 10.0.2.2
-  return DEPLOYED_URL;
+  
+  return "http://192.168.1.8:5000/api"; 
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -29,7 +26,7 @@ export const api = axios.create({
 
 export const withUserHeader = (userId) => ({
   headers: {
-    "x-user-id": String(userId),
+    "x-user-id": String(userId), // Must match middleware!
   },
 });
 

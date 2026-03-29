@@ -32,9 +32,25 @@ import UserPackageQuotation from './screens/client/UserPackageQuotation';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
 import QuotationForm from './screens/client/QuotationForm';
+import Notifications from './screens/client/Notifications';
+
+// 🔥 ALL-IN PACKAGE FLOW IMPORTS 🔥
+import QuotationAllIn from './screens/client/QuotationAllIn';
+import BookingReview from './screens/client/BookingReview';
+import BookingUploads from './screens/client/BookingUploads';
+import RegistrationStep1 from './screens/client/RegistrationStep1';
+import RegistrationStep2 from './screens/client/RegistrationStep2';
+import RegistrationStep3 from './screens/client/RegistrationStep3';
+import RegistrationStep4 from './screens/client/RegistrationStep4';
+
+// 🔥 NEW PAYMENT FLOW IMPORTS 🔥
+import PaymentMode from './screens/client/PaymentMode';
+import PaymentMethod from './screens/client/PaymentMethod';
+import PaymentSuccess from './screens/client/PaymentSuccess';
+
+import AboutUs from './screens/client/AboutUs';
 
 import { UserProvider, useUser } from './context/UserContext';
-import Notifications from './screens/client/Notifications';
 
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
@@ -60,18 +76,15 @@ function AppNavigator() {
   const prefix = Linking.createURL('/');
   
   const linking = {
-    prefixes: [prefix, 'travex://'], // Listens for your custom scheme
+    prefixes: [prefix, 'travex://'], 
     config: {
       screens: {
-        // Maps the incoming URL 'travex://login' to your 'login' screen
         login: 'login', 
-        // Note: You can add more later, like resetpassconfirm: 'resetpassconfirm'
       },
     },
   };
 
   return (
-    // Pass the linking object into the NavigationContainer
     <NavigationContainer linking={linking}>
       <MyScreen.Navigator screenOptions={{ headerShown: false }}>
 
@@ -97,7 +110,21 @@ function AppNavigator() {
             <MyScreen.Screen name="userbookings" component={UserBookings} />
             <MyScreen.Screen name="notifications" component={Notifications} />
 
-            {/* Quotation Screens */}
+            {/* --- 🔥 ALL-IN BOOKING FLOW 🔥 --- */}
+            <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
+            <MyScreen.Screen name="bookingreview" component={BookingReview} />
+            <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
+            <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
+            <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
+            <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
+            <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
+
+            {/* --- 🔥 PAYMENT FLOW 🔥 --- */}
+            <MyScreen.Screen name="paymentmode" component={PaymentMode} />
+            <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
+            <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
+
+            {/* Quotation Screens (Private Tour) */}
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
@@ -111,6 +138,8 @@ function AppNavigator() {
             <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
             <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
             <MyScreen.Screen name="visaprogress" component={VisaProgress} />
+            
+            <MyScreen.Screen name="aboutus" component={AboutUs} />
           </>
         )}
 

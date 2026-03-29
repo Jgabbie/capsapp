@@ -22,10 +22,19 @@ export default function Packages({ navigation }) {
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+    
+    // Budget States (Slider values and Text Input values separate for better UX)
     const [budgetRange, setBudgetRange] = useState([0, 150000]);
+    const [minBudgetInput, setMinBudgetInput] = useState("0");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("150000");
+
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
+    
+    // Days States
     const [daysValue, setDaysValue] = useState([15]);
+    const [daysInput, setDaysInput] = useState("15");
+
     const [travelersValue, setTravelersValue] = useState("");
 
     useEffect(() => {
@@ -80,6 +89,29 @@ export default function Packages({ navigation }) {
         });
     }, [packages, searchText, budgetRange, selectedTags, tourType, daysValue, travelersValue]);
 
+    // Handlers to sync text inputs with sliders
+    const handleBudgetInputChange = (type, value) => {
+        const numericValue = value.replace(/[^0-9]/g, '');
+        if (type === 'min') {
+            setMinBudgetInput(numericValue);
+            const num = Number(numericValue);
+            if (num <= budgetRange[1]) setBudgetRange([num, budgetRange[1]]);
+        } else {
+            setMaxBudgetInput(numericValue);
+            const num = Number(numericValue);
+            if (num >= budgetRange[0] && num <= 150000) setBudgetRange([budgetRange[0], num]);
+        }
+    };
+
+    const handleDaysInputChange = (value) => {
+        const numericValue = value.replace(/[^0-9]/g, '');
+        setDaysInput(numericValue);
+        const num = Number(numericValue);
+        if (num >= 1 && num <= 15) {
+            setDaysValue([num]);
+        }
+    };
+
     return (
         <View style={{ flex: 1 }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
@@ -112,10 +144,8 @@ export default function Packages({ navigation }) {
                                     <Text style={DestinationStyles.packageTitle}>{item.title}</Text>
                                     <Text style={DestinationStyles.packageTypeLabel}>{item.packageType} • {item.duration}</Text>
                                     
-                                    {/* 1. NEW FEATURE: Render Tags dynamically */}
                                     {item.packageTags && item.packageTags.length > 0 && (
                                         <View style={DestinationStyles.packageTagsRow}>
-                                            {/* We slice to 4 so it doesn't overflow the card and look messy */}
                                             {item.packageTags.slice(0, 4).map((tag, index) => (
                                                 <View key={index} style={DestinationStyles.tagPill}>
                                                     <Text style={DestinationStyles.tagText}>{tag}</Text>
@@ -126,7 +156,6 @@ export default function Packages({ navigation }) {
 
                                     <View style={DestinationStyles.packageFooter}>
                                         <View style={DestinationStyles.priceContainer}>
-                                            {/* 2. NEW FEATURE: Dynamic Computation Display */}
                                             {tv > 1 ? (
                                                 <>
                                                     <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
@@ -161,45 +190,95 @@ export default function Packages({ navigation }) {
                             <TouchableOpacity onPress={() => setFilterModalVisible(false)}><Ionicons name="close" size={24} color="#333" /></TouchableOpacity>
                         </View>
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                            
+                            {/* --- UPDATED BUDGET SECTION --- */}
                             <Text style={DestinationStyles.filterLabel}>Budget Range (₱)</Text>
+                            <View style={DestinationStyles.budgetInputRow}>
+                                <TextInput 
+                                    style={DestinationStyles.budgetInputBox} 
+                                    keyboardType="numeric"
+                                    value={minBudgetInput}
+                                    onChangeText={(val) => handleBudgetInputChange('min', val)}
+                                />
+                                <Text style={DestinationStyles.budgetInputText}>to</Text>
+                                <TextInput 
+                                    style={DestinationStyles.budgetInputBox} 
+                                    keyboardType="numeric"
+                                    value={maxBudgetInput}
+                                    onChangeText={(val) => handleBudgetInputChange('max', val)}
+                                />
+                            </View>
                             <View style={{ alignItems: 'center' }}>
-                                <MultiSlider values={budgetRange} sliderLength={width - 80} onValuesChange={setBudgetRange} min={0} max={150000} step={1000} selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} />
-                                <Text style={{ color: '#555', fontSize: 12 }}>{formatPeso(budgetRange[0])} - {formatPeso(budgetRange[1])}</Text>
+                                <MultiSlider 
+                                    values={budgetRange} 
+                                    sliderLength={width - 80} 
+                                    onValuesChange={(vals) => {
+                                        setBudgetRange(vals);
+                                        setMinBudgetInput(String(vals[0]));
+                                        setMaxBudgetInput(String(vals[1]));
+                                    }} 
+                                    min={0} max={150000} step={1000} 
+                                    selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
+                                />
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱150,000</Text>
                             </View>
 
-                            <Text style={DestinationStyles.filterLabel}>Tour Type</Text>
+                            {/* --- UPDATED TOUR TYPE --- */}
+                            <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>
                             <View style={DestinationStyles.filterPillContainer}>
                                 {['All', 'Domestic', 'International'].map(t => (
                                     <TouchableOpacity key={t} style={[DestinationStyles.filterPill, tourType === t && DestinationStyles.filterPillSelected]} onPress={() => setTourType(t)}>
-                                        <Text style={[DestinationStyles.filterPillText, tourType === t && { color: '#fff' }]}>{t}</Text>
+                                        <Text style={[DestinationStyles.filterPillText, tourType === t && { color: '#000' }]}>{t}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
 
-                            <Text style={[DestinationStyles.filterLabel, { marginTop: 15 }]}>Max Days: {daysValue[0]}</Text>
-                            <View style={{ alignItems: 'center' }}>
-                                <MultiSlider values={daysValue} sliderLength={width - 80} onValuesChange={setDaysValue} min={1} max={15} step={1} selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} />
-                            </View>
-
-                            <Text style={DestinationStyles.filterLabel}>Group Size</Text>
+                            {/* --- UPDATED TRAVELERS SECTION --- */}
+                            <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Travelers</Text>
                             <TextInput 
                                 style={DestinationStyles.searchBar} 
-                                placeholder="Number of travelers" 
+                                placeholder="How many travellers?" 
                                 keyboardType="numeric" 
                                 value={travelersValue} 
-                                // 3. NEW FEATURE: Regex blocks non-numbers instantly
                                 onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))} 
                             />
+                            <Text style={DestinationStyles.filterSubtext}>Show packages with available slots for your group size</Text>
+
+                            {/* --- UPDATED DAYS OF TOUR SECTION --- */}
+                            <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Days of Tour</Text>
+                            <View style={DestinationStyles.daysInputRow}>
+                                <TextInput 
+                                    style={DestinationStyles.daysInputBox} 
+                                    keyboardType="numeric"
+                                    value={daysInput}
+                                    onChangeText={handleDaysInputChange}
+                                />
+                                <Text style={DestinationStyles.daysMaxText}>Max{'\n'}Days</Text>
+                            </View>
+                            <View style={{ alignItems: 'center' }}>
+                                <MultiSlider 
+                                    values={daysValue} 
+                                    sliderLength={width - 80} 
+                                    onValuesChange={(vals) => {
+                                        setDaysValue(vals);
+                                        setDaysInput(String(vals[0]));
+                                    }} 
+                                    min={1} max={15} step={1} 
+                                    selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
+                                />
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>
+                            </View>
                             
+                            {/* --- UPDATED TAGS SECTION --- */}
                             {tagOptions.length > 0 && (
                                 <>
-                                    <Text style={DestinationStyles.filterLabel}>Tags / Activities</Text>
+                                    <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tags / Activities</Text>
                                     <View style={DestinationStyles.filterPillContainer}>
                                         {tagOptions.map(tag => (
                                             <TouchableOpacity key={tag} style={[DestinationStyles.filterPill, selectedTags.includes(tag) && DestinationStyles.filterPillSelected]} onPress={() => {
                                                 setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
                                             }}>
-                                                <Text style={[DestinationStyles.filterPillText, selectedTags.includes(tag) && { color: '#fff' }]}>{tag}</Text>
+                                                <Text style={[DestinationStyles.filterPillText, selectedTags.includes(tag) && { color: '#000' }]}>{tag}</Text>
                                             </TouchableOpacity>
                                         ))}
                                     </View>

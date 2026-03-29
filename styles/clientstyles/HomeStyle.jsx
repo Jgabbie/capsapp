@@ -240,6 +240,9 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 15,
         textAlign: "center"
     },
+    inputWrapper: {
+        marginBottom: 15,
+    },
     contactInput: {
         backgroundColor: "#f9f9f9",
         borderWidth: 1,
@@ -247,10 +250,20 @@ const HomeStyle = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 15,
         height: 45,
-        marginBottom: 15,
         fontFamily: "Roboto_400Regular",
         fontSize: 14,
-        color: "#333"
+        color: "#333",
+        marginBottom: 15 // Default margin when not in wrapper
+    },
+    inputErrorBorder: {
+        borderColor: "#ff4d4f",
+    },
+    errorText: {
+        color: "#ff4d4f",
+        fontSize: 11,
+        fontFamily: "Roboto_400Regular",
+        marginTop: 4,
+        marginLeft: 4,
     },
     contactTextArea: {
         backgroundColor: "#f9f9f9",
@@ -279,6 +292,51 @@ const HomeStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: "Montserrat_700Bold",
         fontSize: 15
+    },
+
+    // --- SUCCESS MODAL STYLES ---
+    successModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    successModalBox: {
+        backgroundColor: '#fff',
+        width: '85%',
+        borderRadius: 16,
+        padding: 25,
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    successModalTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 18,
+        color: "#305797",
+        textAlign: "center",
+        marginBottom: 10,
+    },
+    successModalSub: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#555",
+        textAlign: "center",
+        marginBottom: 20,
+    },
+    successModalButton: {
+        backgroundColor: "#305797",
+        paddingVertical: 10,
+        paddingHorizontal: 40,
+        borderRadius: 8,
+    },
+    successModalButtonText: {
+        color: "#fff",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
     }
 });
 

@@ -1,3 +1,4 @@
+import mongoose from "mongoose"; // 🔥 Added Mongoose to handle the ID conversion
 import Booking from "../models/booking.js";
 import Cancellation from "../models/cancellation.js";
 import Transaction from "../models/transaction.js";
@@ -48,39 +49,30 @@ export const createBooking = async (req, res) => {
 
 export const getUserBookings = async (req, res) => {
   try {
-    // 1. Find all successful transaction IDs for this user
-    const paidBookingIds = await Transaction.distinct("bookingId", {
-      userId: req.userId,
-      status: { $in: ["Paid", "Successful"] },
-    });
+    console.log("🔍 Searching for bookings for User ID:", req.userId);
 
-    // 2. Fetch the bookings that match those transactions
-    // We use .populate('packageId') so the mobile app gets the Tour Name and Image
+    // 🔥 Force the ID into a MongoDB ObjectId to prevent string mismatch errors
+    const userObjectId = new mongoose.Types.ObjectId(req.userId);
+
     const bookings = await Booking.find({
-      userId: req.userId,
-      _id: { $in: paidBookingIds },
-      status: { $ne: "Cancelled" },
+      userId: userObjectId,
     })
     .populate("packageId") 
     .sort({ createdAt: -1 });
 
+    console.log(`✅ Found ${bookings.length} bookings for this user!`);
+
     return res.status(200).json(bookings);
   } catch (error) {
+    console.error("❌ Error fetching user bookings:", error);
     return res.status(500).json({ message: "Error fetching bookings", error: error.message });
   }
 };
 
 export const getAllBookings = async (_req, res) => {
   try {
-    const paidBookingIds = await Transaction.distinct("bookingId", {
-      status: { $in: ["Paid", "Successful"] },
-    });
-
-    // Admin view: include user details too
-    const bookings = await Booking.find({
-      _id: { $in: paidBookingIds },
-      status: { $ne: "Cancelled" },
-    })
+    // Admins also need to see ALL bookings so they can verify the 'Pending' ones
+    const bookings = await Booking.find()
     .populate("packageId")
     .populate("userId", "username email")
     .sort({ createdAt: -1 });

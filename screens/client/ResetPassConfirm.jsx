@@ -1,20 +1,19 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import { Ionicons } from '@expo/vector-icons' // 🔥 ADDED: Icon library
+
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
-
-// 1. IMPORT OUR DYNAMIC API
 import { api } from '../../utils/api' 
 
 export default function ResetPassConfirm() {
     const cs = useNavigation()
     const route = useRoute() 
     
-    // Catch the token passed from the PasswordReset screen
     const { token } = route.params || {};
 
     const [fontsLoaded] = useFonts({
@@ -29,17 +28,20 @@ export default function ResetPassConfirm() {
     const [errorPassword, setErrorPassword] = useState("")
     const [errorConfirm, setErrorConfirm] = useState("")
     
+    // 🔥 NEW: States to track password visibility
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
     const [loading, setLoading] = useState(false)
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
 
     if (!fontsLoaded) return null;
 
-    // Helper to safely show messages on both Android and Web
     const showMessage = (message) => {
         if (Platform.OS === "android") {
             ToastAndroid.show(message, ToastAndroid.LONG);
         } else {
-            alert(message); // Standard browser alert for Web
+            alert(message); 
         }
     }
 
@@ -69,7 +71,6 @@ export default function ResetPassConfirm() {
 
         setLoading(true)
         try {
-            // 2. FIXED API ENDPOINT
             const response = await api.post('/users/auth/reset-password', { 
                 newPassword: password, 
                 token: token 
@@ -78,7 +79,6 @@ export default function ResetPassConfirm() {
                 setIsSuccessModalOpen(true)
             }
         } catch (err) {
-            // 3. SAFE ERROR DISPLAY FOR WEB AND MOBILE
             showMessage(err.response?.data?.message || "Failed to reset password")
         } finally {
             setLoading(false)
@@ -95,32 +95,59 @@ export default function ResetPassConfirm() {
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
                 <Text style={ResetPassConfirmStyle.label}>New Password</Text>
-                <TextInput
-                    style={[ResetPassConfirmStyle.input, errorPassword && ResetPassConfirmStyle.inputErrorBorder]}
-                    secureTextEntry={true}
-                    maxLength={20}
-                    value={password}
-                    onChangeText={(val) => {
-                        setPassword(val)
-                        setErrorPassword(validatePassword(val))
-                    }}
-                />
+                {/* 🔥 NEW: Wrapper View for the Password Input */}
+                <View style={ResetPassConfirmStyle.passwordContainer}>
+                    <TextInput
+                        style={[ResetPassConfirmStyle.input, errorPassword && ResetPassConfirmStyle.inputErrorBorder]}
+                        secureTextEntry={!showPassword} // Toggle based on state
+                        maxLength={20}
+                        value={password}
+                        onChangeText={(val) => {
+                            setPassword(val)
+                            setErrorPassword(validatePassword(val))
+                        }}
+                    />
+                    <TouchableOpacity 
+                        style={ResetPassConfirmStyle.eyeIcon} 
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Ionicons 
+                            name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                            size={20} 
+                            color="#6d6d6d" 
+                        />
+                    </TouchableOpacity>
+                </View>
                 {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
 
+
                 <Text style={ResetPassConfirmStyle.label}>Confirm Password</Text>
-                <TextInput
-                    style={[ResetPassConfirmStyle.input, errorConfirm && ResetPassConfirmStyle.inputErrorBorder]}
-                    secureTextEntry={true}
-                    maxLength={20}
-                    value={confirmPassword}
-                    onChangeText={(val) => {
-                        setConfirmPassword(val)
-                        // Immediate match check
-                        if (val !== password) setErrorConfirm("Passwords do not match.")
-                        else setErrorConfirm("")
-                    }}
-                />
+                {/* 🔥 NEW: Wrapper View for the Confirm Password Input */}
+                <View style={ResetPassConfirmStyle.passwordContainer}>
+                    <TextInput
+                        style={[ResetPassConfirmStyle.input, errorConfirm && ResetPassConfirmStyle.inputErrorBorder]}
+                        secureTextEntry={!showConfirmPassword} // Toggle based on state
+                        maxLength={20}
+                        value={confirmPassword}
+                        onChangeText={(val) => {
+                            setConfirmPassword(val)
+                            if (val !== password) setErrorConfirm("Passwords do not match.")
+                            else setErrorConfirm("")
+                        }}
+                    />
+                    <TouchableOpacity 
+                        style={ResetPassConfirmStyle.eyeIcon} 
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        <Ionicons 
+                            name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                            size={20} 
+                            color="#6d6d6d" 
+                        />
+                    </TouchableOpacity>
+                </View>
                 {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
+
 
                 <TouchableOpacity 
                     style={[ResetPassConfirmStyle.button, { opacity: loading ? 0.7 : 1 }]} 

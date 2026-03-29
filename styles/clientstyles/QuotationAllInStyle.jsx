@@ -1,0 +1,303 @@
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+
+const QuotationAllInStyle = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#f8fafc',
+    },
+    container: {
+        padding: 20,
+        paddingBottom: 40,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    titleGroup: {
+        flex: 1,
+        marginRight: 10,
+    },
+    mainTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 22,
+        color: "#1f2a44",
+    },
+    subtitle: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#4e5b72",
+        marginTop: 4,
+    },
+    backButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+        backgroundColor: '#fff',
+    },
+    backButtonText: {
+        fontFamily: "Roboto_500Medium",
+        color: "#64748b",
+        fontSize: 12,
+    },
+    // Arrangement Cards
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#e7ecf7',
+        marginBottom: 20,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: "#1f2a44",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.08,
+        shadowRadius: 20,
+    },
+    cardSelected: {
+        borderColor: '#305797',
+        borderWidth: 2,
+    },
+    cardImage: {
+        width: '100%',
+        height: 160,
+        resizeMode: 'cover',
+    },
+    cardContent: {
+        padding: 16,
+    },
+    cardTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 16,
+        color: "#1f2a44",
+        marginBottom: 6,
+    },
+    cardDesc: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#4b5563",
+        lineHeight: 18,
+    },
+    cardNote: {
+        fontFamily: "Roboto_500Medium",
+        fontSize: 11,
+        color: "#FF4D4F",
+        marginTop: 10,
+    },
+    // Counters
+    counterSection: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#e7ecf7',
+        marginBottom: 25,
+    },
+    counterSectionTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 18,
+        color: "#1f2a44",
+        marginBottom: 15,
+    },
+    counterRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    counterLabelGroup: {
+        flex: 1,
+    },
+    counterLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
+        color: "#1f2a44",
+    },
+    counterSublabel: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 11,
+        color: "#6b7280",
+        marginTop: 2,
+    },
+    counterControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    counterBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    counterValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 16,
+        color: "#1f2a44",
+        marginHorizontal: 15,
+        minWidth: 20,
+        textAlign: 'center',
+    },
+    // Summary
+    summaryTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 20,
+        color: "#1f2a44",
+        marginBottom: 15,
+    },
+    summaryCard: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 24,
+        borderWidth: 1,
+        borderColor: '#e0e7ff',
+        elevation: 4,
+        shadowColor: "#1f2a44",
+        shadowOffset: { width: 0, height: 18 },
+        shadowOpacity: 0.08,
+        shadowRadius: 40,
+    },
+    totalLabel: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 12,
+        color: "#666",
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    totalValue: {
+        fontFamily: "Roboto_700Bold",
+        fontSize: 32,
+        color: "#305797",
+        marginVertical: 8,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e6eaf4',
+        marginVertical: 15,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    detailLabel: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 13,
+        color: "#4e5b72",
+    },
+    detailValue: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#1f2a44",
+        textAlign: 'right',
+        flex: 1,
+        marginLeft: 10,
+    },
+    proceedButton: {
+        backgroundColor: "#305797",
+        height: 50,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    proceedButtonText: {
+        fontFamily: "Montserrat_700Bold",
+        color: "#fff",
+        fontSize: 16,
+    },
+    // --- NEW SUMMARY STYLES ---
+    summarySection: {
+        marginTop: 10,
+    },
+    bookingDetailsCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#e0e7ff',
+        marginBottom: 15,
+    },
+    totalAmountCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#e0e7ff',
+        marginBottom: 20,
+        elevation: 2,
+        shadowColor: "#1f2a44",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+    },
+    detailRowBreakdown: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    breakdownLabel: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 12,
+        color: '#1f2a44',
+        flex: 1,
+    },
+    breakdownValue: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#4e5b72',
+        flex: 2,
+        textAlign: 'right',
+    },
+    pricingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 8,
+    },
+    pricingText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: '#4e5b72',
+    },
+    summaryNote: {
+        fontFamily: "Roboto_400Regular",
+        fontStyle: 'italic',
+        fontSize: 10,
+        color: '#888',
+        marginVertical: 12,
+    },
+    dashedBox: {
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        borderColor: '#cbd5e1',
+        borderRadius: 8,
+        padding: 12,
+        backgroundColor: '#f8fafc',
+    },
+    dashedBoxLabel: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 11,
+        color: '#1f2a44',
+    },
+    dashedBoxValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
+        color: '#305797',
+        textTransform: 'uppercase',
+        marginTop: 2,
+    }
+});
+
+export default QuotationAllInStyle;

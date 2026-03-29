@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, Alert, ToastAndroid } from 'react-native'
+import { View, Text, TouchableOpacity, Image, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
@@ -33,6 +33,8 @@ export default function Home() {
     const [contactEmail, setContactEmail] = useState('')
     const [contactMessage, setContactMessage] = useState('')
     const [submittingContact, setSubmittingContact] = useState(false)
+    const [emailError, setEmailError] = useState('')
+    const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
 
     const activityOptions = ['All Activities', 'Adventure Type', 'Beach', 'Hiking', 'City Tour']
     const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
@@ -96,14 +98,24 @@ export default function Home() {
     const internationalPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'international')
     const domesticPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'domestic')
 
+    // --- EMAIL VALIDATION HANDLER ---
+    const handleEmailChange = (text) => {
+        const cleanedText = text.replace(/\s/g, '');
+        setContactEmail(cleanedText);
+
+        if (cleanedText === '') {
+            setEmailError(''); // Clear error if empty (button will be disabled anyway)
+        } else if (user && cleanedText.toLowerCase() !== user.email.toLowerCase()) {
+            setEmailError('Please use the email associated with your account.');
+        } else {
+            setEmailError('');
+        }
+    }
+
     // --- CONTACT US SUBMIT LOGIC ---
     const handleContactSubmit = async () => {
         if (!user || contactEmail.toLowerCase() !== user.email.toLowerCase()) {
-            if (Platform.OS === 'android') {
-                ToastAndroid.show('Please use the email associated with your account.', ToastAndroid.SHORT);
-            } else {
-                Alert.alert('Invalid Email', 'Please use the email associated with your account.');
-            }
+            setEmailError('Please use the email associated with your account.');
             return;
         }
 
@@ -115,21 +127,27 @@ export default function Home() {
                 message: contactMessage
             };
             
+            // This hits the exact same endpoint as your web version!
             await api.post('/email/contact', payload);
             
-            Alert.alert("Success", "Your message has been sent. Kindly check your email for responses.");
+            // Show the custom success modal
+            setSuccessModalVisible(true);
+            
+            // Clear the form
             setContactName('');
             setContactEmail('');
             setContactMessage('');
+            setEmailError('');
+            
         } catch (error) {
             console.log("Contact submit error:", error.message);
-            Alert.alert("Error", "Failed to send message. Please try again later.");
+            // In a real app, you might want a fail modal here too, but for now we'll just log it.
         } finally {
             setSubmittingContact(false);
         }
     }
 
-    const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactMessage.trim() !== '';
+    const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     const TravelCard = ({ item }) => {
         const imageSource = item.images && item.images.length > 0 
@@ -251,6 +269,22 @@ export default function Home() {
 
             <DropdownModal />
 
+            {/* --- CUSTOM SUCCESS MODAL --- */}
+            <Modal visible={isSuccessModalVisible} transparent={true} animationType="fade">
+                <View style={HomeStyle.successModalOverlay}>
+                    <View style={HomeStyle.successModalBox}>
+                        <Text style={HomeStyle.successModalTitle}>Your message has been sent</Text>
+                        <Text style={HomeStyle.successModalSub}>Kindly check your email for responses.</Text>
+                        <TouchableOpacity 
+                            style={HomeStyle.successModalButton}
+                            onPress={() => setSuccessModalVisible(false)}
+                        >
+                            <Text style={HomeStyle.successModalButtonText}>Continue</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -342,15 +376,18 @@ export default function Home() {
                                 onChangeText={(text) => setContactName(text.replace(/[^a-zA-Z\s]/g, ''))} // Letters and spaces only
                             />
                             
-                            <TextInput
-                                style={HomeStyle.contactInput}
-                                placeholder="Your Email"
-                                placeholderTextColor="#999"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                value={contactEmail}
-                                onChangeText={(text) => setContactEmail(text.replace(/\s/g, ''))} // No spaces allowed
-                            />
+                            <View style={HomeStyle.inputWrapper}>
+                                <TextInput
+                                    style={[HomeStyle.contactInput, emailError ? HomeStyle.inputErrorBorder : null, { marginBottom: 0 }]}
+                                    placeholder="Your Email"
+                                    placeholderTextColor="#999"
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    value={contactEmail}
+                                    onChangeText={handleEmailChange}
+                                />
+                                {emailError ? <Text style={HomeStyle.errorText}>{emailError}</Text> : null}
+                            </View>
                             
                             <TextInput
                                 style={HomeStyle.contactTextArea}
