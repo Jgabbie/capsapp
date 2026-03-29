@@ -2,9 +2,7 @@ import { StyleSheet } from "react-native";
 
 const HomeStyle = StyleSheet.create({
     container: {
-        flex: 1,
         padding: 15, 
-        backgroundColor: "#fff",
     },
     mainTitleContainer: {
         flexDirection: 'row',
@@ -81,7 +79,6 @@ const HomeStyle = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 4
     },
-    // --- NEW MODAL DROPDOWN STYLES ---
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.4)',
@@ -110,7 +107,6 @@ const HomeStyle = StyleSheet.create({
         color: '#305797',
         fontFamily: 'Roboto_500Medium'
     },
-    // ---------------------------------
     card: {
         marginRight: 15, 
         width: 150
@@ -203,6 +199,86 @@ const HomeStyle = StyleSheet.create({
         textAlign: 'center',
         marginTop: 20,
         marginBottom: 20
+    },
+    
+    // --- CONTACT US STYLES ---
+    contactContainer: {
+        marginTop: 30,
+        marginBottom: 20,
+        paddingHorizontal: 5
+    },
+    contactTitle: {
+        fontSize: 22,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        marginBottom: 10
+    },
+    contactDesc: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#555",
+        lineHeight: 20,
+        marginBottom: 20,
+        textAlign: "justify"
+    },
+    contactCard: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 20,
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        borderWidth: 1,
+        borderColor: "#eaeaea"
+    },
+    contactCardTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 16,
+        color: "#333",
+        marginBottom: 15,
+        textAlign: "center"
+    },
+    contactInput: {
+        backgroundColor: "#f9f9f9",
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        height: 45,
+        marginBottom: 15,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#333"
+    },
+    contactTextArea: {
+        backgroundColor: "#f9f9f9",
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        paddingTop: 12,
+        minHeight: 100,
+        marginBottom: 20,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#333"
+    },
+    contactSubmitBtn: {
+        backgroundColor: "#305797",
+        borderRadius: 8,
+        height: 45,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    contactSubmitBtnDisabled: {
+        backgroundColor: "#a0b4d4" // Lighter blue when disabled
+    },
+    contactSubmitText: {
+        color: "#fff",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 15
     }
 });
 
