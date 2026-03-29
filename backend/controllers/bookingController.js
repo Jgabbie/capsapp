@@ -33,7 +33,7 @@ export const createBooking = async (req, res) => {
       bookingDate: bookingDetails.bookingDate,
       travelDate: bookingDetails.travelDate,
       travelers: bookingDetails.travelers,
-      
+
       bookingDetails, // Keep the original object just in case
       checkoutToken,
       reference: generateBookingReference(),
@@ -54,11 +54,12 @@ export const getUserBookings = async (req, res) => {
     // 🔥 Force the ID into a MongoDB ObjectId to prevent string mismatch errors
     const userObjectId = new mongoose.Types.ObjectId(req.userId);
 
+    //bookings
     const bookings = await Booking.find({
       userId: userObjectId,
     })
-    .populate("packageId") 
-    .sort({ createdAt: -1 });
+      .populate("packageId")
+      .sort({ createdAt: -1 });
 
     console.log(`✅ Found ${bookings.length} bookings for this user!`);
 
@@ -73,9 +74,9 @@ export const getAllBookings = async (_req, res) => {
   try {
     // Admins also need to see ALL bookings so they can verify the 'Pending' ones
     const bookings = await Booking.find()
-    .populate("packageId")
-    .populate("userId", "username email")
-    .sort({ createdAt: -1 });
+      .populate("packageId")
+      .populate("userId", "username email")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json(bookings);
   } catch (error) {
