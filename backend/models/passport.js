@@ -21,8 +21,8 @@ const passportSchema = new mongoose.Schema(
     applicationType: { type: String, required: true },
     status: {
       type: String,
-      enum: ["Pending", "Processing", "Approved", "Rejected"],
-      default: "Pending",
+      enum: ["Submitted", "Processing", "Approved", "Released", "Rejected"],
+      default: "Submitted",
     },
     documents: {
       passportPhoto: { type: uploadedFileSchema, default: () => ({}) },
