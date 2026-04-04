@@ -12,7 +12,6 @@ import Header from '../../components/Header'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import ProfileStyle from '../../styles/clientstyles/ProfileStyle'
 
-// IMPORTED withUserHeader for our new API calls
 import { api, withUserHeader } from '../../utils/api' 
 import { useUser } from '../../context/UserContext'
 
@@ -55,11 +54,9 @@ export default function Profile() {
     const [errors, setErrors] = useState({
         firstname: "",
         lastname: "",
-        email: "",
         phonenum: ""
     })
 
-    // --- NEW: State for Recent Activity ---
     const [recentBookings, setRecentBookings] = useState([])
     const [recentReviews, setRecentReviews] = useState([])
     const [loadingExtra, setLoadingExtra] = useState(false)
@@ -94,7 +91,6 @@ export default function Profile() {
                     const img = currentUser.profileImage || currentUser.profileImageUrl || ""
                     setProfileImage(img)
 
-                    // Sync global context immediately
                     updateUser({
                         firstname: currentUser.firstname,
                         lastname: currentUser.lastname,
@@ -115,14 +111,11 @@ export default function Profile() {
             if (!user?._id) return;
             setLoadingExtra(true);
             try {
-                // We use Promise.all to fetch both databases at the exact same time to save loading time!
                 const [bookingsRes, reviewsRes] = await Promise.all([
                     api.get('/booking/my-bookings', withUserHeader(user._id)).catch(() => ({ data: [] })),
-                    // Note: If your backend endpoint for a user's ratings is named differently, update '/rating/my-ratings' here!
                     api.get('/rating/my-ratings', withUserHeader(user._id)).catch(() => ({ data: [] })) 
                 ]);
 
-                // Safely grab the arrays and sort/slice them later
                 setRecentBookings(bookingsRes.data?.bookings || bookingsRes.data || []);
                 setRecentReviews(reviewsRes.data?.ratings || reviewsRes.data || []);
             } catch (error) {
@@ -157,10 +150,6 @@ export default function Profile() {
             if (value === "") return "Last name is required.";
             if (value.length < 2) return "Must be at least 2 characters.";
             if (/[ -]$/.test(value)) return "Must not end with a space or dash.";
-        }
-        if (field === "email") {
-            if (value === "") return "Email is required.";
-            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) return "Invalid Email.";
         }
         if (field === "phonenum") {
             const rawDigits = value.replace(/\D/g, "")
@@ -229,7 +218,6 @@ export default function Profile() {
         const nextErrors = {
             firstname: validate('firstname', userData.firstname),
             lastname: validate('lastname', userData.lastname),
-            email: validate('email', userData.email),
             phonenum: validate('phonenum', userData.phonenum)
         }
         setErrors(nextErrors)
@@ -273,7 +261,7 @@ export default function Profile() {
 
     const cancelEdit = () => {
         setUserData(originalData)
-        setErrors({ firstname: "", lastname: "", email: "", phonenum: "" })
+        setErrors({ firstname: "", lastname: "", phonenum: "" })
         setEditing(false)
     }
 
@@ -339,16 +327,13 @@ export default function Profile() {
                         </View>
                     </View>
 
-                    {/* Email */}
+                    {/* Email - NOW PERMANENTLY DISABLED */}
                     <Text style={ProfileStyle.profileLabel}>Email Address</Text>
                     <TextInput 
                         value={userData.email} 
-                        editable={editing} 
-                        keyboardType="email-address"
-                        onChangeText={(text) => valueHandler('email', text)}
-                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.email && ProfileStyle.profileInputsError]} 
+                        editable={false} 
+                        style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} 
                     />
-                    {errors.email ? <Text style={ProfileStyle.errorMessage}>{errors.email}</Text> : null}
 
                     {/* Phone */}
                     <Text style={ProfileStyle.profileLabel}>Phone Number</Text>

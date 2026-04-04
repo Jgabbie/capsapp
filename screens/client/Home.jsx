@@ -1,10 +1,13 @@
-import { View, Text, TouchableOpacity, Image, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+// --- OPTIMIZED IMAGE IMPORT ---
+import { Image } from 'expo-image'; 
 
 import Chatbot from '../../components/Chatbot'
 import HomeStyle from '../../styles/clientstyles/HomeStyle'
@@ -18,17 +21,14 @@ export default function Home() {
     const { user, updateUser } = useUser() 
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     
-    // --- DATA & SEARCH STATES ---
     const [packages, setPackages] = useState([])
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
 
-    // --- DROPDOWN FILTER STATES ---
     const [activeDropdown, setActiveDropdown] = useState(null) 
     const [selectedActivity, setSelectedActivity] = useState('Activities')
     const [selectedDuration, setSelectedDuration] = useState('Duration')
 
-    // --- CONTACT US STATES ---
     const [contactName, setContactName] = useState('')
     const [contactEmail, setContactEmail] = useState('')
     const [contactMessage, setContactMessage] = useState('')
@@ -48,7 +48,6 @@ export default function Home() {
         Roboto_700Bold
     })
 
-    // --- FETCH DATA FROM MONGODB ---
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -81,7 +80,6 @@ export default function Home() {
         fetchData()
     }, [user?._id])
 
-    // FILTER LOGIC
     const filteredPackages = packages.filter(pkg => {
         const matchesSearch = pkg.packageName.toLowerCase().includes(searchQuery.toLowerCase())
         
@@ -98,13 +96,12 @@ export default function Home() {
     const internationalPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'international')
     const domesticPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'domestic')
 
-    // --- EMAIL VALIDATION HANDLER ---
     const handleEmailChange = (text) => {
         const cleanedText = text.replace(/\s/g, '');
         setContactEmail(cleanedText);
 
         if (cleanedText === '') {
-            setEmailError(''); // Clear error if empty (button will be disabled anyway)
+            setEmailError('');
         } else if (user && cleanedText.toLowerCase() !== user.email.toLowerCase()) {
             setEmailError('Please use the email associated with your account.');
         } else {
@@ -112,7 +109,6 @@ export default function Home() {
         }
     }
 
-    // --- CONTACT US SUBMIT LOGIC ---
     const handleContactSubmit = async () => {
         if (!user || contactEmail.toLowerCase() !== user.email.toLowerCase()) {
             setEmailError('Please use the email associated with your account.');
@@ -127,13 +123,9 @@ export default function Home() {
                 message: contactMessage
             };
             
-            // This hits the exact same endpoint as your web version!
             await api.post('/email/contact', payload);
-            
-            // Show the custom success modal
             setSuccessModalVisible(true);
             
-            // Clear the form
             setContactName('');
             setContactEmail('');
             setContactMessage('');
@@ -141,7 +133,6 @@ export default function Home() {
             
         } catch (error) {
             console.log("Contact submit error:", error.message);
-            // In a real app, you might want a fail modal here too, but for now we'll just log it.
         } finally {
             setSubmittingContact(false);
         }
@@ -151,19 +142,25 @@ export default function Home() {
 
     const TravelCard = ({ item }) => {
         const imageSource = item.images && item.images.length > 0 
-            ? { uri: item.images[0] } 
+            ? item.images[0]
             : require('../../assets/images/japan_imagesmall.png')
 
         return (
             <TouchableOpacity style={HomeStyle.card} onPress={() => cs.navigate("packagedetails", { id: item._id })}>
-                <Image source={imageSource} style={HomeStyle.cardImage} />
+                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                <Image 
+                    source={imageSource} 
+                    style={HomeStyle.cardImage} 
+                    contentFit="cover"
+                    transition={300} // Adds a nice fade-in effect
+                />
                 <Text style={HomeStyle.cardTitle} numberOfLines={1}>{item.packageName}</Text>
                 <View style={HomeStyle.infoRow}>
-                    <Image source={require('../../assets/images/date_iconsmall.png')} />
+                    <Image source={require('../../assets/images/date_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
                     <Text style={HomeStyle.infoText}>{item.packageDuration} DAYS</Text>
                 </View>
                 <View style={HomeStyle.infoRow}>
-                    <Image source={require('../../assets/images/location_iconsmall.png')} />
+                    <Image source={require('../../assets/images/location_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
                     <Text style={HomeStyle.infoText} numberOfLines={1}>
                         {item.packageType.charAt(0).toUpperCase() + item.packageType.slice(1)}
                     </Text>
@@ -175,12 +172,18 @@ export default function Home() {
 
     const BannerCard = ({ item, subText }) => {
         const imageSource = item.images && item.images.length > 0 
-            ? { uri: item.images[0] } 
+            ? item.images[0]
             : require('../../assets/images/southkorea_image.png')
 
         return (
             <View style={HomeStyle.bannerCard}>
-                <Image source={imageSource} style={HomeStyle.bannerImage} />
+                 {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                <Image 
+                    source={imageSource} 
+                    style={HomeStyle.bannerImage} 
+                    contentFit="cover"
+                    transition={300}
+                />
                 <View style={HomeStyle.bannerFooter}>
                     <Text style={HomeStyle.bannerTitle}>{item.packageName}</Text>
                     <Text style={HomeStyle.bannerSub} numberOfLines={2}>
@@ -192,7 +195,7 @@ export default function Home() {
                     onPress={() => cs.navigate("packagedetails", { id: item._id })}
                 >
                     <Text style={HomeStyle.viewAllText}>View Package</Text>
-                    <Image source={require('../../assets/images/arrow_righticon.png')} style={HomeStyle.arrowIcon} tintColor={"#fff"} />
+                    <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, {tintColor: "#fff"}]} contentFit="contain" />
                 </TouchableOpacity>
             </View>
         )
@@ -269,7 +272,6 @@ export default function Home() {
 
             <DropdownModal />
 
-            {/* --- CUSTOM SUCCESS MODAL --- */}
             <Modal visible={isSuccessModalVisible} transparent={true} animationType="fade">
                 <View style={HomeStyle.successModalOverlay}>
                     <View style={HomeStyle.successModalBox}>
@@ -358,7 +360,6 @@ export default function Home() {
                         </>
                     )}
 
-                    {/* --- CONTACT US SECTION --- */}
                     <View style={HomeStyle.contactContainer}>
                         <Text style={HomeStyle.contactTitle}>Contact Us</Text>
                         <Text style={HomeStyle.contactDesc}>
@@ -373,7 +374,7 @@ export default function Home() {
                                 placeholder="Your Name"
                                 placeholderTextColor="#999"
                                 value={contactName}
-                                onChangeText={(text) => setContactName(text.replace(/[^a-zA-Z\s]/g, ''))} // Letters and spaces only
+                                onChangeText={(text) => setContactName(text.replace(/[^a-zA-Z\s]/g, ''))}
                             />
                             
                             <View style={HomeStyle.inputWrapper}>

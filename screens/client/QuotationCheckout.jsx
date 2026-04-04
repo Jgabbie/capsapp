@@ -188,6 +188,9 @@ export default function QuotationCheckout({ route, navigation }) {
           "/booking/create-booking",
           {
             packageId: quotation.packageId || quotation._id,
+            // UPDATED SCHEMA FIX: Placed travelers and travelDate at the ROOT level
+            travelers: Number(quotation?.travelDetails?.travelers || 1),
+            travelDate: quotation?.travelDetails?.travelDate || "TBD",
             bookingDetails,
             checkoutToken: callbackParams.checkoutToken,
           },

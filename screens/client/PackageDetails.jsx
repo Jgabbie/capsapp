@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+// --- OPTIMIZED IMAGE IMPORT ---
+import { Image } from 'expo-image';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Header from "../../components/Header";
@@ -12,7 +14,6 @@ import ModalStyle from "../../styles/componentstyles/ModalStyle";
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
-// Date formatters to match the web
 const formatShortDate = (dateString) => {
     if (!dateString) return "";
     const options = { month: 'short', day: 'numeric' };
@@ -118,13 +119,11 @@ export default function PackageDetails({ route, navigation }) {
         return (total / reviews.length).toFixed(1);
     }, [reviews]);
 
-    // 🔥 THIS IS THE FUNCTION THAT FIXED THE LOCAL PACKAGE BUG 🔥
     const handlePrimaryAction = () => {
         if (!user) {
             Alert.alert("Login Required", "Please login to proceed.");
             return;
         }
-        // Always open the Arrangement Modal, regardless of package type
         setIsArrangementModalOpen(true);
     };
 
@@ -194,7 +193,13 @@ export default function PackageDetails({ route, navigation }) {
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
                     <View style={DestinationStyles.detailsHeader}>
                         <Text style={DestinationStyles.detailsTitle}>{fullPkg.title}</Text>
-                        <Image source={{ uri: fullPkg.image }} style={DestinationStyles.heroImage} />
+                        {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                        <Image 
+                            source={fullPkg.image} 
+                            style={DestinationStyles.heroImage}
+                            contentFit="cover"
+                            transition={300} 
+                        />
                     </View>
 
                     <View style={DestinationStyles.heroCard}>
@@ -239,9 +244,11 @@ export default function PackageDetails({ route, navigation }) {
                                 reviews.map((r, i) => (
                                     <View key={i} style={DestinationStyles.recentReviewContainer}>
                                         <View style={DestinationStyles.reviewHeaderRow}>
+                                            {/* --- UPDATED TO USE EXPO-IMAGE --- */}
                                             <Image 
-                                                source={ r.userId?.profileImage ? { uri: getImageUrl(r.userId.profileImage) } : require('../../assets/images/profile_icon60.png') } 
+                                                source={ r.userId?.profileImage ? getImageUrl(r.userId.profileImage) : require('../../assets/images/profile_icon60.png') } 
                                                 style={DestinationStyles.reviewProfileImg} 
+                                                contentFit="cover"
                                             />
                                             <View style={DestinationStyles.reviewHeaderInfo}>
                                                 <View>
@@ -370,14 +377,16 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <TouchableOpacity style={[DestinationStyles.arrangementOptionCard, selectedArrangement === 'All in Package' && DestinationStyles.arrangementOptionCardSelected]} onPress={() => setSelectedArrangement('All in Package')} activeOpacity={0.8}>
-                                <Image source={require('../../assets/images/fixedallin.jpg')} style={DestinationStyles.arrangementImage} />
+                                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                                <Image source={require('../../assets/images/fixedallin.jpg')} style={DestinationStyles.arrangementImage} contentFit="cover" />
                                 <View style={DestinationStyles.arrangementTextContainer}>
                                     <Text style={DestinationStyles.arrangementTitleText}>All in Package</Text>
                                     <Text style={DestinationStyles.arrangementDesc}>In this selection, you will receive a fixed itinerary based on the current package. This allows you to proceed with the booking process without any changes to the package details.</Text>
                                 </View>
                             </TouchableOpacity>
                             <TouchableOpacity style={[DestinationStyles.arrangementOptionCard, selectedArrangement === 'Private Tour' && DestinationStyles.arrangementOptionCardSelected]} onPress={() => setSelectedArrangement('Private Tour')} activeOpacity={0.8}>
-                                <Image source={require('../../assets/images/allinpackage.jpg')} style={DestinationStyles.arrangementImage} />
+                                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                                <Image source={require('../../assets/images/allinpackage.jpg')} style={DestinationStyles.arrangementImage} contentFit="cover" />
                                 <View style={DestinationStyles.arrangementTextContainer}>
                                     <Text style={DestinationStyles.arrangementTitleText}>Private Tour</Text>
                                     <Text style={DestinationStyles.arrangementDesc}>In this selection, you can customize the itinerary of the current package. This allows you to send quotation request for more personalized experience.</Text>
@@ -390,7 +399,6 @@ export default function PackageDetails({ route, navigation }) {
                                 if (selectedArrangement === 'All in Package') {
                                     setIsDateModalOpen(true);
                                 } else {
-                                    // Private Tour goes to the customization form
                                     navigation.navigate("quotationform", { pkg: fullPkg, arrangement: 'Land Arrangement' }); 
                                 }
                             }}>
@@ -490,7 +498,6 @@ export default function PackageDetails({ route, navigation }) {
                                         const dateString = `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}`;
                                         const finalPrice = (fullPkg.price || 0) + (selectedSchedule.extrarate || 0);
 
-                                        // 🔥 ROUTE TO NEW ALL-IN SCREEN 🔥
                                         navigation.navigate("quotationallin", { 
                                             pkg: fullPkg, 
                                             arrangement: 'All in Package', 

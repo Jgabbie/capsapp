@@ -3,9 +3,8 @@ import PackageModel from "../models/package.js";
 // Fetch all packages for the mobile Home screen
 export const getPackages = async (req, res) => {
     try {
-        // 🔥 THE FIX: Use .select() to exclude the heavy Base64 image fields.
-        // The minus sign (-) tells MongoDB "Send everything EXCEPT these fields"
-        const packages = await PackageModel.find().select('-image -images');
+        // 🔥 REMOVED the .select('-image -images') block so the app actually gets the pictures!
+        const packages = await PackageModel.find();
         
         res.status(200).json(packages);
     } catch (err) {
@@ -19,8 +18,6 @@ export const getPackage = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // We leave this one alone because loading ONE image is usually 
-        // okay for the phone. It's loading ALL of them at once that crashes it.
         const pkg = await PackageModel.findById(id);
 
         if (!pkg) return res.status(404).json({ message: "Package not found" });

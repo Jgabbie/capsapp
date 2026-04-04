@@ -49,7 +49,8 @@ export default function PaymentMethod({ route, navigation }) {
                 const payload = {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     travelDate: setupData.selectedDate,
-                    travelerTotal: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
+                    // UPDATED SCHEMA FIX: Changed 'travelerTotal' to 'travelers'
+                    travelers: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
                     amount: amountToPay,
                     paymentType,
                     bookingDetails: { ...setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency },
@@ -68,7 +69,8 @@ export default function PaymentMethod({ route, navigation }) {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     totalPrice: amountToPay,
                     travelDate: setupData.selectedDate,
-                    travelerTotal: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
+                    // UPDATED SCHEMA FIX: Changed 'travelerTotal' to 'travelers'
+                    travelers: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
                     leadEmail: user.email,
                     leadContact: leadGuestInfo.contact,
                     successUrl: 'https://mrctravels.com/success', // Placeholder for mobile

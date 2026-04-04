@@ -20,9 +20,10 @@ export default function BookingInvoice({ route, navigation }) {
   const passportFileName = passportUpload?.passportFileName || "";
   const passportFileUrl = passportUpload?.passportFileUrl || "";
 
+  // UPDATED: Now targeting the nested travelerCounts from the web schema
   const totals = useMemo(() => {
-    const totalPrice = Number(bookingDetails.totalPrice || 0);
-    const paidAmount = Number(bookingDetails.paidAmount || totalPrice);
+    const totalPrice = Number(bookingDetails?.travelerCounts?.totalPrice || bookingDetails?.totalPrice || 0);
+    const paidAmount = Number(bookingDetails?.paidAmount || totalPrice);
     return {
       totalPrice,
       paidAmount,
@@ -37,10 +38,11 @@ export default function BookingInvoice({ route, navigation }) {
     }).format(Number(value || 0));
 
   const invoiceData = useMemo(() => {
-    const subtotal = Number(bookingDetails.totalPrice || 0);
+    const subtotal = totals.totalPrice;
     const tax = subtotal * 0.12;
     const totalWithTax = subtotal + tax;
-    const travelers = Number(bookingDetails.travelers || 1) || 1;
+    // UPDATED: Pulling travelers from the root booking object first
+    const travelers = Number(booking?.travelers || bookingDetails?.travelers || 1);
     const issueDate = new Date(booking?.createdAt || Date.now());
     const dueDate = new Date(issueDate);
     dueDate.setDate(issueDate.getDate() + 14);
@@ -65,8 +67,10 @@ export default function BookingInvoice({ route, navigation }) {
       },
       booking: {
         reference: booking?.reference || "N/A",
-        packageName: bookingDetails.packageName || "N/A",
-        travelDates: bookingDetails.travelDate || "TBD",
+        // UPDATED: Prioritize populated packageId from the backend
+        packageName: booking?.packageId?.packageName || bookingDetails?.packageName || "N/A",
+        // UPDATED: Prioritize root travelDate
+        travelDates: booking?.travelDate || bookingDetails?.travelDate || "TBD",
         travelers,
       },
       items: [
@@ -81,7 +85,7 @@ export default function BookingInvoice({ route, navigation }) {
       tax,
       totalWithTax,
     };
-  }, [booking?.createdAt, booking?.reference, bookingDetails, totals.remainingBalance]);
+  }, [booking, bookingDetails, totals]);
 
   useEffect(() => {
     try {
@@ -99,6 +103,10 @@ export default function BookingInvoice({ route, navigation }) {
     }
   }, [invoiceData]);
 
+  // UI Variable fallbacks to match the schema fixes
+  const displayPackageName = booking?.packageId?.packageName || bookingDetails?.packageName || "--";
+  const displayTravelDate = booking?.travelDate || bookingDetails?.travelDate || "--";
+
   return (
     <View style={{ flex: 1 }}>
       <Header openSidebar={() => setSidebarVisible(true)} />
@@ -111,8 +119,8 @@ export default function BookingInvoice({ route, navigation }) {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Booking Invoice</Text>
         <Text style={styles.meta}>Reference: {booking?.reference || "--"}</Text>
-        <Text style={styles.meta}>Package: {bookingDetails.packageName || "--"}</Text>
-        <Text style={styles.meta}>Travel Date: {bookingDetails.travelDate || "--"}</Text>
+        <Text style={styles.meta}>Package: {displayPackageName}</Text>
+        <Text style={styles.meta}>Travel Date: {displayTravelDate}</Text>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Payment Summary</Text>

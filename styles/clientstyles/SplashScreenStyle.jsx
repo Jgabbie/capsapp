@@ -15,6 +15,8 @@ export default StyleSheet.create({
     footerText: {
         position: 'absolute',
         bottom: 50,
+        width: '100%',         // Fixes the wrapping issue
+        textAlign: 'center',   // Centers it perfectly
         fontSize: 14,
         fontFamily: 'Montserrat_400Regular',
         color: '#305797',

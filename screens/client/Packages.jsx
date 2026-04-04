@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
+// --- OPTIMIZED IMAGE IMPORT ---
+import { Image } from 'expo-image';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Sidebar from "../../components/Sidebar";
@@ -23,7 +25,7 @@ export default function Packages({ navigation }) {
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
     
-    // Budget States (Slider values and Text Input values separate for better UX)
+    // Budget States 
     const [budgetRange, setBudgetRange] = useState([0, 150000]);
     const [minBudgetInput, setMinBudgetInput] = useState("0");
     const [maxBudgetInput, setMaxBudgetInput] = useState("150000");
@@ -89,7 +91,6 @@ export default function Packages({ navigation }) {
         });
     }, [packages, searchText, budgetRange, selectedTags, tourType, daysValue, travelersValue]);
 
-    // Handlers to sync text inputs with sliders
     const handleBudgetInputChange = (type, value) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         if (type === 'min') {
@@ -139,7 +140,13 @@ export default function Packages({ navigation }) {
                         
                         return (
                             <View key={item.id} style={DestinationStyles.packageCard}>
-                                <Image source={{ uri: item.image }} style={DestinationStyles.packageImage} />
+                                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
+                                <Image 
+                                    source={item.image} 
+                                    style={DestinationStyles.packageImage}
+                                    contentFit="cover"
+                                    transition={300} 
+                                />
                                 <View style={DestinationStyles.packageContent}>
                                     <Text style={DestinationStyles.packageTitle}>{item.title}</Text>
                                     <Text style={DestinationStyles.packageTypeLabel}>{item.packageType} • {item.duration}</Text>
@@ -191,7 +198,6 @@ export default function Packages({ navigation }) {
                         </View>
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                             
-                            {/* --- UPDATED BUDGET SECTION --- */}
                             <Text style={DestinationStyles.filterLabel}>Budget Range (₱)</Text>
                             <View style={DestinationStyles.budgetInputRow}>
                                 <TextInput 
@@ -223,7 +229,6 @@ export default function Packages({ navigation }) {
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱150,000</Text>
                             </View>
 
-                            {/* --- UPDATED TOUR TYPE --- */}
                             <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>
                             <View style={DestinationStyles.filterPillContainer}>
                                 {['All', 'Domestic', 'International'].map(t => (
@@ -233,7 +238,6 @@ export default function Packages({ navigation }) {
                                 ))}
                             </View>
 
-                            {/* --- UPDATED TRAVELERS SECTION --- */}
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Travelers</Text>
                             <TextInput 
                                 style={DestinationStyles.searchBar} 
@@ -244,7 +248,6 @@ export default function Packages({ navigation }) {
                             />
                             <Text style={DestinationStyles.filterSubtext}>Show packages with available slots for your group size</Text>
 
-                            {/* --- UPDATED DAYS OF TOUR SECTION --- */}
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Days of Tour</Text>
                             <View style={DestinationStyles.daysInputRow}>
                                 <TextInput 
@@ -269,7 +272,6 @@ export default function Packages({ navigation }) {
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>
                             </View>
                             
-                            {/* --- UPDATED TAGS SECTION --- */}
                             {tagOptions.length > 0 && (
                                 <>
                                     <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tags / Activities</Text>
