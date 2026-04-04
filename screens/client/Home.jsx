@@ -152,7 +152,7 @@ export default function Home() {
                     source={imageSource} 
                     style={HomeStyle.cardImage} 
                     contentFit="cover"
-                    transition={300} // Adds a nice fade-in effect
+                    transition={300} 
                 />
                 <Text style={HomeStyle.cardTitle} numberOfLines={1}>{item.packageName}</Text>
                 <View style={HomeStyle.infoRow}>
@@ -287,11 +287,18 @@ export default function Home() {
                 </View>
             </Modal>
 
+            {/* 🔥 UPDATED KEYBOARD AVOIDING VIEW & SCROLL VIEW 🔥 */}
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} 
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20} 
             >
-                <ScrollView style={HomeStyle.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                <ScrollView 
+                    style={HomeStyle.container} 
+                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 120 : 180 }} // Increased bottom padding!
+                    showsVerticalScrollIndicator={false} 
+                    keyboardShouldPersistTaps="handled"
+                >
                     
                     <View style={HomeStyle.mainTitleContainer}>
                         <Text style={HomeStyle.mainTitle}>M&RC Travel and Tours</Text>

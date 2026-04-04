@@ -10,7 +10,7 @@ const ProfileStyle = StyleSheet.create({
     profileHeading: {
         fontSize: 24,
         fontFamily: "Montserrat_700Bold",
-        color: "#333",
+        color: "#305797",
         marginBottom: 20,
         marginTop: 10,
     },

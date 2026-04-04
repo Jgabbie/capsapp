@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import { Ionicons } from '@expo/vector-icons' // 🔥 ADDED VECTOR ICONS
+import { Ionicons } from '@expo/vector-icons' 
 
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
@@ -35,7 +35,7 @@ export default function Sidebar({ visible, onClose }) {
         </TouchableOpacity>
     )
 
-    // 🔥 NEW Vector-based Menu Item 🔥
+    // Vector-based Menu Item
     const MenuVectorItem = ({ iconName, title, onPress }) => (
         <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
             <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
@@ -66,27 +66,15 @@ export default function Sidebar({ visible, onClose }) {
                     <View style={SidebarStyle.divider} />
 
                     <MenuItem
-                        title="Home Page"
+                        title="Home"
                         icon={require('../assets/images/home_icon.png')}
                         onPress={() => { onClose(); cs.navigate("home") }}
                     />
 
                     <MenuItem
-                        title="User Profile"
+                        title="Profile"
                         icon={require('../assets/images/user_icon.png')}
                         onPress={() => { onClose(); cs.navigate("profile") }}
-                    />
-
-                    <MenuItem
-                        title="Bookings"
-                        icon={require('../assets/images/booking_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("userbookings") }}
-                    />
-
-                    <MenuVectorItem
-                        title="Applications"
-                        iconName="documents-outline" // Document icon representing forms/visas/passports
-                        onPress={() => { onClose(); cs.navigate("userapplications") }}
                     />
 
                     <MenuItem
@@ -102,6 +90,12 @@ export default function Sidebar({ visible, onClose }) {
                     />
 
                     <MenuItem
+                        title="Bookings"
+                        icon={require('../assets/images/booking_icon.png')}
+                        onPress={() => { onClose(); cs.navigate("userbookings") }}
+                    />
+
+                    <MenuItem
                         title="Quotations"
                         icon={require('../assets/images/transactions_icon.png')} 
                         onPress={() => { onClose(); cs.navigate("userquotations"); }}
@@ -111,6 +105,12 @@ export default function Sidebar({ visible, onClose }) {
                         title="Transactions"
                         icon={require('../assets/images/transactions_icon.png')}
                         onPress={() => { onClose(); cs.navigate("usertransactions") }}
+                    />
+
+                    <MenuVectorItem
+                        title="Applications"
+                        iconName="documents-outline" 
+                        onPress={() => { onClose(); cs.navigate("userapplications") }}
                     />
 
                     <MenuItem
@@ -125,7 +125,6 @@ export default function Sidebar({ visible, onClose }) {
                         onPress={() => { onClose(); cs.navigate("passportguidance") }}
                     />
 
-                    {/* 🔥 NEW ABOUT US BUTTON HERE 🔥 */}
                     <MenuVectorItem
                         title="About Us"
                         iconName="information-circle-outline"

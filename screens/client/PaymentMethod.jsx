@@ -44,13 +44,21 @@ export default function PaymentMethod({ route, navigation }) {
         setLoading(true);
 
         try {
+            // Safely parse the traveler counts to guarantee a Number
+            const adultCount = Number(setupData?.travelerCounts?.adult) || 0;
+            const childCount = Number(setupData?.travelerCounts?.child) || 0;
+            const infantCount = Number(setupData?.travelerCounts?.infant) || 0;
+            
+            // If the math equals 0, fallback to the length of the passengers array
+            const calculatedTravelers = (adultCount + childCount + infantCount) || (passengers?.length) || 1;
+
             if (method === 'manual') {
                 // Prepare Payload for Manual Payment
                 const payload = {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     travelDate: setupData.selectedDate,
-                    // UPDATED SCHEMA FIX: Changed 'travelerTotal' to 'travelers'
-                    travelers: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
+                    // 🔥 THE FIX: Changed 'travelers' back to 'travelerTotal' to match what payController.js is looking for!
+                    travelerTotal: calculatedTravelers, 
                     amount: amountToPay,
                     paymentType,
                     bookingDetails: { ...setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency },
@@ -69,10 +77,10 @@ export default function PaymentMethod({ route, navigation }) {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     totalPrice: amountToPay,
                     travelDate: setupData.selectedDate,
-                    // UPDATED SCHEMA FIX: Changed 'travelerTotal' to 'travelers'
-                    travelers: (setupData.travelerCounts.adult + setupData.travelerCounts.child + setupData.travelerCounts.infant),
+                    // Note: Paymongo might not even use this based on your backend, but good to have.
+                    travelers: calculatedTravelers, 
                     leadEmail: user.email,
-                    leadContact: leadGuestInfo.contact,
+                    leadContact: leadGuestInfo?.contact || '', 
                     successUrl: 'https://mrctravels.com/success', // Placeholder for mobile
                     cancelUrl: 'https://mrctravels.com/cancel',
                 };
@@ -83,7 +91,6 @@ export default function PaymentMethod({ route, navigation }) {
                 if (checkoutUrl) {
                     await WebBrowser.openBrowserAsync(checkoutUrl);
                     setLoading(false);
-                    // After browser closes, navigate to success (Webhook handles backend verification)
                     navigation.navigate("paymentsuccess", { reference: 'PENDING', mode: 'online' });
                 }
             }
