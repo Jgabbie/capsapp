@@ -1,86 +1,195 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
-import ProgressTracker from "../../components/ProgressTracker";
-import { useNavigation } from "@react-navigation/native";
-import ProgressTrackerStyles from "../../styles/componentstyles/ProgressTrackerStyles";
+import React, { useEffect, useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { Ionicons } from '@expo/vector-icons';
+import dayjs from "dayjs";
+
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 
 export default function PassportProgress() {
-  const cs = useNavigation();
-  const { user } = useUser();
-  const [status, setStatus] = useState("Pending");
+    const cs = useNavigation()
+    const route = useRoute()
+    const { user } = useUser()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
+    
+    const applicationId = route.params?.applicationId;
 
-  const passportSteps = [
-    {
-      title: "Documents Submitted",
-      description: "Your documents are being verified",
-    },
-    {
-      title: "Documents Approved",
-      description: "You may now deliver the documents",
-    },
-    {
-      title: "Passport Processing",
-      description: "Your passport is currently being processed",
-    },
-    {
-      title: "Passport Rejected",
-      description: "Your documents are being delivered back",
-    },
-    {
-      title: "Passport Completed",
-      description: "Passport process completed successfully",
-    },
-  ];
+    const [application, setApplication] = useState(null)
+    const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadLatestApplication = async () => {
-      if (!user?._id) return;
-      try {
-        const { data } = await api.get("/passport/applications", withUserHeader(user._id));
-        if (mounted && Array.isArray(data) && data.length) {
-          setStatus(data[0].status || "Pending");
+    useEffect(() => {
+        const fetchApplicationDetails = async () => {
+            if (!user?._id || !applicationId) return;
+            
+            try {
+                setLoading(true);
+                // Fetch ALL applications, then find the specific one to bypass the lack of an /:id route
+                const appRes = await api.get('/passport/applications', withUserHeader(user._id));
+                const appData = appRes.data.find(app => app._id === applicationId);
+                
+                if (!appData) throw new Error("Application not found in your list.");
+                
+                setApplication(appData);
+            } catch (error) {
+                console.log("Error fetching details:", error.message);
+                Alert.alert('Error', 'Unable to load application details.');
+            } finally {
+                setLoading(false);
+            }
         }
-      } catch (_error) {
-        if (mounted) {
-          Alert.alert("Unable to load status", "Showing default progress while status sync is unavailable.");
-        }
-      }
-    };
 
-    loadLatestApplication();
+        fetchApplicationDetails();
+    }, [user?._id, applicationId]);
 
-    return () => {
-      mounted = false;
-    };
-  }, [user?._id]);
+    const appStatus = useMemo(() => {
+        if (!application?.status) return "Submitted";
+        return Array.isArray(application.status) ? application.status[0] : application.status;
+    }, [application]);
 
-  const currentStep = useMemo(() => {
-    if (status === "Approved") return 4;
-    if (status === "Rejected") return 3;
-    if (status === "Processing") return 2;
-    return 1;
-  }, [status]);
+    // Standard Passport Steps based on your backend logic
+    const steps = [
+        "Application submitted",
+        "Application approved",
+        "Payment complete",
+        "Documents uploaded",
+        "Documents approved",
+        "Documents received",
+        "Documents submitted",
+        "Processing by DFA",
+        "DFA approved",
+        "Passport released"
+    ];
 
-  return (
-    <View>
-      <View style={ProgressTrackerStyles.container}>
-        <Text style={ProgressTrackerStyles.header}>Your Progress Tracker</Text>
+    const currentStepIndex = useMemo(() => {
+        const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
+        return Math.max(0, index);
+    }, [steps, appStatus]);
 
-        <ProgressTracker steps={passportSteps} currentStep={currentStep} />
+    if (loading) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#f5f7fa', justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#305797" />
+                <Text style={{ marginTop: 10, color: '#6b7280' }}>Loading details...</Text>
+            </View>
+        );
+    }
 
-        <TouchableOpacity
-          style={ProgressTrackerStyles.button}
-          onPress={() => {
-            cs.navigate("passportguidance");
-          }}
-        >
-          <Text style={ProgressTrackerStyles.buttonText}>Back</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    if (!application) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#f5f7fa', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: '#6b7280' }}>Application not found.</Text>
+                <TouchableOpacity onPress={() => cs.goBack()} style={{ marginTop: 20, padding: 10, backgroundColor: '#305797', borderRadius: 8 }}>
+                    <Text style={{ color: '#fff' }}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    return (
+        <View style={PassportProgressStyle.container}>
+            <Header openSidebar={() => setSidebarVisible(true)} />
+            <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+
+            <ScrollView contentContainerStyle={PassportProgressStyle.scrollContent} showsVerticalScrollIndicator={false}>
+                
+                <View style={PassportProgressStyle.headerContainer}>
+                    <TouchableOpacity onPress={() => cs.goBack()} style={PassportProgressStyle.backButton}>
+                        <Ionicons name="arrow-back" size={24} color="#1f2937" />
+                    </TouchableOpacity>
+                    <Text style={PassportProgressStyle.title}>Passport Details</Text>
+                </View>
+
+                {/* Application Info Card */}
+                <View style={PassportProgressStyle.card}>
+                    <Text style={PassportProgressStyle.cardTitle}>Application Info</Text>
+                    
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Reference</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.applicationId || application._id}</Text>
+                    </View>
+                    
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Status</Text>
+                        <View style={PassportProgressStyle.statusTag}>
+                            <Text style={PassportProgressStyle.statusText}>{appStatus}</Text>
+                        </View>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Date Submitted</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{dayjs(application.createdAt).format('MMM D, YYYY')}</Text>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Applicant Name</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.username || 'N/A'}</Text>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>DFA Location</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.dfaLocation}</Text>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Preferred Date</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.preferredDate}</Text>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Preferred Time</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.preferredTime}</Text>
+                    </View>
+
+                    <View style={[PassportProgressStyle.infoRow, { borderBottomWidth: 0 }]}>
+                        <Text style={PassportProgressStyle.infoLabel}>Application Type</Text>
+                        <Text style={[PassportProgressStyle.infoValue, { fontFamily: 'Montserrat_700Bold', color: '#305797' }]}>
+                            {application.applicationType}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Progress Tracker Card */}
+                <View style={PassportProgressStyle.card}>
+                    <Text style={PassportProgressStyle.cardTitle}>Progress Tracker</Text>
+
+                    <View style={{ marginTop: 10 }}>
+                        {steps.map((step, index) => {
+                            const isCompleted = index <= currentStepIndex;
+                            const isActive = index === currentStepIndex;
+                            const isLast = index === steps.length - 1;
+
+                            return (
+                                <View key={index} style={PassportProgressStyle.stepItem}>
+                                    <View style={PassportProgressStyle.stepIndicator}>
+                                        <View style={[PassportProgressStyle.stepCircle, isCompleted ? PassportProgressStyle.stepCircleActive : PassportProgressStyle.stepCircleInactive]}>
+                                            <Text style={isCompleted ? PassportProgressStyle.stepNumberActive : PassportProgressStyle.stepNumberInactive}>
+                                                {index + 1}
+                                            </Text>
+                                        </View>
+                                        {!isLast && (
+                                            <View style={[PassportProgressStyle.stepLine, isCompleted && !isActive ? PassportProgressStyle.stepLineActive : {}]} />
+                                        )}
+                                    </View>
+                                    
+                                    <View style={PassportProgressStyle.stepContent}>
+                                        <Text style={isCompleted ? PassportProgressStyle.stepTitleActive : PassportProgressStyle.stepTitleInactive}>
+                                            {step}
+                                        </Text>
+                                        {isActive && (
+                                            <Text style={PassportProgressStyle.stepDesc}>Current Stage</Text>
+                                        )}
+                                    </View>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+
+            </ScrollView>
+        </View>
+    );
 }

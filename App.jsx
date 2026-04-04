@@ -18,6 +18,7 @@ import Wishlist from './screens/client/Wishlist';
 import UserBookings from './screens/client/UserBookings';
 import UserTransactions from './screens/client/UserTransactions';
 import BookingInvoice from './screens/client/BookingInvoice';
+import UserApplications from './screens/client/UserApplications';
 
 import PassportGuidance from './screens/client/PassportGuidance';
 import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
@@ -108,6 +109,7 @@ function AppNavigator() {
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />
             <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
             <MyScreen.Screen name="userbookings" component={UserBookings} />
+            <MyScreen.Screen name="userapplications" component={UserApplications} />
             <MyScreen.Screen name="notifications" component={Notifications} />
 
             {/* --- 🔥 ALL-IN BOOKING FLOW 🔥 --- */}

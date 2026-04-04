@@ -1,9 +1,10 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native'
+import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
+import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+import { Ionicons } from '@expo/vector-icons'
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -11,22 +12,15 @@ import Chatbot from '../../components/Chatbot'
 import VisaGuidanceStyle from '../../styles/clientstyles/VisaGuidanceStyle'
 import { api } from '../../utils/api'
 
-// --- LOCAL IMAGE MAPPING FOR PRESENTATION ---
-// This maps the exact 'visaName' from your database to your local files
-const localImages = {
-    "Korea Visa": require('../../assets/images/Korea_Visa.jpg'),
-    "Japan Visa": require('../../assets/images/Japan_Visa.jpg'),
-    // Add more here in the future if needed!
-};
-
 export default function VisaGuidance() {
     const cs = useNavigation()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [services, setServices] = useState([])
     const [loading, setLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState('')
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
+        Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     })
 
@@ -38,7 +32,7 @@ export default function VisaGuidance() {
                 setServices(Array.isArray(data) ? data : [])
             } catch (error) {
                 console.log("Visa Fetch Error:", error.message)
-                Alert.alert('Unable to load visa services', 'Please check your connection.')
+                Alert.alert('Error', 'Unable to load visa services. Please check your connection.')
             } finally {
                 setLoading(false)
             }
@@ -46,48 +40,69 @@ export default function VisaGuidance() {
         loadServices()
     }, [])
 
+    const filteredServices = useMemo(() => {
+        if (!searchQuery) return services;
+        return services.filter(service => 
+            service.visaName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            service.visaDescription.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [services, searchQuery]);
+
+    const formatPeso = (value) => `₱ ${(Number(value) || 0).toLocaleString("en-PH")}`;
+
     if (!fontsLoaded) return null;
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={VisaGuidanceStyle.container}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView 
-                style={VisaGuidanceStyle.container}
-                contentContainerStyle={{ paddingBottom: 30 }}
+                contentContainerStyle={VisaGuidanceStyle.contentContainer}
                 showsVerticalScrollIndicator={false}
             >
-                <Text style={VisaGuidanceStyle.title}>Visa Guidance</Text>
+                <View style={VisaGuidanceStyle.headerContainer}>
+                    <Text style={VisaGuidanceStyle.title}>Visa Services</Text>
+                    <Text style={VisaGuidanceStyle.subtitle}>Search and filter the visa type you need to apply.</Text>
+                </View>
+
+                <View style={VisaGuidanceStyle.searchContainer}>
+                    <Ionicons name="search" size={20} color="#9ca3af" />
+                    <TextInput
+                        style={VisaGuidanceStyle.searchInput}
+                        placeholder="Search visa type"
+                        placeholderTextColor="#9ca3af"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <Ionicons name="close-circle" size={18} color="#9ca3af" />
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {loading ? (
                     <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
-                ) : services.length === 0 ? (
-                    <Text style={VisaGuidanceStyle.description}>No visa services available right now.</Text>
+                ) : filteredServices.length === 0 ? (
+                    <Text style={VisaGuidanceStyle.emptyText}>No visa services found.</Text>
                 ) : (
-                    services.map((item) => (
+                    filteredServices.map((item) => (
                         <View key={item._id} style={VisaGuidanceStyle.card}>
-                            
-                            {/* FIXED: Using the local mapping dictionary based on visaName */}
-                            <Image 
-                                source={localImages[item.visaName]} 
-                                style={VisaGuidanceStyle.cardImage} 
-                                resizeMode="cover"
-                            />
-
                             <View style={VisaGuidanceStyle.cardContent}>
                                 <Text style={VisaGuidanceStyle.visaTitle}>{item.visaName}</Text>
-                                <Text style={VisaGuidanceStyle.description} numberOfLines={3}>
+                                <Text style={VisaGuidanceStyle.description} numberOfLines={2}>
                                     {item.visaDescription}
                                 </Text>
-
-                                <TouchableOpacity 
-                                    style={VisaGuidanceStyle.applyButton}
-                                    onPress={() => cs.navigate("visadetailsguidance", { service: item })}
-                                >
-                                    <Text style={VisaGuidanceStyle.applyText}>Apply Now</Text>
-                                </TouchableOpacity>
+                                <Text style={VisaGuidanceStyle.price}>{formatPeso(item.visaPrice)}</Text>
                             </View>
+
+                            <TouchableOpacity 
+                                style={VisaGuidanceStyle.applyButton}
+                                onPress={() => cs.navigate("visadetailsguidance", { service: item })}
+                            >
+                                <Text style={VisaGuidanceStyle.applyText}>Apply</Text>
+                            </TouchableOpacity>
                         </View>
                     ))
                 )}

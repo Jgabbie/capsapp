@@ -83,6 +83,12 @@ export default function Sidebar({ visible, onClose }) {
                         onPress={() => { onClose(); cs.navigate("userbookings") }}
                     />
 
+                    <MenuVectorItem
+                        title="Applications"
+                        iconName="documents-outline" // Document icon representing forms/visas/passports
+                        onPress={() => { onClose(); cs.navigate("userapplications") }}
+                    />
+
                     <MenuItem
                         title="Destinations"
                         icon={require('../assets/images/destination_icon.png')}
