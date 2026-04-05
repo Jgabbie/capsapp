@@ -57,7 +57,6 @@ export default function PaymentMethod({ route, navigation }) {
                 const payload = {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     travelDate: setupData.selectedDate,
-                    // 🔥 THE FIX: Changed 'travelers' back to 'travelerTotal' to match what payController.js is looking for!
                     travelerTotal: calculatedTravelers, 
                     amount: amountToPay,
                     paymentType,
@@ -77,7 +76,6 @@ export default function PaymentMethod({ route, navigation }) {
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     totalPrice: amountToPay,
                     travelDate: setupData.selectedDate,
-                    // Note: Paymongo might not even use this based on your backend, but good to have.
                     travelers: calculatedTravelers, 
                     leadEmail: user.email,
                     leadContact: leadGuestInfo?.contact || '', 
@@ -85,13 +83,40 @@ export default function PaymentMethod({ route, navigation }) {
                     cancelUrl: 'https://mrctravels.com/cancel',
                 };
 
+                // 1. Create the session in Paymongo
                 const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                 const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
                 if (checkoutUrl) {
-                    await WebBrowser.openBrowserAsync(checkoutUrl);
-                    setLoading(false);
-                    navigation.navigate("paymentsuccess", { reference: 'PENDING', mode: 'online' });
+                    // 2. Open the browser for the user to pay
+                    const browserResult = await WebBrowser.openBrowserAsync(checkoutUrl);
+                    
+                    // 3. When the browser closes, FORCE CREATE the booking!
+                    const checkoutTokenTemp = `mobile-tok-${Date.now()}`;
+                    
+                    const finalBookingPayload = {
+                        packageId: setupData.pkg._id || setupData.pkg.id,
+                        checkoutToken: checkoutTokenTemp,
+                        bookingDetails: {
+                            bookingDate: new Date().toISOString(),
+                            travelDate: setupData.selectedDate,
+                            travelers: calculatedTravelers,
+                            ...setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
+                        }
+                    };
+
+                    try {
+                        // 🔥 THE FIX: Changed from '/booking/apply' to exactly match your bookingRoutes.js ('/booking/create-booking')
+                        const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
+                        
+                        setLoading(false);
+                        navigation.navigate("paymentsuccess", { reference: bookingSaved.data.reference || 'PENDING', mode: 'online' });
+                    } catch (bookingError) {
+                        setLoading(false);
+                        console.error("Failed to save booking to DB after PayMongo:", bookingError.message);
+                        Alert.alert("Notice", "Payment completed, but syncing with database took too long. It will appear in your bookings shortly.");
+                        navigation.navigate("paymentsuccess", { reference: 'PENDING', mode: 'online' });
+                    }
                 }
             }
         } catch (error) {

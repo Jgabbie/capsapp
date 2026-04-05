@@ -6,6 +6,7 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from "@expo-googl
 import { Ionicons } from "@expo/vector-icons"
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import dayjs from 'dayjs' // 🔥 ADDED for date formatting
 
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
@@ -265,6 +266,14 @@ export default function Profile() {
         setEditing(false)
     }
 
+    // Helper for Status Badge styling
+    const getStatusStyle = (status) => {
+        const s = String(status).toLowerCase();
+        if (s.includes('success') || s.includes('approve')) return { bg: '#f0f4ff', text: '#305797' };
+        if (s.includes('reject') || s.includes('cancel')) return { bg: '#fee2e2', text: '#b91c1c' };
+        return { bg: '#fef9c3', text: '#b45309' }; // Pending / Default
+    };
+
     if (!fontsLoaded) return null;
 
     return (
@@ -437,7 +446,7 @@ export default function Profile() {
                     )}
                 </View>
 
-                {/* --- DYNAMIC REVIEWS & BOOKINGS --- */}
+                {/* --- DYNAMIC REVIEWS --- */}
                 <Text style={ProfileStyle.sectionTitle}>My Recent Reviews</Text>
                 {loadingExtra ? (
                     <ActivityIndicator size="small" color="#305797" style={{ marginTop: 10, marginBottom: 20 }} />
@@ -446,20 +455,29 @@ export default function Profile() {
                         <Text style={ProfileStyle.emptyStateText}>No reviews yet.</Text>
                     </View>
                 ) : (
-                    // Only map over the 3 most recent reviews
                     recentReviews.slice(0, 3).map((review, index) => (
                         <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
+                            {/* Title matched to Web Layout */}
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, marginBottom: 2, textTransform: 'uppercase' }}>
+                                {review.packageId?.packageName || review.package?.packageName || review.packageName || "Tour Package"}
+                            </Text>
+                            {/* Date */}
+                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
+                                {dayjs(review.createdAt || review.date).format('MMM D, YYYY')}
+                            </Text>
+                            {/* Stars */}
                             <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#fadb14', fontSize: 16 }}>
-                                {/* Renders literal stars based on the rating number */}
                                 {'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}
                             </Text>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#555', marginTop: 8 }} numberOfLines={2}>
-                                "{review.review}"
+                            {/* Review Text */}
+                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', marginTop: 6 }} numberOfLines={2}>
+                                {review.review}
                             </Text>
                         </View>
                     ))
                 )}
 
+                {/* --- DYNAMIC BOOKINGS --- */}
                 <Text style={ProfileStyle.sectionTitle}>My Recent Bookings</Text>
                 {loadingExtra ? (
                     <ActivityIndicator size="small" color="#305797" style={{ marginTop: 10, marginBottom: 20 }} />
@@ -468,24 +486,36 @@ export default function Profile() {
                         <Text style={ProfileStyle.emptyStateText}>No bookings yet.</Text>
                     </View>
                 ) : (
-                    // Only map over the 3 most recent bookings
-                    recentBookings.slice(0, 3).map((booking, index) => (
-                        <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#333' }}>
-                                    {booking.bookingReference || booking.reference || "Booking"}
+                    recentBookings.slice(0, 3).map((booking, index) => {
+                        const statusColor = getStatusStyle(booking.status || "Pending");
+                        return (
+                            <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
+                                {/* Top Row: Package Name & Status Pill */}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 4 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, flex: 1, textTransform: 'uppercase' }}>
+                                        {booking.packageId?.packageName || booking.package?.packageName || booking.bookingDetails?.tourPackageTitle || booking.bookingDetails?.pkg?.packageName || booking.packageName || "Custom Package"}
+                                    </Text>
+                                    
+                                    <View style={{ backgroundColor: statusColor.bg, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8, alignSelf: 'flex-start' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: statusColor.text, fontSize: 10, textTransform: 'uppercase' }}>
+                                            {booking.status || "Pending"}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Date */}
+                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 10 }}>
+                                    {dayjs(booking.createdAt || booking.bookingDate).format('MMM D, YYYY')}
                                 </Text>
-                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 12 }}>
-                                    {booking.status || "Pending"}
+
+                                {/* Bottom Row: Reference & Package Type */}
+                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', fontSize: 13 }}>
+                                    Reference No. {booking.bookingReference || booking.reference || "N/A"} • {(booking.packageId?.packageType || booking.package?.packageType || booking.bookingDetails?.pkg?.packageType || "DOMESTIC").toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#777', marginTop: 5 }}>
-                                {booking.package?.packageName || booking.packageName || "Custom Package"}
-                            </Text>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
-                {/* Extra padding at the bottom for smooth scrolling */}
                 <View style={{ height: 30 }} />
 
                 {/* Modals */}
