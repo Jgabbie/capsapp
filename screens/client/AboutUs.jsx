@@ -4,19 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
 
-import Header from '../../components/Header'; 
-import Sidebar from '../../components/Sidebar'; 
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
 import AboutUsStyle from '../../styles/clientstyles/AboutUsStyle';
 
 export default function AboutUs() {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
+    //fonts
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
         Roboto_400Regular,
         Roboto_500Medium
     });
 
+
+    //links
     const facebookLink = 'https://www.facebook.com/mrctravelandtour';
     const instagramLink = 'https://www.instagram.com/mrc_travelandtours?fbclid=IwY2xjawQVIU5leHRuA2FlbQIxMABicmlkETE1M0YwaFZ6SW1EQ0xTZnNrc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHgrnAZz5frwKYlnHCi-Txow7AV3kwbYXwWp0W7XV-_BZcoANgGr7hUQA3Eq6_aem_VyUBdOcsD0LsgGhYaEtNog';
 
@@ -32,7 +35,7 @@ export default function AboutUs() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={AboutUsStyle.container}>
-                
+
                 <View style={AboutUsStyle.section}>
                     <Text style={AboutUsStyle.mainTitle}>About Us</Text>
                     <Text style={AboutUsStyle.paragraph}>
@@ -65,15 +68,15 @@ export default function AboutUs() {
 
                 {/* 🔥 NEW ACCREDITATIONS SECTION 🔥 */}
                 <View style={AboutUsStyle.infoSection}>
-                    <Text style={[AboutUsStyle.mainTitle, {textAlign: 'center', marginBottom: 20}]}>Accreditations</Text>
-                    
+                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}>Accreditations</Text>
+
                     <View style={{ alignItems: 'center', marginBottom: 30 }}>
                         {/* PhilGEPS Logo */}
-                        <Image 
-                            source={require('../../assets/images/philgeps.png')} 
-                            style={{ width: 120, height: 120, resizeMode: 'contain' }} 
+                        <Image
+                            source={require('../../assets/images/philgeps.png')}
+                            style={{ width: 120, height: 120, resizeMode: 'contain' }}
                         />
-                        
+
                         <Text style={[AboutUsStyle.paragraph, { textAlign: 'center', marginTop: 15 }]}>
                             M&RC Travel and Tours is accredited by the Philippine Government Electronic Procurement System (PhilGEPS), ensuring that we meet the highest standards of quality, reliability, and professionalism in providing travel services. Our accreditation reflects our commitment to excellence and our dedication to delivering exceptional travel experiences to our customers.
                         </Text>
@@ -81,11 +84,11 @@ export default function AboutUs() {
 
                     <View style={{ alignItems: 'center', marginBottom: 20 }}>
                         {/* DOT Logo */}
-                        <Image 
-                            source={require('../../assets/images/dot.png')} 
-                            style={{ width: 120, height: 120, resizeMode: 'contain' }} 
+                        <Image
+                            source={require('../../assets/images/dot.png')}
+                            style={{ width: 120, height: 120, resizeMode: 'contain' }}
                         />
-                        
+
                         <Text style={[AboutUsStyle.paragraph, { textAlign: 'center', marginTop: 15 }]}>
                             M&RC Travel and Tours is accredited by the Department of Tourism (DOT) of the Philippines, ensuring that we meet the highest standards of quality, safety, and customer service in the travel industry. Our accreditation reflects our commitment to providing exceptional travel experiences and our dedication to upholding the integrity and professionalism of our services.
                         </Text>
@@ -106,7 +109,7 @@ export default function AboutUs() {
                     </Text>
 
                     <Text style={[AboutUsStyle.subTitle, { marginTop: 20 }]}>Our Socials</Text>
-                    
+
                     <TouchableOpacity style={AboutUsStyle.socialBtn} onPress={() => openLink(facebookLink)}>
                         <Ionicons name="logo-facebook" size={24} color="#305797" />
                         <Text style={AboutUsStyle.socialText}>M&RC Travel and Tours</Text>
