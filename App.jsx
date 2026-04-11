@@ -50,7 +50,7 @@ import PaymentMethod from './screens/client/PaymentMethod';
 import PaymentSuccess from './screens/client/PaymentSuccess';
 
 import AboutUs from './screens/client/AboutUs';
-
+import FAQs from './screens/client/FAQs';
 import { UserProvider, useUser } from './context/UserContext';
 
 const normalizeRole = (role) => {
@@ -142,6 +142,7 @@ function AppNavigator() {
             <MyScreen.Screen name="visaprogress" component={VisaProgress} />
             
             <MyScreen.Screen name="aboutus" component={AboutUs} />
+            <MyScreen.Screen name="faqs" component={FAQs} />
           </>
         )}
 

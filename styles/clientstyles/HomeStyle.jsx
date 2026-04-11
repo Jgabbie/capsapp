@@ -40,7 +40,7 @@ const HomeStyle = StyleSheet.create({
         flex: 2, 
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc",
+        backgroundColor: "#fff", // 🔥 CHANGED to white background
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 6, 
@@ -107,16 +107,28 @@ const HomeStyle = StyleSheet.create({
         color: '#305797',
         fontFamily: 'Roboto_500Medium'
     },
+    
+    // 🔥 UPDATED CARD STYLES 🔥
     card: {
         marginRight: 15, 
-        width: 150
+        width: 150,
+        backgroundColor: '#fff', // Added white box background
+        borderRadius: 12,        // Rounded corners for the box
+        overflow: 'hidden',      // Keeps the top of the image neat
+        elevation: 1,            // Subtle shadow
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     cardImage: {
         width: 150,
         height: 100,
-        borderRadius: 10,
-        marginBottom: 5,
-        backgroundColor: '#e0e0e0'
+        backgroundColor: '#e0e0e0' // Removed bottom margin, padding handles it now
+    },
+    cardContent: {
+        padding: 10,  // Adds neat space around the text inside the white box
+        paddingTop: 8,
     },
     cardTitle: {
         fontFamily: "Montserrat_500Medium",
@@ -253,7 +265,7 @@ const HomeStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         fontSize: 14,
         color: "#333",
-        marginBottom: 15 // Default margin when not in wrapper
+        marginBottom: 15 
     },
     inputErrorBorder: {
         borderColor: "#ff4d4f",
@@ -286,7 +298,7 @@ const HomeStyle = StyleSheet.create({
         alignItems: "center"
     },
     contactSubmitBtnDisabled: {
-        backgroundColor: "#a0b4d4" // Lighter blue when disabled
+        backgroundColor: "#a0b4d4" 
     },
     contactSubmitText: {
         color: "#fff",

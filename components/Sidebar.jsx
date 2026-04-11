@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, Modal, Pressable } from 'react-native'
+import { View, Text, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -52,6 +52,8 @@ export default function Sidebar({ visible, onClose }) {
             <View style={{ flex: 1 }}>
                 <Pressable style={SidebarStyle.overlay} onPress={onClose} />
                 <View style={SidebarStyle.sidebarContainer}>
+                    
+                    {/* --- STICKY TOP SECTION --- */}
                     <View style={SidebarStyle.profileSection}>
                         <Image
                             source={profileImageSource}
@@ -65,79 +67,95 @@ export default function Sidebar({ visible, onClose }) {
 
                     <View style={SidebarStyle.divider} />
 
-                    <MenuItem
-                        title="Home"
-                        icon={require('../assets/images/home_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("home") }}
-                    />
+                    {/* --- SCROLLABLE MIDDLE SECTION --- */}
+                    <ScrollView 
+                        style={{ flex: 1 }} 
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingVertical: 5 }}
+                    >
+                        <MenuItem
+                            title="Home"
+                            icon={require('../assets/images/home_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("home") }}
+                        />
 
-                    <MenuItem
-                        title="Profile"
-                        icon={require('../assets/images/user_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("profile") }}
-                    />
+                        <MenuItem
+                            title="Profile"
+                            icon={require('../assets/images/user_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("profile") }}
+                        />
 
-                    <MenuItem
-                        title="Destinations"
-                        icon={require('../assets/images/destination_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("packages") }}
-                    />
+                        <MenuItem
+                            title="Destinations"
+                            icon={require('../assets/images/destination_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("packages") }}
+                        />
 
-                    <MenuItem
-                        title="Wishlist"
-                        icon={require('../assets/images/wishlist_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("wishlist") }}
-                    />
+                        <MenuItem
+                            title="Wishlist"
+                            icon={require('../assets/images/wishlist_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("wishlist") }}
+                        />
 
-                    <MenuItem
-                        title="Bookings"
-                        icon={require('../assets/images/booking_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("userbookings") }}
-                    />
+                        <MenuItem
+                            title="Bookings"
+                            icon={require('../assets/images/booking_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("userbookings") }}
+                        />
 
-                    <MenuItem
-                        title="Quotations"
-                        icon={require('../assets/images/transactions_icon.png')} 
-                        onPress={() => { onClose(); cs.navigate("userquotations"); }}
-                    />
+                        <MenuItem
+                            title="Quotations"
+                            icon={require('../assets/images/transactions_icon.png')} 
+                            onPress={() => { onClose(); cs.navigate("userquotations"); }}
+                        />
 
-                    <MenuItem
-                        title="Transactions"
-                        icon={require('../assets/images/transactions_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("usertransactions") }}
-                    />
+                        <MenuItem
+                            title="Transactions"
+                            icon={require('../assets/images/transactions_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("usertransactions") }}
+                        />
 
-                    <MenuVectorItem
-                        title="Applications"
-                        iconName="documents-outline" 
-                        onPress={() => { onClose(); cs.navigate("userapplications") }}
-                    />
+                        <MenuVectorItem
+                            title="Applications"
+                            iconName="documents-outline" 
+                            onPress={() => { onClose(); cs.navigate("userapplications") }}
+                        />
 
-                    <MenuItem
-                        title="Visa Assistance"
-                        icon={require('../assets/images/visa_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("visaguidance") }}
-                    />
+                        <MenuItem
+                            title="Visa Assistance"
+                            icon={require('../assets/images/visa_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("visaguidance") }}
+                        />
 
-                    <MenuItem
-                        title="Passport Assistance"
-                        icon={require('../assets/images/passport_icon.png')}
-                        onPress={() => { onClose(); cs.navigate("passportguidance") }}
-                    />
+                        <MenuItem
+                            title="Passport Assistance"
+                            icon={require('../assets/images/passport_icon.png')}
+                            onPress={() => { onClose(); cs.navigate("passportguidance") }}
+                        />
 
-                    <MenuVectorItem
-                        title="About Us"
-                        iconName="information-circle-outline"
-                        onPress={() => { onClose(); cs.navigate("aboutus") }}
-                    />
+                        <MenuVectorItem
+                            title="About Us"
+                            iconName="information-circle-outline"
+                            onPress={() => { onClose(); cs.navigate("aboutus") }}
+                        />
 
+                        <MenuVectorItem
+                            title="General FAQs"
+                            iconName="help-circle-outline"
+                            onPress={() => { onClose(); cs.navigate("faqs") }}
+                        />
+                    </ScrollView>
+
+                    {/* --- STICKY BOTTOM SECTION --- */}
                     <View style={SidebarStyle.divider} />
 
-                    <MenuItem
-                        title="Logout"
-                        icon={require('../assets/images/logout_icon.png')}
-                        onPress={() => setModalVisible(true)}
-                    />
+                    <View style={{ paddingTop: 10 }}>
+                        <MenuItem
+                            title="Logout"
+                            icon={require('../assets/images/logout_icon.png')}
+                            onPress={() => setModalVisible(true)}
+                        />
+                    </View>
                 </View>
             </View>
 

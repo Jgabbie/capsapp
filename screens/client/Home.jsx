@@ -154,18 +154,21 @@ export default function Home() {
                     contentFit="cover"
                     transition={300} 
                 />
-                <Text style={HomeStyle.cardTitle} numberOfLines={1}>{item.packageName}</Text>
-                <View style={HomeStyle.infoRow}>
-                    <Image source={require('../../assets/images/date_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
-                    <Text style={HomeStyle.infoText}>{item.packageDuration} DAYS</Text>
+                {/* 🔥 NEW: Wrapper for text to give it padding inside the white box */}
+                <View style={HomeStyle.cardContent}>
+                    <Text style={HomeStyle.cardTitle} numberOfLines={1}>{item.packageName}</Text>
+                    <View style={HomeStyle.infoRow}>
+                        <Image source={require('../../assets/images/date_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
+                        <Text style={HomeStyle.infoText}>{item.packageDuration} DAYS</Text>
+                    </View>
+                    <View style={HomeStyle.infoRow}>
+                        <Image source={require('../../assets/images/location_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
+                        <Text style={HomeStyle.infoText} numberOfLines={1}>
+                            {item.packageType.charAt(0).toUpperCase() + item.packageType.slice(1)}
+                        </Text>
+                    </View>
+                    <Text style={HomeStyle.priceText}>₱{item.packagePricePerPax.toLocaleString()}</Text>
                 </View>
-                <View style={HomeStyle.infoRow}>
-                    <Image source={require('../../assets/images/location_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
-                    <Text style={HomeStyle.infoText} numberOfLines={1}>
-                        {item.packageType.charAt(0).toUpperCase() + item.packageType.slice(1)}
-                    </Text>
-                </View>
-                <Text style={HomeStyle.priceText}>₱{item.packagePricePerPax.toLocaleString()}</Text>
             </TouchableOpacity>
         )
     }
@@ -295,7 +298,7 @@ export default function Home() {
             >
                 <ScrollView 
                     style={HomeStyle.container} 
-                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 120 : 180 }} // Increased bottom padding!
+                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 120 : 180 }} 
                     showsVerticalScrollIndicator={false} 
                     keyboardShouldPersistTaps="handled"
                 >

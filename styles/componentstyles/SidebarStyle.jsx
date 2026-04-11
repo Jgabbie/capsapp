@@ -9,14 +9,13 @@ const SidebarStyle = StyleSheet.create({
         left: 0,
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-start'
     },
     sidebarContainer: {
         width: '75%',
         height: '100%',
         backgroundColor: '#4076A0',
         paddingTop: 40,
+        paddingBottom: 40, // 🔥 FIXED: Pushes the content up from the phone's bottom nav buttons
         paddingHorizontal: 30,
         elevation: 5,
         boxShadow: "2px 0px 8px rgba(0,0,0,0.3)"
@@ -43,7 +42,7 @@ const SidebarStyle = StyleSheet.create({
     userHandle: {
         color: '#fff',
         fontFamily: 'Roboto_400Regular',
-        fontWeight: 'noraml',
+        fontWeight: 'normal',
         fontSize: 14
     },
     divider: {
@@ -68,8 +67,7 @@ const SidebarStyle = StyleSheet.create({
         fontSize: 18,
         marginLeft: 12,
         width: '100%',
-
     },
 })
 
-export default SidebarStyle
+export default SidebarStyle;
