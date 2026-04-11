@@ -2,18 +2,13 @@ import PassportModel from "../models/passport.js";
 import UserModel from "../models/users.js";
 
 const randomApplicationNumber = () =>
-  `APP-${Math.random().toString(36).slice(2, 11).toUpperCase()}`;
+  `APP-PASS-${Math.floor(100000000 + Math.random() * 900000000)}`; // Matched web generation style
 
-const getUploadedFileMeta = (req, fieldName) => {
+// Changed to return just the URL string so the Web Admin can read it easily
+const getUploadedFileUrl = (req, fieldName) => {
   const file = req.files?.[fieldName]?.[0];
   if (!file) return null;
-
-  return {
-    fileName: file.originalname,
-    fileUrl: `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`,
-    mimeType: file.mimetype,
-    uploadedAt: new Date(),
-  };
+  return `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`;
 };
 
 export const applyPassport = async (req, res) => {
@@ -30,19 +25,21 @@ export const applyPassport = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const documents = {
-      passportPhoto: getUploadedFileMeta(req, "passportPhoto"),
-      applicationForm: getUploadedFileMeta(req, "applicationForm"),
-      psaBirthCertificate: getUploadedFileMeta(req, "psaBirthCertificate"),
-      validGovernmentId: getUploadedFileMeta(req, "validGovernmentId"),
-      oldPassport: getUploadedFileMeta(req, "oldPassport"),
+    // 🔥 FIXED: Mapped to match Web's `submittedDocuments` structure
+    const submittedDocuments = {
+      birthCertificate: getUploadedFileUrl(req, "psaBirthCertificate"),
+      applicationForm: getUploadedFileUrl(req, "applicationForm"),
+      govId: getUploadedFileUrl(req, "validGovernmentId"),
+      passportPhoto: getUploadedFileUrl(req, "passportPhoto"),
+      oldPassport: getUploadedFileUrl(req, "oldPassport"),
+      additionalDocs: []
     };
 
     const hasAllDocuments =
-      documents.passportPhoto &&
-      documents.applicationForm &&
-      documents.psaBirthCertificate &&
-      documents.validGovernmentId;
+      submittedDocuments.passportPhoto &&
+      submittedDocuments.applicationForm &&
+      submittedDocuments.birthCertificate &&
+      submittedDocuments.govId;
 
     if (!hasAllDocuments) {
       return res.status(400).json({
@@ -52,7 +49,7 @@ export const applyPassport = async (req, res) => {
     }
 
     const isRenewApplication = String(applicationType || "").toLowerCase().includes("renew");
-    if (isRenewApplication && !documents.oldPassport) {
+    if (isRenewApplication && !submittedDocuments.oldPassport) {
       return res.status(400).json({
         message: "Please upload your old passport for renew passport applications",
       });
@@ -65,8 +62,8 @@ export const applyPassport = async (req, res) => {
       preferredDate,
       preferredTime,
       applicationType,
-      applicationId: randomApplicationNumber(),
-      documents,
+      applicationNumber: randomApplicationNumber(), // 🔥 FIXED: Changed from applicationId to applicationNumber
+      submittedDocuments, // 🔥 FIXED: Used the Web-friendly document object
     });
 
     return res.status(201).json({
@@ -92,5 +89,36 @@ export const getPassportApplications = async (req, res) => {
     return res.status(200).json(applications);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+// 🔥 NEW: Function to handle the user choosing a suggested appointment 🔥
+export const chooseAppointment = async (req, res) => {
+  const { id } = req.params;
+  const { date, time } = req.body;
+
+  try {
+    if (!date || !time) {
+      return res.status(400).json({ message: "Chosen appointment date and time are required" });
+    }
+
+    const application = await PassportModel.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Passport application not found" });
+    }
+
+    // Update the preferred date and time with the selected option
+    application.preferredDate = date;
+    application.preferredTime = time;
+    
+    await application.save();
+
+    return res.status(200).json({ 
+        message: "Preferred appointment schedule updated", 
+        application 
+    });
+  } catch (error) {
+    console.error("Error updating preferred appointment schedule:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

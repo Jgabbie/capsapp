@@ -4,6 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 
+import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
+import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
+
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import UserApplicationsStyle from '../../styles/clientstyles/UserApplicationsStyle';
@@ -15,6 +18,14 @@ export default function UserApplications() {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     
+    const [fontsLoaded] = useFonts({
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
+    });
+    
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -25,27 +36,45 @@ export default function UserApplications() {
             if (!user?._id) return;
             setLoading(true);
             try {
+                // Fetching from your Mobile Backend endpoints
                 const [passportRes, visaRes] = await Promise.all([
                     api.get('/passport/applications', withUserHeader(user._id)).catch(() => ({ data: [] })),
                     api.get('/visa/applications', withUserHeader(user._id)).catch(() => ({ data: [] }))
                 ]);
 
-                const passportApps = (passportRes.data || []).map(app => ({
+                // Filter to ONLY show the logged-in user's apps (using safe String comparison)
+                const myPassports = (passportRes.data || []).filter(app => {
+                    const ownerId = app.userId?._id || app.userId || app.user?._id || app.user;
+                    return String(ownerId) === String(user._id);
+                });
+
+                const myVisas = (visaRes.data || []).filter(app => {
+                    const ownerId = app.userId?._id || app.userId || app.user?._id || app.user;
+                    return String(ownerId) === String(user._id);
+                });
+
+                const extractStatus = (statusData) => {
+                    if (Array.isArray(statusData)) return statusData[0];
+                    return statusData;
+                };
+
+                const passportApps = myPassports.map(app => ({
                     key: app._id,
-                    ref: app.applicationId || app._id,
-                    type: 'Passport', // 🔥 FIXED: Force this to "Passport" so the filter button works perfectly
-                    name: app.applicationType || 'Passport', // Will show "New Passport" or "Renew Passport"
-                    status: app.status || 'Submitted',
+                    // Look for both ID names so it works regardless of which backend made it
+                    ref: app.applicationNumber || app.applicationId || app._id, 
+                    type: 'Passport', 
+                    name: app.applicationType || 'Passport', 
+                    status: extractStatus(app.status || app.applicationStatus) || 'Submitted',
                     date: app.createdAt,
                     details: app,
                 }));
 
-                const visaApps = (visaRes.data || []).map(app => ({
+                const visaApps = myVisas.map(app => ({
                     key: app._id,
                     ref: app.applicationNumber || app._id,
                     type: 'Visa',
                     name: app.serviceName || 'Visa',
-                    status: app.status || 'Pending',
+                    status: extractStatus(app.status || app.applicationStatus) || 'Pending',
                     date: app.createdAt,
                     details: app,
                 }));
@@ -77,6 +106,8 @@ export default function UserApplications() {
         if (s.includes('rejected') || s.includes('cancelled')) return { bg: '#fee2e2', text: '#b91c1c' };
         return { bg: '#fef9c3', text: '#b45309' }; 
     };
+
+    if (!fontsLoaded) return null;
 
     return (
         <View style={UserApplicationsStyle.container}>

@@ -78,6 +78,26 @@ const VisaProgressStyle = StyleSheet.create({
         color: '#b45309',
         textTransform: 'uppercase'
     },
+    // 🔥 NEW STYLES FOR SUBMITTED DOCUMENTS 🔥
+    docRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6'
+    },
+    docLabel: {
+        fontFamily: 'Roboto_500Medium',
+        fontSize: 14,
+        color: '#374151',
+    },
+    docLink: {
+        fontFamily: 'Roboto_500Medium',
+        fontSize: 14,
+        color: '#305797',
+        textDecorationLine: 'underline'
+    },
     // Custom Vertical Stepper Styles
     stepItem: {
         flexDirection: 'row',
@@ -143,6 +163,55 @@ const VisaProgressStyle = StyleSheet.create({
         fontSize: 13,
         fontFamily: "Roboto_400Regular",
         color: "#6b7280",
+    },
+    // 🔥 NEW STYLES FOR APPOINTMENT OPTIONS 🔥
+    optionCard: {
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 12,
+        backgroundColor: '#fff',
+    },
+    optionCardSelected: {
+        borderColor: '#305797',
+        backgroundColor: '#f0f5ff',
+    },
+    optionTag: {
+        backgroundColor: '#e0e7ff',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginBottom: 8,
+    },
+    optionTagText: {
+        color: '#305797',
+        fontSize: 12,
+        fontFamily: 'Montserrat_600SemiBold',
+    },
+    optionDate: {
+        fontSize: 16,
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#1f2937',
+    },
+    optionTime: {
+        fontSize: 14,
+        fontFamily: 'Roboto_400Regular',
+        color: '#6b7280',
+        marginTop: 4,
+    },
+    submitBtn: {
+        backgroundColor: '#305797',
+        padding: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    submitBtnText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 15,
     }
 });
 

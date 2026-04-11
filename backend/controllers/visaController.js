@@ -8,16 +8,11 @@ const generateApplicationNumber = () => {
   return `APP-${timestamp}-${randomPart}`;
 };
 
-const getUploadedFileMeta = (req, fieldName) => {
+// 🔥 FIXED: Return simple string URLs for the Web Admin
+const getUploadedFileUrl = (req, fieldName) => {
   const file = req.files?.[fieldName]?.[0];
   if (!file) return null;
-
-  return {
-    fileName: file.originalname,
-    fileUrl: `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`,
-    mimeType: file.mimetype,
-    uploadedAt: new Date(),
-  };
+  return `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`;
 };
 
 export const applyVisa = async (req, res) => {
@@ -40,18 +35,19 @@ export const applyVisa = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const documents = {
-      validPassport: getUploadedFileMeta(req, "validPassport"),
-      completedVisaApplicationForm: getUploadedFileMeta(req, "completedVisaApplicationForm"),
-      passportSizePhoto: getUploadedFileMeta(req, "passportSizePhoto"),
-      bankCertificateAndStatement: getUploadedFileMeta(req, "bankCertificateAndStatement"),
+    // 🔥 FIXED: Format as simple URLs for the Web backend
+    const submittedDocuments = {
+      validPassport: getUploadedFileUrl(req, "validPassport"),
+      completedVisaApplicationForm: getUploadedFileUrl(req, "completedVisaApplicationForm"),
+      passportSizePhoto: getUploadedFileUrl(req, "passportSizePhoto"),
+      bankCertificateAndStatement: getUploadedFileUrl(req, "bankCertificateAndStatement"),
     };
 
     const hasAllDocuments =
-      documents.validPassport &&
-      documents.completedVisaApplicationForm &&
-      documents.passportSizePhoto &&
-      documents.bankCertificateAndStatement;
+      submittedDocuments.validPassport &&
+      submittedDocuments.completedVisaApplicationForm &&
+      submittedDocuments.passportSizePhoto &&
+      submittedDocuments.bankCertificateAndStatement;
 
     if (!hasAllDocuments) {
       return res.status(400).json({
@@ -71,7 +67,7 @@ export const applyVisa = async (req, res) => {
       preferredDate,
       preferredTime,
       purposeOfTravel,
-      documents,
+      submittedDocuments, 
     });
 
     return res.status(201).json({
@@ -101,5 +97,36 @@ export const getVisaApplications = async (req, res) => {
     return res.status(200).json(applications);
   } catch (error) {
     return res.status(500).json({ message: "Error fetching visa applications", error: error.message });
+  }
+};
+
+// 🔥 NEW: Function to handle the user choosing a suggested appointment for Visa 🔥
+export const chooseAppointment = async (req, res) => {
+  const { id } = req.params;
+  const { date, time } = req.body;
+
+  try {
+    if (!date || !time) {
+      return res.status(400).json({ message: "Chosen appointment date and time are required" });
+    }
+
+    const application = await VisaApplicationModel.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Visa application not found" });
+    }
+
+    // Update the preferred date and time with the selected option
+    application.preferredDate = date;
+    application.preferredTime = time;
+    
+    await application.save();
+
+    return res.status(200).json({ 
+        message: "Preferred appointment schedule updated", 
+        application 
+    });
+  } catch (error) {
+    console.error("Error updating preferred appointment schedule:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

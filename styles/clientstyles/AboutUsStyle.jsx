@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const AboutUsStyle = StyleSheet.create({
     container: {
@@ -52,14 +54,24 @@ const AboutUsStyle = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3,
     },
-    divider: {
-        height: 1,
-        backgroundColor: '#ddd',
-        marginVertical: 10,
+    // --- SHOWCASE IMAGE STYLES ---
+    showcaseImage: {
+        width: '100%',
+        height: 200, 
+        borderRadius: 10,
+        marginTop: 15,
+        resizeMode: 'cover', // Ensures the image fills the space nicely
     },
-    infoSection: {
-        paddingVertical: 15,
-    },
+    // --- REDUNDANT DIVIDER STYLE REMOVED ---
+    // divider: {
+    //     height: 1,
+    //     backgroundColor: '#ddd',
+    //     marginVertical: 10,
+    // },
+    // --- REDUNDANT INFOSECTION STYLE REMOVED ---
+    // infoSection: {
+    //     paddingVertical: 15,
+    // },
     socialBtn: {
         flexDirection: 'row',
         alignItems: 'center',

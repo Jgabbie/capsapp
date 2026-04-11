@@ -290,7 +290,7 @@ export default function Signup() {
 
                     {/* LINKS & BUTTON */}
                     <View style={SignupStyle.signupLinksContainer}>
-                        <Text onPress={() => cs.navigate("login")} style={SignupStyle.signupLinks}>Already have an account? Login here</Text>
+                        <Text onPress={() => cs.navigate("login")} style={SignupStyle.signupLinks}>Already have an account? Login</Text>
                     </View>
 
                     <TouchableOpacity 

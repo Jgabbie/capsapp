@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
@@ -23,59 +23,89 @@ export default function VisaProgress() {
     const [dynamicSteps, setDynamicSteps] = useState([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const fetchApplicationDetails = async () => {
-            if (!user?._id || !applicationId) return;
+    // 🔥 NEW STATES FOR SUGGESTED SCHEDULES 🔥
+    const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
+    const [confirmingSchedule, setConfirmingSchedule] = useState(false);
+
+    const fetchApplicationDetails = async () => {
+        if (!user?._id || !applicationId) return;
+        
+        try {
+            setLoading(true);
             
-            try {
-                setLoading(true);
-                
-                // 🔥 FIX 1: Fetch ALL applications, then find the one we want. 
-                // This prevents the 404 error since the mobile backend lacks the /:id route.
-                const appRes = await api.get('/visa/applications', withUserHeader(user._id));
-                const appData = appRes.data.find(app => app._id === applicationId);
-                
-                if (!appData) throw new Error("Application not found in your list.");
-                
-                setApplication(appData);
+            const appRes = await api.get('/visa/applications', withUserHeader(user._id));
+            const appData = appRes.data.find(app => app._id === applicationId);
+            
+            if (!appData) throw new Error("Application not found in your list.");
+            
+            setApplication(appData);
 
-                // 2. Fetch the service to get the price and process steps
-                if (appData?.serviceId) {
-                    const serviceId = appData.serviceId._id || appData.serviceId;
-                    
-                    // 🔥 FIX 2: Added `withUserHeader(user._id)` to pass authentication!
-                    const servRes = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id));
-                    
-                    setServicePrice(servRes.data?.visaPrice || 0);
-                    
-                    if (servRes.data?.visaProcessSteps && servRes.data.visaProcessSteps.length > 0) {
-                        setDynamicSteps(servRes.data.visaProcessSteps);
-                    }
+            if (appData?.serviceId) {
+                const serviceId = appData.serviceId._id || appData.serviceId;
+                const servRes = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id));
+                
+                setServicePrice(servRes.data?.visaPrice || 0);
+                
+                if (servRes.data?.visaProcessSteps && servRes.data.visaProcessSteps.length > 0) {
+                    setDynamicSteps(servRes.data.visaProcessSteps);
                 }
-            } catch (error) {
-                console.log("Error fetching details:", error.message);
-                Alert.alert('Error', 'Unable to load application details.');
-            } finally {
-                setLoading(false);
             }
+        } catch (error) {
+            console.log("Error fetching details:", error.message);
+            Alert.alert('Error', 'Unable to load application details.');
+        } finally {
+            setLoading(false);
         }
+    }
 
+    useEffect(() => {
         fetchApplicationDetails();
     }, [user?._id, applicationId]);
 
-    // Format Status safely (handles arrays or strings)
+    // 🔥 NEW FUNCTION: Submit the chosen appointment to the backend 🔥
+    const handleConfirmSchedule = async () => {
+        if (selectedScheduleIndex === null) {
+            Alert.alert("Notice", "Please select an appointment option first.");
+            return;
+        }
+
+        const selected = application.suggestedAppointmentSchedules[selectedScheduleIndex];
+        if (!selected?.date || !selected?.time) {
+            Alert.alert("Error", "Selected option is missing date or time.");
+            return;
+        }
+
+        try {
+            setConfirmingSchedule(true);
+            await api.put(`/visa/applications/${application._id}/choose-appointment`, {
+                date: selected.date,
+                time: selected.time
+            }, withUserHeader(user._id));
+
+            Alert.alert("Success", "Appointment schedule confirmed!");
+            setSelectedScheduleIndex(null);
+            
+            await fetchApplicationDetails();
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Error', 'Failed to confirm appointment schedule.');
+        } finally {
+            setConfirmingSchedule(false);
+        }
+    };
+
     const appStatus = useMemo(() => {
         if (!application?.status) return "Pending";
         return Array.isArray(application.status) ? application.status[0] : application.status;
     }, [application]);
 
-    // Set Steps (Dynamic from DB, fallback to generic 10 steps, or Canada 3 steps)
+    const openDocument = (url) => {
+        if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
+    };
+
     const steps = useMemo(() => {
         if (dynamicSteps.length > 0) return dynamicSteps;
-
-        if (application?.serviceName?.includes('Canada')) {
-            return ["aaa", "aaa", "aaa"];
-        }
+        if (application?.serviceName?.includes('Canada')) return ["aaa", "aaa", "aaa"];
 
         return [
             "Application Submitted",
@@ -91,7 +121,6 @@ export default function VisaProgress() {
         ];
     }, [dynamicSteps, application]);
 
-    // Calculate which step we are currently on
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
@@ -159,7 +188,7 @@ export default function VisaProgress() {
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Preferred Date</Text>
-                        <Text style={VisaProgressStyle.infoValue}>{application.preferredDate}</Text>
+                        <Text style={VisaProgressStyle.infoValue}>{dayjs(application.preferredDate).format('MMM D, YYYY')}</Text>
                     </View>
 
                     <View style={VisaProgressStyle.infoRow}>
@@ -180,6 +209,86 @@ export default function VisaProgress() {
                     </View>
                 </View>
 
+                {/* 🔥 SUGGESTED APPOINTMENTS CARD 🔥 */}
+                {appStatus.toLowerCase() === 'application submitted' && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Suggested Appointment Options</Text>
+                        
+                        {application.suggestedAppointmentSchedules?.length > 0 ? (
+                            <>
+                                <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your Embassy appointment.</Text>
+                                
+                                {application.suggestedAppointmentSchedules.map((slot, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[
+                                            VisaProgressStyle.optionCard,
+                                            selectedScheduleIndex === index && VisaProgressStyle.optionCardSelected
+                                        ]}
+                                        onPress={() => setSelectedScheduleIndex(index)}
+                                    >
+                                        <View style={VisaProgressStyle.optionTag}>
+                                            <Text style={VisaProgressStyle.optionTagText}>Option {index + 1}</Text>
+                                        </View>
+                                        <Text style={VisaProgressStyle.optionDate}>{dayjs(slot.date).format("MMM DD, YYYY")}</Text>
+                                        <Text style={VisaProgressStyle.optionTime}>{slot.time}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                                
+                                <TouchableOpacity 
+                                    style={[VisaProgressStyle.submitBtn, selectedScheduleIndex === null && { opacity: 0.5 }]}
+                                    disabled={selectedScheduleIndex === null || confirmingSchedule}
+                                    onPress={handleConfirmSchedule}
+                                >
+                                    {confirmingSchedule ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>Confirm Selected Date</Text>}
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <Text style={{ color: '#6b7280', fontSize: 14 }}>No suggested dates yet. Please check back later.</Text>
+                        )}
+                    </View>
+                )}
+
+                {/* Submitted Documents Display */}
+                {application.submittedDocuments && Object.keys(application.submittedDocuments).length > 0 && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Submitted Documents</Text>
+                        
+                        {application.submittedDocuments.validPassport && (
+                            <View style={VisaProgressStyle.docRow}>
+                                <Text style={VisaProgressStyle.docLabel}>Valid Passport</Text>
+                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.validPassport)}>
+                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        {application.submittedDocuments.completedVisaApplicationForm && (
+                            <View style={VisaProgressStyle.docRow}>
+                                <Text style={VisaProgressStyle.docLabel}>Application Form</Text>
+                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.completedVisaApplicationForm)}>
+                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        {application.submittedDocuments.passportSizePhoto && (
+                            <View style={VisaProgressStyle.docRow}>
+                                <Text style={VisaProgressStyle.docLabel}>Passport Photo</Text>
+                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.passportSizePhoto)}>
+                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        {application.submittedDocuments.bankCertificateAndStatement && (
+                            <View style={VisaProgressStyle.docRow}>
+                                <Text style={VisaProgressStyle.docLabel}>Bank Cert / Statement</Text>
+                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.bankCertificateAndStatement)}>
+                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                )}
+
                 {/* Progress Tracker Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Progress Tracker</Text>
@@ -198,7 +307,6 @@ export default function VisaProgress() {
                                                 {index + 1}
                                             </Text>
                                         </View>
-                                        {/* Don't draw the line after the very last item */}
                                         {!isLast && (
                                             <View style={[VisaProgressStyle.stepLine, isCompleted && !isActive ? VisaProgressStyle.stepLineActive : {}]} />
                                         )}

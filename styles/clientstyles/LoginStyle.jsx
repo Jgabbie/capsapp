@@ -1,9 +1,14 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
 
 const LoginStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 200
+        // 🔥 Reverted back to 200 to push it down to its original vertical position
+        paddingTop: 200,
+        // Centers all children horizontally
+        alignItems: 'center', 
     },
     loginHeading: {
         fontSize: 60,
@@ -22,11 +27,16 @@ const LoginStyle = StyleSheet.create({
         margin: 20,
         textAlign: "center"
     },
+    inputWrapper: {
+        width: width * 0.85, 
+        maxWidth: 400, 
+        marginBottom: 10,
+    },
     loginLabel: {
         fontSize: 16,
         color: "#305797",
-        marginLeft: 20,
-        marginBottom: 2
+        marginBottom: 4,
+        alignSelf: 'flex-start', 
     },
     loginInputs: {
         fontSize: 18,
@@ -34,9 +44,7 @@ const LoginStyle = StyleSheet.create({
         borderRadius: 10,
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
-        marginLeft: 20,
-        marginBottom: 10,
-        width: 360,
+        width: '100%',
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
@@ -48,9 +56,7 @@ const LoginStyle = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
         borderColor: "#6d6d6d",
-        marginLeft: 20,
-        marginBottom: 10,
-        width: 360,
+        width: '100%',
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
     },
@@ -65,6 +71,44 @@ const LoginStyle = StyleSheet.create({
         paddingRight: 15,
         justifyContent: 'center',
         height: '100%'
+    },
+    // --- Error Message ---
+    errorMessage: {
+        color: "#ff1616",
+        alignSelf: 'flex-start',
+        marginBottom: 10
+    },
+    // --- Links Container (Signup & Forgot Pass) ---
+    loginLinksContainer: {
+        flexDirection: 'row', 
+        alignItems: 'center',
+        width: width * 0.85,
+        maxWidth: 400,
+        marginBottom: 20,
+    },
+    loginLinks: {
+        fontSize: 14,
+        color: "#305797",
+        textDecorationLine: 'underline', 
+    },
+    loginLinksDivider: {
+        color: "#305797",
+        marginHorizontal: 10, 
+    },
+    // --- Login Button ---
+    loginButton: {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#305797",
+        width: width * 0.85,
+        maxWidth: 400,
+        height: 45,
+        borderRadius: 10
+    },
+    loginButtonText: {
+        color: "#fff",
+        fontSize: 18,
+        fontFamily: "Roboto_500Medium"
     },
     // --- OTP Specific Styles ---
     otpInput: {
@@ -89,34 +133,7 @@ const LoginStyle = StyleSheet.create({
     timerHighlight: {
         color: "#992A46",
         fontFamily: "Roboto_700Bold"
-    },
-    loginLinks: {
-        fontSize: 16,
-        color: "#305797"
-    },
-    loginLinksContainer: {
-        marginLeft: 20,
-        marginBottom: 20
-    },
-    loginButton: {
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#305797",
-        width: 360,
-        height: 45,
-        marginLeft: 20,
-        borderRadius: 10
-    },
-    loginButtonText: {
-        color: "#fff",
-        fontSize: 18,
-        fontFamily: "Roboto_500Medium"
-    },
-    errorMessage: {
-        color: "#ff1616",
-        marginLeft: 20,
-        marginBottom: 10
     }
 })
 
-export default LoginStyle
+export default LoginStyle;

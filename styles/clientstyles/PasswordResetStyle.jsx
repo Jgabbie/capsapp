@@ -69,7 +69,8 @@ const PasswordResetStyle = StyleSheet.create({
         fontFamily: "Roboto_500Medium"
     },
     linksContainer: {
-        alignItems: "center",
+        alignItems: "flex-start", // 🔥 Changed from "center" to "flex-start"
+        marginLeft: 20,           // 🔥 Added left margin to match the input and button
         marginTop: 15,
         marginBottom: 20
     },
@@ -81,7 +82,7 @@ const PasswordResetStyle = StyleSheet.create({
     // --- OTP Specific Styles ---
     otpInput: {
         fontSize: 24,
-        letterSpacing: 8, // Spreads the numbers out to look like separate boxes
+        letterSpacing: 8, 
         textAlign: "center",
         borderWidth: 1,
         borderRadius: 10,

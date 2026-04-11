@@ -5,7 +5,6 @@ const UserApplicationsStyle = StyleSheet.create({
         flex: 1,
         backgroundColor: "#f5f7fa"
     },
-    // 🔥 FIXED: Header now matches the clean, blue TRAVEX style
     headerContainer: {
         marginBottom: 16,
         marginTop: 10,
@@ -45,13 +44,16 @@ const UserApplicationsStyle = StyleSheet.create({
         paddingVertical: 12,
     },
     filterPill: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 20, // 🔥 Increased padding
+        paddingVertical: 10,   // 🔥 Increased padding
         borderRadius: 20,
         backgroundColor: '#fff',
         marginRight: 8,
         borderWidth: 1,
         borderColor: '#e5e7eb',
+        minWidth: 70, // 🔥 Guarantees it won't shrink too small
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     filterPillActive: {
         backgroundColor: '#305797',
@@ -61,6 +63,7 @@ const UserApplicationsStyle = StyleSheet.create({
         fontSize: 13,
         fontFamily: "Montserrat_600SemiBold",
         color: "#4b5563",
+        textAlign: 'center', // 🔥 Centered text
     },
     filterPillTextActive: {
         color: "#fff",
@@ -130,14 +133,18 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     viewButton: {
         backgroundColor: "#305797",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 20, // 🔥 Increased padding
+        paddingVertical: 10,   // 🔥 Increased padding
         borderRadius: 6,
+        minWidth: 80, // 🔥 Guarantees width for the word "View"
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     viewButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 13,
+        textAlign: 'center',
     },
     emptyContainer: {
         alignItems: 'center',

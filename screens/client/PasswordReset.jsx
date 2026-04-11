@@ -7,7 +7,6 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-googl
 import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 
-// 1. IMPORT OUR DYNAMIC API INSTEAD OF AXIOS
 import { api } from '../../utils/api' 
 
 export default function PasswordReset() {
@@ -29,7 +28,6 @@ export default function PasswordReset() {
     const [errorOtp, setErrorOtp] = useState("")
     const [timer, setTimer] = useState(0)
 
-    // OTP Timer effect
     useEffect(() => {
         let interval = null
         if (timer > 0) {
@@ -53,7 +51,6 @@ export default function PasswordReset() {
 
         setLoading(true)
         try {
-            // 2. FIXED ENDPOINT AND API CALL
             await api.post('/users/auth/send-reset-otp', { email })
             setTimer(60)
             setIsModalOpen(true)
@@ -72,11 +69,9 @@ export default function PasswordReset() {
 
         setLoading(true)
         try {
-            // 3. FIXED ENDPOINT AND API CALL
             const response = await api.post('/users/auth/check-reset-otp', { email, otp })
             if (response.data.success || response.status === 200) {
                 setIsModalOpen(false)
-                // Navigate to the next screen, passing the email and token!
                 cs.navigate("resetpassconfirm", { email: email, token: response.data.resetToken })
             }
         } catch (err) {
@@ -88,7 +83,6 @@ export default function PasswordReset() {
 
     const resendOTP = async () => {
         try {
-            // 4. FIXED ENDPOINT AND API CALL
             await api.post('/users/auth/send-reset-otp', { email })
             ToastAndroid.show("OTP Sent!", ToastAndroid.SHORT)
             setTimer(60)
@@ -163,7 +157,6 @@ export default function PasswordReset() {
                             </TouchableOpacity>
                         )}
 
-                        {/* Cancel button to close modal */}
                          <TouchableOpacity onPress={() => setIsModalOpen(false)} style={{ marginTop: 20 }}>
                                 <Text style={[PasswordResetStyle.linkText, { color: '#992A46' }]}>Cancel</Text>
                         </TouchableOpacity>

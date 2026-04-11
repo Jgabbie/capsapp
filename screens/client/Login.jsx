@@ -73,7 +73,6 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // FIXED PATH: Added /users/
             const response = await api.post('/users/login-user', {
                 username: normalizedUsername,
                 password: normalizedPassword
@@ -107,7 +106,6 @@ export default function Login() {
             if (status === 403 && data?.email) {
                 try {
                     const email = data.email;
-                    // FIXED PATH: Changed /auth/ to /users/
                     await api.post('/users/auth/send-verify-otp', { email: email });
                     setUnverifiedEmail(email);
                     setTimer(60);
@@ -131,7 +129,6 @@ export default function Login() {
 
         setLoading(true);
         try {
-            // FIXED PATH: Changed /auth/ to /users/
             const response = await api.post('/users/auth/verify-account', { 
                 otp: otp, 
                 email: unverifiedEmail
@@ -152,7 +149,6 @@ export default function Login() {
 
     const resendOTP = async () => {
         try {
-            // FIXED PATH: Changed /auth/ to /users/
             await api.post('/users/auth/send-verify-otp', { email: unverifiedEmail })
             showMessage("OTP sent!");
             setTimer(60);
@@ -167,10 +163,10 @@ export default function Login() {
             style={LoginStyle.container}
             resizeMode='cover'
         >
-            <View>
-                <Text style={LoginStyle.loginHeading}>Welcome</Text>
-                <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
+            <Text style={LoginStyle.loginHeading}>Welcome</Text>
+            <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
+            <View style={LoginStyle.inputWrapper}>
                 <Text style={LoginStyle.loginLabel}>Username</Text>
                 <TextInput 
                     style={LoginStyle.loginInputs} 
@@ -180,7 +176,9 @@ export default function Login() {
                     }}
                     value={getUsername}
                 />
+            </View>
 
+            <View style={LoginStyle.inputWrapper}>
                 <Text style={LoginStyle.loginLabel}>Password</Text>
                 <View style={LoginStyle.passwordContainer}>
                     <TextInput 
@@ -196,26 +194,37 @@ export default function Login() {
                         <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
                     </TouchableOpacity>
                 </View>
+            </View>
 
-                {getError ? <Text style={LoginStyle.errorMessage}>{getError}</Text> : null}
-
-                <View style={LoginStyle.loginLinksContainer}>
-                    <Text onPress={() => { cs.navigate("signup") }} style={LoginStyle.loginLinks}>Don't have an account? Signup here</Text>
-                    <Text onPress={() => { cs.navigate("resetpassword") }} style={LoginStyle.loginLinks}>Forgot your password?</Text>
+            {getError ? (
+                <View style={LoginStyle.inputWrapper}>
+                    <Text style={LoginStyle.errorMessage}>{getError}</Text>
                 </View>
+            ) : null}
 
-                <TouchableOpacity 
-                    style={[LoginStyle.loginButton, { opacity: loading ? 0.7 : 1 }]} 
-                    onPress={handleLogin}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={LoginStyle.loginButtonText}>Login</Text>
-                    )}
+            <View style={LoginStyle.loginLinksContainer}>
+                <TouchableOpacity onPress={() => { cs.navigate("signup") }}>
+                    <Text style={LoginStyle.loginLinks}>Signup here</Text>
+                </TouchableOpacity>
+                
+                <Text style={LoginStyle.loginLinksDivider}>|</Text>
+                
+                <TouchableOpacity onPress={() => { cs.navigate("resetpassword") }}>
+                    <Text style={LoginStyle.loginLinks}>Forgot password</Text>
                 </TouchableOpacity>
             </View>
+
+            <TouchableOpacity 
+                style={[LoginStyle.loginButton, { opacity: loading ? 0.7 : 1 }]} 
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={LoginStyle.loginButtonText}>Login</Text>
+                )}
+            </TouchableOpacity>
 
             {/* OTP Verification Modal */}
             <Modal transparent animationType='fade' visible={isOTPModalOpen}>
@@ -244,12 +253,12 @@ export default function Login() {
                             <Text style={LoginStyle.timerText}>Wait for <Text style={LoginStyle.timerHighlight}>{timer}</Text> sec to resend</Text>
                         ) : (
                             <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
-                                <Text style={LoginStyle.loginLinks}>Didn't get the code? Click here</Text>
+                                <Text style={[LoginStyle.loginLinks, { textDecorationLine: 'none' }]}>Didn't get the code? Click here</Text>
                             </TouchableOpacity>
                         )}
 
                         <TouchableOpacity onPress={() => setIsOTPModalOpen(false)} style={{ marginTop: 20 }}>
-                            <Text style={[LoginStyle.loginLinks, { color: '#992A46' }]}>Cancel</Text>
+                            <Text style={[LoginStyle.loginLinks, { color: '#992A46', textDecorationLine: 'none' }]}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
