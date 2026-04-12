@@ -25,19 +25,26 @@ export default function Packages({ navigation }) {
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
     
-    // Budget States 
-    const [budgetRange, setBudgetRange] = useState([0, 150000]);
+    // 🔥 UPDATED: Budget States (Max 100,000)
+    const [budgetRange, setBudgetRange] = useState([0, 100000]);
     const [minBudgetInput, setMinBudgetInput] = useState("0");
-    const [maxBudgetInput, setMaxBudgetInput] = useState("150000");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("100000");
 
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
     
-    // Days States
-    const [daysValue, setDaysValue] = useState([15]);
-    const [daysInput, setDaysInput] = useState("15");
+    // 🔥 UPDATED: Days States (Max 10)
+    const [daysValue, setDaysValue] = useState([10]);
+    const [daysInput, setDaysInput] = useState("10");
 
     const [travelersValue, setTravelersValue] = useState("");
+
+    const getAvailabilityStatus = (slots) => {
+        if (slots === undefined || slots === null) return "Available"; 
+        if (slots <= 0) return "Sold out";
+        if (slots <= 5) return "Few slots";
+        return "Available";
+    };
 
     useEffect(() => {
         const fetchPackages = async () => {
@@ -47,19 +54,32 @@ export default function Packages({ navigation }) {
                 
                 const response = await api.get('/package/get-packages');
                 
-                const mapped = response.data.map((item) => ({
-                    id: item._id,
-                    title: item.packageName,
-                    description: item.packageDescription,
-                    image: item.images?.[0] || "https://via.placeholder.com/800x500?text=No+Image",
-                    packagePricePerPax: item.packagePricePerPax || 0,
-                    duration: `${item.packageDuration || 0} Days`,
-                    packageDuration: item.packageDuration || 0,
-                    packageType: item.packageType || "Domestic",
-                    packageAvailableSlots: item.packageAvailableSlots || 0,
-                    packageTags: item.packageTags || [],
-                    rawItem: item 
-                }));
+                const mapped = response.data.map((item) => {
+                    // Extract exact slots calculation
+                    let calculatedSlots = 0;
+                    if (item.packageSpecificDate && Array.isArray(item.packageSpecificDate)) {
+                        calculatedSlots = item.packageSpecificDate.reduce((sum, dateObj) => {
+                            return sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0);
+                        }, 0);
+                    }
+                    const finalSlots = item.packageAvailableSlots ?? item.slots ?? calculatedSlots;
+
+                    return {
+                        id: item._id,
+                        title: item.packageName,
+                        description: item.packageDescription,
+                        image: item.images?.[0] || "https://via.placeholder.com/800x500?text=No+Image",
+                        packagePricePerPax: item.packagePricePerPax || 0,
+                        duration: `${item.packageDuration || 0} Days`,
+                        packageDuration: item.packageDuration || 0,
+                        packageType: item.packageType || "Domestic",
+                        slots: finalSlots,
+                        availability: getAvailabilityStatus(finalSlots),
+                        rating: item.averageRating ? Number(item.averageRating).toFixed(1) : "0.0", // Safely fetch rating
+                        packageTags: item.packageTags || [],
+                        rawItem: item 
+                    };
+                });
                 setPackages(mapped);
             } catch (err) {
                 console.log("Fetch Error: ", err.message);
@@ -86,7 +106,7 @@ export default function Packages({ navigation }) {
             const matchesType = tourType === 'All' || item.packageType.toLowerCase() === tourType.toLowerCase();
             const matchesDays = item.packageDuration <= daysValue[0];
             const tv = Number(travelersValue);
-            const matchesTravelers = !tv || item.packageAvailableSlots >= tv;
+            const matchesTravelers = !tv || item.slots >= tv;
             return matchesSearch && matchesBudget && matchesTags && matchesType && matchesDays && matchesTravelers;
         });
     }, [packages, searchText, budgetRange, selectedTags, tourType, daysValue, travelersValue]);
@@ -100,7 +120,8 @@ export default function Packages({ navigation }) {
         } else {
             setMaxBudgetInput(numericValue);
             const num = Number(numericValue);
-            if (num >= budgetRange[0] && num <= 150000) setBudgetRange([budgetRange[0], num]);
+            // 🔥 CAP AT 100000 🔥
+            if (num >= budgetRange[0] && num <= 100000) setBudgetRange([budgetRange[0], num]);
         }
     };
 
@@ -108,7 +129,8 @@ export default function Packages({ navigation }) {
         const numericValue = value.replace(/[^0-9]/g, '');
         setDaysInput(numericValue);
         const num = Number(numericValue);
-        if (num >= 1 && num <= 15) {
+        // 🔥 CAP AT 10 🔥
+        if (num >= 1 && num <= 10) {
             setDaysValue([num]);
         }
     };
@@ -133,6 +155,14 @@ export default function Packages({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
+                {/* 🔥 NEW RESULTS HEADER 🔥 */}
+                <View style={DestinationStyles.resultsHeader}>
+                    <Text style={DestinationStyles.resultsTitle}>Available Packages</Text>
+                    <Text style={DestinationStyles.resultsCount}>
+                        {filteredPackages.length === 1 ? '1 found' : `${filteredPackages.length} found`}
+                    </Text>
+                </View>
+
                 {loading ? <ActivityIndicator size="large" color="#305797" style={{marginTop: 50}} /> : error ? <Text style={{color:'red', textAlign:'center', marginTop: 20}}>{error}</Text> : (
                     filteredPackages.map((item) => {
                         const tv = Number(travelersValue);
@@ -140,7 +170,6 @@ export default function Packages({ navigation }) {
                         
                         return (
                             <View key={item.id} style={DestinationStyles.packageCard}>
-                                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
                                 <Image 
                                     source={item.image} 
                                     style={DestinationStyles.packageImage}
@@ -148,9 +177,37 @@ export default function Packages({ navigation }) {
                                     transition={300} 
                                 />
                                 <View style={DestinationStyles.packageContent}>
-                                    <Text style={DestinationStyles.packageTitle}>{item.title}</Text>
-                                    <Text style={DestinationStyles.packageTypeLabel}>{item.packageType} • {item.duration}</Text>
                                     
+                                    {/* 🔥 NEW: Title and Rating Row 🔥 */}
+                                    <View style={DestinationStyles.cardHeaderRow}>
+                                        <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
+                                        {item.rating && item.rating !== "0.0" ? (
+                                            <View style={DestinationStyles.ratingContainer}>
+                                                <Ionicons name="star" size={14} color="#facc15" />
+                                                <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
+                                            </View>
+                                        ) : null}
+                                    </View>
+
+                                    {/* 🔥 NEW: Type, Availability, and Duration Row 🔥 */}
+                                    <View style={DestinationStyles.cardSubHeaderRow}>
+                                        <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
+                                            <Text style={[DestinationStyles.typeTagText, { color: item.packageType.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
+                                                {item.packageType.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                        <View style={[DestinationStyles.availTag, { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }]}>
+                                            <Text style={[DestinationStyles.availTagText, { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }]}>
+                                                {item.availability.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                        <Text style={DestinationStyles.durationText}>{item.duration}</Text>
+                                    </View>
+
+                                    {/* 🔥 NEW: Slots Text 🔥 */}
+                                    <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
+                                    
+                                    {/* Tags */}
                                     {item.packageTags && item.packageTags.length > 0 && (
                                         <View style={DestinationStyles.packageTagsRow}>
                                             {item.packageTags.slice(0, 4).map((tag, index) => (
@@ -161,18 +218,18 @@ export default function Packages({ navigation }) {
                                         </View>
                                     )}
 
+                                    {/* Footer with Price and Button */}
                                     <View style={DestinationStyles.packageFooter}>
                                         <View style={DestinationStyles.priceContainer}>
                                             {tv > 1 ? (
-                                                <>
-                                                    <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
-                                                        {formatPeso(item.packagePricePerPax)} x {tv} pax =
-                                                    </Text>
-                                                    <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
-                                                </>
-                                            ) : (
+                                                <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
+                                                    {formatPeso(item.packagePricePerPax)} x {tv} pax =
+                                                </Text>
+                                            ) : null}
+                                            <View style={DestinationStyles.priceRowBox}>
                                                 <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
-                                            )}
+                                                <Text style={DestinationStyles.budgetPaxText}>Budget / Pax</Text>
+                                            </View>
                                         </View>
 
                                         <TouchableOpacity 
@@ -223,10 +280,10 @@ export default function Packages({ navigation }) {
                                         setMinBudgetInput(String(vals[0]));
                                         setMaxBudgetInput(String(vals[1]));
                                     }} 
-                                    min={0} max={150000} step={1000} 
+                                    min={0} max={100000} step={1000} 
                                     selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
                                 />
-                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱150,000</Text>
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱100,000</Text>
                             </View>
 
                             <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>
@@ -266,7 +323,7 @@ export default function Packages({ navigation }) {
                                         setDaysValue(vals);
                                         setDaysInput(String(vals[0]));
                                     }} 
-                                    min={1} max={15} step={1} 
+                                    min={1} max={10} step={1} 
                                     selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
                                 />
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>

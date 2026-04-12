@@ -69,9 +69,10 @@ const RegistrationFormStyle = StyleSheet.create({
     paperInput: {
         borderBottomWidth: 1,
         borderBottomColor: '#000',
-        height: 25,
+        height: 35, // 👇 Increased from 25 so the text isn't cut off
         fontSize: 11,
-        padding: 0,
+        paddingHorizontal: 5, // 👇 Added a little padding so text doesn't touch the very edge of the grey box
+        paddingVertical: 0,
         color: '#000',
     },
     row: {

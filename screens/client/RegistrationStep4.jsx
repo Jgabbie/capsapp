@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, StatusBar, Image, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, StatusBar, Image, Modal } from 'react-native';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import ModalStyle from '../../styles/componentstyles/ModalStyle'; // 🔥 IMPORTED MODAL STYLES 🔥
 import { useUser } from '../../context/UserContext';
 
 const formatLongDate = (dateVal) => {
@@ -13,17 +14,26 @@ const formatLongDate = (dateVal) => {
 export default function RegistrationStep4({ route, navigation }) {
     const { user } = useUser();
     
+    // State to control the confirmation modal
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+
     // Catch all the data passed from Step 3
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
-    const handleSubmitBooking = () => {
-    // 🔥 This is the bridge to the payment screens 🔥
-    navigation.navigate("paymentmode", { 
-        setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency 
-    });
-};
+    // Opens the modal instead of instantly navigating
+    const handleOpenConfirmModal = () => {
+        setIsProceedModalOpen(true);
+    };
+
+    // Actual submission function when "Proceed" is clicked inside the modal
+    const confirmBooking = () => {
+        setIsProceedModalOpen(false);
+        navigation.navigate("paymentmode", { 
+            setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency 
+        });
+    };
 
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>
@@ -80,7 +90,7 @@ export default function RegistrationStep4({ route, navigation }) {
                                 Some packages requires a certain number of passengers in order to proceed. In the event that the required number of travelers was not met by the travel company and tour operator, they have the right to transfer passengers with PREVIOUS DENIED VISA will not be accepted. Some documents are needed to be submitted to the embassy/immigration if necessary. The rate quoted is based on a minimum number of travelers per departure. Lead guest must understand that the rate will vary if minimum number of travlers was not met or is subject to new quotation.
                             </Text>
 
-                            {/* 🔥 RED FINAL WAIVER TEXT 🔥 */}
+                            {/* RED FINAL WAIVER TEXT */}
                             <Text style={{ fontFamily: "Montserrat_700Bold", fontWeight: 'bold', fontStyle: 'italic', fontSize: 8, textAlign: 'justify', color: '#d32f2f', lineHeight: 11 }}>
                                 I have read and understand the Terms & Conditions detailed above and the Special Booking Conditions as stated out in the T&C of the tour package quotation I have availed, and accept them on behalf of myself and my party.
                             </Text>
@@ -104,10 +114,10 @@ export default function RegistrationStep4({ route, navigation }) {
 
                 {/* Footer Navigation Buttons */}
                 <View style={RegistrationFormStyle.footerContainer}>
-                    {/* The Green Submit Button */}
+                    {/* 🔥 UPDATED: Submit Button to trigger Modal 🔥 */}
                     <TouchableOpacity 
                         style={[QuotationAllInStyle.proceedButton, { backgroundColor: '#28a745' }]}
-                        onPress={handleSubmitBooking}
+                        onPress={handleOpenConfirmModal}
                     >
                         <Text style={QuotationAllInStyle.proceedButtonText}>SUBMIT FINAL BOOKING</Text>
                     </TouchableOpacity>
@@ -120,6 +130,51 @@ export default function RegistrationStep4({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            {/* 🔥 NEW: Proceed to Booking Modal matching the Web version 🔥 */}
+            <Modal transparent animationType='fade' visible={isProceedModalOpen} onRequestClose={() => setIsProceedModalOpen(false)}>
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={[ModalStyle.modalBox, { width: '90%', paddingHorizontal: 20, paddingVertical: 25 }]}>
+                        
+                        <Text style={[ModalStyle.modalTitle, { fontSize: 20, textAlign: 'center', marginBottom: 15 }]}>
+                            Proceed to Booking
+                        </Text>
+
+                        <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                            <Text style={[ModalStyle.modalText, { textAlign: 'justify', marginBottom: 12, lineHeight: 20 }]}>
+                                Make sure that you have read the terms and conditions before proceeding. The travel agency will not be tolerating any type of tampering and modifications in the booking details. Once, you have proceed with the booking, you will not be able to change or modify any of the booking details. If you have any concerns or questions regarding your booking, please contact our customer support for assistance.
+                            </Text>
+                            
+                            <Text style={[ModalStyle.modalText, { textAlign: 'justify', marginBottom: 12, lineHeight: 20 }]}>
+                                By clicking the "Proceed" button, you acknowledge that you have read and understood the terms and conditions of your booking, and you agree to proceed with the booking process. Please ensure that all the information you provided is accurate and complete before confirming your booking.
+                            </Text>
+                            
+                            <Text style={[ModalStyle.modalText, { textAlign: 'center', marginBottom: 15, lineHeight: 20 }]}>
+                                Thank you for choosing our travel services. We look forward to providing you with an unforgettable travel experience!
+                            </Text>
+                            
+                            <Text style={[ModalStyle.modalText, { textAlign: 'center', color: '#b54747', fontFamily: 'Montserrat_600SemiBold', fontSize: 11, marginBottom: 10 }]}>
+                                Note: Once you click the "Proceed" button, your booking will be submitted and cannot be modified. Please review all details carefully before proceeding.
+                            </Text>
+                            
+                            <Text style={[ModalStyle.modalText, { textAlign: 'center', color: '#b54747', fontFamily: 'Montserrat_600SemiBold', fontSize: 11, marginBottom: 15 }]}>
+                                If you have any questions or need further assistance, please contact our customer support team before proceeding.
+                            </Text>
+                        </ScrollView>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginTop: 10 }}>
+                            <TouchableOpacity style={[ModalStyle.modalButton, { flex: 1, backgroundColor: '#305797' }]} onPress={confirmBooking}>
+                                <Text style={ModalStyle.modalButtonText}>Proceed</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[ModalStyle.modalCancelButton, { flex: 1, backgroundColor: '#b54747', borderWidth: 0 }]} onPress={() => setIsProceedModalOpen(false)}>
+                                <Text style={[ModalStyle.modalButtonText, { color: '#fff' }]}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                    </View>
+                </View>
+            </Modal>
+
         </SafeAreaView>
     );
 }

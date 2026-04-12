@@ -36,6 +36,7 @@ const BookingReviewStyle = StyleSheet.create({
         paddingVertical: 5,
         borderRadius: 999,
         backgroundColor: 'rgba(48, 87, 151, 0.12)',
+        alignSelf: 'flex-start',
     },
     pillText: {
         fontFamily: "Montserrat_700Bold",
@@ -116,15 +117,37 @@ const BookingReviewStyle = StyleSheet.create({
         color: "#3c465a",
         marginBottom: 5,
     },
-    // --- NEW FOOTER BUTTON STYLES ---
+
+    // --- 🔥 NEW POLICY CARD STYLES 🔥 ---
+    policyCard: {
+        backgroundColor: '#f9fafc', 
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#edf0f7',
+    },
+    policyTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 15,
+        color: "#1f2a44",
+        marginBottom: 8,
+    },
+    policyText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: "#3c465a",
+        lineHeight: 18,
+    },
+
+    // --- FOOTER BUTTON STYLES ---
     footerContainer: {
         marginTop: 10,
-        paddingBottom: 50, // Extra space at the bottom to avoid phone buttons
+        paddingBottom: 50, 
         paddingHorizontal: 10,
     },
     smallProceedButton: {
         backgroundColor: '#305797',
-        paddingVertical: 14, // Slimmer than the old bulky button but tall enough for a thumb
+        paddingVertical: 14, 
         borderRadius: 12,
         alignItems: 'center',
         marginBottom: 15,
@@ -136,16 +159,16 @@ const BookingReviewStyle = StyleSheet.create({
     },
     smallProceedButtonText: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 15, // Slightly bigger text
+        fontSize: 15, 
         color: "#ffffff",
     },
     backTextButton: {
         alignItems: 'center',
-        paddingVertical: 12, // Bigger invisible box for easier tapping
+        paddingVertical: 12, 
     },
     backText: {
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 15, // Match the size
+        fontSize: 15, 
         color: "#6b7486",
     }
 });

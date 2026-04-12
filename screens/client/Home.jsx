@@ -354,7 +354,7 @@ export default function Home() {
                                 <>
                                     <Text style={HomeStyle.title}>Packages For You</Text>
                                     {internationalPackages.map((pkg) => (
-                                        <BannerCard key={pkg._id} item={pkg} subText="Explore the world with our premium international tours" />
+                                        <BannerCard key={pkg._id} item={pkg} />
                                     ))}
                                 </>
                             )}
@@ -363,7 +363,7 @@ export default function Home() {
                                 <>
                                     <Text style={HomeStyle.title}>Local Packages</Text>
                                     {domesticPackages.map((pkg) => (
-                                        <BannerCard key={pkg._id} item={pkg} subText="Discover the beauty of the Philippines" />
+                                        <BannerCard key={pkg._id} item={pkg} />
                                     ))}
                                 </>
                             )}

@@ -29,10 +29,28 @@ export default function RegistrationStep2({ route, navigation }) {
         title: '', fullName: '', email: '', contact: '', relation: ''
     });
 
-    // To handle multiple dropdowns with one Modal
-    const [activeDropdown, setActiveDropdown] = useState(null); // 'dietary', 'medical', 'insurance', 'emergencyTitle', or null
+    const [activeDropdown, setActiveDropdown] = useState(null);
 
-    // --- Validation & Proceed ---
+    // --- Validation Logic ---
+    const isValidEmail = (email) => {
+        if (!email) return true; // Don't turn red if empty (handle empty on submit)
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    };
+
+    const isValidContact = (contact) => {
+        if (!contact) return true; // Don't turn red if empty
+        const digits = contact.replace(/\D/g, "");
+        // Valid PH numbers: 10 digits starting with 8 or 9 OR 11 digits starting with 09
+        if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
+        if (digits.length === 11 && digits.startsWith("09")) return true;
+        return false;
+    };
+
+    // Derived boolean states to trigger the red text styling
+    const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
+    const contactHasError = !isValidContact(emergency.contact) && emergency.contact.length > 0;
+
+    // --- Proceed Handler ---
     const handleNext = () => {
         // Dietary Validation
         if (!medicalData.dietary) return Alert.alert("Required", "Please select Yes or No for Dietary requests.");
@@ -46,8 +64,16 @@ export default function RegistrationStep2({ route, navigation }) {
         if (!medicalData.insurance) return Alert.alert("Required", "Please select Yes or No for Travel Insurance.");
 
         // Emergency Contact Validation
-        if (!emergency.title || !emergency.fullName || !emergency.contact || !emergency.relation) {
+        if (!emergency.title || !emergency.fullName || !emergency.email || !emergency.contact || !emergency.relation) {
             return Alert.alert("Required", "Please complete all required fields in the Emergency Contact section.");
+        }
+
+        // Block progression if validations fail
+        if (emailHasError) {
+            return Alert.alert("Invalid Input", "Please enter a valid email address.");
+        }
+        if (contactHasError) {
+            return Alert.alert("Invalid Input", "Please enter a valid 10 or 11 digit contact number.");
         }
 
         navigation.navigate("registrationstep3", { ...route.params, medicalData, emergency });
@@ -84,7 +110,6 @@ export default function RegistrationStep2({ route, navigation }) {
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>
             <StatusBar barStyle="light-content" />
-            {/* 🔥 scrollViewContent ensures bottom padding so the button isn't blocked 🔥 */}
             <ScrollView contentContainerStyle={RegistrationFormStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
                 
                 <View style={RegistrationFormStyle.paperPage}>
@@ -210,11 +235,23 @@ export default function RegistrationStep2({ route, navigation }) {
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Email: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.email} onChangeText={(v) => setEmergency({...emergency, email: v})} />
+                                <TextInput 
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }} 
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    value={emergency.email} 
+                                    onChangeText={(v) => setEmergency({...emergency, email: v.replace(/\s/g, '')})} 
+                                />
                             </View>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Contact Number: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} keyboardType="phone-pad" value={emergency.contact} onChangeText={(v) => setEmergency({...emergency, contact: v})} />
+                                <TextInput 
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: contactHasError ? '#b54747' : '#000' }} 
+                                    keyboardType="phone-pad" 
+                                    maxLength={11}
+                                    value={emergency.contact} 
+                                    onChangeText={(v) => setEmergency({...emergency, contact: v.replace(/[^0-9]/g, '')})} 
+                                />
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Relation: </Text>

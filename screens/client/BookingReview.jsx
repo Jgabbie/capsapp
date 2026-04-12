@@ -12,6 +12,13 @@ export default function BookingReview({ route, navigation }) {
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
 
+    // 🔥 ADDED: Determine if Visa is required based on the database schema
+    const requiresVisa = Boolean(
+        pkg?.requiresVisa ??
+        pkg?.packageRequiresVisa ??
+        pkg?.visaRequired
+    );
+
     const handleNext = () => {
         // Move to Screen 3: Uploads
         navigation.navigate("bookinguploads", { setupData });
@@ -87,6 +94,24 @@ export default function BookingReview({ route, navigation }) {
                                 <Text key={i} style={BookingReviewStyle.itemText}>✕ {item}</Text>
                             ))}
                         </View>
+                    </View>
+
+                    {/* --- 🔥 NEW: Visa Requirement Card --- */}
+                    <View style={[BookingReviewStyle.policyCard, { marginTop: 20 }]}>
+                        <Text style={BookingReviewStyle.policyTitle}>Visa Requirement</Text>
+                        <Text style={BookingReviewStyle.policyText}>
+                            {requiresVisa
+                                ? 'Please be informed that this package requires a visa. Please ensure you have a valid visa before travel.'
+                                : 'This package does not require a visa.'}
+                        </Text>
+                    </View>
+
+                    {/* --- 🔥 NEW: Cancellation Policy Card --- */}
+                    <View style={[BookingReviewStyle.policyCard, { marginTop: 16 }]}>
+                        <Text style={BookingReviewStyle.policyTitle}>Cancellation Policy</Text>
+                        <Text style={BookingReviewStyle.policyText}>
+                            Please be informed that cancellation request with medical reasons are only accepted and refundable with valid medical certificate. Cancellation request without medical reasons are non-refundable. For any cancellation request, please reach out to us through the Contact Us section on our Home page.
+                        </Text>
                     </View>
                 </View>
 

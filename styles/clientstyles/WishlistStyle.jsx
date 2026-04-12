@@ -10,7 +10,7 @@ const WishlistStyle = StyleSheet.create({
     title: {
         fontSize: 24,
         fontFamily: "Montserrat_700Bold",
-        color: "#1e293b",
+        color: "#305797",
         marginBottom: 5
     },
     subtitle: {
@@ -120,7 +120,7 @@ const WishlistStyle = StyleSheet.create({
         borderColor: "#e2e8f0",
         marginBottom: 20,
         overflow: "hidden",
-        elevation: 1 // slight shadow
+        elevation: 1 
     },
     cardImage: {
         width: "100%",
@@ -152,6 +152,20 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 13,
         color: "#64748b",
         fontFamily: "Roboto_400Regular",
+    },
+    // 🔥 NEW STYLES: Slots & Discount 🔥
+    slotsText: {
+        fontSize: 13,
+        color: "#64748b",
+        fontFamily: "Roboto_400Regular",
+        marginBottom: 15
+    },
+    discountText: {
+        fontSize: 12,
+        fontFamily: "Montserrat_700Bold",
+        color: "#10b981", 
+        minWidth: 50,
+        textAlign: 'right'
     },
     priceText: {
         fontSize: 18,
@@ -186,16 +200,15 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 12,
         fontFamily: "Montserrat_600SemiBold"
     },
+    // 🔥 UPDATED: Red Background, White Text 🔥
     btnRemove: {
-        backgroundColor: "#fff",
+        backgroundColor: "#a11d33", 
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 6,
-        borderWidth: 1,
-        borderColor: "#cbd5e1"
     },
     btnRemoveText: {
-        color: "#475569",
+        color: "#fff", 
         fontSize: 12,
         fontFamily: "Montserrat_600SemiBold"
     },

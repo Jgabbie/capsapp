@@ -43,9 +43,9 @@ export default function Wishlist() {
     const [modalVisible, setModalVisible] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
 
-    // 🔥 NEW FILTER STATES (Matched to Web)
+    // Filter States
     const [searchText, setSearchText] = useState("");
-    const [activeDropdown, setActiveDropdown] = useState(null); // 'category', 'availability', 'price' or null
+    const [activeDropdown, setActiveDropdown] = useState(null); 
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [selectedAvailability, setSelectedAvailability] = useState("All");
     const [selectedPrice, setSelectedPrice] = useState("All");
@@ -55,9 +55,8 @@ export default function Wishlist() {
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     });
 
-    // Helper to determine availability status
     const getAvailabilityStatus = (slots) => {
-        if (slots === undefined || slots === null) return "Available"; // Fallback
+        if (slots === undefined || slots === null) return "Available"; 
         if (slots <= 0) return "Sold out";
         if (slots <= 5) return "Few slots";
         return "Available";
@@ -74,6 +73,20 @@ export default function Wishlist() {
                     
                     const mapped = items.map(item => {
                         const pkg = item.packageId || item.package || item; 
+                        
+                        // 🔥 FIX: Calculate total slots by summing up the dates array 🔥
+                        let calculatedSlots = 0;
+                        if (pkg.packageSpecificDate && Array.isArray(pkg.packageSpecificDate)) {
+                            calculatedSlots = pkg.packageSpecificDate.reduce((sum, dateObj) => {
+                                return sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0);
+                            }, 0);
+                        }
+
+                        const finalSlots = pkg.packageAvailableSlots ?? pkg.slots ?? calculatedSlots;
+                        
+                        // 🔥 FIX: Use the correct discount variable from your database 🔥
+                        const finalDiscount = pkg.packageDiscountPercent ?? pkg.discount ?? 0;
+
                         return {
                             id: pkg._id,
                             title: pkg.packageName,
@@ -82,8 +95,10 @@ export default function Wishlist() {
                             duration: `${pkg.packageDuration || 0} DAYS`,
                             packageDuration: pkg.packageDuration || 0,
                             packageType: pkg.packageType || "Domestic", 
-                            availability: getAvailabilityStatus(pkg.slots ?? 10),
-                            reference: pkg.reference || `PKG-${pkg._id.substring(0, 8).toUpperCase()}`,
+                            availability: getAvailabilityStatus(finalSlots),
+                            slots: finalSlots,
+                            discount: finalDiscount,
+                            reference: pkg.packageCode || pkg.reference || `PKG-${pkg._id.substring(0, 8).toUpperCase()}`,
                             rawPackage: pkg 
                         };
                     });
@@ -103,7 +118,7 @@ export default function Wishlist() {
     const availabilitiesList = ["All", "Available", "Few slots", "Sold out"];
     const pricesList = ["All", "Under 4000", "4000-7000", "7000+"];
 
-    // 🔥 NEW FILTERING LOGIC
+    // Filtering Logic
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
@@ -153,7 +168,6 @@ export default function Wishlist() {
                 <Text style={WishlistStyle.title}>Your Wishlist</Text>
                 <Text style={WishlistStyle.subtitle}>Search and filter the packages you saved for later.</Text>
 
-                {/* --- FILTERS CONTAINER --- */}
                 <View style={WishlistStyle.filterBox}>
                     <Text style={WishlistStyle.filterLabel}>Search</Text>
                     <View style={WishlistStyle.searchBar}>
@@ -167,7 +181,6 @@ export default function Wishlist() {
                     </View>
 
                     <View style={WishlistStyle.dropdownRow}>
-                        {/* Category */}
                         <View style={{flex: 1}}>
                             <Text style={WishlistStyle.filterLabel}>Category</Text>
                             <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('category')}>
@@ -176,7 +189,6 @@ export default function Wishlist() {
                             </TouchableOpacity>
                         </View>
                         
-                        {/* Availability */}
                         <View style={{flex: 1, marginHorizontal: 8}}>
                             <Text style={WishlistStyle.filterLabel}>Availability</Text>
                             <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('availability')}>
@@ -185,7 +197,6 @@ export default function Wishlist() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Price */}
                         <View style={{flex: 1}}>
                             <Text style={WishlistStyle.filterLabel}>Price</Text>
                             <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('price')}>
@@ -196,7 +207,6 @@ export default function Wishlist() {
                     </View>
                 </View>
 
-                {/* DROPDOWN MENUS OVERLAYS */}
                 {activeDropdown === 'category' && (
                     <View style={[WishlistStyle.dropdownMenu, { left: 20 }]}>
                         {categoriesList.map(cat => (
@@ -225,7 +235,6 @@ export default function Wishlist() {
                     </View>
                 )}
 
-                {/* --- PACKAGES HEADER --- */}
                 <View style={WishlistStyle.packagesHeader}>
                     <Text style={WishlistStyle.packagesTitle}>Packages</Text>
                     <Text style={WishlistStyle.foundText}>
@@ -233,7 +242,6 @@ export default function Wishlist() {
                     </Text>
                 </View>
 
-                {/* --- RENDER CONTENT --- */}
                 {loading ? (
                     <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
                 ) : filteredPackages.length === 0 ? (
@@ -247,7 +255,6 @@ export default function Wishlist() {
                             <Image style={WishlistStyle.cardImage} source={{ uri: item.image }} />
 
                             <View style={WishlistStyle.cardContent}>
-                                {/* Title and Category Tag */}
                                 <View style={WishlistStyle.rowBetween}>
                                     <Text style={WishlistStyle.packageName} numberOfLines={1}>{item.title}</Text>
                                     <View style={[WishlistStyle.tag, { backgroundColor: item.packageType?.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
@@ -258,8 +265,7 @@ export default function Wishlist() {
                                 </View>
                                 <Text style={WishlistStyle.refText}>{item.reference}</Text>
 
-                                {/* Duration and Availability Tag */}
-                                <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 15 }]}>
+                                <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 8 }]}>
                                     <Text style={WishlistStyle.durationText}>{item.duration}</Text>
                                     <View style={[
                                         WishlistStyle.tag, 
@@ -272,9 +278,16 @@ export default function Wishlist() {
                                             {item.availability.toUpperCase()}
                                         </Text>
                                     </View>
+                                    
+                                    {item.discount > 0 ? (
+                                        <Text style={WishlistStyle.discountText}>{item.discount}% OFF</Text>
+                                    ) : (
+                                        <View style={{ minWidth: 50 }} />
+                                    )}
                                 </View>
 
-                                {/* Price and Buttons */}
+                                <Text style={WishlistStyle.slotsText}>Slots: {item.slots}</Text>
+
                                 <View style={WishlistStyle.rowBetween}>
                                     <Text style={WishlistStyle.priceText}>{formatPeso(item.packagePricePerPax)}</Text>
                                     <View style={WishlistStyle.actionButtons}>
