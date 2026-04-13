@@ -62,10 +62,13 @@ const DestinationStyles = StyleSheet.create({
 
   // 🔥 UPDATED TAB STYLES 🔥
   tabRow: { flexDirection: "row", backgroundColor: "#305797", marginTop: 20, padding: 0 },
-  tabButton: { flex: 1, paddingVertical: 10, alignItems: "center" },
+  // Changed paddingVertical from 10 to 12 for better height, and removed hard flex constraints if needed, but flex: 1 is usually okay. Added paddingHorizontal to ensure text doesn't hit the edges.
+  tabButton: { flex: 1, paddingVertical: 12, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
   tabButtonActive: { backgroundColor: "#fff" },
-  tabText: { color: "#fff", fontSize: 13, fontFamily: "Montserrat_600SemiBold" },
-  tabTextActive: { color: "#305797", fontFamily: "Montserrat_700Bold" },
+  // Reduced base font size slightly from 13 to 11 to guarantee fit on all screens, and centered the text.
+  tabText: { color: "#fff", fontSize: 11, fontFamily: "Montserrat_600SemiBold", textAlign: 'center' },
+  // Ensured the active state font size matches so it doesn't jump and get cut off when clicked.
+  tabTextActive: { color: "#305797", fontFamily: "Montserrat_700Bold", fontSize: 11 },
 
   sectionBody: { padding: 16, paddingBottom: 120 },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#305797", marginBottom: 6 },

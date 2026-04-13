@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from "react-native";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const PaymentStyle = StyleSheet.create({
     safeArea: {
@@ -10,7 +10,6 @@ const PaymentStyle = StyleSheet.create({
     container: {
         padding: 20,
     },
-    // Progress bar style similar to your web breadcrumbs
     progressContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -39,7 +38,6 @@ const PaymentStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         color: '#fff',
     },
-    // Section Headers
     sectionTitle: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 18,
@@ -52,7 +50,75 @@ const PaymentStyle = StyleSheet.create({
         color: "#6b7486",
         marginBottom: 20,
     },
-    // Mode Selection Cards
+
+    // --- PREVIEW BUTTON CONTAINER ---
+    previewButtonContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        marginBottom: 20,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+    },
+    previewHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    previewLabel: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 11,
+        color: '#64748b',
+        marginBottom: 2,
+    },
+    previewValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 13,
+        color: '#1f2a44',
+    },
+    previewTotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#f1f5f9',
+        marginBottom: 12,
+    },
+    previewTotalLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
+        color: '#1f2a44',
+    },
+    previewTotalAmount: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 18,
+        color: '#305797',
+    },
+    previewBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f8faff',
+        borderWidth: 1,
+        borderColor: '#305797',
+        borderRadius: 8,
+        paddingVertical: 12,
+        gap: 8,
+    },
+    previewBtnText: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 13,
+        color: '#305797',
+    },
+
+    // --- MODE SELECTION ---
     modeCard: {
         backgroundColor: '#fff',
         borderRadius: 16,
@@ -66,7 +132,7 @@ const PaymentStyle = StyleSheet.create({
     modeCardSelected: {
         borderColor: '#305797',
         borderWidth: 2,
-        backgroundColor: '#f7f9ff',
+        backgroundColor: '#f8faff',
     },
     radioCircle: {
         height: 20,
@@ -103,29 +169,24 @@ const PaymentStyle = StyleSheet.create({
         color: '#64748b',
         lineHeight: 18,
     },
-    // Frequency Picker (Dropdown replacement)
     pickerContainer: {
         marginTop: 15,
         backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: '#cbd5e1',
         borderRadius: 8,
-        padding: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    pickerLabel: {
-        fontFamily: "Montserrat_600SemiBold",
-        fontSize: 11,
-        color: '#1f2a44',
-        marginBottom: 5,
-    },
-    // Schedule Box
+
+    // --- SCHEDULE BOX ---
     scheduleBox: {
         backgroundColor: '#fff',
         borderRadius: 16,
-        padding: 15,
+        padding: 18,
         marginTop: 5,
         marginBottom: 20,
         borderWidth: 1,
@@ -134,121 +195,442 @@ const PaymentStyle = StyleSheet.create({
     },
     scheduleTitle: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 14,
+        fontSize: 15,
         color: '#1f2a44',
-        marginBottom: 10,
+        marginBottom: 12,
     },
     scheduleItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 8,
+        alignItems: 'center', // 🔥 NEW: Keeps them vertically centered
+        paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#f1f5f9',
     },
+    // 🔥 NEW: This stops the text from getting squished
+    scheduleInfoContainer: {
+        flex: 1, 
+        paddingRight: 10,
+    },
     scheduleLabel: {
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 12,
+        fontSize: 13,
         color: '#1f2a44',
+        flexShrink: 1, // 🔥 NEW: Ensures text can wrap if needed
     },
     scheduleDate: {
         fontFamily: "Roboto_400Regular",
         fontSize: 11,
         color: '#64748b',
+        marginTop: 2,
     },
     scheduleAmount: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 12,
+        fontSize: 13,
         color: '#305797',
+        textAlign: 'right', // 🔥 NEW: Pushes amount cleanly to the right
     },
     scheduleNote: {
-        fontSize: 10,
+        fontSize: 11,
         color: '#b54747',
         fontStyle: 'italic',
-        marginTop: 10,
+        marginTop: 12,
         textAlign: 'center',
     },
-    // Invoice Summary Card
-    invoiceCard: {
+
+    // --- INVOICE PREVIEW MODAL UI (FIXED SIZE) ---
+    invModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    invPaper: {
+        backgroundColor: '#fff',
+        width: '100%',
+        height: height * 0.85, // 🔥 UPDATED: Fixed height to match your first screenshot (85% of screen)
+        borderRadius: 8,
+        padding: 20,
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+    },
+    invCloseBtn: {
+        position: 'absolute',
+        top: -10,
+        right: -10,
+        zIndex: 10,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+    },
+    invHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginTop: 10,
+    },
+    invCompanyBlock: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 2,
+    },
+    invLogo: {
+        width: 60,
+        height: 40,
+        marginRight: 10,
+    },
+    invCompanyDetails: {
+        justifyContent: 'center',
+    },
+    invCompanyName: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 10,
+        color: '#333',
+        marginBottom: 2
+    },
+    invMutedText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 7.5,
+        color: '#555',
+        marginTop: 1.5,
+    },
+    invTitleBlock: {
+        flex: 1,
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+    },
+    invTitleText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#333',
+    },
+    invDivider: {
+        height: 2,
+        backgroundColor: '#374151',
+        marginVertical: 15,
+    },
+    invBillRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 20,
+    },
+    invBillTo: {
+        flex: 1,
+        paddingRight: 10,
+    },
+    invTinyLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 7,
+        color: '#777',
+        marginBottom: 4,
+    },
+    invCustomerName: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 10,
+        color: '#333',
+        marginBottom: 2,
+    },
+    invSummaryGrid: {
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        flex: 1.5,
+    },
+    invSummaryCol: {
+        flex: 1,
+        padding: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    invDarkBg: {
+        backgroundColor: '#374151',
+    },
+    invSummaryValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 8,
+        color: '#333',
+        marginTop: 4
+    },
+    invTable: {
+        marginBottom: 20,
+    },
+    invTableHeader: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+        paddingBottom: 5,
+        marginBottom: 5,
+    },
+    invTableRow: {
+        flexDirection: 'row',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
+    },
+    invCell: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 7.5,
+        color: '#333',
+    },
+    invFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    invBankInfo: {
+        flex: 1.5,
+        paddingRight: 10,
+    },
+    invTotalContainer: {
+        flex: 1,
+        alignItems: 'flex-end',
+    },
+    invTotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#333',
+        paddingVertical: 8,
+        marginBottom: 10,
+    },
+    invTotalLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 9,
+        color: '#333',
+    },
+    invTotalValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 9,
+        color: '#333',
+    },
+    invThankYou: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 8,
+        color: '#555',
+    },
+    invScheduleSection: {
+        marginTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
+        paddingTop: 15,
+    },
+    invScheduleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+        paddingVertical: 6,
+    },
+    invScheduleLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 8,
+        color: '#333',
+    },
+    invScheduleAmount: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 9,
+        color: '#305797',
+    },
+    invScheduleNote: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 7,
+        fontStyle: 'italic',
+        color: '#b54747',
+        marginTop: 8,
+    },
+    // --- PAYMENT METHOD (SCREEN 2) SPECIFIC STYLES ---
+    // These replace modeCard for Screen 2 so it doesn't conflict with Screen 1
+    methodGridContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginBottom: 20,
+    },
+    methodGridCard: {
+        flex: 1,
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
-        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        minHeight: 190,
+        flexDirection: 'column', // Ensures text stacks vertically under the radio
         elevation: 2,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
     },
-    invoiceRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
+    methodGridCardSelected: {
+        borderColor: '#305797',
+        borderWidth: 2,
+        backgroundColor: '#f4f8ff', 
     },
-    invoiceLabel: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 12,
-        color: '#64748b',
+    methodRadioHeader: {
+        alignItems: 'center', // Centers the radio button like the web version
+        marginBottom: 12,
+        paddingTop: 5,
     },
-    invoiceValue: {
-        fontFamily: "Montserrat_700Bold",
-        fontSize: 12,
-        color: '#1f2a44',
-        flex: 1,
-        textAlign: 'right',
+    
+    // --- BANK GRID STYLES ---
+    manualBankSection: {
+        marginTop: 10,
     },
-    invoiceTotal: {
-        fontSize: 16,
-        color: '#305797',
-        marginTop: 5,
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#f1f5f9',
-    },
-    // Bank Grid
     bankGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 10,
+        justifyContent: 'space-between',
         marginBottom: 20,
     },
-    bankItem: {
+    bankGridCard: {
         width: '48%',
         backgroundColor: '#fff',
+        borderRadius: 10,
         padding: 12,
-        borderRadius: 12,
+        marginBottom: 12,
         borderWidth: 1,
         borderColor: '#e2e8f0',
+        elevation: 2,
     },
     bankName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 11,
+        fontSize: 13,
         color: '#305797',
         marginBottom: 4,
     },
     bankAccount: {
-        fontFamily: "Roboto_500Medium",
-        fontSize: 11,
-        color: '#1f2a44',
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#1e293b',
+        letterSpacing: 1,
     },
     bankHolder: {
-        fontSize: 9,
-        color: '#64748b',
-        marginTop: 2,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 8,
+        color: '#94a3b8',
+        marginTop: 4,
+        textTransform: 'uppercase',
     },
-    // Success View
+
+    // --- UPLOAD SECTION STYLES ---
+    uploadSection: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    uploadTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
+        color: '#1f2a44',
+        marginBottom: 6,
+    },
+    uploadSubtitle: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 11,
+        color: '#64748b',
+        lineHeight: 16,
+    },
+    uploadConstraints: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 10,
+        color: '#94a3b8',
+        marginTop: 8,
+    },
+    verificationNote: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 10,
+        color: '#ef4444',
+        fontStyle: 'italic',
+        marginTop: 12,
+        lineHeight: 15,
+    },
+    selectImageBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#305797',
+        borderRadius: 6,
+        paddingVertical: 10,
+        marginTop: 15,
+        gap: 8,
+    },
+    selectImageBtnText: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 13,
+        color: '#fff',
+    },
+    imagePreviewContainer: {
+        marginTop: 20,
+    },
+    previewImageLabel: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 12,
+        color: '#1f2a44',
+        marginBottom: 8,
+    },
+    previewImageBox: {
+        width: '100%',
+        minHeight: 100,
+        backgroundColor: '#f8fafc',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    imageWrapper: {
+        width: '100%',
+        height: 200,
+        position: 'relative',
+    },
+    previewSelectedImage: {
+        width: '100%',
+        height: '100%',
+    },
+    removeImageBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 5,
+        elevation: 3,
+    },
+    noImageText: {
+        color: '#94a3b8',
+        fontSize: 12,
+        fontFamily: "Roboto_400Regular",
+    },
+    // --- PAYMENT SUCCESS SCREEN ---
     successContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 30,
-        backgroundColor: '#fff',
+        padding: 24,
+        backgroundColor: '#f8fafc',
+    },
+    successIconWrapper: {
+        backgroundColor: '#e6fcf5',
+        padding: 24,
+        borderRadius: 65,
+        marginBottom: 24,
+        elevation: 2,
+        shadowColor: "#0ca678",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
     },
     successTitle: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 22,
+        fontSize: 24,
         color: '#1f2a44',
-        marginTop: 20,
-        marginBottom: 10,
+        textAlign: 'center',
+        marginBottom: 12,
     },
     successDesc: {
         fontFamily: "Roboto_400Regular",
@@ -256,26 +638,43 @@ const PaymentStyle = StyleSheet.create({
         color: '#64748b',
         textAlign: 'center',
         lineHeight: 22,
-        marginBottom: 30,
+        paddingHorizontal: 10,
+        marginBottom: 35,
     },
     refBox: {
-        backgroundColor: '#f1f5f9',
-        padding: 15,
-        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 16,
+        paddingVertical: 24,
         width: '100%',
         alignItems: 'center',
         marginBottom: 40,
+        elevation: 1,
     },
     refLabel: {
-        fontSize: 12,
-        color: '#64748b',
-        marginBottom: 5,
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 11,
+        color: '#94a3b8',
+        letterSpacing: 1.5,
+        marginBottom: 8,
     },
     refText: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18,
+        fontSize: 22,
         color: '#305797',
-        letterSpacing: 1,
+        letterSpacing: 2,
+    },
+    backTextButton: {
+        paddingVertical: 15,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    backText: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 14,
+        color: '#64748b',
     }
 });
 

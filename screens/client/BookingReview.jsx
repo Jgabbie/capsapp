@@ -12,12 +12,13 @@ export default function BookingReview({ route, navigation }) {
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
 
-    // 🔥 ADDED: Determine if Visa is required based on the database schema
-    const requiresVisa = Boolean(
-        pkg?.requiresVisa ??
-        pkg?.packageRequiresVisa ??
-        pkg?.visaRequired
-    );
+    // 🔥 FIX: Properly check for "Yes", "true", or boolean true
+    const rawVisaValue = pkg?.requiresVisa ?? pkg?.packageRequiresVisa ?? pkg?.visaRequired;
+    const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
+
+    // 🔥 NEW: Check if it's a domestic package to dynamically change the button text
+    const isDomestic = String(pkg?.packageType || '').toLowerCase().includes('domestic');
+    const documentLabel = isDomestic ? 'Valid ID' : 'Passport';
 
     const handleNext = () => {
         // Move to Screen 3: Uploads
@@ -34,7 +35,6 @@ export default function BookingReview({ route, navigation }) {
                 
                 <View style={BookingReviewStyle.headerGroup}>
                     <Text style={QuotationAllInStyle.mainTitle}>Review Package</Text>
-                    {/* UPDATED TEXT */}
                     <Text style={QuotationAllInStyle.subtitle}>Review the day-by-day schedule and what your package covers.</Text>
                 </View>
 
@@ -96,7 +96,7 @@ export default function BookingReview({ route, navigation }) {
                         </View>
                     </View>
 
-                    {/* --- 🔥 NEW: Visa Requirement Card --- */}
+                    {/* --- Visa Requirement Card --- */}
                     <View style={[BookingReviewStyle.policyCard, { marginTop: 20 }]}>
                         <Text style={BookingReviewStyle.policyTitle}>Visa Requirement</Text>
                         <Text style={BookingReviewStyle.policyText}>
@@ -106,7 +106,7 @@ export default function BookingReview({ route, navigation }) {
                         </Text>
                     </View>
 
-                    {/* --- 🔥 NEW: Cancellation Policy Card --- */}
+                    {/* --- Cancellation Policy Card --- */}
                     <View style={[BookingReviewStyle.policyCard, { marginTop: 16 }]}>
                         <Text style={BookingReviewStyle.policyTitle}>Cancellation Policy</Text>
                         <Text style={BookingReviewStyle.policyText}>
@@ -115,13 +115,14 @@ export default function BookingReview({ route, navigation }) {
                     </View>
                 </View>
 
-                {/* --- NEW COMPACT FOOTER NAVIGATION --- */}
+                {/* --- COMPACT FOOTER NAVIGATION --- */}
                 <View style={BookingReviewStyle.footerContainer}>
                     <TouchableOpacity 
                         style={BookingReviewStyle.smallProceedButton}
                         onPress={handleNext}
                     >
-                        <Text style={BookingReviewStyle.smallProceedButtonText}>Next: Upload Documents</Text>
+                        {/* 🔥 UPDATED: Dynamic document label */}
+                        <Text style={BookingReviewStyle.smallProceedButtonText}>Next: Upload {documentLabel}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 

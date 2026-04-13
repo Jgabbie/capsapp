@@ -247,6 +247,11 @@ export default function PackageDetails({ route, navigation }) {
         );
     }
 
+    // 🔥 NEW: Calculate if the package is completely sold out
+    const totalSlots = fullPkg.packageAvailableSlots ?? fullPkg.slots ?? 
+        (fullPkg.packageSpecificDate || []).reduce((sum, dateObj) => sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0), 0);
+    const isPackageSoldOut = totalSlots <= 0 || fullPkg.availability === 'Sold out';
+
     return (
         <View style={DestinationStyles.detailsContainer}>
             <Header openSidebar={() => setSidebarVisible(true)} />
@@ -266,9 +271,20 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.priceValue}>{formatPeso(fullPkg.price)}</Text>
                                 <Text style={{fontSize: 10, color: '#777'}}>/ Pax</Text>
                             </View>
-                            <TouchableOpacity style={DestinationStyles.availabilityButton} onPress={handlePrimaryAction}>
-                                <Text style={DestinationStyles.availabilityText}>
-                                    {fullPkg.isInternational ? "Check Availability" : "Get Quotation"}
+                            {/* 🔥 UPDATED: Check Availability Button */}
+                            <TouchableOpacity 
+                                style={[
+                                    DestinationStyles.availabilityButton,
+                                    isPackageSoldOut && { backgroundColor: '#cbd5e1', borderColor: '#cbd5e1' }
+                                ]} 
+                                onPress={handlePrimaryAction}
+                                disabled={isPackageSoldOut}
+                            >
+                                <Text style={[
+                                    DestinationStyles.availabilityText,
+                                    isPackageSoldOut && { color: '#64748b' }
+                                ]}>
+                                    {isPackageSoldOut ? "Sold Out" : "Check Availability"}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -567,51 +583,75 @@ export default function PackageDetails({ route, navigation }) {
                             </Text>
                         </View>
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            {(fullPkg?.packageSpecificDate || []).length > 0 ? (
-                                (fullPkg.packageSpecificDate).map((range, index) => {
-                                    const isSelected = selectedSchedule === range;
-                                    const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
-                                    
-                                    return (
-                                        <TouchableOpacity 
-                                            key={index}
-                                            style={[DestinationStyles.dateCard, isSelected && DestinationStyles.dateCardSelected]}
-                                            onPress={() => setSelectedSchedule(range)}
-                                            activeOpacity={0.8}
-                                        >
-                                            {isSelected && (
-                                                <View style={DestinationStyles.selectedBadge}>
-                                                    <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
-                                                </View>
-                                            )}
-                                            <View style={DestinationStyles.dateRow}>
-                                                <Ionicons name="calendar-outline" size={18} color="#305797" />
-                                                <Text style={DestinationStyles.dateText}>
-                                                    Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
-                                                </Text>
-                                            </View>
-                                            <View style={DestinationStyles.priceRowDate}>
-                                                <Text style={DestinationStyles.priceTextDate}>
-                                                    {formatPeso(cardPrice)} / pax
-                                                </Text>
-                                                <View style={DestinationStyles.slotsBadge}>
-                                                    <Text style={[
-                                                        DestinationStyles.slotsBadgeText, 
-                                                        range.slots <= 10 && { color: '#b91c1c' } // 👇 ADD THIS LINE for the red warning
-                                                    ]}>
-                                                        {range.slots} slots left
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                        </TouchableOpacity>
-                                    );
-                                })
-                            ) : (
-                                <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
-                                    No available dates for this package.
+    {(fullPkg?.packageSpecificDate || []).length > 0 ? (
+        (fullPkg.packageSpecificDate).map((range, index) => {
+            const isSelected = selectedSchedule === range;
+            const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
+            
+            // 🔥 NEW: Determine if the card should be completely disabled
+            const isSoldOut = range.slots <= 0;
+            
+            return (
+                <TouchableOpacity 
+                    key={index}
+                    // 🔥 NEW: Add the disabled prop and a conditional style for greyed-out look
+                    disabled={isSoldOut}
+                    style={[
+                        DestinationStyles.dateCard, 
+                        isSelected && DestinationStyles.dateCardSelected,
+                        isSoldOut && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' } 
+                    ]}
+                    // 🔥 NEW: Prevent selection if sold out
+                    onPress={() => {
+                        if (!isSoldOut) {
+                            setSelectedSchedule(range);
+                        }
+                    }}
+                    activeOpacity={isSoldOut ? 1 : 0.8}
+                >
+                    {isSelected && (
+                        <View style={DestinationStyles.selectedBadge}>
+                            <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
+                        </View>
+                    )}
+                    <View style={DestinationStyles.dateRow}>
+                        <Ionicons name="calendar-outline" size={18} color={isSoldOut ? "#9ca3af" : "#305797"} />
+                        <Text style={[DestinationStyles.dateText, isSoldOut && { color: '#9ca3af' }]}>
+                            Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
+                        </Text>
+                    </View>
+                    <View style={DestinationStyles.priceRowDate}>
+                        <Text style={[
+                            DestinationStyles.priceTextDate, 
+                            isSoldOut && { color: '#9ca3af' }
+                        ]}>
+                            {formatPeso(fullPkg.price || 0)} / pax
+                            {range.extrarate > 0 && (
+                                <Text style={{ color: isSoldOut ? '#9ca3af' : '#64748b', fontSize: 12 }}>
+                                    {` + ${formatPeso(range.extrarate)} extra`}
                                 </Text>
                             )}
-                        </ScrollView>
+                        </Text>
+                        <View style={DestinationStyles.slotsBadge}>
+                            {/* 🔥 UPDATED: Keep the red warning text for 10 or below, but handle 0 separately */}
+                            <Text style={[
+                                DestinationStyles.slotsBadgeText, 
+                                (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
+                                isSoldOut && { color: '#9ca3af', fontWeight: 'bold' } 
+                            ]}>
+                                {isSoldOut ? "Sold Out" : `${range.slots} slots left`}
+                            </Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            );
+        })
+    ) : (
+        <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
+            No available dates for this package.
+        </Text>
+    )}
+</ScrollView>
 
                         <View style={DestinationStyles.selectionFooter}>
                             <Text style={DestinationStyles.selectionFooterText}>

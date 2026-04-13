@@ -13,16 +13,17 @@ export default function PaymentSuccess({ route, navigation }) {
             <StatusBar barStyle="dark-content" />
             <View style={PaymentStyle.successContainer}>
                 
-                <View style={{backgroundColor: '#e6fcf5', padding: 20, borderRadius: 50}}>
+                <View style={PaymentStyle.successIconWrapper}>
                     <Ionicons name="checkmark-circle" size={80} color="#0ca678" />
                 </View>
 
-                <Text style={PaymentStyle.successTitle}>Booking Successful!</Text>
+                <Text style={PaymentStyle.successTitle}>Booking Secured!</Text>
                 
                 <Text style={PaymentStyle.successDesc}>
                     {mode === 'manual' 
                         ? "Your booking request and proof of payment have been submitted. Our team will verify it within 1-2 business days."
-                        : "Your payment has been processed successfully. You can now view your itinerary in your bookings."
+                        // 🔥 UPDATED ONLINE TEXT 🔥
+                        : "Your booking is saved! Please complete your payment in the browser. Once paid, your itinerary will be fully confirmed in your bookings."
                     }
                 </Text>
 
@@ -33,18 +34,16 @@ export default function PaymentSuccess({ route, navigation }) {
 
                 <TouchableOpacity 
                     style={[QuotationAllInStyle.proceedButton, {width: '100%'}]}
-                    // 🔥 Fixed: Direct navigation to the "userbookings" screen defined in App.jsx
                     onPress={() => navigation.navigate("userbookings")}
                 >
                     <Text style={QuotationAllInStyle.proceedButtonText}>View My Bookings</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                    style={[PaymentStyle.backTextButton, {marginTop: 10}]}
-                    // 🔥 Fixed: Direct navigation to the "home" screen defined in App.jsx
+                    style={PaymentStyle.backTextButton}
                     onPress={() => navigation.navigate("home")}
                 >
-                    <Text style={[PaymentStyle.backText, {color: '#305797'}]}>Return to Home</Text>
+                    <Text style={PaymentStyle.backText}>Return to Home</Text>
                 </TouchableOpacity>
 
             </View>

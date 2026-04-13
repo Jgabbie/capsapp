@@ -34,6 +34,10 @@ export default function RegistrationStep1({ route, navigation }) {
                        (setupData?.travelerCounts?.child || 0) + 
                        (setupData?.travelerCounts?.infant || 0);
 
+    // 🔥 NEW: Check if it's a domestic package
+    const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
+    const isDomestic = String(packageType).toLowerCase().includes('domestic');
+
     // 🔥 NEW: State to hold the full fetched user profile
     const [fullUserData, setFullUserData] = useState(null);
 
@@ -109,9 +113,16 @@ export default function RegistrationStep1({ route, navigation }) {
         }
     }, [fullUserData, userTitle, userContact, userAddress, travelersData]);
 
-    const isTableIncomplete = passengers.some(p => 
-        !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age || !p.passport || !p.expiry
-    );
+    // 🔥 UPDATED: Only check passport fields if the package is International
+    const isTableIncomplete = passengers.some(p => {
+        const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
+        
+        if (isDomestic) {
+            return missingBasicInfo; // Passes if basic info is complete
+        } else {
+            return missingBasicInfo || !p.passport || !p.expiry; // Fails if passport info is missing on International
+        }
+    });
 
     const handleNext = () => {
         if (!leadGuestInfo.title || !leadGuestInfo.contact || !leadGuestInfo.address) {

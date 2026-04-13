@@ -1,23 +1,31 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle'; // Reusing modal style
+import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle'; 
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import { useUser } from '../../context/UserContext';
 
-const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+// For "73,539.20" format inside the invoice
+const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// For standard "₱73,539.20" outside the invoice
+const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 
 export default function PaymentMode({ route, navigation }) {
+    const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [paymentType, setPaymentType] = useState('full'); // 'deposit' or 'full'
+    const [paymentType, setPaymentType] = useState('deposit'); // Default to deposit to match web
     const [frequency, setFrequency] = useState('Every 2 weeks');
     const [showFreqDropdown, setShowFreqDropdown] = useState(false);
+    
+    // State for the Invoice Preview Modal
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
     const travelerTotal = useMemo(() => {
         const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
@@ -26,7 +34,7 @@ export default function PaymentMode({ route, navigation }) {
 
     const totalAmount = setupData?.totalPrice || 0;
 
-    // --- Calculation Logic (Ported from Web) ---
+   // --- SYNCED WEB CALCULATION LOGIC ---
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;
@@ -36,27 +44,47 @@ export default function PaymentMode({ route, navigation }) {
 
         const freqWeeks = getFrequencyWeeks(frequency);
         const today = dayjs();
-        // Web logic: deposit is per pax
-        const depositAmount = (setupData?.pkg?.packageDeposit || 5000) * travelerTotal;
+        
+        // 1. Get the Start Date (Mobile passes it as a string "Month DD, YYYY - Month DD, YYYY")
+        const startDateString = setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null;
+        const travelDateComputation = startDateString ? dayjs(startDateString) : today;
+
+        // 2. Cutoff Logic: Whichever is earlier, Travel Date or 45 days from now
+        const maxAllowedDate = today.add(45, 'day');
+        const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
+            ? travelDateComputation
+            : maxAllowedDate;
+
+        // 3. Base Amounts
+        const depositAmount = (setupData?.pkg?.packageDeposit || 0) * travelerTotal;
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
         
-        // Window: 45 days from today (as per web code)
-        const dueCutoffDate = today.add(45, 'day');
-        const installmentWindowDays = dueCutoffDate.diff(today, 'day');
-        const installmentCount = Math.max(Math.floor(installmentWindowDays / (freqWeeks * 7)), 1);
+        // 4. Web's Exact While-Loop Logic
+        const paymentDates = [];
+        let nextDate = dayjs(today).add(freqWeeks, 'week');
+
+        while (nextDate.isBefore(dueCutoffDate) || nextDate.isSame(dueCutoffDate)) {
+            paymentDates.push(nextDate);
+            nextDate = nextDate.add(freqWeeks, 'week');
+        }
+
+        // 5. Fallback if no dates fit before cutoff
+        if (paymentDates.length === 0) {
+            paymentDates.push(dueCutoffDate.subtract(1, 'day'));
+        }
+
+        const installmentCount = paymentDates.length;
         const installmentAmount = installmentCount ? remainingAmount / installmentCount : 0;
 
+        // 6. Build the final schedule array
         const schedule = [
             { label: 'Deposit', amount: depositAmount, date: today },
-        ];
-
-        for (let i = 0; i < installmentCount; i++) {
-            schedule.push({
-                label: `Installment ${i + 1}`,
+            ...paymentDates.map((date, index) => ({
+                label: `Installment ${index + 1}`,
                 amount: installmentAmount,
-                date: today.add(freqWeeks * (i + 1), 'week')
-            });
-        }
+                date: date
+            }))
+        ];
 
         return { schedule, depositAmount };
     }, [frequency, travelerTotal, totalAmount, setupData]);
@@ -72,6 +100,14 @@ export default function PaymentMode({ route, navigation }) {
             fullSchedule: scheduleData.schedule 
         });
     };
+
+    // --- Invoice Derived Data ---
+    const issueDate = dayjs();
+    const lastInstallmentDate = scheduleData.schedule[scheduleData.schedule.length - 1].date;
+    const amountToCharge = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
+    const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
+    const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
+    const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
 
     return (
         <SafeAreaView style={PaymentStyle.safeArea}>
@@ -90,24 +126,31 @@ export default function PaymentMode({ route, navigation }) {
                     <View style={PaymentStyle.progressStep}><Text style={[PaymentStyle.progressText, {color: '#64748b'}]}>2</Text></View>
                 </View>
 
-                {/* --- INVOICE SUMMARY --- */}
-                <View style={PaymentStyle.invoiceCard}>
-                    <View style={PaymentStyle.invoiceRow}>
-                        <Text style={PaymentStyle.invoiceLabel}>Package:</Text>
-                        <Text style={PaymentStyle.invoiceValue} numberOfLines={1}>{setupData?.pkg?.title}</Text>
+                {/* PREVIEW BUTTON CONTAINER */}
+                <View style={PaymentStyle.previewButtonContainer}>
+                    <View style={PaymentStyle.previewHeader}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={PaymentStyle.previewLabel}>Package:</Text>
+                            <Text style={PaymentStyle.previewValue} numberOfLines={1}>{setupData?.pkg?.title?.toUpperCase() || 'TOUR PACKAGE'}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={PaymentStyle.previewLabel}>Travelers:</Text>
+                            <Text style={PaymentStyle.previewValue}>{travelerTotal} Person(s)</Text>
+                        </View>
                     </View>
-                    <View style={PaymentStyle.invoiceRow}>
-                        <Text style={PaymentStyle.invoiceLabel}>Travelers:</Text>
-                        <Text style={PaymentStyle.invoiceValue}>{travelerTotal} Person(s)</Text>
+                    <View style={PaymentStyle.previewTotalRow}>
+                        <Text style={PaymentStyle.previewTotalLabel}>GRAND TOTAL:</Text>
+                        <Text style={PaymentStyle.previewTotalAmount}>{formatPeso(totalAmount)}</Text>
                     </View>
-                    <View style={[PaymentStyle.invoiceRow, PaymentStyle.invoiceTotal]}>
-                        <Text style={[PaymentStyle.invoiceLabel, {fontFamily: "Montserrat_700Bold", color: '#1f2a44'}]}>GRAND TOTAL:</Text>
-                        <Text style={[PaymentStyle.invoiceValue, {fontSize: 16, color: '#305797'}]}>{formatPeso(totalAmount)}</Text>
-                    </View>
+                    <TouchableOpacity style={PaymentStyle.previewBtn} onPress={() => setShowInvoiceModal(true)}>
+                        <Ionicons name="document-text-outline" size={18} color="#305797" />
+                        <Text style={PaymentStyle.previewBtnText}>Preview Booking Invoice</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* --- DEPOSIT CARD --- */}
                 <TouchableOpacity 
+                    activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'deposit' && PaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('deposit')}
                 >
@@ -120,7 +163,7 @@ export default function PaymentMode({ route, navigation }) {
                         
                         {paymentType === 'deposit' && (
                             <TouchableOpacity style={PaymentStyle.pickerContainer} onPress={() => setShowFreqDropdown(true)}>
-                                <Text style={{fontSize: 13}}>{frequency}</Text>
+                                <Text style={{fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44'}}>{frequency}</Text>
                                 <Ionicons name="chevron-down" size={18} color="#64748b" />
                             </TouchableOpacity>
                         )}
@@ -129,6 +172,7 @@ export default function PaymentMode({ route, navigation }) {
 
                 {/* --- FULL PAYMENT CARD --- */}
                 <TouchableOpacity 
+                    activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'full' && PaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('full')}
                 >
@@ -146,15 +190,16 @@ export default function PaymentMode({ route, navigation }) {
                     <View style={PaymentStyle.scheduleBox}>
                         <Text style={PaymentStyle.scheduleTitle}>Payment Schedule</Text>
                         {scheduleData.schedule.map((item, idx) => (
-                            <View key={idx} style={PaymentStyle.scheduleItem}>
-                                <View>
-                                    <Text style={PaymentStyle.scheduleLabel}>{item.label}</Text>
-                                    <Text style={PaymentStyle.scheduleDate}>{item.date.format('MMM DD, YYYY')}</Text>
-                                </View>
-                                <Text style={PaymentStyle.scheduleAmount}>{formatPeso(item.amount)}</Text>
-                            </View>
-                        ))}
-                        <Text style={PaymentStyle.scheduleNote}>* A penalty of ₱500 applies for late deposit payments.</Text>
+    <View key={idx} style={PaymentStyle.scheduleItem}>
+        {/* 🔥 UPDATED: Added the new style here */}
+        <View style={PaymentStyle.scheduleInfoContainer}>
+            <Text style={PaymentStyle.scheduleLabel}>{item.label}</Text>
+            <Text style={PaymentStyle.scheduleDate}>{item.date.format('MMM DD, YYYY')}</Text>
+        </View>
+        <Text style={PaymentStyle.scheduleAmount}>{formatPeso(item.amount)}</Text>
+    </View>
+))}
+                        <Text style={PaymentStyle.scheduleNote}>Note: A penalty of PHP 500 applies for late deposit payments.</Text>
                     </View>
                 )}
 
@@ -165,7 +210,7 @@ export default function PaymentMode({ route, navigation }) {
                 <View style={{height: 50}} />
             </ScrollView>
 
-            {/* Frequency Dropdown Modal */}
+            {/* FREQUENCY DROPDOWN MODAL */}
             <Modal visible={showFreqDropdown} transparent animationType="fade">
                 <TouchableOpacity style={RegistrationFormStyle.modalOverlay} activeOpacity={1} onPress={() => setShowFreqDropdown(false)}>
                     <View style={RegistrationFormStyle.dropdownBox}>
@@ -177,6 +222,122 @@ export default function PaymentMode({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            {/* INVOICE PREVIEW MODAL */}
+            <Modal visible={showInvoiceModal} animationType="slide" transparent={true}>
+                <View style={PaymentStyle.invModalOverlay}>
+                    <SafeAreaView style={{ flex: 1, width: '100%', padding: 15, justifyContent: 'center' }}>
+                        
+                        <View style={PaymentStyle.invPaper}>
+                            <TouchableOpacity style={PaymentStyle.invCloseBtn} onPress={() => setShowInvoiceModal(false)}>
+                                <Ionicons name="close-circle" size={28} color="#b54747" />
+                            </TouchableOpacity>
+
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {/* Header */}
+                                <View style={PaymentStyle.invHeader}>
+                                    <View style={PaymentStyle.invCompanyBlock}>
+                                        <Image source={require('../../assets/images/Logored.png')} style={PaymentStyle.invLogo} resizeMode="contain" />
+                                        <View style={PaymentStyle.invCompanyDetails}>
+                                            <Text style={PaymentStyle.invCompanyName}>M&RC Travel and Tours</Text>
+                                            <Text style={PaymentStyle.invMutedText}>2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1</Text>
+                                            <Text style={PaymentStyle.invMutedText}>Parañaque City, Philippines</Text>
+                                            <Text style={PaymentStyle.invMutedText}>1709 PHL</Text>
+                                            <Text style={PaymentStyle.invMutedText}>+63 9690554806</Text>
+                                            <Text style={PaymentStyle.invMutedText}>info1@mrctravels.com</Text>
+                                        </View>
+                                    </View>
+                                    <View style={PaymentStyle.invTitleBlock}>
+                                        <Text style={PaymentStyle.invTitleText}>Invoice {issueDate.format('MM')}01</Text>
+                                    </View>
+                                </View>
+
+                                <View style={PaymentStyle.invDivider} />
+
+                                {/* Bill To & Summary Grid */}
+                                <View style={PaymentStyle.invBillRow}>
+                                    <View style={PaymentStyle.invBillTo}>
+                                        <Text style={PaymentStyle.invTinyLabel}>BILL TO</Text>
+                                        <Text style={PaymentStyle.invCustomerName}>{customerName.toUpperCase()}</Text>
+                                        <Text style={PaymentStyle.invMutedText}>{leadGuestInfo?.contact || user?.phonenum || '--'}</Text>
+                                    </View>
+                                    <View style={PaymentStyle.invSummaryGrid}>
+                                        <View style={PaymentStyle.invSummaryCol}>
+                                            <Text style={PaymentStyle.invTinyLabel}>DATE</Text>
+                                            <Text style={PaymentStyle.invSummaryValue}>{issueDate.format('MM/DD/YYYY')}</Text>
+                                        </View>
+                                        <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
+                                            <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>PLEASE PAY</Text>
+                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 10}]}>PHP {formatPesoNumber(amountToCharge)}</Text>
+                                        </View>
+                                        <View style={PaymentStyle.invSummaryCol}>
+                                            <Text style={PaymentStyle.invTinyLabel}>DUE DATE</Text>
+                                            <Text style={PaymentStyle.invSummaryValue}>{dueDateDisplay.format('MM/DD/YYYY')}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                {/* Line Items Table */}
+                                <View style={PaymentStyle.invTable}>
+                                    <View style={PaymentStyle.invTableHeader}>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>DATE</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>ACTIVITY</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]}>DESCRIPTION</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>QTY</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
+                                    </View>
+                                    <View style={PaymentStyle.invTableRow}>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{setupData?.pkg?.title}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>{formatPesoNumber(ratePerPax)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>{formatPesoNumber(totalAmount)}</Text>
+                                    </View>
+                                </View>
+
+                                {/* Footer Bank Details */}
+                                <View style={PaymentStyle.invFooter}>
+                                    <View style={PaymentStyle.invBankInfo}>
+                                        <Text style={[PaymentStyle.invMutedText, {marginBottom: 10}]}>Payment to be deposited in below bank details:</Text>
+                                        <Text style={PaymentStyle.invTinyLabel}>PESO ACCOUNT:</Text>
+                                        <Text style={PaymentStyle.invMutedText}>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</Text>
+                                        <Text style={PaymentStyle.invMutedText}>ACCOUNT NAME: M&RC TRAVEL AND TOURS</Text>
+                                        <Text style={PaymentStyle.invMutedText}>ACCOUNT NUMBER: 006830132692</Text>
+                                    </View>
+                                    <View style={PaymentStyle.invTotalContainer}>
+                                        <View style={PaymentStyle.invTotalRow}>
+                                            <Text style={PaymentStyle.invTotalLabel}>TOTAL DUE</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(totalAmount)}</Text>
+                                        </View>
+                                        <Text style={PaymentStyle.invThankYou}>THANK YOU.</Text>
+                                    </View>
+                                </View>
+
+                                {/* Payment Schedule */}
+                                {paymentType === 'deposit' && (
+                                    <View style={PaymentStyle.invScheduleSection}>
+                                        <Text style={[PaymentStyle.invCustomerName, {marginBottom: 8, fontSize: 10}]}>Payment Schedule</Text>
+                                        {scheduleData.schedule.map((item, idx) => (
+                                            <View key={idx} style={PaymentStyle.invScheduleRow}>
+                                                <Text style={PaymentStyle.invScheduleLabel}>
+                                                    {item.label}
+                                                    {'\n'}
+                                                    <Text style={{fontSize: 7, color: '#777', fontWeight: 'normal'}}>{item.date.format('MM/DD/YYYY')}</Text>
+                                                </Text>
+                                                <Text style={PaymentStyle.invScheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
+                                            </View>
+                                        ))}
+                                        <Text style={PaymentStyle.invScheduleNote}>Note: A penalty of PHP 500 applies for late deposit payments.</Text>
+                                    </View>
+                                )}
+                            </ScrollView>
+                        </View>
+                    </SafeAreaView>
+                </View>
+            </Modal>
+
         </SafeAreaView>
     );
 }
