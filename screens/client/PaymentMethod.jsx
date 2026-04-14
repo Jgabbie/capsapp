@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Linking from 'expo-linking'; // 🔥 Used for opening browser AND creating return deep links
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
@@ -15,17 +16,19 @@ export default function PaymentMethod({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     
-    // Data passed from PaymentMode
+    // Custom Modal State
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+    
     const { setupData, amountToPay, paymentType, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [method, setMethod] = useState('paymongo'); // 'paymongo' or 'manual'
+    const [method, setMethod] = useState('paymongo'); 
     const [proofImage, setProofImage] = useState(null);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            base64: true, // Needed for backend
+            base64: true,
             quality: 0.5,
         });
 
@@ -34,12 +37,19 @@ export default function PaymentMethod({ route, navigation }) {
         }
     };
 
-    const handleProceed = async () => {
+    // Triggered when "Confirm & Proceed" is clicked at the bottom
+    const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
             Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
             return;
         }
+        // Open the custom modal
+        setIsProceedModalOpen(true);
+    };
 
+    // Triggered when "Proceed" is clicked INSIDE the modal
+    const executePaymentFlow = async () => {
+        setIsProceedModalOpen(false); // Close the modal
         setLoading(true);
 
         try {
@@ -66,7 +76,8 @@ export default function PaymentMethod({ route, navigation }) {
                 navigation.navigate("paymentsuccess", { reference: response.data.bookingId || response.data.reference, mode: 'manual' });
 
             } else {
-                // 1. CREATE BOOKING FIRST AS "PENDING"
+                // ONLINE FLOW
+                // 1. Create booking FIRST as PENDING (Not paid)
                 const checkoutTokenTemp = `mobile-tok-${Date.now()}`;
                 const finalBookingPayload = {
                     packageId: setupData.pkg._id || setupData.pkg.id,
@@ -83,7 +94,14 @@ export default function PaymentMethod({ route, navigation }) {
                 const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
 
-                // 2. GET PAYMONGO URL
+                // 🔥 2. Dynamically create Deep Links for the Return to Merchant button
+                // This ensures it works flawlessly on both Expo Go and Standalone Apps
+                const successDeepLink = Linking.createURL('paymentsuccess', { 
+                    queryParams: { reference: bookingRef, mode: 'online' } 
+                });
+                const cancelDeepLink = Linking.createURL('paymentmethod');
+
+                // 3. Send payload to PayMongo
                 const paymentPayload = {
                     bookingId: newBookingId,
                     bookingReference: bookingRef,
@@ -93,20 +111,19 @@ export default function PaymentMethod({ route, navigation }) {
                     travelers: calculatedTravelers, 
                     leadEmail: user.email,
                     leadContact: leadGuestInfo?.contact || '', 
-                    // 🔥 CRITICAL FIX: The deep link brings the user back directly to the Success screen when they click "Return to Merchant" in Chrome
-                    successUrl: `exp://192.168.254.103:8081/--/paymentsuccess?reference=${bookingRef}&mode=online`,
-                    cancelUrl: `exp://192.168.254.103:8081/--/paymentmethod`,
+                    successUrl: successDeepLink, // Sent to PayMongo!
+                    cancelUrl: cancelDeepLink,
                 };
 
                 const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                 const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
-                setLoading(false); 
+                setLoading(false); // Stop loading, we are done saving!
 
                 if (checkoutUrl) {
-                    // 3. OPEN REAL BROWSER
-                    // The app stays exactly where it is. It does NOT navigate.
-                    // If they close the browser without paying, nothing happens, they stay on Payment Method.
+                    // 4. Open Real Browser. 
+                    // NOTICE: There is NO navigation.navigate here. The app stays on this screen!
+                    // If they close the browser, they stay right here. The booking is safely in DB as Pending.
                     Linking.openURL(checkoutUrl);
                 }
             }
@@ -135,7 +152,6 @@ export default function PaymentMethod({ route, navigation }) {
 
                 {/* --- HORIZONTAL CARDS (WEB-STYLE) --- */}
                 <View style={PaymentStyle.methodGridContainer}>
-                    {/* PAYMONGO CARD */}
                     <TouchableOpacity 
                         style={[PaymentStyle.methodGridCard, method === 'paymongo' && PaymentStyle.methodGridCardSelected]}
                         onPress={() => setMethod('paymongo')}
@@ -153,7 +169,6 @@ export default function PaymentMethod({ route, navigation }) {
                         </Text>
                     </TouchableOpacity>
 
-                    {/* MANUAL CARD */}
                     <TouchableOpacity 
                         style={[PaymentStyle.methodGridCard, method === 'manual' && PaymentStyle.methodGridCardSelected]}
                         onPress={() => setMethod('manual')}
@@ -175,8 +190,6 @@ export default function PaymentMethod({ route, navigation }) {
                 {method === 'manual' && (
                     <View style={PaymentStyle.manualBankSection}>
                         <Text style={[PaymentStyle.sectionTitle, {fontSize: 16, marginBottom: 12}]}>Available Bank Accounts</Text>
-                        
-                        {/* --- BANK ACCOUNTS GRID --- */}
                         <View style={PaymentStyle.bankGrid}>
                             {[
                                 { name: 'BDO Unibank', acc: '0012-3456-7890' },
@@ -192,19 +205,11 @@ export default function PaymentMethod({ route, navigation }) {
                             ))}
                         </View>
 
-                        {/* --- UPLOAD SECTION --- */}
                         <View style={PaymentStyle.uploadSection}>
                             <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
-                            <Text style={PaymentStyle.uploadSubtitle}>
-                                Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.
-                            </Text>
-                            <Text style={PaymentStyle.uploadConstraints}>
-                                Accepted formats: JPG or PNG. Max size: 2MB.
-                            </Text>
-                            
-                            <Text style={PaymentStyle.verificationNote}>
-                                Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
-                            </Text>
+                            <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                            <Text style={PaymentStyle.uploadConstraints}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                            <Text style={PaymentStyle.verificationNote}>Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.</Text>
 
                             <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickImage}>
                                 <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
@@ -217,10 +222,7 @@ export default function PaymentMethod({ route, navigation }) {
                                     {proofImage ? (
                                         <View style={PaymentStyle.imageWrapper}>
                                             <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
-                                            <TouchableOpacity 
-                                                style={PaymentStyle.removeImageBtn} 
-                                                onPress={() => setProofImage(null)}
-                                            >
+                                            <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
                                                 <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                             </TouchableOpacity>
                                         </View>
@@ -235,7 +237,7 @@ export default function PaymentMethod({ route, navigation }) {
 
                 <TouchableOpacity 
                     style={[QuotationAllInStyle.proceedButton, {marginTop: 20}]} 
-                    onPress={handleProceed}
+                    onPress={handleProceedClick}
                     disabled={loading}
                 >
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={QuotationAllInStyle.proceedButtonText}>Confirm & Proceed</Text>}
@@ -245,11 +247,107 @@ export default function PaymentMethod({ route, navigation }) {
                     style={{ width: '100%', alignItems: 'center', justifyContent: 'center', marginTop: 15, marginBottom: 40, paddingVertical: 10 }} 
                     onPress={() => navigation.goBack()}
                 >
-                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#64748b', fontSize: 14, textAlign: 'center' }}>
-                        Back to Mode
-                    </Text>
+                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#64748b', fontSize: 14, textAlign: 'center' }}>Back to Mode</Text>
                 </TouchableOpacity>
             </ScrollView>
+
+            {/* 🔥 CUSTOM PROCEED MODAL FROM SCREENSHOT 🔥 */}
+            <Modal visible={isProceedModalOpen} transparent animationType="fade">
+                <View style={localStyles.modalOverlay}>
+                    <View style={localStyles.modalBox}>
+                        <TouchableOpacity style={localStyles.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+                        
+                        <Text style={localStyles.modalTitle}>Proceed to Payment</Text>
+                        <Text style={localStyles.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
+                        
+                        <View style={localStyles.modalButtonRow}>
+                            <TouchableOpacity style={localStyles.proceedBtn} onPress={executePaymentFlow}>
+                                <Text style={localStyles.proceedBtnText}>Proceed</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={localStyles.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
+                                <Text style={localStyles.cancelBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
+
+// Custom styles for the Modal
+const localStyles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalBox: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        paddingTop: 35,
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    closeIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        padding: 5,
+    },
+    modalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 22,
+        color: '#305797',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 14,
+        color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 25,
+        lineHeight: 20,
+    },
+    modalButtonRow: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    proceedBtn: {
+        flex: 1,
+        backgroundColor: '#305797',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    proceedBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14,
+    },
+    cancelBtn: {
+        flex: 1,
+        backgroundColor: '#9f2b46', // Matching the deep red from your screenshot
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cancelBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14,
+    }
+});

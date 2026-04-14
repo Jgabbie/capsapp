@@ -1,7 +1,11 @@
-import mongoose from "mongoose"; // 🔥 Added Mongoose to handle the ID conversion
+import mongoose from "mongoose";
 import Booking from "../models/booking.js";
 import Cancellation from "../models/cancellation.js";
 import Transaction from "../models/transaction.js";
+import Package from "../models/package.js";
+import User from "../models/users.js";
+import TokenCheckout from "../models/tokenCheckout.js";
+import dayjs from "dayjs";
 
 // Helper to generate unique reference numbers
 const generateBookingReference = () => {
@@ -19,22 +23,18 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Check if this specific checkout has already been processed
     const existingBooking = await Booking.findOne({ checkoutToken });
     if (existingBooking) {
       return res.status(200).json(existingBooking);
     }
 
-    // Create the booking using the new model structure we just made
     const booking = await Booking.create({
       packageId,
       userId,
-      // We extract these from bookingDetails to keep the DB flat and searchable
       bookingDate: bookingDetails.bookingDate,
       travelDate: bookingDetails.travelDate,
       travelers: bookingDetails.travelers,
-
-      bookingDetails, // Keep the original object just in case
+      bookingDetails, 
       checkoutToken,
       reference: generateBookingReference(),
       status: "Successful",
@@ -49,30 +49,21 @@ export const createBooking = async (req, res) => {
 
 export const getUserBookings = async (req, res) => {
   try {
-    console.log("🔍 Searching for bookings for User ID:", req.userId);
-
-    // 🔥 Force the ID into a MongoDB ObjectId to prevent string mismatch errors
     const userObjectId = new mongoose.Types.ObjectId(req.userId);
 
-    //bookings
-    const bookings = await Booking.find({
-      userId: userObjectId,
-    })
+    const bookings = await Booking.find({ userId: userObjectId })
       .populate("packageId")
       .sort({ createdAt: -1 });
 
-    console.log(`✅ Found ${bookings.length} bookings for this user!`);
-
     return res.status(200).json(bookings);
   } catch (error) {
-    console.error("❌ Error fetching user bookings:", error);
+    console.error("Error fetching user bookings:", error);
     return res.status(500).json({ message: "Error fetching bookings", error: error.message });
   }
 };
 
 export const getAllBookings = async (_req, res) => {
   try {
-    // Admins also need to see ALL bookings so they can verify the 'Pending' ones
     const bookings = await Booking.find()
       .populate("packageId")
       .populate("userId", "username email")
@@ -85,7 +76,8 @@ export const getAllBookings = async (_req, res) => {
 };
 
 export const cancelBooking = async (req, res) => {
-  const { reason } = req.body;
+  const { reason, comments, imageProof } = req.body;
+  const userId = req.userId;
 
   try {
     const booking = await Booking.findById(req.params.id);
@@ -94,23 +86,186 @@ export const cancelBooking = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // Security check
-    if (booking.userId.toString() !== req.userId) {
+    if (booking.userId.toString() !== userId) {
       return res.status(403).json({ message: "Unauthorized to cancel this booking" });
     }
 
-    booking.status = "Cancelled";
+    if (!reason || !imageProof) {
+        return res.status(400).json({ message: "Cancellation reason and image proof are required" });
+    }
+
+    booking.status = "cancellation requested";
     await booking.save();
 
-    // Create record in the cancellation collection
-    await Cancellation.create({
+    const cancellation = await Cancellation.create({
       bookingId: booking._id,
-      userId: req.userId,
-      cancellationReason: reason || "No reason provided",
+      packageId: booking.packageId,
+      userId: userId,
+      reference: `CN-${Math.floor(100000000 + Math.random() * 900000000)}`,
+      cancellationReason: reason,
+      cancellationComments: comments || '',
+      cancellationDate: new Date(),
+      imageProof: imageProof,
+      status: 'Pending'
     });
 
     return res.status(200).json({ message: "Booking cancelled", booking });
   } catch (error) {
+    console.error("Cancellation Error:", error);
     return res.status(500).json({ message: "Error cancelling booking", error: error.message });
   }
+};
+
+// ==========================================
+// 🔥 NEWLY ADDED FUNCTIONS TO FIX ROUTE CRASH 🔥
+// ==========================================
+
+export const getBookingByReference = async (req, res) => {
+    const userId = req.userId;
+    const { reference } = req.params;
+
+    if (!reference) return res.status(400).json({ message: 'Reference is required' });
+
+    try {
+        const user = await User.findById(userId).select('role').lean();
+        const isAdmin = user?.role === 'Admin' || user?.role === 'Employee';
+
+        const booking = await Booking.findOne(isAdmin ? { reference } : { reference, userId })
+            .populate('packageId', 'packageName packageType');
+
+        if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+        const transactions = await Transaction.find({ bookingId: booking._id })
+            .sort({ createdAt: -1 })
+            .populate('packageId', 'packageName');
+
+        return res.status(200).json({ booking, transactions });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching booking details', error: error.message });
+    }
+};
+
+export const getBookingsTotalBaseOnMonth = async (req, res) => {
+    const userId = req.userId;
+    try {
+        const startOfMonth = dayjs().startOf('month').toDate();
+        const endOfMonth = dayjs().endOf('month').toDate();
+
+        const totalBookings = await Booking.countDocuments({
+            userId,
+            createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+        });
+
+        return res.status(200).json({ totalBookings });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching bookings total', error: error.message });
+    }
+};
+
+export const updateBooking = async (req, res) => {
+    const { id } = req.params;
+    const { status, bookingDetails } = req.body;
+
+    try {
+        const updatedBooking = await Booking.findByIdAndUpdate(
+            id,
+            { ...(status ? { status } : {}), ...(bookingDetails ? { bookingDetails } : {}) },
+            { new: true }
+        );
+
+        if (!updatedBooking) return res.status(404).json({ message: 'Booking not found' });
+        return res.status(200).json(updatedBooking);
+    } catch (error) {
+        return res.status(500).json({ message: 'Error updating booking', error: error.message });
+    }
+};
+
+export const deleteBooking = async (req, res) => {
+    try {
+        const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
+        if (!deletedBooking) return res.status(404).json({ message: 'Booking not found' });
+        return res.status(200).json({ message: 'Booking deleted' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error deleting booking', error: error.message });
+    }
+};
+
+export const getcancellations = async (req, res) => {
+    try {
+        const cancellations = await Cancellation.find({})
+            .populate('userId', 'username email')
+            .populate({
+                path: 'bookingId',
+                select: 'bookingDetails createdAt reference status packageId',
+                populate: { path: 'packageId', select: 'packageName' }
+            })
+            .populate('packageId', 'packageName')
+            .sort({ cancellationDate: -1 });
+        return res.status(200).json(cancellations);
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching cancellations', error: error.message });
+    }
+};
+
+export const approveCancellation = async (req, res) => {
+    try {
+        const cancellation = await Cancellation.findById(req.params.id);
+        if (!cancellation) return res.status(404).json({ message: 'Cancellation request not found' });
+
+        cancellation.status = 'Approved';
+        await cancellation.save();
+
+        const booking = await Booking.findById(cancellation.bookingId);
+        if (booking) {
+            booking.status = 'Cancelled';
+            await booking.save();
+            
+            // Revert the slots back to the package
+            const packageDoc = await Package.findById(booking.packageId);
+            if (packageDoc) {
+                const normalizedStart = dayjs(booking.travelDate?.startDate).format('YYYY-MM-DD');
+                const normalizedEnd = dayjs(booking.travelDate?.endDate).format('YYYY-MM-DD');
+                await Package.updateOne(
+                    { _id: packageDoc._id, packageSpecificDate: { $elemMatch: { startdaterange: normalizedStart, enddaterange: normalizedEnd } } },
+                    { $inc: { 'packageSpecificDate.$.slots': 1 } }
+                );
+            }
+        }
+        return res.status(200).json({ message: 'Cancellation approved' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error approving cancellation', error: error.message });
+    }
+};
+
+export const disApproveCancellation = async (req, res) => {
+    try {
+        const cancellation = await Cancellation.findById(req.params.id);
+        if (!cancellation) return res.status(404).json({ message: 'Cancellation request not found' });
+
+        cancellation.status = 'Disapproved';
+        await cancellation.save();
+
+        const booking = await Booking.findById(cancellation.bookingId);
+        if (booking) {
+            booking.status = 'Pending'; // Revert back
+            await booking.save();
+        }
+        return res.status(200).json({ message: 'Cancellation disapproved' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error disapproving cancellation', error: error.message });
+    }
+};
+
+export const verifyTokenCheckout = async (req, res) => {
+    try {
+        const { token } = req.body;
+        const tokenCheckout = await TokenCheckout.findOne({ token });
+        
+        if (!tokenCheckout) return res.status(400).json({ valid: false, message: 'Invalid token' });
+        if (tokenCheckout.expiresAt < new Date()) return res.status(400).json({ valid: false, message: 'Token has expired' });
+        
+        return res.status(200).json({ valid: true, tokenCheckout });
+    } catch (error) {
+        return res.status(500).json({ valid: false, message: 'Error verifying token', error: error.message });
+    }
 };
