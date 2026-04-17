@@ -8,7 +8,6 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js"; 
 import bookingRoutes from "./routes/bookingRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";
-// 🔥 Updated to point to your new payRoutes file
 import payRoutes from "./routes/payRoutes.js"; 
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from "./routes/packageRoutes.js"; 
@@ -20,6 +19,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 
+// 1. Import the new upload routes here
+import uploadRoutes from './routes/uploadRoutes.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -29,8 +31,8 @@ const app = express();
 
 connectDB();
 
+// 2. IMPORTANT: Apply CORS and parsers BEFORE your routes!
 app.use(cors());
-// Keep these at 50mb to handle the base64 proof of payment images
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
@@ -40,7 +42,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/quotation", quotationRoutes);
-// 🔥 Updated the endpoint to use the new payRoutes logic
 app.use("/api/payment", payRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api/package", packageRoutes); 
@@ -50,6 +51,9 @@ app.use("/api/visa", visaRoutes);
 app.use("/api/visa-services", visaServiceRoutes);
 app.use("/api/email", sendEmailRoutes);
 app.use("/api/rating", ratingRoutes);
+
+// 3. Mount the upload route inside /api/ so the mobile app can reach it!
+app.use("/api/upload", uploadRoutes);
 
 app.get("/", (req, res) => {
     res.send("TRAVEX API Running");

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as Linking from 'expo-linking'; // 🔥 Used for opening browser AND creating return deep links
+import * as Linking from 'expo-linking'; 
+import dayjs from "dayjs";
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
@@ -15,18 +16,16 @@ export default function PaymentMethod({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
-    
-    // Custom Modal State
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     
-    const { setupData, amountToPay, paymentType, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { setupData, amountToPay, paymentType, frequency, passengers, travelerUploads, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [method, setMethod] = useState('paymongo'); 
     const [proofImage, setProofImage] = useState(null);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'], 
             allowsEditing: true,
             base64: true,
             quality: 0.5,
@@ -37,19 +36,45 @@ export default function PaymentMethod({ route, navigation }) {
         }
     };
 
-    // Triggered when "Confirm & Proceed" is clicked at the bottom
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
             Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
             return;
         }
-        // Open the custom modal
         setIsProceedModalOpen(true);
     };
 
-    // Triggered when "Proceed" is clicked INSIDE the modal
+    const getFileUri = (fileObj) => {
+        if (!fileObj) return null;
+        if (typeof fileObj === 'string') return fileObj;
+        if (fileObj.uri) return fileObj.uri;
+        return null;
+    };
+
+    // 🔥 THE BULLETPROOF UPLOADER 🔥
+    const uploadFilesToBackend = async (endpoint, formData) => {
+        // Appends e.g., '/upload/upload-booking-documents' to 'http://YOUR_IP:5000/api'
+        const targetUrl = `${api.defaults.baseURL}${endpoint}`; 
+        
+        const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${user?.token}`,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorHtml = await response.text();
+            throw new Error(`Server returned ${response.status}`);
+        }
+        
+        return await response.json();
+    };
+
     const executePaymentFlow = async () => {
-        setIsProceedModalOpen(false); // Close the modal
+        setIsProceedModalOpen(false); 
         setLoading(true);
 
         try {
@@ -58,72 +83,185 @@ export default function PaymentMethod({ route, navigation }) {
             const infantCount = Number(setupData?.travelerCounts?.infant) || 0;
             const calculatedTravelers = (adultCount + childCount + infantCount) || (passengers?.length) || 1;
 
-            if (method === 'manual') {
-                const payload = {
-                    packageId: setupData.pkg._id || setupData.pkg.id,
-                    travelDate: setupData.selectedDate,
-                    travelerTotal: calculatedTravelers, 
-                    amount: amountToPay,
-                    paymentType,
-                    bookingDetails: { ...setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency },
-                    proofImage: `data:${proofImage.mimeType || 'image/jpeg'};base64,${proofImage.base64}`,
-                    proofImageType: proofImage.mimeType || 'image/jpeg',
-                    proofFileName: 'deposit_slip.jpg'
-                };
+            const travelDateString = setupData?.selectedDate || setupData?.travelDate || "TBD";
+            const [startDateStr, endDateStr] = travelDateString.split(" - ");
+            const travelDateObj = {
+                startDate: startDateStr?.trim() || travelDateString,
+                endDate: endDateStr?.trim() || startDateStr?.trim() || travelDateString
+            };
 
-                const response = await api.post('/payment/manual', payload, withUserHeader(user?._id));
-                setLoading(false);
-                navigation.navigate("paymentsuccess", { reference: response.data.bookingId || response.data.reference, mode: 'manual' });
+            const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelers;
+
+            // 1. EXTRACT & UPLOAD DOCUMENTS TO CLOUDINARY
+            const safePassengers = Array.isArray(passengers) ? passengers : [];
+            const formData = new FormData();
+            const passportIndices = [];
+            const photoIndices = [];
+            let hasFilesToUpload = false;
+
+            safePassengers.forEach((p, i) => {
+                const tUpload = travelerUploads?.[i] || travelerUploads || {};
+                const passUri = getFileUri(tUpload.passport || p.passportFile || p.passport);
+                const photoUri = getFileUri(tUpload.photo || p.photoFile || p.photo);
+
+                if (passUri && !passUri.startsWith('http')) {
+                    const filename = passUri.split('/').pop() || `passport_${i}.jpg`;
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : `image/jpeg`;
+                    formData.append('files', { uri: passUri, name: filename, type });
+                    passportIndices.push(i);
+                    hasFilesToUpload = true;
+                }
+                if (photoUri && !photoUri.startsWith('http')) {
+                    const filename = photoUri.split('/').pop() || `photo_${i}.jpg`;
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : `image/jpeg`;
+                    formData.append('files', { uri: photoUri, name: filename, type });
+                    photoIndices.push(i);
+                    hasFilesToUpload = true;
+                }
+            });
+
+            let uploadedUrls = [];
+            if (hasFilesToUpload) {
+                try {
+                    const uploadResult = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+                    uploadedUrls = uploadResult?.urls || uploadResult?.url || [];
+                } catch (err) {
+                    console.error("Doc Upload Error:", err);
+                    Alert.alert("Upload Error", "Failed to upload traveler documents. Please try again.");
+                    setLoading(false);
+                    return; // 🛑 Stops here so broken bookings don't save!
+                }
+            }
+
+            // 2. UNIVERSAL TRANSLATOR
+            let urlIndex = 0;
+            const mappedTravelers = safePassengers.map((p, i) => {
+                const tUpload = travelerUploads?.[i] || travelerUploads || {};
+                let finalPassportUrl = getFileUri(tUpload.passport || p.passportFile || p.passport);
+                let finalPhotoUrl = getFileUri(tUpload.photo || p.photoFile || p.photo);
+
+                if (passportIndices.includes(i)) finalPassportUrl = uploadedUrls[urlIndex++];
+                if (photoIndices.includes(i)) finalPhotoUrl = uploadedUrls[urlIndex++];
+
+                return {
+                    title: p.title || 'MR',
+                    firstName: p.firstName || '',
+                    lastName: p.lastName || '',
+                    roomType: p.room || p.roomType || 'N/A', 
+                    age: p.age?.toString() || '0',
+                    birthday: p.bday || p.birthday || p.birthdate || null, 
+                    passportNo: p.passport || p.passportNo || 'N/A', 
+                    passportExpiry: p.expiry || p.passportExpiry || null, 
+                    passportFile: finalPassportUrl,
+                    photoFile: finalPhotoUrl
+                };
+            });
+
+            const rootPassportFiles = mappedTravelers.map(t => t.passportFile).filter(Boolean);
+            const rootPhotoFiles = mappedTravelers.map(t => t.photoFile).filter(Boolean);
+
+            // 3. FORMAT EXACT WEB JSON STRUCTURE
+            const mappedBookingDetails = {
+                dateOfRegistration: dayjs().format("MM/DD/YYYY"),
+                travelDate: travelDateString, 
+                tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
+                tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
+                leadTitle: leadGuestInfo?.title || "MR",
+                leadFullName: leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim(),
+                leadEmail: user?.email,
+                leadContact: leadGuestInfo?.contact || user?.phonenum || "",
+                leadAddress: leadGuestInfo?.address || "",
+                travelers: mappedTravelers, 
+                passportFiles: rootPassportFiles, 
+                photoFiles: rootPhotoFiles,
+                dietaryDetails: medicalData?.dietaryDetails || "",
+                dietaryRequest: medicalData?.dietary === 'Yes' ? "Y" : "N",
+                medicalDetails: medicalData?.medicalDetails || "",
+                medicalRequest: medicalData?.medical === 'Yes' ? "Y" : "N",
+                purchaseInsurance: medicalData?.insurance === 'Yes' ? "Y" : "N",
+                ownInsurance: "N",
+                totalPrice: setupData?.totalPrice || amountToPay || 0, 
+                emergencyContact: emergency?.contact || "",
+                emergencyEmail: emergency?.email || "",
+                emergencyName: emergency?.fullName || "",
+                emergencyRelation: emergency?.relation || "",
+                emergencyTitle: emergency?.title || "MR",
+                paymentDetails: {
+                    paymentType: paymentType || 'deposit',
+                    frequency: frequency || 'Every 2 weeks',
+                    depositAmount: depositAmount
+                }
+            };
+
+            const finalBookingPayload = {
+                packageId: setupData.pkg._id || setupData.pkg.id,
+                checkoutToken: `mobile-tok-${Date.now()}`,
+                travelDate: travelDateObj, 
+                travelers: calculatedTravelers, 
+                passportFiles: rootPassportFiles,
+                photoFiles: rootPhotoFiles,
+                bookingDetails: mappedBookingDetails 
+            };
+
+            if (method === 'manual') {
+                const receiptFormData = new FormData();
+                const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : `image/jpeg`;
+                receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
+
+                try {
+                    const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                    const proofUrl = receiptUpload?.url;
+
+                    const manualPayload = {
+                        ...finalBookingPayload,
+                        amount: amountToPay,
+                        paymentType,
+                        proofImage: proofUrl,
+                        proofImageType: proofImage.mimeType || 'image/jpeg',
+                        proofFileName: proofImage.fileName || 'deposit_slip.jpg'
+                    };
+
+                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    setLoading(false);
+                    navigation.navigate("paymentsuccess", { reference: response.data.bookingId || response.data.reference, mode: 'manual' });
+                } catch (err) {
+                    console.error("Receipt Upload Error:", err);
+                    Alert.alert("Upload Error", "Failed to upload deposit slip. Please try again.");
+                    setLoading(false);
+                    return;
+                }
 
             } else {
-                // ONLINE FLOW
-                // 1. Create booking FIRST as PENDING (Not paid)
-                const checkoutTokenTemp = `mobile-tok-${Date.now()}`;
-                const finalBookingPayload = {
-                    packageId: setupData.pkg._id || setupData.pkg.id,
-                    checkoutToken: checkoutTokenTemp,
-                    bookingDetails: {
-                        bookingDate: new Date().toISOString(),
-                        travelDate: setupData.selectedDate,
-                        travelers: calculatedTravelers,
-                        ...setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
-                    }
-                };
-
                 const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
                 const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
 
-                // 🔥 2. Dynamically create Deep Links for the Return to Merchant button
-                // This ensures it works flawlessly on both Expo Go and Standalone Apps
-                const successDeepLink = Linking.createURL('paymentsuccess', { 
-                    queryParams: { reference: bookingRef, mode: 'online' } 
-                });
+                const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
                 const cancelDeepLink = Linking.createURL('paymentmethod');
 
-                // 3. Send payload to PayMongo
                 const paymentPayload = {
                     bookingId: newBookingId,
                     bookingReference: bookingRef,
                     packageId: setupData.pkg._id || setupData.pkg.id,
                     totalPrice: amountToPay,
-                    travelDate: setupData.selectedDate,
+                    travelDate: travelDateObj, 
                     travelers: calculatedTravelers, 
                     leadEmail: user.email,
                     leadContact: leadGuestInfo?.contact || '', 
-                    successUrl: successDeepLink, // Sent to PayMongo!
+                    successUrl: successDeepLink,
                     cancelUrl: cancelDeepLink,
                 };
 
                 const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                 const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
-                setLoading(false); // Stop loading, we are done saving!
+                setLoading(false); 
 
                 if (checkoutUrl) {
-                    // 4. Open Real Browser. 
-                    // NOTICE: There is NO navigation.navigate here. The app stays on this screen!
-                    // If they close the browser, they stay right here. The booking is safely in DB as Pending.
                     Linking.openURL(checkoutUrl);
                 }
             }
@@ -141,6 +279,15 @@ export default function PaymentMethod({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
+                
+                <TouchableOpacity 
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={16} color="#fff" />
+                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', marginLeft: 6, fontSize: 14 }}>Back</Text>
+                </TouchableOpacity>
+
                 <Text style={PaymentStyle.sectionTitle}>Payment Methods</Text>
                 <Text style={PaymentStyle.sectionSubtitle}>Select a payment method to complete your booking.</Text>
 
@@ -150,7 +297,7 @@ export default function PaymentMethod({ route, navigation }) {
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>2</Text></View>
                 </View>
 
-                {/* --- HORIZONTAL CARDS (WEB-STYLE) --- */}
+                {/* --- HORIZONTAL CARDS --- */}
                 <View style={PaymentStyle.methodGridContainer}>
                     <TouchableOpacity 
                         style={[PaymentStyle.methodGridCard, method === 'paymongo' && PaymentStyle.methodGridCardSelected]}
@@ -207,10 +354,8 @@ export default function PaymentMethod({ route, navigation }) {
 
                         <View style={PaymentStyle.uploadSection}>
                             <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
-                            <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
-                            <Text style={PaymentStyle.uploadConstraints}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
-                            <Text style={PaymentStyle.verificationNote}>Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.</Text>
-
+                            <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip.</Text>
+                            
                             <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickImage}>
                                 <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                 <Text style={PaymentStyle.selectImageBtnText}>Select Receipt Image</Text>
@@ -242,16 +387,8 @@ export default function PaymentMethod({ route, navigation }) {
                 >
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={QuotationAllInStyle.proceedButtonText}>Confirm & Proceed</Text>}
                 </TouchableOpacity>
-
-                <TouchableOpacity 
-                    style={{ width: '100%', alignItems: 'center', justifyContent: 'center', marginTop: 15, marginBottom: 40, paddingVertical: 10 }} 
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#64748b', fontSize: 14, textAlign: 'center' }}>Back to Mode</Text>
-                </TouchableOpacity>
             </ScrollView>
 
-            {/* 🔥 CUSTOM PROCEED MODAL FROM SCREENSHOT 🔥 */}
             <Modal visible={isProceedModalOpen} transparent animationType="fade">
                 <View style={localStyles.modalOverlay}>
                     <View style={localStyles.modalBox}>
@@ -277,77 +414,15 @@ export default function PaymentMethod({ route, navigation }) {
     );
 }
 
-// Custom styles for the Modal
 const localStyles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    modalBox: {
-        width: '100%',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 24,
-        paddingTop: 35,
-        alignItems: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    closeIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        padding: 5,
-    },
-    modalTitle: {
-        fontFamily: 'Montserrat_700Bold',
-        fontSize: 22,
-        color: '#305797',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    modalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
-        fontSize: 14,
-        color: '#64748b',
-        textAlign: 'center',
-        marginBottom: 25,
-        lineHeight: 20,
-    },
-    modalButtonRow: {
-        flexDirection: 'row',
-        width: '100%',
-        justifyContent: 'space-between',
-        gap: 12,
-    },
-    proceedBtn: {
-        flex: 1,
-        backgroundColor: '#305797',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    proceedBtnText: {
-        fontFamily: 'Montserrat_600SemiBold',
-        color: '#fff',
-        fontSize: 14,
-    },
-    cancelBtn: {
-        flex: 1,
-        backgroundColor: '#9f2b46', // Matching the deep red from your screenshot
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    cancelBtnText: {
-        fontFamily: 'Montserrat_600SemiBold',
-        color: '#fff',
-        fontSize: 14,
-    }
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    modalBox: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 24, paddingTop: 35, alignItems: 'center', elevation: 5 },
+    closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
+    modalTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 22, color: '#305797', marginBottom: 12 },
+    modalSubtitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25 },
+    modalButtonRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 12 },
+    proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+    proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
+    cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 }
 });

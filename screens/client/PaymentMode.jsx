@@ -10,9 +10,7 @@ import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { useUser } from '../../context/UserContext';
 
-// For "73,539.20" format inside the invoice
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-// For standard "₱73,539.20" outside the invoice
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 
 export default function PaymentMode({ route, navigation }) {
@@ -20,11 +18,9 @@ export default function PaymentMode({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [paymentType, setPaymentType] = useState('deposit'); // Default to deposit to match web
+    const [paymentType, setPaymentType] = useState('deposit'); 
     const [frequency, setFrequency] = useState('Every 2 weeks');
     const [showFreqDropdown, setShowFreqDropdown] = useState(false);
-    
-    // State for the Invoice Preview Modal
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
     const travelerTotal = useMemo(() => {
@@ -34,7 +30,6 @@ export default function PaymentMode({ route, navigation }) {
 
     const totalAmount = setupData?.totalPrice || 0;
 
-   // --- SYNCED WEB CALCULATION LOGIC ---
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;
@@ -45,21 +40,17 @@ export default function PaymentMode({ route, navigation }) {
         const freqWeeks = getFrequencyWeeks(frequency);
         const today = dayjs();
         
-        // 1. Get the Start Date (Mobile passes it as a string "Month DD, YYYY - Month DD, YYYY")
         const startDateString = setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null;
         const travelDateComputation = startDateString ? dayjs(startDateString) : today;
 
-        // 2. Cutoff Logic: Whichever is earlier, Travel Date or 45 days from now
         const maxAllowedDate = today.add(45, 'day');
         const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
             ? travelDateComputation
             : maxAllowedDate;
 
-        // 3. Base Amounts
         const depositAmount = (setupData?.pkg?.packageDeposit || 0) * travelerTotal;
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
         
-        // 4. Web's Exact While-Loop Logic
         const paymentDates = [];
         let nextDate = dayjs(today).add(freqWeeks, 'week');
 
@@ -68,7 +59,6 @@ export default function PaymentMode({ route, navigation }) {
             nextDate = nextDate.add(freqWeeks, 'week');
         }
 
-        // 5. Fallback if no dates fit before cutoff
         if (paymentDates.length === 0) {
             paymentDates.push(dueCutoffDate.subtract(1, 'day'));
         }
@@ -76,13 +66,12 @@ export default function PaymentMode({ route, navigation }) {
         const installmentCount = paymentDates.length;
         const installmentAmount = installmentCount ? remainingAmount / installmentCount : 0;
 
-        // 6. Build the final schedule array
         const schedule = [
-            { label: 'Deposit', amount: depositAmount, date: today },
+            { label: 'Deposit', amount: depositAmount, date: today.toISOString() },
             ...paymentDates.map((date, index) => ({
                 label: `Installment ${index + 1}`,
                 amount: installmentAmount,
-                date: date
+                date: date.toISOString()
             }))
         ];
 
@@ -101,9 +90,8 @@ export default function PaymentMode({ route, navigation }) {
         });
     };
 
-    // --- Invoice Derived Data ---
     const issueDate = dayjs();
-    const lastInstallmentDate = scheduleData.schedule[scheduleData.schedule.length - 1].date;
+    const lastInstallmentDate = dayjs(scheduleData.schedule[scheduleData.schedule.length - 1].date);
     const amountToCharge = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
     const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
@@ -116,17 +104,25 @@ export default function PaymentMode({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
+                
+                {/* 🔥 RESTORED BACK BUTTON 🔥 */}
+                <TouchableOpacity 
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={16} color="#fff" />
+                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', marginLeft: 6, fontSize: 14 }}>Back</Text>
+                </TouchableOpacity>
+
                 <Text style={PaymentStyle.sectionTitle}>Mode of Payment</Text>
                 <Text style={PaymentStyle.sectionSubtitle}>Choose how you want to settle your booking.</Text>
 
-                {/* --- PROGRESS STEPS --- */}
                 <View style={PaymentStyle.progressContainer}>
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>1</Text></View>
                     <View style={PaymentStyle.progressLine} />
                     <View style={PaymentStyle.progressStep}><Text style={[PaymentStyle.progressText, {color: '#64748b'}]}>2</Text></View>
                 </View>
 
-                {/* PREVIEW BUTTON CONTAINER */}
                 <View style={PaymentStyle.previewButtonContainer}>
                     <View style={PaymentStyle.previewHeader}>
                         <View style={{ flex: 1 }}>
@@ -148,7 +144,6 @@ export default function PaymentMode({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                {/* --- DEPOSIT CARD --- */}
                 <TouchableOpacity 
                     activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'deposit' && PaymentStyle.modeCardSelected]}
@@ -170,7 +165,6 @@ export default function PaymentMode({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
 
-                {/* --- FULL PAYMENT CARD --- */}
                 <TouchableOpacity 
                     activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'full' && PaymentStyle.modeCardSelected]}
@@ -185,20 +179,18 @@ export default function PaymentMode({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
 
-                {/* --- PAYMENT SCHEDULE PREVIEW --- */}
                 {paymentType === 'deposit' && (
                     <View style={PaymentStyle.scheduleBox}>
                         <Text style={PaymentStyle.scheduleTitle}>Payment Schedule</Text>
                         {scheduleData.schedule.map((item, idx) => (
-    <View key={idx} style={PaymentStyle.scheduleItem}>
-        {/* 🔥 UPDATED: Added the new style here */}
-        <View style={PaymentStyle.scheduleInfoContainer}>
-            <Text style={PaymentStyle.scheduleLabel}>{item.label}</Text>
-            <Text style={PaymentStyle.scheduleDate}>{item.date.format('MMM DD, YYYY')}</Text>
-        </View>
-        <Text style={PaymentStyle.scheduleAmount}>{formatPeso(item.amount)}</Text>
-    </View>
-))}
+                            <View key={idx} style={PaymentStyle.scheduleItem}>
+                                <View style={PaymentStyle.scheduleInfoContainer}>
+                                    <Text style={PaymentStyle.scheduleLabel}>{item.label}</Text>
+                                    <Text style={PaymentStyle.scheduleDate}>{dayjs(item.date).format('MMM DD, YYYY')}</Text>
+                                </View>
+                                <Text style={PaymentStyle.scheduleAmount}>{formatPeso(item.amount)}</Text>
+                            </View>
+                        ))}
                         <Text style={PaymentStyle.scheduleNote}>Note: A penalty of PHP 500 applies for late deposit payments.</Text>
                     </View>
                 )}
@@ -210,7 +202,6 @@ export default function PaymentMode({ route, navigation }) {
                 <View style={{height: 50}} />
             </ScrollView>
 
-            {/* FREQUENCY DROPDOWN MODAL */}
             <Modal visible={showFreqDropdown} transparent animationType="fade">
                 <TouchableOpacity style={RegistrationFormStyle.modalOverlay} activeOpacity={1} onPress={() => setShowFreqDropdown(false)}>
                     <View style={RegistrationFormStyle.dropdownBox}>
@@ -223,18 +214,15 @@ export default function PaymentMode({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/* INVOICE PREVIEW MODAL */}
             <Modal visible={showInvoiceModal} animationType="slide" transparent={true}>
                 <View style={PaymentStyle.invModalOverlay}>
                     <SafeAreaView style={{ flex: 1, width: '100%', padding: 15, justifyContent: 'center' }}>
-                        
                         <View style={PaymentStyle.invPaper}>
                             <TouchableOpacity style={PaymentStyle.invCloseBtn} onPress={() => setShowInvoiceModal(false)}>
                                 <Ionicons name="close-circle" size={28} color="#b54747" />
                             </TouchableOpacity>
 
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                {/* Header */}
                                 <View style={PaymentStyle.invHeader}>
                                     <View style={PaymentStyle.invCompanyBlock}>
                                         <Image source={require('../../assets/images/Logored.png')} style={PaymentStyle.invLogo} resizeMode="contain" />
@@ -254,7 +242,6 @@ export default function PaymentMode({ route, navigation }) {
 
                                 <View style={PaymentStyle.invDivider} />
 
-                                {/* Bill To & Summary Grid */}
                                 <View style={PaymentStyle.invBillRow}>
                                     <View style={PaymentStyle.invBillTo}>
                                         <Text style={PaymentStyle.invTinyLabel}>BILL TO</Text>
@@ -277,7 +264,6 @@ export default function PaymentMode({ route, navigation }) {
                                     </View>
                                 </View>
 
-                                {/* Line Items Table */}
                                 <View style={PaymentStyle.invTable}>
                                     <View style={PaymentStyle.invTableHeader}>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>DATE</Text>
@@ -297,7 +283,6 @@ export default function PaymentMode({ route, navigation }) {
                                     </View>
                                 </View>
 
-                                {/* Footer Bank Details */}
                                 <View style={PaymentStyle.invFooter}>
                                     <View style={PaymentStyle.invBankInfo}>
                                         <Text style={[PaymentStyle.invMutedText, {marginBottom: 10}]}>Payment to be deposited in below bank details:</Text>
@@ -315,7 +300,6 @@ export default function PaymentMode({ route, navigation }) {
                                     </View>
                                 </View>
 
-                                {/* Payment Schedule */}
                                 {paymentType === 'deposit' && (
                                     <View style={PaymentStyle.invScheduleSection}>
                                         <Text style={[PaymentStyle.invCustomerName, {marginBottom: 8, fontSize: 10}]}>Payment Schedule</Text>
@@ -324,7 +308,7 @@ export default function PaymentMode({ route, navigation }) {
                                                 <Text style={PaymentStyle.invScheduleLabel}>
                                                     {item.label}
                                                     {'\n'}
-                                                    <Text style={{fontSize: 7, color: '#777', fontWeight: 'normal'}}>{item.date.format('MM/DD/YYYY')}</Text>
+                                                    <Text style={{fontSize: 7, color: '#777', fontWeight: 'normal'}}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
                                                 </Text>
                                                 <Text style={PaymentStyle.invScheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
                                             </View>
@@ -337,7 +321,6 @@ export default function PaymentMode({ route, navigation }) {
                     </SafeAreaView>
                 </View>
             </Modal>
-
         </SafeAreaView>
     );
 }

@@ -15,7 +15,8 @@ const generateBookingReference = () => {
 };
 
 export const createBooking = async (req, res) => {
-  const { packageId, bookingDetails, checkoutToken } = req.body;
+  // Extracting from root request body
+  const { packageId, checkoutToken, bookingDetails, travelDate, travelers } = req.body;
   const userId = req.userId;
 
   try {
@@ -28,19 +29,43 @@ export const createBooking = async (req, res) => {
       return res.status(200).json(existingBooking);
     }
 
+    // 🔥 WEB SYNC: Format the exact shapes the Web Backend expects
+    
+    // 1. Format root travelDate as an object { startDate, endDate }
+    let rootTravelDate = { startDate: "TBD", endDate: "TBD" };
+    if (travelDate && travelDate.startDate) {
+        rootTravelDate = travelDate; // Use provided object
+    } else if (bookingDetails?.travelDate) {
+        // Try parsing string "Month DD, YYYY - Month DD, YYYY"
+        const dates = String(bookingDetails.travelDate).split(" - ");
+        rootTravelDate = {
+            startDate: dates[0] || "TBD",
+            endDate: dates[1] || dates[0] || "TBD"
+        };
+    }
+
+    // 2. Format root travelers as an absolute Number
+    let rootTravelersCount = 1;
+    if (typeof travelers === 'number') {
+        rootTravelersCount = travelers;
+    } else if (bookingDetails?.travelers && Array.isArray(bookingDetails.travelers)) {
+        rootTravelersCount = bookingDetails.travelers.length;
+    }
+
+    // 3. Create the Database Record matching Web Schema
     const booking = await Booking.create({
       packageId,
       userId,
-      bookingDate: bookingDetails.bookingDate,
-      travelDate: bookingDetails.travelDate,
-      travelers: bookingDetails.travelers,
-      bookingDetails, 
+      bookingDate: bookingDetails.bookingDate || new Date().toISOString(),
+      travelDate: rootTravelDate, 
+      travelers: rootTravelersCount,
+      bookingDetails: bookingDetails, // Contains the full nested objects/arrays 
       checkoutToken,
       reference: generateBookingReference(),
-      status: "Successful",
+      status: "Pending", // 🔥 Web requires new bookings to be Pending until paid!
     });
 
-    return res.status(201).json(booking);
+    return res.status(201).json({ booking, paymentToken: checkoutToken });
   } catch (error) {
     console.error("Create Booking Error:", error);
     return res.status(500).json({ message: "Error creating booking", error: error.message });
@@ -117,7 +142,7 @@ export const cancelBooking = async (req, res) => {
 };
 
 // ==========================================
-// 🔥 NEWLY ADDED FUNCTIONS TO FIX ROUTE CRASH 🔥
+// HYBRID / SYNCED ENDPOINTS
 // ==========================================
 
 export const getBookingByReference = async (req, res) => {
@@ -220,7 +245,6 @@ export const approveCancellation = async (req, res) => {
             booking.status = 'Cancelled';
             await booking.save();
             
-            // Revert the slots back to the package
             const packageDoc = await Package.findById(booking.packageId);
             if (packageDoc) {
                 const normalizedStart = dayjs(booking.travelDate?.startDate).format('YYYY-MM-DD');

@@ -16,11 +16,15 @@ const bookingSchema = new mongoose.Schema(
     },
     // Explicit fields to keep mobile and web database entries identical
     bookingDate: { type: String, required: true },
-    travelDate: { type: String, required: true },
-    travelers: { type: Number, required: true },
     
+    // 🔥 FIX 1: Changed from String to Object to accept { startDate, endDate }
+    travelDate: { type: Object, required: true },
+    
+    travelers: { type: Number, required: true },
     reference: { type: String, required: true, unique: true },
-    status: { type: String, default: "Successful" },
+    
+    // 🔥 FIX 2: Default to "Pending" so unpaid bookings aren't accidentally marked as Paid
+    status: { type: String, default: "Pending" },
     
     // Optional: Keep these if you plan to use Stripe/Paymongo tokens
     checkoutToken: { type: String, unique: true, sparse: true },
@@ -29,7 +33,7 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true, collection: "bookings" }
 );
 
-// This prevent errors during hot-reloads in development
+// This prevents errors during hot-reloads in development
 const Booking = mongoose.models.bookings || mongoose.model("bookings", bookingSchema);
 
 export default Booking;
