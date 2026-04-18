@@ -51,25 +51,25 @@ export default function PaymentMethod({ route, navigation }) {
         return null;
     };
 
-    // 🔥 THE BULLETPROOF UPLOADER 🔥
+    // 🔥 THE TRULY BULLETPROOF UPLOADER (FETCH) 🔥
     const uploadFilesToBackend = async (endpoint, formData) => {
-        // Appends e.g., '/upload/upload-booking-documents' to 'http://YOUR_IP:5000/api'
-        const targetUrl = `${api.defaults.baseURL}${endpoint}`; 
+        const baseUrl = api.defaults.baseURL.replace(/\/api$/, '');
+        const targetUrl = `${baseUrl}/api${endpoint}`; 
         
         const response = await fetch(targetUrl, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${user?.token}`,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                // 🛑 EXPLICITLY NO CONTENT-TYPE. Let fetch build the boundary natively.
             },
             body: formData
         });
-
-        if (!response.ok) {
-            const errorHtml = await response.text();
-            throw new Error(`Server returned ${response.status}`);
-        }
         
+        if (!response.ok) {
+            console.error("Upload failed with status:", response.status);
+            throw new Error(`HTTP Error ${response.status}`);
+        }
         return await response.json();
     };
 
@@ -78,6 +78,78 @@ export default function PaymentMethod({ route, navigation }) {
         setLoading(true);
 
         try {
+            const isExistingBooking = !!route.params.existingBookingId;
+            const targetPackageId = route.params.existingPackageId || setupData?.pkg?._id || setupData?.pkg?.id;
+
+            // ==========================================================
+            // SCENARIO A: PAYING FOR AN EXISTING BOOKING
+            // ==========================================================
+            if (isExistingBooking) {
+                if (method === 'manual') {
+                    const receiptFormData = new FormData();
+                    const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : `image/jpeg`;
+                    
+                    receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
+                    receiptFormData.append('receipt', { uri: proofImage.uri, name: filename, type });
+
+                    try {
+                        const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                        const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
+
+                        if (!proofUrl) {
+                            throw new Error("No URL returned from server.");
+                        }
+                        
+                        const manualPayload = {
+                            bookingId: route.params.existingBookingId,
+                            packageId: targetPackageId,
+                            amount: amountToPay,
+                            paymentType: paymentType || 'Full Payment',
+                            proofImage: proofUrl,
+                            proofImageType: proofImage.mimeType || 'image/jpeg',
+                            proofFileName: proofImage.fileName || 'deposit_slip.jpg',
+                            status: 'Pending' // 🔥 FLOW FIX: Manual payments must go to Pending for admin review!
+                        };
+
+                        const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                        setLoading(false);
+                        navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
+                        return; 
+                    } catch (err) {
+                        console.error("Receipt Upload Error:", err);
+                        Alert.alert("Upload Error", "Failed to upload deposit slip. Please try again.");
+                        setLoading(false);
+                        return;
+                    }
+                } else {
+                    // Existing Booking -> PayMongo
+                    const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: route.params.existingReference, mode: 'online' } });
+                    const cancelDeepLink = Linking.createURL('paymentmethod');
+
+                    const paymentPayload = {
+                        bookingId: route.params.existingBookingId,
+                        bookingReference: route.params.existingReference,
+                        packageId: targetPackageId,
+                        totalPrice: amountToPay,
+                        leadEmail: user.email,
+                        leadContact: leadGuestInfo?.contact || '', 
+                        successUrl: successDeepLink,
+                        cancelUrl: cancelDeepLink,
+                    };
+
+                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const checkoutUrl = response.data?.data?.attributes?.checkout_url;
+                    setLoading(false); 
+                    if (checkoutUrl) Linking.openURL(checkoutUrl);
+                    return; 
+                }
+            }
+
+            // ==========================================================
+            // SCENARIO B: CREATING A BRAND NEW BOOKING
+            // ==========================================================
             const adultCount = Number(setupData?.travelerCounts?.adult) || 0;
             const childCount = Number(setupData?.travelerCounts?.child) || 0;
             const infantCount = Number(setupData?.travelerCounts?.infant) || 0;
@@ -131,7 +203,7 @@ export default function PaymentMethod({ route, navigation }) {
                     console.error("Doc Upload Error:", err);
                     Alert.alert("Upload Error", "Failed to upload traveler documents. Please try again.");
                     setLoading(false);
-                    return; // 🛑 Stops here so broken bookings don't save!
+                    return; 
                 }
             }
 
@@ -195,58 +267,77 @@ export default function PaymentMethod({ route, navigation }) {
                 }
             };
 
+            // 🔥 FLOW FIX: Determine the correct status based on the selected payment method 🔥
+            const initialBookingStatus = method === 'manual' ? 'Pending' : 'Not Paid';
+
             const finalBookingPayload = {
-                packageId: setupData.pkg._id || setupData.pkg.id,
+                packageId: targetPackageId, 
                 checkoutToken: `mobile-tok-${Date.now()}`,
                 travelDate: travelDateObj, 
                 travelers: calculatedTravelers, 
                 passportFiles: rootPassportFiles,
                 photoFiles: rootPhotoFiles,
-                bookingDetails: mappedBookingDetails 
+                bookingDetails: mappedBookingDetails,
+                status: initialBookingStatus // 🔥 Applied the dynamic status here! 🔥
             };
 
+            // Create the booking!
+            const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
+            const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
+            const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
+
+            // ==========================================================
+            // SCENARIO B.1: MANUAL PAYMENT PROCESSING
+            // ==========================================================
             if (method === 'manual') {
                 const receiptFormData = new FormData();
                 const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
                 const match = /\.(\w+)$/.exec(filename);
                 const type = match ? `image/${match[1]}` : `image/jpeg`;
+                
                 receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
+                receiptFormData.append('receipt', { uri: proofImage.uri, name: filename, type });
 
                 try {
                     const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
-                    const proofUrl = receiptUpload?.url;
+                    const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
+
+                    if (!proofUrl) {
+                        throw new Error("No URL returned from server.");
+                    }
 
                     const manualPayload = {
-                        ...finalBookingPayload,
+                        bookingId: newBookingId,
+                        packageId: targetPackageId,
                         amount: amountToPay,
-                        paymentType,
+                        paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',
-                        proofFileName: proofImage.fileName || 'deposit_slip.jpg'
+                        proofFileName: proofImage.fileName || 'deposit_slip.jpg',
+                        status: 'Pending' // Explicitly Pending for manual review
                     };
 
-                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
-                    navigation.navigate("paymentsuccess", { reference: response.data.bookingId || response.data.reference, mode: 'manual' });
+                    navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
                 } catch (err) {
-                    console.error("Receipt Upload Error:", err);
-                    Alert.alert("Upload Error", "Failed to upload deposit slip. Please try again.");
+                    Alert.alert("Upload Error", "Failed to upload deposit slip.");
                     setLoading(false);
                     return;
                 }
 
-            } else {
-                const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
-                const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
-                const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
-
+            } 
+            // ==========================================================
+            // SCENARIO B.2: PAYMONGO PROCESSING
+            // ==========================================================
+            else {
                 const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
                 const cancelDeepLink = Linking.createURL('paymentmethod');
 
                 const paymentPayload = {
                     bookingId: newBookingId,
                     bookingReference: bookingRef,
-                    packageId: setupData.pkg._id || setupData.pkg.id,
+                    packageId: targetPackageId,
                     totalPrice: amountToPay,
                     travelDate: travelDateObj, 
                     travelers: calculatedTravelers, 

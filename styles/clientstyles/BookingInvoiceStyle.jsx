@@ -1,4 +1,6 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get("window");
 
 export default StyleSheet.create({
     safeArea: {
@@ -172,14 +174,6 @@ export default StyleSheet.create({
         color: '#333',
         fontFamily: 'Montserrat_600SemiBold',
     },
-    txnStatus: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
-        overflow: 'hidden',
-        fontSize: 12,
-        fontFamily: 'Montserrat_600SemiBold',
-    },
 
     // --- DOCUMENTS ---
     travelerDocSection: {
@@ -228,7 +222,179 @@ export default StyleSheet.create({
         backgroundColor: '#f8fafc',
     },
 
-    // --- PROCEED TO CHECKOUT ---
+    // --- INLINE PAYMENT METHODS (NEW) ---
+    methodGridContainer: {
+        flexDirection: 'column',
+        gap: 12,
+        marginBottom: 20,
+    },
+    methodGridCard: {
+        backgroundColor: '#fff',
+        borderWidth: 1.5,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 16,
+    },
+    methodGridCardSelected: {
+        borderColor: '#305797',
+        backgroundColor: '#f8faff',
+    },
+    methodRadioHeader: {
+        marginBottom: 12,
+    },
+    radioCircle: {
+        height: 24,
+        width: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: '#cbd5e1',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    radioCircleSelected: {
+        borderColor: '#305797',
+    },
+    radioInner: {
+        height: 12,
+        width: 12,
+        borderRadius: 6,
+        backgroundColor: '#305797',
+    },
+    modeTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 16,
+        color: '#1e293b',
+        marginBottom: 6,
+    },
+    modeDesc: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+        color: '#64748b',
+        lineHeight: 18,
+    },
+    modeNote: {
+        fontSize: 12,
+    },
+    
+    // --- MANUAL BANK & UPLOAD SECTION (NEW) ---
+    manualBankSection: {
+        marginTop: 5,
+    },
+    bankGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    bankGridCard: {
+        width: '48%',
+        backgroundColor: '#f8fafc',
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        marginBottom: 10,
+    },
+    bankName: {
+        fontFamily: 'Montserrat_700Bold',
+        color: '#305797',
+        fontSize: 13,
+        marginBottom: 4,
+    },
+    bankAccount: {
+        fontFamily: 'Roboto_500Medium',
+        fontSize: 12,
+        color: '#333',
+        marginBottom: 2,
+    },
+    bankHolder: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 9,
+        color: '#64748b',
+        textTransform: 'uppercase',
+    },
+    uploadSection: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 16,
+    },
+    uploadTitle: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 15,
+        color: '#333',
+        marginBottom: 6,
+    },
+    uploadSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 12,
+        color: '#64748b',
+        marginBottom: 16,
+    },
+    selectImageBtn: {
+        backgroundColor: '#305797',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        borderRadius: 8,
+        gap: 8,
+        marginBottom: 20,
+    },
+    selectImageBtnText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 14,
+    },
+    imagePreviewContainer: {
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
+        paddingTop: 16,
+    },
+    previewImageLabel: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#333',
+        marginBottom: 10,
+    },
+    previewImageBox: {
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        borderRadius: 8,
+        minHeight: 150,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+    },
+    imageWrapper: {
+        position: 'relative',
+        width: '100%',
+        alignItems: 'center',
+    },
+    previewSelectedImage: {
+        width: '100%',
+        height: 250,
+        borderRadius: 6,
+    },
+    removeImageBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: '#fee2e2',
+        padding: 8,
+        borderRadius: 20,
+        elevation: 2,
+    },
+    noImageText: {
+        color: '#9ca3af',
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+    },
+
+    // --- PROCEED BUTTON ---
     checkoutSection: {
         backgroundColor: '#f8fafc',
         borderRadius: 8,
@@ -280,4 +446,16 @@ export default StyleSheet.create({
         fontSize: 15,
         marginLeft: 8,
     },
+
+    // --- MODAL CONFIRMATION STYLES ---
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    modalBox: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 24, paddingTop: 35, alignItems: 'center', elevation: 5 },
+    closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
+    modalTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 22, color: '#305797', marginBottom: 12 },
+    modalSubtitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25 },
+    modalButtonRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 12 },
+    proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+    proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
+    cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 }
 });

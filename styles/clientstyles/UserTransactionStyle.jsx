@@ -1,13 +1,14 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { height } = Dimensions.get("window");
 
 export default StyleSheet.create({
     container: {
         padding: 15,
-        backgroundColor: "#f5f7fa", // Matched Bookings background
+        backgroundColor: "#f5f7fa", 
         flexGrow: 1, 
         paddingBottom: 40,
     },
-    // --- REDESIGNED HEADER TO MATCH BOOKINGS ---
     title: {
         fontSize: 20, 
         fontFamily: "Montserrat_700Bold",
@@ -111,9 +112,12 @@ export default StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         fontSize: 11,
     },
+    cardBody: {
+        marginBottom: 10,
+    },
     packageName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 16,
+        fontSize: 14,
         color: "#305797",
         marginBottom: 8,
     },
@@ -125,35 +129,57 @@ export default StyleSheet.create({
     detailLabel: {
         fontFamily: "Roboto_400Regular",
         color: "#777",
-        fontSize: 13
+        fontSize: 12
     },
     detailValue: {
         fontFamily: "Roboto_500Medium",
         color: "#333",
-        fontSize: 13
+        fontSize: 12
     },
     amount: {
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
-        fontSize: 15
+        fontSize: 14
+    },
+    
+    // --- CARD BUTTONS ---
+    actionButtonsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 5,
     },
     viewButton: {
         backgroundColor: "#305797",
-        padding: 12,
-        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
         alignItems: "center",
-        marginTop: 10
+        flexDirection: "row",
+        justifyContent: 'center',
+        gap: 6,
+        flex: 1,
+    },
+    viewProofButton: {
+        backgroundColor: "#305797",
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: 'center',
+        gap: 6,
+        flex: 1,
     },
     buttonText: {
         color: "#fff",
-        fontFamily: "Montserrat_700Bold",
-        fontSize: 13
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 12
     },
 
-    // --- MODAL STYLES ---
+    // --- UTILITY MODAL STYLES ---
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -181,7 +207,7 @@ export default StyleSheet.create({
         fontFamily: 'Roboto_500Medium'
     },
 
-    // --- EMPTY STATE STYLES ---
+    // --- EMPTY STATE ---
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -198,5 +224,193 @@ export default StyleSheet.create({
         fontSize: 16,
         color: '#999',
         marginTop: 15,
+    },
+
+    // --- PROOF IMAGE MODAL ---
+    proofImageContainer: {
+        width: '90%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 15,
+        alignItems: 'center',
+    },
+    proofHeader: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    proofTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 16,
+        color: "#305797",
+    },
+    proofImage: {
+        width: '100%',
+        height: 400,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+
+    // --- RECEIPT MODAL (Matches Web Layout) ---
+    receiptPaper: {
+        backgroundColor: '#fff',
+        width: '95%',
+        height: height * 0.8,
+        borderRadius: 8,
+        padding: 20,
+        elevation: 10,
+    },
+    receiptCloseBtn: {
+        position: 'absolute',
+        top: -10,
+        right: -10,
+        zIndex: 10,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+    },
+    receiptHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        paddingBottom: 15,
+        marginBottom: 15,
+    },
+    receiptCompanyBlock: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    receiptLogo: {
+        width: 50,
+        height: 40,
+        marginRight: 10,
+    },
+    receiptCompanyDetails: {
+        justifyContent: 'center',
+    },
+    receiptCompanyName: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 10,
+        color: '#305797',
+        marginBottom: 2
+    },
+    receiptMutedText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 7.5,
+        color: '#555',
+        marginTop: 1,
+    },
+    receiptTitleText: {
+        fontFamily: "Montserrat_400Regular",
+        fontSize: 18,
+        color: '#333',
+    },
+    receiptMetaRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    receiptBilledTo: {
+        flex: 1,
+    },
+    receiptMetaRight: {
+        alignItems: 'flex-end',
+    },
+    receiptTinyLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 7,
+        color: '#305797', // Using blue to match web label-blue
+        marginBottom: 4,
+        textTransform: 'uppercase'
+    },
+    receiptCustomerName: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 11,
+        color: '#333',
+    },
+    receiptMetaValue: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 10,
+        color: '#333',
+    },
+    receiptTable: {
+        width: '100%',
+        marginBottom: 20,
+    },
+    receiptTableHeader: {
+        flexDirection: 'row',
+        backgroundColor: '#374151',
+        paddingVertical: 8,
+        paddingHorizontal: 5,
+    },
+    receiptTh: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 8,
+        color: '#fff',
+    },
+    receiptTableRow: {
+        flexDirection: 'row',
+        paddingVertical: 12,
+        paddingHorizontal: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
+    },
+    receiptTd: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 9,
+        color: '#333',
+    },
+    receiptSummaryBlock: {
+        alignItems: 'flex-end',
+        marginTop: 10,
+        paddingRight: 5,
+    },
+    receiptSummaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '60%',
+        marginBottom: 10,
+    },
+    receiptSummaryLabel: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 10,
+        color: '#555',
+    },
+    receiptSummaryValue: {
+        fontFamily: "Roboto_500Medium",
+        fontSize: 10,
+        color: '#333',
+    },
+    receiptTotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '60%',
+        borderTopWidth: 1,
+        borderTopColor: '#333',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+        paddingVertical: 8,
+        marginBottom: 20,
+    },
+    receiptTotalLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 11,
+        color: '#305797',
+    },
+    receiptTotalValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 11,
+        color: '#333',
+    },
+    receiptFooterText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 8,
+        color: '#777',
+        marginTop: 5,
     }
 });

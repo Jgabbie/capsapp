@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Modal, TouchableWithoutFeedback } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { Calendar } from 'react-native-calendars';
 import dayjs from "dayjs";
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import Constants from "expo-constants";
 
 import QuotationFormStyle from "../../styles/clientstyles/QuotationFormStyle";
@@ -12,6 +13,8 @@ import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
+
+dayjs.extend(isSameOrBefore);
 
 // Utility for fetching images
 const getTravelSystemApiBase = () => {
@@ -35,15 +38,16 @@ const periodsList = ['AM', 'PM'];
 
 export default function QuotationForm({ route, navigation }) {
     const { user } = useUser();
+    const today = dayjs();
     
-    // 🔥 UPDATED DATA EXTRACTION: Catches the ID no matter how it was passed
+    // Data Extraction
     const { pkg, packageId: routePackageId, id: routeId } = route.params || {};
     const finalPackageId = pkg?._id || pkg?.id || routePackageId || routeId;
     
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- DATA EXTRACTION (Matches Web) ---
+    // --- PACKAGE DATA ---
     const hotels = pkg?.packageHotels || [];
     const airlines = pkg?.packageAirlines || [];
     const fixedItinerary = pkg?.packageItineraries || {};
@@ -76,7 +80,6 @@ export default function QuotationForm({ route, navigation }) {
 
     // --- FORM STATES ---
     const [packageCategory, setPackageCategory] = useState("All in Package");
-    const [travelers, setTravelers] = useState("1");
     const [preferredAirlines, setPreferredAirlines] = useState("");
     const [preferredHotels, setPreferredHotels] = useState("");
     const [preferredDate, setPreferredDate] = useState(""); 
@@ -84,35 +87,47 @@ export default function QuotationForm({ route, navigation }) {
     const [itineraryNotes, setItineraryNotes] = useState(itineraryLabels.map(() => ""));
     const [additionalComments, setAdditionalComments] = useState("");
     
+    // 🔥 NEW: TRAVELER STATES MATCHING WEB 🔥
+    const [travelerType, setTravelerType] = useState('solo');
+    const [adultCount, setAdultCount] = useState(2);
+    const [childCount, setChildCount] = useState(0);
+    const [infantCount, setInfantCount] = useState(0);
+
     // Flight Details States
     const [flightAirline, setFlightAirline] = useState("");
     const [flightDate, setFlightDate] = useState("");
     const [flightTime, setFlightTime] = useState("");
     
-    // Temp States for Custom Time Picker
     const [tempHour, setTempHour] = useState("12");
     const [tempMinute, setTempMinute] = useState("00");
     const [tempPeriod, setTempPeriod] = useState("PM");
 
     const [errors, setErrors] = useState({});
 
-    // Dropdown Modal States
     const [isHotelModalOpen, setHotelModalOpen] = useState(false);
     const [isAirlineModalOpen, setAirlineModalOpen] = useState(false);
     const [isDateModalOpen, setDateModalOpen] = useState(false);
-    
-    // NEW: Flight Modal States
     const [isFlightDateModalOpen, setFlightDateModalOpen] = useState(false);
     const [isFlightTimeModalOpen, setFlightTimeModalOpen] = useState(false);
+
+    // Auto-adjust group minimum
+    useEffect(() => {
+        if (travelerType === 'group' && adultCount < 2) {
+            setAdultCount(2);
+        }
+    }, [travelerType, adultCount]);
+
 
     // --- VALIDATION LOGIC ---
     const validate = () => {
         let newErrors = {};
         
-        if (!travelers || parseInt(travelers) < 1) newErrors.travelers = "Please enter the number of travelers";
+        const totalTravelers = travelerType === 'solo' ? 1 : Math.max(0, adultCount) + Math.max(0, childCount) + Math.max(0, infantCount);
+
+        if (!totalTravelers || totalTravelers < 1) newErrors.travelers = "Please enter the number of travelers";
         
         if (packageCategory !== 'Land Arrangement') {
-            if (!preferredAirlines.trim()) newErrors.preferredAirlines = "Please provide your preferred airlines";
+            if (!preferredAirlines.trim() && airlines.length > 0) newErrors.preferredAirlines = "Please provide your preferred airlines";
         }
         
         if (!preferredHotels.trim()) newErrors.preferredHotels = "Please provide your preferred hotels";
@@ -131,7 +146,6 @@ export default function QuotationForm({ route, navigation }) {
         return Object.keys(newErrors).length === 0;
     };
 
-    // 🔥 UPDATED HANDLE SUBMIT
     const handleSubmit = async () => {
         if (!validate()) {
             Alert.alert("Missing Information", "Please fix the highlighted errors before submitting.");
@@ -152,24 +166,37 @@ export default function QuotationForm({ route, navigation }) {
                 flightDetails = { flightAirline: "", flightDate: "", flightTime: "" };
             }
 
-            // 🔥 CRITICAL FIX: The payload structure now perfectly matches the backend!
-            const payload = {
-                packageId: finalPackageId,
-                packageName: pkg?.packageName || "Custom Tour Package", // Backend explicitly requires this!
-                travelDetails: { // Changed from 'quotationDetails' to 'travelDetails'
-                    travelers: parseInt(travelers) || 1,
-                    preferredAirlines,
-                    preferredHotels,
-                    budgetRange,
-                    itineraryNotes,
-                    additionalComments: additionalComments || "None",
-                    flightDetails,
-                    packageCategory,
-                    preferredDate
-                }
+            // Structured traveler count exactly like the web
+            const travelersPayload = travelerType === 'solo' 
+                ? { adult: 1, child: 0, infant: 0 } 
+                : { adult: adultCount, child: childCount, infant: infantCount };
+
+            // The core data object
+            const detailsObject = { 
+                travelers: travelersPayload,
+                preferredAirlines,
+                preferredHotels,
+                budgetRange,
+                itineraryNotes,
+                additionalComments: additionalComments || "None",
+                flightDetails,
+                packageCategory,
+                // Include both spellings used by your Web (Domestic vs Intl)
+                preferredDates: preferredDate, 
+                prefferedDate: preferredDate 
             };
 
-            console.log("📤 Sending Quotation Payload:", JSON.stringify(payload, null, 2));
+            // 🔥 THE UNIVERSAL PAYLOAD 🔥
+            // We send BOTH 'travelDetails' (for Mobile Backend) AND 'quotationDetails' (for Web Backend).
+            // This mathematically guarantees that neither backend will throw a "Missing required fields" 400 error!
+            const payload = {
+                packageId: finalPackageId,
+                packageName: pkg?.packageName || pkg?.title || "Tour Package", // Required by Mobile Backend
+                travelDetails: detailsObject,      // Required by Mobile Backend
+                quotationDetails: detailsObject    // Required by Web Backend
+            };
+
+            console.log("📤 Sending Universal Payload:", JSON.stringify(payload, null, 2));
 
             await api.post("/quotation/create-quotation", payload, withUserHeader(user?._id));
             
@@ -272,17 +299,67 @@ export default function QuotationForm({ route, navigation }) {
                 {/* --- FORM FIELDS --- */}
                 <View style={QuotationFormStyle.section}>
                     
-                    <View style={QuotationFormStyle.inputGroup}>
-                        <Text style={QuotationFormStyle.inputLabel}>Number of Travelers <Text style={{color: 'red'}}>*</Text></Text>
-                        <TextInput 
-                            style={[QuotationFormStyle.textInput, errors.travelers && QuotationFormStyle.inputErrorBorder]}
-                            keyboardType="numeric"
-                            value={travelers}
-                            onChangeText={setTravelers}
-                        />
-                        {errors.travelers && <Text style={QuotationFormStyle.errorText}>{errors.travelers}</Text>}
-                        <Text style={QuotationFormStyle.helperNote}>Note: If you are a solo traveler, an additional single supplement rate may apply.</Text>
-                    </View>
+                    {/* 🔥 NEW TRAVELERS SELECTOR TO MATCH WEB 🔥 */}
+                    <Text style={QuotationFormStyle.inputLabel}>Travelers <Text style={{color: 'red'}}>*</Text></Text>
+                    
+                    <TouchableOpacity 
+                        style={[QuotationFormStyle.selectionCard, travelerType === 'solo' && QuotationFormStyle.selectionCardActive]}
+                        onPress={() => setTravelerType('solo')}
+                    >
+                        <Text style={QuotationFormStyle.selectionTitle}>Solo</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>Note: If you are a solo traveler, an additional single supplement rate may apply.</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[QuotationFormStyle.selectionCard, travelerType === 'group' && QuotationFormStyle.selectionCardActive, {marginBottom: 10}]}
+                        onPress={() => setTravelerType('group')}
+                    >
+                        <Text style={QuotationFormStyle.selectionTitle}>Group</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>Note: Group bookings may have different pricing and availability. The maximum pax allowed per booking is 2 or more.</Text>
+                    </TouchableOpacity>
+
+                    {travelerType === 'group' && (
+                        <View style={{ marginBottom: 20 }}>
+                            <View style={QuotationFormStyle.travelerCounterRow}>
+                                <Text style={QuotationFormStyle.travelerCounterLabel}>Adult</Text>
+                                <View style={QuotationFormStyle.travelerCounterControls}>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setAdultCount(Math.max(2, adultCount - 1))}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
+                                    </TouchableOpacity>
+                                    <Text style={QuotationFormStyle.travelerCounterValue}>{adultCount}</Text>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setAdultCount(adultCount + 1)}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            
+                            <View style={QuotationFormStyle.travelerCounterRow}>
+                                <Text style={QuotationFormStyle.travelerCounterLabel}>Child</Text>
+                                <View style={QuotationFormStyle.travelerCounterControls}>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setChildCount(Math.max(0, childCount - 1))}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
+                                    </TouchableOpacity>
+                                    <Text style={QuotationFormStyle.travelerCounterValue}>{childCount}</Text>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setChildCount(childCount + 1)}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            <View style={QuotationFormStyle.travelerCounterRow}>
+                                <Text style={QuotationFormStyle.travelerCounterLabel}>Infant</Text>
+                                <View style={QuotationFormStyle.travelerCounterControls}>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setInfantCount(Math.max(0, infantCount - 1))}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
+                                    </TouchableOpacity>
+                                    <Text style={QuotationFormStyle.travelerCounterValue}>{infantCount}</Text>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setInfantCount(infantCount + 1)}>
+                                        <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    )}
 
                     {packageCategory === 'All in Package' && (
                         <View style={QuotationFormStyle.inputGroup}>
@@ -316,6 +393,7 @@ export default function QuotationForm({ route, navigation }) {
                         <Text style={QuotationFormStyle.helperNote}>Note: Hotel rates may increase if you choose a hotel other than the fixed one.</Text>
                     </View>
 
+                    {/* 🔥 UPDATED DATES TO MATCH WEB SELECTOR 🔥 */}
                     <View style={QuotationFormStyle.inputGroup}>
                         <Text style={QuotationFormStyle.inputLabel}>Preferred Travel Dates <Text style={{color: 'red'}}>*</Text></Text>
                         <TouchableOpacity 
@@ -325,7 +403,7 @@ export default function QuotationForm({ route, navigation }) {
                             <Text style={preferredDate ? QuotationFormStyle.dropdownText : QuotationFormStyle.dropdownPlaceholder}>
                                 {preferredDate || "Select preferred dates"}
                             </Text>
-                            {isInternational ? <Ionicons name="chevron-down" size={16} color="#bfbfbf" /> : <Ionicons name="calendar-outline" size={16} color="#bfbfbf" />}
+                            <Ionicons name="chevron-down" size={16} color="#bfbfbf" />
                         </TouchableOpacity>
                         {errors.preferredDate && <Text style={QuotationFormStyle.errorText}>{errors.preferredDate}</Text>}
                     </View>
@@ -511,38 +589,47 @@ export default function QuotationForm({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/* DATE MODAL (Dynamic: Calendar for Domestic, List for International) */}
+            {/* 🔥 NEW DATE MODAL: MATCHES WEB SELECTOR WITH SLOTS 🔥 */}
             <Modal visible={isDateModalOpen} transparent animationType="fade">
                 <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setDateModalOpen(false)}>
                     <TouchableWithoutFeedback>
-                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 15, maxHeight: '70%' }]}>
+                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 0, maxHeight: '70%' }]}>
                             <Text style={{ textAlign: 'center', fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>Select Travel Dates</Text>
-                            
-                            {isInternational ? (
-                                <ScrollView>
-                                    {dateRanges.map((range, i) => {
-                                        const rangeString = `${formatDate(range.startdaterange)} - ${formatDate(range.enddaterange)}`;
-                                        return (
-                                            <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredDate(`${rangeString} (Slots: ${range.slots})`); setDateModalOpen(false); }}>
-                                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
-                                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#777', textAlign: 'center', fontSize: 12 }}>Slots: {range.slots}</Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </ScrollView>
-                            ) : (
-                                <Calendar 
-                                    onDayPress={(day) => { setPreferredDate(day.dateString); setDateModalOpen(false); }} 
-                                    theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
-                                    minDate={new Date().toISOString().split('T')[0]} // Prevent past dates
-                                />
-                            )}
+                            <ScrollView>
+                                {dateRanges.length === 0 ? (
+                                    <Text style={{ textAlign: 'center', padding: 20, color: '#888' }}>No dates available.</Text>
+                                ) : (
+                                    dateRanges
+                                        .filter((range) => dayjs(range.startdaterange).isAfter(today, 'day'))
+                                        .map((range, i) => {
+                                            const rangeString = `${formatDate(range.startdaterange)} - ${formatDate(range.enddaterange)}`;
+                                            const hasSlots = Number(range.slots) > 0;
+                                            
+                                            return (
+                                                <TouchableOpacity 
+                                                    key={i} 
+                                                    style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0', backgroundColor: hasSlots ? '#fff' : '#f9f9f9', opacity: hasSlots ? 1 : 0.5 }} 
+                                                    disabled={!hasSlots}
+                                                    onPress={() => { 
+                                                        setPreferredDate(`${rangeString} (Slots: ${range.slots})`); 
+                                                        setDateModalOpen(false); 
+                                                    }}
+                                                >
+                                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
+                                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: hasSlots ? '#305797' : '#e74c3c', textAlign: 'center', fontSize: 12, marginTop: 4 }}>
+                                                        {hasSlots ? `Slots Available: ${range.slots}` : 'Fully Booked'}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })
+                                )}
+                            </ScrollView>
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
             </Modal>
 
-            {/* FLIGHT DATE MODAL (Always Calendar) */}
+            {/* FLIGHT DATE MODAL */}
             <Modal visible={isFlightDateModalOpen} transparent animationType="fade">
                 <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setFlightDateModalOpen(false)}>
                     <TouchableWithoutFeedback>
@@ -558,7 +645,7 @@ export default function QuotationForm({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/* FLIGHT TIME MODAL (Custom Scrolling Picker mimicking Ant Design) */}
+            {/* FLIGHT TIME MODAL */}
             <Modal visible={isFlightTimeModalOpen} transparent animationType="fade">
                 <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setFlightTimeModalOpen(false)}>
                     <TouchableWithoutFeedback>

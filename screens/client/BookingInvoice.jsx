@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as Linking from 'expo-linking'; 
+import * as ImagePicker from 'expo-image-picker'; 
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import AdminSidebar from "../../components/AdminSidebar";
 import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
+import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
-import { generateBookingInvoicePdf } from "../../utils/bookingInvoicePdf"; 
 
 export default function BookingInvoice({ route, navigation }) {
     const { user } = useUser();
@@ -28,48 +29,115 @@ export default function BookingInvoice({ route, navigation }) {
     const [loading, setLoading] = useState(true);
     
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-    const [invoicePdfUrl, setInvoicePdfUrl] = useState("");
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [invoiceNumber, setInvoiceNumber] = useState("");
+
+    const [method, setMethod] = useState('paymongo');
+    const [proofImage, setProofImage] = useState(null);
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
     const bookingDetails = booking?.bookingDetails || {};
-    const reference = booking?.reference || booking?.ref || "--";
+    const reference = booking?.reference || booking?.ref || booking?._id || "--";
+
+    const buildInvoiceNumber = (allBookings, currentBooking) => {
+        if (!currentBooking) return "";
+        const createdAtValue = currentBooking.createdAt || currentBooking.bookingDate;
+        const createdAt = createdAtValue ? dayjs(createdAtValue) : null;
+        if (!createdAt || !createdAt.isValid()) return "";
+
+        const monthKey = createdAt.format("MM");
+        const monthBookings = (allBookings || [])
+            .map((item) => ({ ...item, _createdAt: item.createdAt || item.bookingDate }))
+            .filter((item) => item._createdAt && dayjs(item._createdAt).isValid())
+            .filter((item) => dayjs(item._createdAt).isSame(createdAt, "month"));
+
+        monthBookings.sort((a, b) => new Date(a._createdAt) - new Date(b._createdAt));
+        const index = monthBookings.findIndex((item) => String(item._id) === String(currentBooking._id));
+        const sequence = index >= 0 ? index + 1 : monthBookings.length + 1;
+        return `${monthKey}${String(sequence).padStart(2, "0")}`;
+    };
 
     useEffect(() => {
         if (!reference || reference === "--") {
             setLoading(false);
             return;
         }
+
         const fetchAllData = async () => {
+            let finalBooking = rawBooking;
+            let finalTxns = [];
+
             try {
+                // Primary Fetch
                 const bookingRes = await api.get(`/booking/by-reference/${reference}`, withUserHeader(user?._id));
-                setBooking(bookingRes.data?.booking || rawBooking);
-                setTransactions(bookingRes.data?.transactions || []);
+                finalBooking = bookingRes.data?.booking || rawBooking;
+                finalTxns = bookingRes.data?.transactions || [];
             } catch (err) {
-                console.error("Failed to load live booking details:", err);
-            } finally {
-                setLoading(false);
+                console.log("Primary fetch failed. Triggering Transaction Fallback...");
+                
+                // 🔥 THE BULLETPROOF FALLBACK 🔥
+                // If by-reference 500s, we grab the transactions directly and link them!
+                try {
+                    const txRes = await api.get('/transaction/my-transactions', withUserHeader(user?._id));
+                    const allTx = txRes.data?.transactions || txRes.data || [];
+                    
+                    // 🔥 FIXED FILTER: Accurately checks the nested bookingId reference!
+                    finalTxns = allTx.filter(tx => 
+                        String(tx.bookingId?._id || tx.bookingId) === String(rawBooking?._id || rawBooking?.id) || 
+                        tx.bookingId?.reference === reference ||
+                        tx.bookingReference === reference
+                    );
+                } catch (txErr) {
+                    console.log("Fallback transaction fetch failed:", txErr.message);
+                }
             }
+
+            setBooking(finalBooking);
+            setTransactions(finalTxns);
+
+            if (finalBooking?._id) {
+                try {
+                    const allBookingsRes = await api.get("/booking/all-bookings", withUserHeader(user?._id));
+                    const number = buildInvoiceNumber(allBookingsRes.data || [], finalBooking);
+                    if (number) setInvoiceNumber(number);
+                    else {
+                        const cDate = finalBooking.createdAt || finalBooking.bookingDate;
+                        if (cDate) setInvoiceNumber(`${dayjs(cDate).format("MM")}01`);
+                    }
+                } catch (countErr) {
+                    const cDate = finalBooking.createdAt || finalBooking.bookingDate || new Date();
+                    setInvoiceNumber(`${dayjs(cDate).format("MM")}01`);
+                }
+            }
+
+            setLoading(false);
         };
         fetchAllData();
     }, [reference, user?._id]);
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat("en-PH", {
-            style: "currency", currency: "PHP", minimumFractionDigits: 2, maximumFractionDigits: 2
-        }).format(Number(value || 0));
-    };
+    const formatCurrency = (value) => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+    const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const totalPrice = Number(booking?.totalPrice || bookingDetails?.totalPrice || 0);
-    const paidAmount = transactions
+    const computedPaidFromTxns = transactions
         .filter(txn => txn.status === "Paid" || txn.status === "Successful" || txn.status === "Fully Paid")
         .reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+        
+    // 🔥 DOUBLE SAFETY NET: Checks rawBooking computedStatus to ensure it doesn't show ₱0.00
+    const isPaidStatus = booking?.status === "Fully Paid" || booking?.status === "Successful" || rawBooking?.status === "Fully Paid" || rawBooking?.computedStatus === "Fully Paid";
+    const fallbackPaidAmount = isPaidStatus ? totalPrice : Number(booking?.paidAmount || rawBooking?.paidAmount || 0);
 
+    const paidAmount = transactions.length > 0 ? computedPaidFromTxns : fallbackPaidAmount;
     const remainingBalance = Math.max(totalPrice - paidAmount, 0);
 
-    const transactionStatus = transactions.length === 0 ? "Pending" : (paidAmount >= totalPrice ? "Fully Paid" : "Partial");
+    const transactionStatus = (transactions.length === 0 && paidAmount === 0) 
+        ? "Not Paid" : (paidAmount >= totalPrice ? "Fully Paid" : "Partial");
+
     const getPaymentStatus = () => {
-        if (booking?.status === 'Cancelled' || booking?.status === 'cancellation requested') return { label: booking.status, color: "#555", bg: "#eee" };
+        if (booking?.status === 'Cancelled' || booking?.status === 'cancellation requested' || rawBooking?.computedStatus === 'Cancelled') return { label: booking?.status || 'Cancelled', color: "#555", bg: "#eee" };
         if (transactionStatus === "Fully Paid" || transactionStatus === "Paid") return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
-        if (transactionStatus === "Pending") return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" };
+        if (transactionStatus === "Not Paid") return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" }; 
         return { label: "Balance Due", color: "#d48806", bg: "#fffbe6" };
     };
     const paymentStatus = getPaymentStatus();
@@ -84,45 +152,22 @@ export default function BookingInvoice({ route, navigation }) {
             const e = dayjs(booking.travelDate.endDate);
             if (s.isValid() && e.isValid()) formattedTravelDate = `${s.format('MMM D, YYYY')} - ${e.format('MMM D, YYYY')}`;
             else formattedTravelDate = `${booking.travelDate.startDate} - ${booking.travelDate.endDate}`;
-        } else if (typeof booking?.travelDate === 'string') {
-            formattedTravelDate = booking.travelDate;
-        } else if (bookingDetails?.travelDate) {
-            formattedTravelDate = bookingDetails.travelDate;
-        }
+        } else if (typeof booking?.travelDate === 'string') formattedTravelDate = booking.travelDate;
+        else if (bookingDetails?.travelDate) formattedTravelDate = bookingDetails.travelDate;
+        else if (rawBooking?.formattedTravelDate) formattedTravelDate = rawBooking.formattedTravelDate;
     } catch(e) { formattedTravelDate = '--'; }
 
-    const handleViewInvoice = () => {
-        if (invoicePdfUrl) {
-            Linking.openURL(invoicePdfUrl);
-        } else {
-            Alert.alert("Generating...", "Please wait a moment while the invoice is generated.");
-        }
-    };
+    const handleViewInvoice = () => setShowInvoiceModal(true);
 
-    useEffect(() => {
-        if (!booking) return;
-        try {
-            const travelersCount = Number(booking?.travelers || bookingDetails?.travelers?.length || 1);
-            const invoiceData = {
-                company: { name: "M&RC Travel and Tours", address: "Parañaque City, Philippines", email: "info@mrc-travel.com", phone: "+63 9690554806" },
-                invoice: { number: reference, issueDate: dayjs(booking?.createdAt).format("MMM D, YYYY"), status: remainingBalance > 0 ? "Unpaid" : "Paid" },
-                customer: { name: bookingDetails.leadFullName || "Customer", email: user?.email || "N/A", phone: bookingDetails.leadContact || "N/A" },
-                booking: { reference, packageName, travelDates: formattedTravelDate, travelers: travelersCount },
-                items: [{ description: packageName, qty: 1, rate: totalPrice, amount: totalPrice }],
-                subtotal: totalPrice, tax: 0, totalWithTax: totalPrice,
-            };
-            const { dataUri } = generateBookingInvoicePdf(invoiceData);
-            setInvoicePdfUrl(dataUri);
-        } catch (_error) {
-            setInvoicePdfUrl("");
-        }
-    }, [booking, remainingBalance, totalPrice, formattedTravelDate]);
-
-    // 🔥 "UNIVERSAL TRANSLATOR" FOR TRAVELERS 🔥
-    const baseTravelers = Array.isArray(bookingDetails?.travelers) 
-        ? bookingDetails.travelers 
-        : Array.isArray(bookingDetails?.passengers) ? bookingDetails.passengers : [];
-        
+    const issueDate = booking?.createdAt ? dayjs(booking.createdAt) : dayjs();
+    const travelDateObj = booking?.travelDate?.startDate ? dayjs(booking.travelDate.startDate) : dayjs().add(1, 'month');
+    const dueDateDisplay = travelDateObj.isValid() ? travelDateObj.subtract(25, 'day') : issueDate.add(14, 'day');
+    
+    const customerName = bookingDetails?.leadFullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
+    const travelerTotal = Number(booking?.travelers || bookingDetails?.travelers?.length || bookingDetails?.passengers?.length || 1);
+    const ratePerPax = travelerTotal > 0 ? totalPrice / travelerTotal : totalPrice;
+    
+    const baseTravelers = Array.isArray(bookingDetails?.travelers) ? bookingDetails.travelers : Array.isArray(bookingDetails?.passengers) ? bookingDetails.passengers : [];
     const fallbackPassports = bookingDetails?.passportFiles || booking?.passportFiles || [];
     const fallbackPhotos = bookingDetails?.photoFiles || booking?.photoFiles || [];
 
@@ -149,7 +194,86 @@ export default function BookingInvoice({ route, navigation }) {
         return d.isValid() ? d.format('MMM D, YYYY') : dateStr;
     };
 
-    // --- EXACT A4 PDF LAYOUT FROM SCREENSHOTS ---
+    // ==========================================
+    // 🔥 BASE64 PAYMENT UPLOAD (BYPASSES 500 ERROR) 🔥
+    // ==========================================
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({ 
+            mediaTypes: ['images'], 
+            allowsEditing: true, 
+            base64: true, // 🔥 Crucial for bypass
+            quality: 0.5 
+        });
+        if (!result.canceled) setProofImage(result.assets[0]);
+    };
+
+    const handleProceedClick = () => {
+        if (method === 'manual' && !proofImage) {
+            Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
+            return;
+        }
+        setIsProceedModalOpen(true);
+    };
+
+    const executePaymentFlow = async () => {
+        setIsProceedModalOpen(false); 
+        setPaymentLoading(true);
+
+        try {
+            const targetPackageId = booking?.packageId?._id || booking?.packageId?.id || booking?.packageId;
+
+            if (method === 'manual') {
+                if (!proofImage?.base64) {
+                    Alert.alert("Error", "Image data is missing. Please re-select the image.");
+                    setPaymentLoading(false);
+                    return;
+                }
+                
+                // 🔥 THE BYPASS: Send image as Base64 string directly to manual-deposit, ignoring the broken upload route!
+                const base64Image = `data:${proofImage.mimeType || 'image/jpeg'};base64,${proofImage.base64}`;
+                const filename = proofImage.fileName || proofImage.uri.split('/').pop() || 'deposit.jpg';
+
+                const manualPayload = {
+                    bookingId: booking?._id || rawBooking?._id || rawBooking?.id,
+                    packageId: targetPackageId,
+                    amount: remainingBalance,
+                    proofImage: base64Image,
+                    proofImageType: proofImage.mimeType || 'image/jpeg',
+                    proofFileName: filename
+                };
+
+                await api.post('/payment/manual-deposit', manualPayload, withUserHeader(user?._id));
+                setPaymentLoading(false);
+                navigation.navigate("paymentsuccess", { reference, mode: 'manual' });
+
+            } else {
+                // PayMongo
+                const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: reference, mode: 'online' } });
+                const cancelDeepLink = Linking.createURL('bookinginvoice');
+
+                const paymentPayload = {
+                    bookingId: booking?._id || rawBooking?._id || rawBooking?.id,
+                    bookingReference: reference,
+                    packageId: targetPackageId,
+                    totalPrice: remainingBalance,
+                    successUrl: successDeepLink,
+                    cancelUrl: cancelDeepLink,
+                };
+
+                const response = await api.post('/payment/create-checkout-session-deposit', { paymentPayload }, withUserHeader(user?._id));
+                const checkoutUrl = response.data?.data?.attributes?.checkout_url || response.data?.checkoutUrl;
+
+                setPaymentLoading(false); 
+                if (checkoutUrl) Linking.openURL(checkoutUrl);
+            }
+        } catch (error) {
+            setPaymentLoading(false);
+            console.error("Payment Error:", error);
+            Alert.alert("Error", "Failed to process payment. Please try again.");
+        }
+    };
+
+
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
         try {
@@ -299,25 +423,25 @@ export default function BookingInvoice({ route, navigation }) {
                                 <div class="detail-box">${bookingDetails?.medicalDetails || ''}</div>
                             </div>
                             
-                            <div style="border: 1px solid #000; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                            <div style="border: 1px solid #000; padding: 15px; margin-top: 20px; border-radius: 5px;">
                                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 10px;">TRAVEL INSURANCE</div>
                                 <p style="font-size: 9px; margin-bottom: 15px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
                                 
-                                <table style="width: 100%; border: none;">
-                                    <tr>
-                                        <td style="border: none; padding: 0; width: 90%;"><strong>Do you agree to purchase a Travel Insurance from us?</strong></td>
-                                        <td style="border: none; text-align: right;"><div class="yes-no-box">${bookingDetails?.purchaseInsurance === 'Y' ? 'Y' : 'N'}</div></td>
-                                    </tr>
-                                </table>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div style="width: 80%; font-size: 10px;">Do you agree to purchase a Travel Insurance from us?</div>
+                                    <div style="width: 15%; border: 1px solid #000; text-align: center; padding: 5px; font-weight: bold;">
+                                        ${bookingDetails?.purchaseInsurance === 'Y' ? 'Y' : 'N'}
+                                    </div>
+                                </div>
                                 <p style="font-style: italic; font-size: 8px; color: #555; margin-bottom: 15px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
                                 
                                 <table style="margin: 0;">
                                     <tr>
-                                        <td style="width: 35%; text-align: right; font-weight: bold; border: 1px solid #000; background-color: #fff;">If YES, please indicate details:</td>
+                                        <td style="width: 40%; text-align: right; font-weight: bold; border: 1px solid #000;">If YES, please indicate details:</td>
                                         <td style="font-style: italic; font-size: 9px; border: 1px solid #000;">Please check the conditions and coverage carefully and send us a copy of the policy so we can review as well.</td>
                                     </tr>
                                     <tr>
-                                        <td style="text-align: right; font-weight: bold; border: 1px solid #000; background-color: #fff;">If NO but chose not to purchase Travel Insurance from us:</td>
+                                        <td style="text-align: right; font-weight: bold; border: 1px solid #000;">If NO but chose not to purchase Travel Insurance from us:</td>
                                         <td style="font-weight: bold; border: 1px solid #000;">I understand that I am waiving the right of any assistance from the travel and tours company related to claims.</td>
                                     </tr>
                                 </table>
@@ -346,7 +470,7 @@ export default function BookingInvoice({ route, navigation }) {
                             </div>
                         </div>
 
-                        <div class="page">
+                        <div class="page" style="page-break-after: auto;">
                             <div class="logo-container">
                                 <img src="https://res.cloudinary.com/dcv8v7jjc/image/upload/v1775653130/booking-documents/Logo.png" alt="M&RC Travel and Tours" />
                             </div>
@@ -495,17 +619,121 @@ export default function BookingInvoice({ route, navigation }) {
                             </View>
                         </View>
 
-                        {/* 🔥 RESTORED "VIEW INVOICE PDF" BUTTON 🔥 */}
                         <TouchableOpacity 
-                            style={{ marginTop: 15, backgroundColor: '#e6f7ff', borderWidth: 1, borderColor: '#305797', padding: 12, borderRadius: 8, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }} 
+                            style={{ marginTop: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8faff', borderWidth: 1, borderColor: '#305797', borderRadius: 8, paddingVertical: 12, gap: 8 }} 
                             onPress={handleViewInvoice}
                         >
-                            <Ionicons name="receipt-outline" size={18} color="#305797" style={{ marginRight: 8 }} />
-                            <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold' }}>Preview Booking Invoice</Text>
+                            <Ionicons name="document-text-outline" size={18} color="#305797" />
+                            <Text style={{ fontFamily: "Montserrat_600SemiBold", fontSize: 13, color: '#305797' }}>Preview Booking Invoice</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* --- 2. DOCUMENTS --- */}
+                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && booking?.status !== 'cancellation requested' && rawBooking?.computedStatus !== 'Cancelled' && (
+                        <View style={BookingInvoiceStyle.card}>
+                            <Text style={BookingInvoiceStyle.cardTitle}>Payment Methods</Text>
+                            <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16 }]}>Select a payment method to complete your booking.</Text>
+
+                            <View style={BookingInvoiceStyle.methodGridContainer}>
+                                <TouchableOpacity 
+                                    style={[BookingInvoiceStyle.methodGridCard, method === 'paymongo' && BookingInvoiceStyle.methodGridCardSelected]}
+                                    onPress={() => setMethod('paymongo')}
+                                    activeOpacity={0.9}
+                                >
+                                    <View style={BookingInvoiceStyle.methodRadioHeader}>
+                                        <View style={[BookingInvoiceStyle.radioCircle, method === 'paymongo' && BookingInvoiceStyle.radioCircleSelected]}>
+                                            {method === 'paymongo' && <View style={BookingInvoiceStyle.radioInner} />}
+                                        </View>
+                                    </View>
+                                    <Text style={BookingInvoiceStyle.modeTitle}>Paymongo</Text>
+                                    <Text style={BookingInvoiceStyle.modeDesc}>Pay securely via Credit Card, GCash, or Maya. Rates depend on the transaction method.</Text>
+                                    <Text style={[BookingInvoiceStyle.modeNote, { color: '#ef4444', fontStyle: 'italic', marginTop: 8 }]}>
+                                        Note: The rate for using this payment method is 3.5%.
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    style={[BookingInvoiceStyle.methodGridCard, method === 'manual' && BookingInvoiceStyle.methodGridCardSelected]}
+                                    onPress={() => setMethod('manual')}
+                                    activeOpacity={0.9}
+                                >
+                                    <View style={BookingInvoiceStyle.methodRadioHeader}>
+                                        <View style={[BookingInvoiceStyle.radioCircle, method === 'manual' && BookingInvoiceStyle.radioCircleSelected]}>
+                                            {method === 'manual' && <View style={BookingInvoiceStyle.radioInner} />}
+                                        </View>
+                                    </View>
+                                    <Text style={BookingInvoiceStyle.modeTitle}>Manual Payment</Text>
+                                    <Text style={BookingInvoiceStyle.modeDesc}>Direct deposit. You will need to upload proof of payment for manual verification by our team.</Text>
+                                    <Text style={[BookingInvoiceStyle.modeNote, { color: '#ef4444', fontStyle: 'italic', marginTop: 8 }]}>
+                                        Note: The verification of your payment may take up to 1-2 business days.
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {method === 'manual' && (
+                                <View style={BookingInvoiceStyle.manualBankSection}>
+                                    <Text style={[BookingInvoiceStyle.cardTitle, {fontSize: 16, marginBottom: 12}]}>Available Bank Accounts</Text>
+                                    <View style={BookingInvoiceStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO Unibank', acc: '0012-3456-7890' },
+                                            { name: 'BPI', acc: '9876-5432-10' },
+                                            { name: 'Metro Bank', acc: '0012-3456-7890' },
+                                            { name: 'Land Bank', acc: '9876-5432-10' },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={BookingInvoiceStyle.bankGridCard}>
+                                                <Text style={BookingInvoiceStyle.bankName}>{bank.name}</Text>
+                                                <Text style={BookingInvoiceStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={BookingInvoiceStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={BookingInvoiceStyle.uploadSection}>
+                                        <Text style={BookingInvoiceStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={BookingInvoiceStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip.</Text>
+                                        
+                                        <TouchableOpacity style={BookingInvoiceStyle.selectImageBtn} onPress={pickImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={BookingInvoiceStyle.selectImageBtnText}>Select Receipt Image</Text>
+                                        </TouchableOpacity>
+
+                                        <View style={BookingInvoiceStyle.imagePreviewContainer}>
+                                            <Text style={BookingInvoiceStyle.previewImageLabel}>Preview</Text>
+                                            <View style={BookingInvoiceStyle.previewImageBox}>
+                                                {proofImage ? (
+                                                    <View style={BookingInvoiceStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={BookingInvoiceStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={BookingInvoiceStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                ) : (
+                                                    <Text style={BookingInvoiceStyle.noImageText}>No image selected</Text>
+                                                )}
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+
+                            <View style={BookingInvoiceStyle.checkoutSection}>
+                                <Text style={BookingInvoiceStyle.checkoutTitle}>Amount to Pay</Text>
+                                <Text style={BookingInvoiceStyle.checkoutAmount}>{formatCurrency(remainingBalance)}</Text>
+                                
+                                <TouchableOpacity 
+                                    style={BookingInvoiceStyle.checkoutButton} 
+                                    onPress={handleProceedClick}
+                                    disabled={paymentLoading}
+                                >
+                                    {paymentLoading ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text style={BookingInvoiceStyle.checkoutButtonText}>Confirm & Proceed</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
                     <View style={BookingInvoiceStyle.card}>
                         <Text style={BookingInvoiceStyle.cardTitle}>Traveler Documents</Text>
                         
@@ -522,7 +750,7 @@ export default function BookingInvoice({ route, navigation }) {
                                         <Text style={BookingInvoiceStyle.travelerDetailText}>Title: {traveler.title}</Text>
                                         <Text style={BookingInvoiceStyle.travelerDetailText}>Room: {traveler.roomType}</Text>
                                         <Text style={BookingInvoiceStyle.travelerDetailText}>Age: {traveler.age}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passport: {traveler.passportNo}</Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passport #: {traveler.passportNo}</Text>
                                         <Text style={BookingInvoiceStyle.travelerDetailText}>Birthday: {safeDate(traveler.birthday)}</Text>
                                         <Text style={BookingInvoiceStyle.travelerDetailText}>Expiry: {safeDate(traveler.passportExpiry)}</Text>
                                     </View>
@@ -555,7 +783,6 @@ export default function BookingInvoice({ route, navigation }) {
                         )}
                     </View>
 
-                    {/* --- 3. TRANSACTION HISTORY --- */}
                     <View style={BookingInvoiceStyle.card}>
                         <Text style={BookingInvoiceStyle.cardTitle}>Transaction History</Text>
                         
@@ -596,43 +823,6 @@ export default function BookingInvoice({ route, navigation }) {
                         )}
                     </View>
 
-                    {/* --- 4. PROCEED TO CHECKOUT BUTTON --- */}
-                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && booking?.status !== 'cancellation requested' && (
-                        <View style={BookingInvoiceStyle.checkoutSection}>
-                            <Text style={BookingInvoiceStyle.checkoutTitle}>Amount to Pay</Text>
-                            <Text style={BookingInvoiceStyle.checkoutAmount}>{formatCurrency(remainingBalance)}</Text>
-                            
-                            <TouchableOpacity 
-                                style={BookingInvoiceStyle.checkoutButton} 
-                                onPress={() => navigation.navigate('paymentmethod', { 
-                                    setupData: bookingDetails, 
-                                    amountToPay: remainingBalance,
-                                    paymentType: 'Full Payment',
-                                    passengers: travelersWithDocs,
-                                    leadGuestInfo: {
-                                        fullName: bookingDetails.leadFullName || '',
-                                        title: bookingDetails.leadTitle || '',
-                                        contact: bookingDetails.leadContact || '',
-                                        address: bookingDetails.leadAddress || ''
-                                    },
-                                    medicalData: {
-                                        dietary: bookingDetails.dietaryDetails || '',
-                                        conditions: bookingDetails.medicalDetails || ''
-                                    },
-                                    emergency: {
-                                        phone: bookingDetails.emergencyContact || '',
-                                        email: bookingDetails.emergencyEmail || '',
-                                        name: bookingDetails.emergencyName || '',
-                                        relation: bookingDetails.emergencyRelation || ''
-                                    }
-                                })}
-                            >
-                                <Text style={BookingInvoiceStyle.checkoutButtonText}>Proceed to Payment Methods</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-
-                    {/* --- 5. REGISTRATION PDF GENERATOR --- */}
                     <View style={BookingInvoiceStyle.card}>
                         <Text style={BookingInvoiceStyle.cardTitle}>Booking Registration</Text>
                         <Text style={{ color: '#555', marginBottom: 16 }}>Download your complete registration forms and terms & conditions.</Text>
@@ -655,6 +845,130 @@ export default function BookingInvoice({ route, navigation }) {
 
                 </ScrollView>
             )}
+
+            <Modal visible={isProceedModalOpen} transparent animationType="fade">
+                <View style={BookingInvoiceStyle.modalOverlay}>
+                    <View style={BookingInvoiceStyle.modalBox}>
+                        <TouchableOpacity style={BookingInvoiceStyle.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+                        
+                        <Text style={BookingInvoiceStyle.modalTitle}>Proceed to Payment</Text>
+                        <Text style={BookingInvoiceStyle.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
+                        
+                        <View style={BookingInvoiceStyle.modalButtonRow}>
+                            <TouchableOpacity style={BookingInvoiceStyle.proceedBtn} onPress={executePaymentFlow}>
+                                <Text style={BookingInvoiceStyle.proceedBtnText}>Proceed</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={BookingInvoiceStyle.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
+                                <Text style={BookingInvoiceStyle.cancelBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal visible={showInvoiceModal} animationType="slide" transparent={true}>
+                <View style={PaymentStyle.invModalOverlay}>
+                    <SafeAreaView style={{ flex: 1, width: '100%', padding: 15, justifyContent: 'center' }}>
+                        <View style={PaymentStyle.invPaper}>
+                            <TouchableOpacity style={PaymentStyle.invCloseBtn} onPress={() => setShowInvoiceModal(false)}>
+                                <Ionicons name="close-circle" size={28} color="#b54747" />
+                            </TouchableOpacity>
+
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                <View style={PaymentStyle.invHeader}>
+                                    <View style={PaymentStyle.invCompanyBlock}>
+                                        <Image source={require('../../assets/images/Logored.png')} style={PaymentStyle.invLogo} resizeMode="contain" />
+                                        <View style={PaymentStyle.invCompanyDetails}>
+                                            <Text style={PaymentStyle.invCompanyName}>M&RC Travel and Tours</Text>
+                                            <Text style={PaymentStyle.invMutedText}>2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1</Text>
+                                            <Text style={PaymentStyle.invMutedText}>Parañaque City, Philippines</Text>
+                                            <Text style={PaymentStyle.invMutedText}>1709 PHL</Text>
+                                            <Text style={PaymentStyle.invMutedText}>+63 969 055 4806</Text>
+                                            <Text style={PaymentStyle.invMutedText}>info1@mrctravels.com</Text>
+                                        </View>
+                                    </View>
+                                    <View style={PaymentStyle.invTitleBlock}>
+                                        <Text style={PaymentStyle.invTitleText}>Invoice {invoiceNumber}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={PaymentStyle.invDivider} />
+
+                                <View style={PaymentStyle.invBillRow}>
+                                    <View style={PaymentStyle.invBillTo}>
+                                        <Text style={PaymentStyle.invTinyLabel}>BILL TO</Text>
+                                        <Text style={PaymentStyle.invCustomerName}>{customerName.toUpperCase()}</Text>
+                                        <Text style={PaymentStyle.invMutedText}>{bookingDetails?.leadContact || user?.phonenum || '--'}</Text>
+                                        <Text style={PaymentStyle.invMutedText}>Reference: {reference}</Text>
+                                        <Text style={PaymentStyle.invMutedText}>Travel Date: {formattedTravelDate}</Text>
+                                    </View>
+                                    <View style={PaymentStyle.invSummaryGrid}>
+                                        <View style={PaymentStyle.invSummaryCol}>
+                                            <Text style={PaymentStyle.invTinyLabel}>DATE</Text>
+                                            <Text style={PaymentStyle.invSummaryValue}>{issueDate.format('MM/DD/YYYY')}</Text>
+                                        </View>
+                                        <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
+                                            <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>TOTAL PRICE</Text>
+                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 10}]}>PHP {formatPesoNumber(totalPrice)}</Text>
+                                        </View>
+                                        <View style={PaymentStyle.invSummaryCol}>
+                                            <Text style={PaymentStyle.invTinyLabel}>DUE DATE</Text>
+                                            <Text style={PaymentStyle.invSummaryValue}>{dueDateDisplay.format('MM/DD/YYYY')}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                <View style={PaymentStyle.invTable}>
+                                    <View style={PaymentStyle.invTableHeader}>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>DATE</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>ACTIVITY</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]}>DESCRIPTION</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>QTY</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
+                                    </View>
+                                    <View style={PaymentStyle.invTableRow}>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Package</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageName}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>1</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>{formatPesoNumber(totalPrice)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>{formatPesoNumber(totalPrice)}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={PaymentStyle.invFooter}>
+                                    <View style={[PaymentStyle.invBankInfo, { flex: 1 }]}>
+                                        <Text style={[PaymentStyle.invMutedText, {marginBottom: 10}]}>Payment to be deposited in below bank details:</Text>
+                                        <Text style={PaymentStyle.invTinyLabel}>PESO ACCOUNT:</Text>
+                                        <Text style={PaymentStyle.invMutedText}>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</Text>
+                                        <Text style={PaymentStyle.invMutedText}>ACCOUNT NAME: M&RC TRAVEL AND TOURS</Text>
+                                        <Text style={PaymentStyle.invMutedText}>ACCOUNT NUMBER: 006830132692</Text>
+                                    </View>
+                                    <View style={[PaymentStyle.invTotalContainer, { flex: 1.5 }]}>
+                                        <View style={PaymentStyle.invTotalRow}>
+                                            <Text style={PaymentStyle.invTotalLabel}>TOTAL PRICE</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(totalPrice)}</Text>
+                                        </View>
+                                        <View style={[PaymentStyle.invTotalRow, { borderTopWidth: 0 }]}>
+                                            <Text style={PaymentStyle.invTotalLabel}>PAID TO DATE</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(paidAmount)}</Text>
+                                        </View>
+                                        <View style={[PaymentStyle.invTotalRow, { backgroundColor: '#f4f6f8', paddingHorizontal: 4, paddingVertical: 10 }]}>
+                                            <Text style={[PaymentStyle.invTotalLabel, { color: '#b91c1c' }]}>REMAINING BAL.</Text>
+                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>PHP {formatPesoNumber(remainingBalance)}</Text>
+                                        </View>
+                                        <Text style={[PaymentStyle.invThankYou, { marginTop: 5 }]}>THANK YOU.</Text>
+                                    </View>
+                                </View>
+                            </ScrollView>
+                        </View>
+                    </SafeAreaView>
+                </View>
+            </Modal>
+
         </SafeAreaView>
     );
 }

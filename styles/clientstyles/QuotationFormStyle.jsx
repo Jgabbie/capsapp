@@ -18,7 +18,6 @@ const QuotationFormStyle = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 1,
         borderColor: "#e0e7ff",
-        // Trying to mimic that soft web shadow
         shadowColor: "#1f2a44",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.06,
@@ -26,7 +25,6 @@ const QuotationFormStyle = StyleSheet.create({
         elevation: 4,
     },
     sectionGradient: {
-        // We will use a standard solid color for React Native instead of CSS gradient
         backgroundColor: "#f7faff", 
     },
     sectionTitle: {
@@ -164,6 +162,48 @@ const QuotationFormStyle = StyleSheet.create({
         fontSize: 12,
         color: "#666",
         lineHeight: 16
+    },
+
+    // --- 🔥 NEW: TRAVELER COUNTERS 🔥 ---
+    travelerCounterRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    travelerCounterLabel: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 14,
+        color: '#333',
+    },
+    travelerCounterControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15,
+    },
+    travelerCounterBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f0f5ff',
+        borderWidth: 1,
+        borderColor: '#d6e4ff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    travelerCounterBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 16,
+        color: '#305797',
+    },
+    travelerCounterValue: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 15,
+        color: '#333',
+        width: 20,
+        textAlign: 'center',
     },
 
     // --- FORM INPUTS ---

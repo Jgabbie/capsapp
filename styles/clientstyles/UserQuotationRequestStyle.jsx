@@ -1,317 +1,326 @@
 import { StyleSheet, Platform, Dimensions } from "react-native";
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const UserQuotationRequestStyle = StyleSheet.create({
-  // --- Main Layout ---
   mainContainer: {
     flex: 1,
-    backgroundColor: "#f5f7fa",
+    backgroundColor: "#eef2f6", // Very light blue/gray matching web background
   },
   scrollContainer: {
-    padding: 20,
+    padding: 15,
     flexGrow: 1,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f7fa",
+    backgroundColor: "#eef2f6",
   },
 
-  // --- Header Section ---
-  title: {
-    fontSize: 24,
-    fontFamily: "Montserrat_700Bold",
-    color: "#305797",
-    marginBottom: 8,
-  },
-  headerMeta: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  metaText: {
-    fontFamily: "Roboto_500Medium",
-    color: "#6b7280",
-    fontSize: 14,
-  },
-  statusTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  statusText: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 12,
-  },
-
-  // --- Cards & Sections ---
-  card: {
+  // --- HEADER CARD ---
+  headerCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 20,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderTopWidth: 4,
+    borderTopColor: "#305797",
     ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 3,
-      },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+      android: { elevation: 2 },
     }),
   },
-  sectionTitle: {
-    fontSize: 16,
+  packageTitle: {
+    fontSize: 20,
     fontFamily: "Montserrat_700Bold",
-    color: "#305797",
-    marginBottom: 15,
+    color: "#305797", // Dark blue text
+    marginBottom: 12,
   },
-
-  // --- Travel Details ---
-  detailRow: {
+  metaRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    alignItems: "center",
+    flexWrap: "wrap",
   },
-  detailLabel: {
+  metaLabel: {
+    fontFamily: "Montserrat_700Bold",
+    color: "#333",
+    fontSize: 12,
+  },
+  metaValue: {
     fontFamily: "Roboto_400Regular",
-    color: "#6b7280",
-    fontSize: 14,
+    color: "#555",
+    fontSize: 12,
   },
-  detailValue: {
-    fontFamily: "Roboto_500Medium",
-    color: "#111827",
-    fontSize: 14,
-    maxWidth: "60%",
-    textAlign: "right",
+  metaDivider: {
+    color: "#ccc",
+    marginHorizontal: 8,
+  },
+  statusTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 4,
+  },
+  statusText: {
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 11,
   },
 
-  // --- PDF List ---
-  pdfItem: {
-    backgroundColor: "#f8fafc",
+  // --- HISTORY CARDS ---
+  historyContainer: {
+    flexDirection: 'column',
+    gap: 15,
+    marginBottom: 20,
+  },
+  historyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: "#305797",
+    borderTopWidth: 4,
+    borderTopColor: "#305797",
+    minHeight: 120,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+      android: { elevation: 2 },
+    }),
   },
-  pdfLink: {
-    fontFamily: "Roboto_700Bold",
-    color: "#305797",
-    fontSize: 15,
-    textDecorationLine: "underline",
-    marginBottom: 4,
-  },
-  pdfMeta: {
-    fontFamily: "Roboto_400Regular",
-    color: "#6b7280",
-    fontSize: 12,
+  historyTitle: {
+    fontSize: 14,
+    fontFamily: "Montserrat_700Bold",
+    color: "#333",
+    marginBottom: 15,
   },
   emptyText: {
     fontFamily: "Roboto_400Regular",
     color: "#9ca3af",
     fontStyle: "italic",
     textAlign: "center",
-    marginTop: 10,
+    marginTop: 15,
+    fontSize: 12,
   },
-
-  // --- Comments History ---
-  commentBox: {
-    backgroundColor: "#f9fafb",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+  historyList: {
+    flexDirection: 'column',
+    gap: 10,
   },
-  commentAuthor: {
-    fontFamily: "Montserrat_700Bold",
-    color: "#374151",
-    fontSize: 14,
+  historyItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 10,
+  },
+  historyItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
-  commentText: {
-    fontFamily: "Roboto_400Regular",
-    color: "#4b5563",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 8,
+  historyItemVersion: {
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 12,
+    color: "#333",
   },
-  commentDate: {
+  historyItemDate: {
     fontFamily: "Roboto_400Regular",
-    color: "#9ca3af",
+    fontSize: 10,
+    color: "#888",
+  },
+  historyItemSub: {
+    fontFamily: "Roboto_400Regular",
     fontSize: 11,
-    textAlign: "right",
+    color: "#555",
+    marginBottom: 4,
+  },
+  historyItemLink: {
+    fontFamily: "Roboto_500Medium",
+    fontSize: 11,
+    color: "#305797",
+    textDecorationLine: "underline",
+  },
+  historyItemComment: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 12,
+    color: "#555",
+    fontStyle: 'italic',
+    marginBottom: 4,
+    marginTop: 4,
   },
 
-  // --- Input & Actions ---
-  actionContainer: {
-    marginBottom: 40,
+  // --- LATEST REVISION ---
+  latestRevisionSection: {
+    marginBottom: 20,
+  },
+  sectionHeading: {
+    fontSize: 18,
+    fontFamily: "Montserrat_700Bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  latestRevisionBox: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d9d9d9',
+    borderRadius: 8,
+    padding: 20,
+    minHeight: 100,
+    justifyContent: 'center',
+  },
+  pdfLinkBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f5ff',
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#adc6ff',
+  },
+  pdfLinkBoxText: {
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#305797",
+    fontSize: 13,
+    marginBottom: 2,
+  },
+
+  // --- INPUT & BUTTONS ---
+  inputSection: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    ...Platform.select({
+        ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+        android: { elevation: 2 },
+    }),
   },
   noteInput: {
-    backgroundColor: "#fff",
+    backgroundColor: "#fafafa",
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 12,
-    padding: 15,
-    height: 100,
-    textAlignVertical: "top", // Ensures text starts at the top on Android
+    borderColor: "#d9d9d9",
+    borderRadius: 6,
+    padding: 12,
+    height: 80,
+    textAlignVertical: "top",
     fontFamily: "Roboto_400Regular",
-    fontSize: 14,
+    fontSize: 13,
+    color: "#333",
+  },
+  charCount: {
+    textAlign: 'right',
+    fontFamily: "Roboto_400Regular",
+    fontSize: 10,
+    color: '#999',
+    marginTop: 4,
     marginBottom: 15,
   },
   actionRow: {
     flexDirection: "row",
-    gap: 12,
+    justifyContent: "flex-end",
+    gap: 10,
   },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: "#1f8f3a", // Match Web Green
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
+  secondaryBtn: {
+    backgroundColor: "#f0f2f5",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
   },
-  primaryButtonText: {
-    color: "#fff",
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#305797",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
+  secondaryBtnText: {
     color: "#305797",
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
+  },
+  primaryBtn: {
+    backgroundColor: "#305797",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  primaryBtnText: {
+    color: "#fff",
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
+  },
+  disabledBtn: {
+    backgroundColor: "#f5f5f5",
+    borderColor: '#d9d9d9',
+    borderWidth: 1,
+  },
+  disabledBtnText: {
+    color: "#b8b8b8",
   },
 
-  // --- MODALS (Summary & Terms) ---
+  // --- CENTERED MODALS (ANT DESIGN STYLE) ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
-  modalContent: {
+  modalContentCentered: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 24,
     width: "100%",
-    maxWidth: 400,
+    maxWidth: 350,
     ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 },
       android: { elevation: 10 },
     }),
   },
-  modalTitle: {
-    fontSize: 20,
+  modalTitleCentered: {
+    fontSize: 18,
     fontFamily: "Montserrat_700Bold",
-    color: "#305797",
-    marginBottom: 15,
+    color: "#333",
+    marginBottom: 10,
     textAlign: "center",
   },
-  summaryList: {
-    marginBottom: 20,
-    backgroundColor: "#f8fafc",
-    padding: 15,
-    borderRadius: 8,
-  },
-  summaryItem: {
-    fontFamily: "Roboto_500Medium",
-    color: "#374151",
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  
-  // Terms Specific
-  termsScrollView: {
-    maxHeight: height * 0.3, // Prevents it from getting too tall
-    backgroundColor: "#f9fafb",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  termsText: {
+  modalTextCentered: {
     fontFamily: "Roboto_400Regular",
-    color: "#4b5563",
-    fontSize: 13,
-    lineHeight: 22,
-  },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    color: "#555",
+    fontSize: 14,
+    textAlign: "center",
     marginBottom: 20,
+    lineHeight: 20,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: "#d1d5db",
-    borderRadius: 4,
-    marginRight: 10,
-  },
-  checkedCheckbox: {
+  modalPrimaryBtnFull: {
     backgroundColor: "#305797",
-    borderColor: "#305797",
-  },
-  checkboxLabel: {
-    fontFamily: "Roboto_500Medium",
-    color: "#374151",
-    fontSize: 14,
-    flex: 1,
-  },
-
-  // Modal Buttons
-  modalActionRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 10,
-  },
-  modalBtnCancel: {
-    flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 6,
     alignItems: "center",
-    backgroundColor: "#f3f4f6",
+    width: '100%',
   },
-  modalBtnTextDark: {
-    color: "#4b5563",
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
-  },
-  modalBtnPrimary: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    backgroundColor: "#305797",
-  },
-  modalBtnTextLight: {
+  modalPrimaryBtnTextFull: {
     color: "#fff",
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 14,
   },
-  disabledButton: {
-    backgroundColor: "#9ca3af",
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modalPrimaryBtnHalf: {
+    flex: 1,
+    backgroundColor: "#305797",
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  modalPrimaryBtnTextHalf: {
+    color: "#fff",
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
+  },
+  modalSecondaryBtnHalf: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderWidth: 1,
+    borderColor: '#d9d9d9',
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  modalSecondaryBtnTextHalf: {
+    color: "#555",
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
   },
 });
 

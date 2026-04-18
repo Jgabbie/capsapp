@@ -1,97 +1,109 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
 
 const UserPackageQuotationStyle = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f7fa", // Web-like background
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: "Montserrat_700Bold",
     color: "#305797",
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#777",
+    fontSize: 13,
+    color: "#6b7280",
     fontFamily: "Roboto_400Regular",
     marginBottom: 20,
   },
   
   // --- Search & Filter ---
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  filterSection: {
     marginBottom: 24,
+    gap: 12,
   },
   searchBar: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f4f8",
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#dbe3ef",
-    height: 48,
+    borderColor: "#d9d9d9",
+    height: 42,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
+    marginLeft: 8,
+    fontSize: 13,
     color: "#333",
     fontFamily: "Roboto_400Regular",
   },
-  dropdownButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: "#f0f4f8",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#dbe3ef",
-    justifyContent: "center",
+  dropdownGroup: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 10,
+  },
+  dropdownButton: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d9d9d9",
+    height: 40,
+    paddingHorizontal: 12,
+  },
+  dropdownText: {
+    fontFamily: "Roboto_400Regular",
+    fontSize: 13,
+    color: "#333",
+  },
+  clearFilterBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // --- Quote Cards ---
   quoteCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#e5e7eb",
     ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 3,
-      },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10 },
+      android: { elevation: 2 },
     }),
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    paddingBottom: 12,
     marginBottom: 12,
   },
   quoteRef: {
     fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
-    color: "#777",
+    fontSize: 13,
+    color: "#305797",
   },
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   statusText: {
-    fontFamily: "Montserrat_700Bold",
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 11,
   },
   
@@ -101,55 +113,108 @@ const UserPackageQuotationStyle = StyleSheet.create({
   },
   packageName: {
     fontFamily: "Montserrat_700Bold",
-    fontSize: 18,
-    color: "#305797",
-    marginBottom: 10,
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 12,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   detailLabel: {
-    fontFamily: "Roboto_400Regular",
-    color: "#666",
-    fontSize: 13,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#6b7280",
+    fontSize: 12,
   },
   detailValue: {
-    fontFamily: "Roboto_500Medium",
-    color: "#333",
-    fontSize: 13,
+    fontFamily: "Roboto_400Regular",
+    color: "#1f2937",
+    fontSize: 12,
   },
 
   // --- Actions & Empty States ---
   viewButton: {
+    flexDirection: 'row',
     backgroundColor: "#305797",
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 5,
   },
   buttonText: {
     color: "#fff",
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
   },
   emptyContainer: {
     alignItems: "center",
-    marginTop: 80, // Pushed down a bit more to match Bookings centering
+    marginTop: 60, 
   },
-  // Added Image Style
   emptyImage: {
     width: 120,
     height: 120,
-    marginBottom: 5,
-    opacity: 0.9, 
+    marginBottom: 10,
+    opacity: 0.8, 
   },
   emptyText: {
-    color: "#a0aab5", // Lighter grayish-blue to match Bookings text
-    fontSize: 16,
+    color: "#9ca3af", 
+    fontSize: 15,
     fontFamily: "Roboto_400Regular",
+  },
+
+  // --- MODAL STYLES (Matched to Web Look) ---
+  modalOverlay: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    paddingHorizontal: 20,
+  },
+  modalContainer: { 
+    backgroundColor: '#fff', 
+    padding: 20, 
+    borderRadius: 12, 
+    width: width > 500 ? 400 : '95%', 
+    maxWidth: 400,
+    elevation: 10,
+  },
+  modalHeaderRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 15, 
+    paddingBottom: 12,
+    borderBottomWidth: 1, 
+    borderColor: '#eee',
+  },
+  modalTitleText: { 
+    fontSize: 16, 
+    fontFamily: 'Montserrat_700Bold', 
+    color: '#305797',
+  },
+  tagContainer: { 
+    flexDirection: 'column', 
+  },
+  modalStatusTag: { 
+    paddingVertical: 12, 
+    borderBottomWidth: 1, 
+    borderColor: '#f0f0f0', 
+  },
+  modalStatusTagSelected: {
+    backgroundColor: '#f8faff', 
+  },
+  modalStatusText: { 
+    color: '#333', 
+    fontFamily: 'Roboto_400Regular', 
+    fontSize: 14,
+    textAlign: 'center'
+  },
+  modalStatusTextSelected: {
+    color: '#305797',
+    fontFamily: 'Montserrat_600SemiBold',
   },
 });
 
