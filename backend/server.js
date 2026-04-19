@@ -18,9 +18,10 @@ import visaServiceRoutes from "./routes/visaServiceRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
-
-// 1. Import the new upload routes here
 import uploadRoutes from './routes/uploadRoutes.js';
+
+// 🔥 NEW: Import the log routes we just created 🔥
+import logRoutes from "./routes/logRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +32,7 @@ const app = express();
 
 connectDB();
 
-// 2. IMPORTANT: Apply CORS and parsers BEFORE your routes!
+// IMPORTANT: Apply CORS and parsers BEFORE your routes!
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -51,9 +52,10 @@ app.use("/api/visa", visaRoutes);
 app.use("/api/visa-services", visaServiceRoutes);
 app.use("/api/email", sendEmailRoutes);
 app.use("/api/rating", ratingRoutes);
-
-// 3. Mount the upload route inside /api/ so the mobile app can reach it!
 app.use("/api/upload", uploadRoutes);
+
+// 🔥 NEW: Mount the log routes so the frontend can access them! 🔥
+app.use("/api/logs", logRoutes);
 
 app.get("/", (req, res) => {
     res.send("TRAVEX API Running");

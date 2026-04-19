@@ -1,5 +1,6 @@
 import Quotation from "../models/quotation.js";
 import User from "../models/users.js";
+import logAction from "../utils/logger.js";
 
 // --- Utility: Generate QT- Reference Number ---
 const generateQuotationReference = () => {
@@ -31,6 +32,7 @@ export const createQuotation = async (req, res) => {
       status: "Pending",
     });
 
+    logAction('QUOTATION_CREATED', userId, { "Quotation Submitted": `Reference: ${quotation.reference}`, packageId });
     return res.status(201).json(quotation);
   } catch (error) {
     return res.status(500).json({ message: "Error creating quotation", error: error.message });
@@ -90,6 +92,8 @@ export const requestRevision = async (req, res) => {
     });
 
     await quotation.save();
+    logAction('QUOTATION_REVISION_REQUESTED', req.userId, { quotationId: quotation._id });
+    return res.status(200).json({ message: "Revision requested", quotation });
     return res.status(200).json({ message: "Revision requested", quotation });
   } catch (error) {
     return res.status(500).json({ message: "Error requesting revision", error: error.message });

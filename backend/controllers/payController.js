@@ -5,6 +5,7 @@ import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js"; // Ensure singular to match your model
 import PackageModel from "../models/package.js";
 import TokenCheckoutModel from "../models/tokenCheckout.js"; // Needed for manual payment tokens
+import logAction from "../utils/logger.js";
 
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
@@ -72,6 +73,7 @@ export const createManualPayment = async (req, res) => {
             paymentType
         });
 
+        logAction('CREATE_MANUAL_PAYMENT', userId, { "Payment Uploaded": `Amount: ₱${amount} for Booking: ${bookingRef}` });
         return res.status(201).json({ 
             message: 'Success', 
             bookingId: bookingRef, 

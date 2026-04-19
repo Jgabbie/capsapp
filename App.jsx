@@ -53,9 +53,10 @@ import AboutUs from './screens/client/AboutUs';
 import FAQs from './screens/client/FAQs';
 import { UserProvider, useUser } from './context/UserContext';
 
+// 🔥 UPDATED: Maps old 'user'/'users' to 'customer' just in case of old tokens
 const normalizeRole = (role) => {
   const normalized = String(role || '').trim().toLowerCase();
-  if (normalized === 'user') return 'users';
+  if (normalized === 'user' || normalized === 'users') return 'customer'; 
   return normalized;
 };
 
@@ -63,13 +64,14 @@ function AppNavigator() {
   const { user, clearUser } = useUser();
   const role = normalizeRole(user?.role);
   const isAdmin = role === 'admin';
-  const isUsers = role === 'users';
+  const isCustomer = role === 'customer'; // 🔥 CHANGED FROM isUsers to isCustomer
 
   useEffect(() => {
-    if (user?._id && !isAdmin && !isUsers) {
+    // If they have an ID, but aren't an admin or customer, boot them out
+    if (user?._id && !isAdmin && !isCustomer) { 
       clearUser();
     }
-  }, [user?._id, isAdmin, isUsers, clearUser]);
+  }, [user?._id, isAdmin, isCustomer, clearUser]);
 
   const MyScreen = createNativeStackNavigator();
 

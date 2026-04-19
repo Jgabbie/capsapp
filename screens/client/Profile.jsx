@@ -6,7 +6,7 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from "@expo-googl
 import { Ionicons } from "@expo/vector-icons"
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import dayjs from 'dayjs' // 🔥 ADDED for date formatting
+import dayjs from 'dayjs' 
 
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
@@ -83,7 +83,7 @@ export default function Profile() {
                         gender: currentUser.gender || "",
                         birthdate: currentUser.birthdate || "",
                         nationality: currentUser.nationality || "",
-                        role: currentUser.role || "Users",
+                        role: currentUser.role || "Customer", // 🔥 CHANGED DEFAULT TO Customer
                         isAccountVerified: currentUser.isAccountVerified || false
                     }
                     setUserData(mappedData)

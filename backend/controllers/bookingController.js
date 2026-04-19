@@ -6,6 +6,7 @@ import Package from "../models/package.js";
 import User from "../models/users.js";
 import TokenCheckout from "../models/tokenCheckout.js";
 import dayjs from "dayjs";
+import logAction from "../utils/logger.js";
 
 // Helper to generate unique reference numbers
 const generateBookingReference = () => {
@@ -65,6 +66,7 @@ export const createBooking = async (req, res) => {
       status: "Pending", // 🔥 Web requires new bookings to be Pending until paid!
     });
 
+    logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageId });
     return res.status(201).json({ booking, paymentToken: checkoutToken });
   } catch (error) {
     console.error("Create Booking Error:", error);
@@ -134,6 +136,7 @@ export const cancelBooking = async (req, res) => {
       status: 'Pending'
     });
 
+    logAction('CANCEL_BOOKING', userId, { "Cancellation Requested": `Booking Ref: ${booking.reference}`, reason });
     return res.status(200).json({ message: "Booking cancelled", booking });
   } catch (error) {
     console.error("Cancellation Error:", error);

@@ -48,7 +48,7 @@ export default function Login() {
 
     const normalizeRole = (role) => {
         const normalized = String(role || "").trim().toLowerCase()
-        if (normalized === "user") return "users"
+        if (normalized === "user" || normalized === "users") return "customer"
         return normalized
     }
 
@@ -81,12 +81,15 @@ export default function Login() {
             if (response.data.success) {
                 const role = response.data.role
                 const normalizedRole = normalizeRole(role)
-                const canonicalRole = normalizedRole === "admin" ? "Admin" : "Users"
-
-                if (normalizedRole !== "admin" && normalizedRole !== "users") {
-                    setError("Unauthorized role. Only Users or Admin can sign in.")
+                
+                // Allow admin, users (for backwards compatibility), or customer
+                if (normalizedRole !== "admin" && normalizedRole !== "users" && normalizedRole !== "customer") {
+                    setError("Unauthorized role. Only Customers or Admin can sign in.")
                     return
                 }
+
+                // Force the canonical role saved to context to be exactly "Customer" or "Admin"
+                const canonicalRole = normalizedRole === "admin" ? "Admin" : "Customer"
 
                 setUser({
                     _id: response.data.userId,

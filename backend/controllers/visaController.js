@@ -1,6 +1,7 @@
 import VisaApplicationModel from "../models/visaApplication.js";
 import VisaServiceModel from "../models/visaService.js";
 import UserModel from "../models/users.js";
+import logAction from "../utils/logger.js";
 
 const generateApplicationNumber = () => {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -70,6 +71,7 @@ export const applyVisa = async (req, res) => {
       submittedDocuments, 
     });
 
+    logAction('APPLY_VISA', userId, { "Visa Application Created": `Application Number: ${application.applicationNumber}` });
     return res.status(201).json({
       message: "Visa application submitted successfully",
       application,

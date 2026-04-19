@@ -2,13 +2,15 @@ import User from "../models/users.js";
 import bcrypt from "bcryptjs";
 import nodemailer from 'nodemailer'; 
 import crypto from 'crypto';         
+import logAction from "../utils/logger.js"; // 🔥 IMPORTED THE LOGGER
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normalizeRole = (value) => String(value || "").trim().toLowerCase();
 const canonicalRole = (value) => {
     const normalized = normalizeRole(value);
     if (normalized === "admin") return "Admin";
-    if (normalized === "users" || normalized === "user") return "Users";
+    // Change this to return Customer
+    if (normalized === "users" || normalized === "user" || normalized === "customer") return "Customer";
     return String(value || "").trim();
 };
 
@@ -93,7 +95,7 @@ export const createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const normalizedRole = normalizeRole(role);
-        const roleValue = normalizedRole === "admin" ? "Admin" : "Users";
+        const roleValue = normalizedRole === "admin" ? "Admin" : "Customer";
 
         const user = new User({
             username,
@@ -157,16 +159,22 @@ export const loginUser = async (req, res) => {
         });
         
         if (!user) {
+            // 🔥 LOG FAILED LOGIN
+            logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
         const storedPasswordHash = user.hashedPassword || user.password || user.hashed_password;
         if (!storedPasswordHash) {
+            // 🔥 LOG FAILED LOGIN
+            logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
         const isMatch = await bcrypt.compare(normalizedPassword, storedPasswordHash);
         if (!isMatch) {
+            // 🔥 LOG FAILED LOGIN
+            logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
@@ -174,6 +182,9 @@ export const loginUser = async (req, res) => {
             return res.status(403).json({ success: false, message: "Please verify your account", email: user.email });
         }
 
+        // 🔥 LOG SUCCESSFUL LOGIN
+        logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
+        
         res.status(200).json({ success: true, userId: user._id, username: user.username, role: canonicalRole(user.role) });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -356,6 +367,9 @@ export const verifyAccount = async (req, res) => {
         user.verifyOtp = ""; 
         user.verifyOtpExpireAt = 0;
         await user.save();
+
+        // 🔥 LOG SUCCESSFUL VERIFICATION
+        logAction('VERIFY_ACCOUNT', user._id, { "Account Verified": `Email: ${user.email}` });
 
         res.status(200).json({ success: true, message: "Account verified successfully" });
     } catch (error) {

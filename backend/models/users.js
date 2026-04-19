@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "Users"
+        default: "Customer" // 🔥 CHANGED FROM "Users" TO "Customer"
     },
     verifyOtp: {
         type: String,

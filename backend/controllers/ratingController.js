@@ -1,5 +1,6 @@
 import Rating from '../models/rating.js';
 import mongoose from 'mongoose';
+import logAction from "../utils/logger.js";
 
 export const submitRating = async (req, res) => {
     const { packageId, rating, review } = req.body;
@@ -31,6 +32,7 @@ export const submitRating = async (req, res) => {
 
         // Removed Socket.io emission since it's not strictly necessary for mobile basic saving
         
+        logAction('SUBMIT_RATING', userId, { "Rating Submitted": `${rating} Stars for Package ID: ${packageId}` });
         return res.status(201).json({
             message: "Rating submitted successfully",
             rating: newRating

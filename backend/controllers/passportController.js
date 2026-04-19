@@ -1,5 +1,6 @@
 import PassportModel from "../models/passport.js";
 import UserModel from "../models/users.js";
+import logAction from "../utils/logger.js";
 
 const randomApplicationNumber = () =>
   `APP-PASS-${Math.floor(100000000 + Math.random() * 900000000)}`; // Matched web generation style
@@ -66,6 +67,7 @@ export const applyPassport = async (req, res) => {
       submittedDocuments, // 🔥 FIXED: Used the Web-friendly document object
     });
 
+    logAction('APPLY_PASSPORT', userId, { "Passport Application Created": `Application Number: ${application.applicationNumber}` });
     return res.status(201).json({
       message: "Passport application submitted successfully",
       application,
