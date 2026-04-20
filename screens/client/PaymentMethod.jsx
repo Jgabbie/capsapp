@@ -51,26 +51,20 @@ export default function PaymentMethod({ route, navigation }) {
         return null;
     };
 
-    // 🔥 THE TRULY BULLETPROOF UPLOADER (FETCH) 🔥
+    // 🔥 STABLE UPLOADER USING AXIOS 🔥
     const uploadFilesToBackend = async (endpoint, formData) => {
-        const baseUrl = api.defaults.baseURL.replace(/\/api$/, '');
-        const targetUrl = `${baseUrl}/api${endpoint}`; 
-        
-        const response = await fetch(targetUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${user?.token}`,
-                'Accept': 'application/json',
-                // 🛑 EXPLICITLY NO CONTENT-TYPE. Let fetch build the boundary natively.
-            },
-            body: formData
-        });
-        
-        if (!response.ok) {
-            console.error("Upload failed with status:", response.status);
-            throw new Error(`HTTP Error ${response.status}`);
+        try {
+            const response = await api.post(endpoint, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    ...withUserHeader(user?._id).headers
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Upload Error inside Axios:", error.response?.data || error.message);
+            throw error;
         }
-        return await response.json();
     };
 
     const executePaymentFlow = async () => {
@@ -92,7 +86,6 @@ export default function PaymentMethod({ route, navigation }) {
                     const type = match ? `image/${match[1]}` : `image/jpeg`;
                     
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
-                    receiptFormData.append('receipt', { uri: proofImage.uri, name: filename, type });
 
                     try {
                         const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
@@ -110,7 +103,7 @@ export default function PaymentMethod({ route, navigation }) {
                             proofImage: proofUrl,
                             proofImageType: proofImage.mimeType || 'image/jpeg',
                             proofFileName: proofImage.fileName || 'deposit_slip.jpg',
-                            status: 'Pending' // 🔥 FLOW FIX: Manual payments must go to Pending for admin review!
+                            status: 'Pending' 
                         };
 
                         const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
@@ -267,7 +260,6 @@ export default function PaymentMethod({ route, navigation }) {
                 }
             };
 
-            // 🔥 FLOW FIX: Determine the correct status based on the selected payment method 🔥
             const initialBookingStatus = method === 'manual' ? 'Pending' : 'Not Paid';
 
             const finalBookingPayload = {
@@ -278,7 +270,7 @@ export default function PaymentMethod({ route, navigation }) {
                 passportFiles: rootPassportFiles,
                 photoFiles: rootPhotoFiles,
                 bookingDetails: mappedBookingDetails,
-                status: initialBookingStatus // 🔥 Applied the dynamic status here! 🔥
+                status: initialBookingStatus 
             };
 
             // Create the booking!
@@ -296,7 +288,6 @@ export default function PaymentMethod({ route, navigation }) {
                 const type = match ? `image/${match[1]}` : `image/jpeg`;
                 
                 receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
-                receiptFormData.append('receipt', { uri: proofImage.uri, name: filename, type });
 
                 try {
                     const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);

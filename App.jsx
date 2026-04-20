@@ -12,6 +12,7 @@ import ResetPassConfirm from './screens/client/ResetPassConfirm';
 
 import Home from './screens/client/Home';
 import Profile from './screens/client/Profile';
+import UserPreference from './screens/client/UserPreference';
 import Packages from './screens/client/Packages';
 import PackageDetails from './screens/client/PackageDetails';
 import Wishlist from './screens/client/Wishlist';
@@ -103,9 +104,21 @@ function AppNavigator() {
         ) : (
           // --- MAIN APP STACK ---
           <>
+            {/* 🔥 MAGIC TRICK: If it's their first login, this becomes the default first screen! */}
+            {user?.loginOnce === false && (
+                <MyScreen.Screen name="UserPreference" component={UserPreference} />
+            )}
+
             <MyScreen.Screen name="home" component={Home} />
             <MyScreen.Screen name="profile" component={Profile} />
+            
+            {/* For normal routing if they aren't forced into it */}
+            {user?.loginOnce !== false && (
+                <MyScreen.Screen name="UserPreference" component={UserPreference} />
+            )}
+
             <MyScreen.Screen name="packages" component={Packages} />
+            {/* ... keep the rest of your screens below ... */}
             <MyScreen.Screen name="packagedetails" component={PackageDetails} />
             <MyScreen.Screen name="wishlist" component={Wishlist} />
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />

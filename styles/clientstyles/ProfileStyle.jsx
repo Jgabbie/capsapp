@@ -225,6 +225,65 @@ const ProfileStyle = StyleSheet.create({
         flex: 1,
         fontFamily: "Roboto_400Regular",
         fontSize: 15,
+    },
+    // --- 🔥 NEW PREFERENCES STYLES 🔥 ---
+    preferencesHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    editPrefButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#305797',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        gap: 6,
+    },
+    editPrefButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 12,
+    },
+    prefSectionTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 14,
+        color: '#1f2937',
+        marginBottom: 4,
+    },
+    prefSubText: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 12,
+        color: '#6b7280',
+        marginBottom: 12,
+    },
+    chipGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    chip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20, // Full rounded pill
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        backgroundColor: '#fff',
+    },
+    chipSelected: {
+        backgroundColor: '#305797', // Dark Blue from Web
+        borderColor: '#305797',
+    },
+    chipText: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+        color: '#4b5563',
+    },
+    chipTextSelected: {
+        color: '#fff',
+        fontFamily: 'Roboto_500Medium',
     }
 });
 

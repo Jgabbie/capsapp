@@ -82,22 +82,25 @@ export default function Login() {
                 const role = response.data.role
                 const normalizedRole = normalizeRole(role)
                 
-                // Allow admin, users (for backwards compatibility), or customer
-                if (normalizedRole !== "admin" && normalizedRole !== "users" && normalizedRole !== "customer") {
-                    setError("Unauthorized role. Only Customers or Admin can sign in.")
+                // Only allow Customer/Users
+                if (normalizedRole !== "users" && normalizedRole !== "customer") {
+                    setError("Unauthorized role. Only Customers can sign in to the mobile app.")
                     return
                 }
 
-                // Force the canonical role saved to context to be exactly "Customer" or "Admin"
-                const canonicalRole = normalizedRole === "admin" ? "Admin" : "Customer"
+                const canonicalRole = "Customer"
 
+                // 🔥 UPDATE: Added loginOnce to the context payload
                 setUser({
                     _id: response.data.userId,
                     username: response.data.username,
                     role: canonicalRole,
+                    loginOnce: response.data.loginOnce 
                 })
 
                 showMessage("Login successful!");
+                // 🛑 Manual navigation removed! App.jsx handles the redirect automatically now.
+
             } else {
                 setError(response.data.message || "Invalid username or password");
             }

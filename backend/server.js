@@ -23,6 +23,9 @@ import uploadRoutes from './routes/uploadRoutes.js';
 // 🔥 NEW: Import the log routes we just created 🔥
 import logRoutes from "./routes/logRoutes.js";
 
+// 🔥 NEW: Import the preferences routes 🔥
+import preferenceRoutes from "./routes/preferencesRoutes.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -56,6 +59,9 @@ app.use("/api/upload", uploadRoutes);
 
 // 🔥 NEW: Mount the log routes so the frontend can access them! 🔥
 app.use("/api/logs", logRoutes);
+
+// 🔥 NEW: Mount the preferences routes! 🔥
+app.use("/api/preferences", preferenceRoutes);
 
 app.get("/", (req, res) => {
     res.send("TRAVEX API Running");

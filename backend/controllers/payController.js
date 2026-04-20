@@ -2,9 +2,9 @@ import axios from "axios";
 import crypto from "crypto";
 import dayjs from "dayjs";
 import BookingModel from "../models/booking.js";
-import TransactionModel from "../models/transaction.js"; // Ensure singular to match your model
+import TransactionModel from "../models/transaction.js"; 
 import PackageModel from "../models/package.js";
-import TokenCheckoutModel from "../models/tokenCheckout.js"; // Needed for manual payment tokens
+import TokenCheckoutModel from "../models/tokenCheckout.js"; 
 import logAction from "../utils/logger.js";
 
 const generateBookingReference = () => {
@@ -20,7 +20,7 @@ const generateTransactionReference = () => {
 };
 
 export const createManualPayment = async (req, res) => {
-    const userId = req.userId; // Provided by requireUser.js
+    const userId = req.userId; 
     try {
         const { packageId, travelDate, travelerTotal, amount, paymentType, proofImage, proofImageType, proofFileName, bookingDetails, bookingId } = req.body;
 
@@ -48,13 +48,19 @@ export const createManualPayment = async (req, res) => {
             bookingRef = booking.reference;
         }
 
+        // 🔥 SAFETY FIX: Ensure we have a booking ID before creating tokens or transactions!
+        if (!finalBookingId) {
+            return res.status(400).json({ error: "Booking ID is required to process payment." });
+        }
+
         // 1. Create Token Checkout (Web Sync)
+        // This now perfectly matches your updated models/tokenCheckout.js
         const token = crypto.randomUUID();
         await TokenCheckoutModel.create({
             token,
             userId,
-            bookingId: finalBookingId,
-            amount: Number(amount),
+            bookingId: finalBookingId, 
+            amount: Number(amount), 
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
@@ -146,7 +152,7 @@ export const createCheckoutSession = async (req, res) => {
     }
 };
 
-// Webhook handler stub (can be expanded later if you add Raw Body parsing)
+// Webhook handler stub
 export const handlePayMongoWebhook = async (req, res) => { 
     res.status(200).send('OK'); 
 };

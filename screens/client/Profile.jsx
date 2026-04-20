@@ -62,6 +62,14 @@ export default function Profile() {
     const [recentReviews, setRecentReviews] = useState([])
     const [loadingExtra, setLoadingExtra] = useState(false)
 
+    // 🔥 PREFERENCES STATES 🔥
+    const [moodOptions, setMoodOptions] = useState([])
+    const tourOptions = ['Domestic', 'International']
+    const [preferences, setPreferences] = useState({ moods: [], tours: [] })
+    const [originalPreferences, setOriginalPreferences] = useState({ moods: [], tours: [] })
+    const [editingPreferences, setEditingPreferences] = useState(false)
+    const [savingPreferences, setSavingPreferences] = useState(false)
+
     // --- FETCH USER DATA ---
     useEffect(() => {
         const fetchUserData = async () => {
@@ -83,7 +91,7 @@ export default function Profile() {
                         gender: currentUser.gender || "",
                         birthdate: currentUser.birthdate || "",
                         nationality: currentUser.nationality || "",
-                        role: currentUser.role || "Customer", // 🔥 CHANGED DEFAULT TO Customer
+                        role: currentUser.role || "Customer", 
                         isAccountVerified: currentUser.isAccountVerified || false
                     }
                     setUserData(mappedData)
@@ -106,26 +114,54 @@ export default function Profile() {
         if (user?._id) fetchUserData()
     }, [user?._id])
 
-    // --- FETCH RECENT ACTIVITY (Bookings & Reviews) ---
+    // --- FETCH RECENT ACTIVITY & PREFERENCES ---
     useEffect(() => {
-        const fetchRecentActivity = async () => {
+        const fetchDashboardData = async () => {
             if (!user?._id) return;
             setLoadingExtra(true);
             try {
-                const [bookingsRes, reviewsRes] = await Promise.all([
+                const [bookingsRes, reviewsRes, tagsRes, prefRes] = await Promise.all([
                     api.get('/booking/my-bookings', withUserHeader(user._id)).catch(() => ({ data: [] })),
-                    api.get('/rating/my-ratings', withUserHeader(user._id)).catch(() => ({ data: [] })) 
+                    api.get('/rating/my-ratings', withUserHeader(user._id)).catch(() => ({ data: [] })),
+                    api.get('/package/get-packages-for-users', withUserHeader(user._id)).catch(() => ({ data: [] })),
+                    api.get('/preferences/me', withUserHeader(user._id)).catch(() => ({ data: null }))
                 ]);
 
                 setRecentBookings(bookingsRes.data?.bookings || bookingsRes.data || []);
                 setRecentReviews(reviewsRes.data?.ratings || reviewsRes.data || []);
+
+                // Extract unique tags for Moods
+                const uniqueTags = new Set();
+                const packagesData = tagsRes.data?.data || tagsRes.data || []; // Handle different nested data structures
+                
+                packagesData.forEach((pkg) => {
+                    pkg.packageTags?.forEach((tag) => uniqueTags.add(tag));
+                });
+                
+                // 🔥 ADDED FALLBACK JUST LIKE THE OTHER SCREEN 🔥
+                if (uniqueTags.size > 0) {
+                    setMoodOptions(Array.from(uniqueTags));
+                } else {
+                    setMoodOptions(['Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples', 'Winter']);
+                }
+
+                // Set user preferences
+                if (prefRes.data?.preferrences) {
+                    const savedPrefs = {
+                        moods: prefRes.data.preferrences.moods || [],
+                        tours: prefRes.data.preferrences.tours || []
+                    };
+                    setPreferences(savedPrefs);
+                    setOriginalPreferences(savedPrefs);
+                }
+
             } catch (error) {
-                console.log("Error fetching recent activity:", error.message);
+                console.log("Error fetching dashboard data:", error.message);
             } finally {
                 setLoadingExtra(false);
             }
         };
-        fetchRecentActivity();
+        fetchDashboardData();
     }, [user?._id]);
 
     const showMessage = (msg) => {
@@ -266,12 +302,47 @@ export default function Profile() {
         setEditing(false)
     }
 
-    // Helper for Status Badge styling
+    // 🔥 PREFERENCES HANDLERS 🔥
+    const togglePreference = (key, value, limit) => {
+        if (!editingPreferences) return;
+        setPreferences(prev => {
+            const current = prev[key] || [];
+            const exists = current.includes(value);
+
+            if (!exists && limit && current.length >= limit) return prev;
+
+            const next = exists ? current.filter(item => item !== value) : [...current, value];
+            return { ...prev, [key]: next };
+        });
+    };
+
+    const savePreferences = async () => {
+        setSavingPreferences(true);
+        try {
+            await api.post('/preferences/save', {
+                moods: preferences.moods,
+                tours: preferences.tours
+            }, withUserHeader(user._id));
+            setOriginalPreferences(preferences);
+            setEditingPreferences(false);
+            showMessage('Preferences saved successfully!');
+        } catch (error) {
+            showMessage('Failed to save preferences');
+        } finally {
+            setSavingPreferences(false);
+        }
+    };
+
+    const cancelPreferencesEdit = () => {
+        setPreferences(originalPreferences);
+        setEditingPreferences(false);
+    };
+
     const getStatusStyle = (status) => {
         const s = String(status).toLowerCase();
         if (s.includes('success') || s.includes('approve')) return { bg: '#f0f4ff', text: '#305797' };
         if (s.includes('reject') || s.includes('cancel')) return { bg: '#fee2e2', text: '#b91c1c' };
-        return { bg: '#fef9c3', text: '#b45309' }; // Pending / Default
+        return { bg: '#fef9c3', text: '#b45309' }; 
     };
 
     if (!fontsLoaded) return null;
@@ -282,10 +353,11 @@ export default function Profile() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <View style={ProfileStyle.container}>
+                
+                {/* --- MY PROFILE CARD --- */}
                 <View style={ProfileStyle.card}>
                     <Text style={ProfileStyle.profileHeading}>My Profile</Text>
 
-                    {/* AVATAR */}
                     <View style={ProfileStyle.profileImageContainer}>
                         <View style={ProfileStyle.profileAvatarWrapper}>
                             {profileImage ? (
@@ -304,21 +376,14 @@ export default function Profile() {
                         )}
                     </View>
 
-                    {/* Username */}
                     <Text style={ProfileStyle.profileLabel}>Username</Text>
-                    <TextInput 
-                        value={userData.username} 
-                        editable={false} 
-                        style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} 
-                    />
+                    <TextInput value={userData.username} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
 
-                    {/* First & Last Name */}
                     <View style={ProfileStyle.fullNameContainer}>
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>First Name</Text>
                             <TextInput 
-                                value={userData.firstname} 
-                                editable={editing} 
+                                value={userData.firstname} editable={editing} 
                                 onChangeText={(text) => valueHandler('firstname', toProperCase(text))}
                                 style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.firstname && ProfileStyle.profileInputsError]} 
                             />
@@ -327,8 +392,7 @@ export default function Profile() {
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>Last Name</Text>
                             <TextInput 
-                                value={userData.lastname} 
-                                editable={editing} 
+                                value={userData.lastname} editable={editing} 
                                 onChangeText={(text) => valueHandler('lastname', toProperCase(text))}
                                 style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.lastname && ProfileStyle.profileInputsError]} 
                             />
@@ -336,44 +400,30 @@ export default function Profile() {
                         </View>
                     </View>
 
-                    {/* Email - NOW PERMANENTLY DISABLED */}
                     <Text style={ProfileStyle.profileLabel}>Email Address</Text>
-                    <TextInput 
-                        value={userData.email} 
-                        editable={false} 
-                        style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} 
-                    />
+                    <TextInput value={userData.email} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
 
-                    {/* Phone */}
                     <Text style={ProfileStyle.profileLabel}>Phone Number</Text>
                     <View style={[ProfileStyle.phoneInputContainer, !editing && ProfileStyle.profileInputsDisabled, errors.phonenum && ProfileStyle.profileInputsError]}>
                         <Text style={ProfileStyle.phonePrefix}>+63</Text>
                         <TextInput 
-                            value={userData.phonenum} 
-                            editable={editing} 
-                            keyboardType="numeric"
-                            maxLength={12} 
-                            onChangeText={formatPhone}
-                            style={[ProfileStyle.phoneInput, !editing && ProfileStyle.profileInputsDisabled]} 
+                            value={userData.phonenum} editable={editing} keyboardType="numeric" maxLength={12} 
+                            onChangeText={formatPhone} style={[ProfileStyle.phoneInput, !editing && ProfileStyle.profileInputsDisabled]} 
                         />
                     </View>
                     {errors.phonenum ? <Text style={ProfileStyle.errorMessage}>{errors.phonenum}</Text> : null}
 
-                    {/* Address */}
                     <Text style={ProfileStyle.profileLabel}>Home Address</Text>
                     <TextInput 
-                        value={userData.address} 
-                        editable={editing} 
+                        value={userData.address} editable={editing} 
                         onChangeText={(text) => valueHandler('address', text)}
                         style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]} 
                     />
 
-                    {/* Gender Dropdown */}
                     <Text style={ProfileStyle.profileLabel}>Gender</Text>
                     <TouchableOpacity 
                         style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]} 
-                        disabled={!editing}
-                        onPress={() => setGenderModalVisible(true)}
+                        disabled={!editing} onPress={() => setGenderModalVisible(true)}
                     >
                         <Text style={{ color: userData.gender ? '#333' : '#a0a0a0', fontFamily: 'Roboto_400Regular' }}>
                             {userData.gender || "Select gender"}
@@ -381,12 +431,10 @@ export default function Profile() {
                         {editing && <Ionicons name="chevron-down" size={16} color="#666" />}
                     </TouchableOpacity>
 
-                    {/* Birthdate Picker */}
                     <Text style={ProfileStyle.profileLabel}>Birthdate</Text>
                     <TouchableOpacity 
                         style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]} 
-                        disabled={!editing}
-                        onPress={() => setShowDatePicker(true)}
+                        disabled={!editing} onPress={() => setShowDatePicker(true)}
                     >
                         <Text style={[ProfileStyle.datePickerText, { color: userData.birthdate ? '#333' : '#a0a0a0' }]}>
                             {userData.birthdate || "Select birthdate"}
@@ -397,31 +445,20 @@ export default function Profile() {
                     {showDatePicker && (
                         <DateTimePicker
                             value={userData.birthdate ? new Date(userData.birthdate) : new Date()}
-                            mode="date"
-                            display="default"
-                            maximumDate={new Date()} 
-                            onChange={handleDateChange}
+                            mode="date" display="default" maximumDate={new Date()} onChange={handleDateChange}
                         />
                     )}
 
-                    {/* Nationality */}
                     <Text style={ProfileStyle.profileLabel}>Nationality</Text>
                     <TextInput 
-                        value={userData.nationality} 
-                        editable={editing} 
+                        value={userData.nationality} editable={editing} 
                         onChangeText={(text) => valueHandler('nationality', text)}
                         style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]} 
                     />
 
-                    {/* Role */}
                     <Text style={ProfileStyle.profileLabel}>Role</Text>
-                    <TextInput 
-                        value={userData.role} 
-                        editable={false} 
-                        style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} 
-                    />
+                    <TextInput value={userData.role} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
 
-                    {/* Verified Badge */}
                     {userData.isAccountVerified && (
                         <View style={ProfileStyle.verifiedBadge}>
                             <Ionicons name="checkmark" size={18} color="#52c41a" style={{ marginRight: 5 }} />
@@ -429,7 +466,6 @@ export default function Profile() {
                         </View>
                     )}
 
-                    {/* Actions */}
                     {!editing ? (
                         <TouchableOpacity style={[ProfileStyle.editButton, { marginTop: 25 }]} onPress={() => setEditing(true)}>
                             <Text style={ProfileStyle.buttonText}><Ionicons name="pencil" size={14} color="#fff"/> Edit Profile</Text>
@@ -440,6 +476,71 @@ export default function Profile() {
                                 <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff"/> Save</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={ProfileStyle.cancelButton} onPress={cancelEdit}>
+                                <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff"/> Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+
+                {/* --- 🔥 NEW: PREFERENCES CARD 🔥 --- */}
+                <View style={ProfileStyle.card}>
+                    <View style={ProfileStyle.preferencesHeader}>
+                        <Text style={ProfileStyle.profileHeading}>Preferences</Text>
+                        {!editingPreferences && (
+                            <TouchableOpacity style={ProfileStyle.editPrefButton} onPress={() => setEditingPreferences(true)}>
+                                <Ionicons name="pencil" size={14} color="#fff" />
+                                <Text style={ProfileStyle.editPrefButtonText}>Edit</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Moods Section */}
+                    <Text style={ProfileStyle.prefSectionTitle}>What are you in the mood for?</Text>
+                    <Text style={ProfileStyle.prefSubText}>Choose up to 3</Text>
+                    <View style={ProfileStyle.chipGrid}>
+                        {moodOptions.map(option => {
+                            const isSelected = preferences.moods.includes(option);
+                            return (
+                                <TouchableOpacity 
+                                    key={option}
+                                    style={[ProfileStyle.chip, isSelected && ProfileStyle.chipSelected]}
+                                    onPress={() => togglePreference('moods', option, 3)}
+                                    disabled={!editingPreferences}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={[ProfileStyle.chipText, isSelected && ProfileStyle.chipTextSelected]}>{option}</Text>
+                                </TouchableOpacity>
+                            )
+                        })}
+                    </View>
+
+                    {/* Tour Type Section */}
+                    <Text style={[ProfileStyle.prefSectionTitle, { marginTop: 20 }]}>What type of tour do you like?</Text>
+                    <Text style={ProfileStyle.prefSubText}>Pick as many as you want.</Text>
+                    <View style={ProfileStyle.chipGrid}>
+                        {tourOptions.map(option => {
+                            const isSelected = preferences.tours.includes(option);
+                            return (
+                                <TouchableOpacity 
+                                    key={option}
+                                    style={[ProfileStyle.chip, isSelected && ProfileStyle.chipSelected]}
+                                    onPress={() => togglePreference('tours', option)}
+                                    disabled={!editingPreferences}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={[ProfileStyle.chipText, isSelected && ProfileStyle.chipTextSelected]}>{option}</Text>
+                                </TouchableOpacity>
+                            )
+                        })}
+                    </View>
+
+                    {/* Edit Actions */}
+                    {editingPreferences && (
+                        <View style={ProfileStyle.actionContainer}>
+                            <TouchableOpacity style={ProfileStyle.saveButton} onPress={savePreferences} disabled={savingPreferences}>
+                                {savingPreferences ? <ActivityIndicator color="#fff" size="small"/> : <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff"/> Save</Text>}
+                            </TouchableOpacity>
+                            <TouchableOpacity style={ProfileStyle.cancelButton} onPress={cancelPreferencesEdit}>
                                 <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff"/> Cancel</Text>
                             </TouchableOpacity>
                         </View>
@@ -457,19 +558,15 @@ export default function Profile() {
                 ) : (
                     recentReviews.slice(0, 3).map((review, index) => (
                         <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
-                            {/* Title matched to Web Layout */}
                             <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, marginBottom: 2, textTransform: 'uppercase' }}>
                                 {review.packageId?.packageName || review.package?.packageName || review.packageName || "Tour Package"}
                             </Text>
-                            {/* Date */}
                             <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
                                 {dayjs(review.createdAt || review.date).format('MMM D, YYYY')}
                             </Text>
-                            {/* Stars */}
                             <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#fadb14', fontSize: 16 }}>
                                 {'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}
                             </Text>
-                            {/* Review Text */}
                             <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', marginTop: 6 }} numberOfLines={2}>
                                 {review.review}
                             </Text>
@@ -490,7 +587,6 @@ export default function Profile() {
                         const statusColor = getStatusStyle(booking.status || "Pending");
                         return (
                             <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
-                                {/* Top Row: Package Name & Status Pill */}
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 4 }}>
                                     <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, flex: 1, textTransform: 'uppercase' }}>
                                         {booking.packageId?.packageName || booking.package?.packageName || booking.bookingDetails?.tourPackageTitle || booking.bookingDetails?.pkg?.packageName || booking.packageName || "Custom Package"}
@@ -503,12 +599,10 @@ export default function Profile() {
                                     </View>
                                 </View>
 
-                                {/* Date */}
                                 <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 10 }}>
                                     {dayjs(booking.createdAt || booking.bookingDate).format('MMM D, YYYY')}
                                 </Text>
 
-                                {/* Bottom Row: Reference & Package Type */}
                                 <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', fontSize: 13 }}>
                                     Reference No. {booking.bookingReference || booking.reference || "N/A"} • {(booking.packageId?.packageType || booking.package?.packageType || booking.bookingDetails?.pkg?.packageType || "DOMESTIC").toUpperCase()}
                                 </Text>

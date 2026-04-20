@@ -2,14 +2,13 @@ import User from "../models/users.js";
 import bcrypt from "bcryptjs";
 import nodemailer from 'nodemailer'; 
 import crypto from 'crypto';         
-import logAction from "../utils/logger.js"; // 🔥 IMPORTED THE LOGGER
+import logAction from "../utils/logger.js"; 
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const normalizeRole = (value) => String(value || "").trim().toLowerCase();
 const canonicalRole = (value) => {
     const normalized = normalizeRole(value);
     if (normalized === "admin") return "Admin";
-    // Change this to return Customer
     if (normalized === "users" || normalized === "user" || normalized === "customer") return "Customer";
     return String(value || "").trim();
 };
@@ -47,8 +46,6 @@ const generateOTPEmailTemplate = (otp, type) => {
 
 // --- HELPER FUNCTION: Welcome Email Template with Deep Link ---
 const generateWelcomeEmailTemplate = (username) => {
-    // NOTE: Change this IP to your laptop's Wi-Fi IP for local testing, 
-    // or your live Render/Railway URL when you deploy to production!
     const redirectUrl = "http://192.168.1.7:5000/api/users/redirect-to-app";
 
     return `
@@ -113,7 +110,6 @@ export const createUser = async (req, res) => {
 
         const savedUser = await user.save();
 
-        // --- Send Welcome Email ---
         try {
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -131,7 +127,6 @@ export const createUser = async (req, res) => {
             console.log("Welcome email sent to:", email);
         } catch (emailError) {
             console.error("Failed to send welcome email:", emailError);
-            // We don't return an error here so the account creation still succeeds
         }
 
         res.status(201).json({ success: true, userId: savedUser._id });
@@ -159,21 +154,18 @@ export const loginUser = async (req, res) => {
         });
         
         if (!user) {
-            // 🔥 LOG FAILED LOGIN
             logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
         const storedPasswordHash = user.hashedPassword || user.password || user.hashed_password;
         if (!storedPasswordHash) {
-            // 🔥 LOG FAILED LOGIN
             logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
         const isMatch = await bcrypt.compare(normalizedPassword, storedPasswordHash);
         if (!isMatch) {
-            // 🔥 LOG FAILED LOGIN
             logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
@@ -182,16 +174,21 @@ export const loginUser = async (req, res) => {
             return res.status(403).json({ success: false, message: "Please verify your account", email: user.email });
         }
 
-        // 🔥 LOG SUCCESSFUL LOGIN
         logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
         
-        res.status(200).json({ success: true, userId: user._id, username: user.username, role: canonicalRole(user.role) });
+        // 🔥 FIXED: Added loginOnce to the response so the mobile app knows if it's their first time!
+        res.status(200).json({ 
+            success: true, 
+            userId: user._id, 
+            username: user.username, 
+            role: canonicalRole(user.role),
+            loginOnce: user.loginOnce // <-- ADDED THIS
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// GET ALL USERS
 export const getUsers = async (req, res) => {
     try {
         const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken");
@@ -201,7 +198,6 @@ export const getUsers = async (req, res) => {
     }
 };
 
-// GET SINGLE USER BY ID
 export const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp");
@@ -214,7 +210,6 @@ export const getUserById = async (req, res) => {
     }
 };
 
-// DELETE USER
 export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -226,7 +221,6 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// UPDATE USER
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -248,9 +242,6 @@ export const updateUser = async (req, res) => {
     }
 };
 
-// =========================================================
-// PASSWORD RESET LOGIC 
-// =========================================================
 export const sendResetOtp = async (req, res) => {
     const { email } = req.body;
     try {
@@ -320,9 +311,6 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// =========================================================
-// ACCOUNT VERIFICATION OTP LOGIC
-// =========================================================
 export const sendVerifyOtp = async (req, res) => {
     const { email } = req.body;
     try {
@@ -368,7 +356,6 @@ export const verifyAccount = async (req, res) => {
         user.verifyOtpExpireAt = 0;
         await user.save();
 
-        // 🔥 LOG SUCCESSFUL VERIFICATION
         logAction('VERIFY_ACCOUNT', user._id, { "Account Verified": `Email: ${user.email}` });
 
         res.status(200).json({ success: true, message: "Account verified successfully" });
@@ -377,11 +364,7 @@ export const verifyAccount = async (req, res) => {
     }
 };
 
-// =========================================================
-// DEEP LINK REDIRECT LOGIC
-// =========================================================
 export const redirectToApp = (req, res) => {
-    // This sends a tiny webpage that automatically triggers the mobile app
     res.send(`
         <html>
             <head>
@@ -392,16 +375,28 @@ export const redirectToApp = (req, res) => {
                 <h2>Opening Travex App...</h2>
                 <p>Please wait while we redirect you to the Login screen.</p>
                 <script>
-                    // 1. Try to open the Mobile App
                     window.location.href = "travex://login";
-                    
-                    // 2. Fallback: If they open this on a PC or don't have the app, 
-                    // redirect to the web login after 2.5 seconds.
                     setTimeout(() => {
-                        window.location.href = "http://localhost:3000/login"; // Update to live URL when deployed
+                        window.location.href = "http://localhost:3000/login"; 
                     }, 2500);
                 </script>
             </body>
         </html>
     `);
+};
+
+// 🔥 NEW: Added the function to update loginOnce flag to prevent 404 error
+export const updateLoginOnce = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        user.loginOnce = true;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Updated loginOnce status" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
