@@ -19,6 +19,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import uploadRoutes from './routes/uploadRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 
 // 🔥 NEW: Import the log routes we just created 🔥
 import logRoutes from "./routes/logRoutes.js";
@@ -56,7 +57,7 @@ app.use("/api/visa-services", visaServiceRoutes);
 app.use("/api/email", sendEmailRoutes);
 app.use("/api/rating", ratingRoutes);
 app.use("/api/upload", uploadRoutes);
-
+app.use('/api/chatbot', chatbotRoutes);
 // 🔥 NEW: Mount the log routes so the frontend can access them! 🔥
 app.use("/api/logs", logRoutes);
 

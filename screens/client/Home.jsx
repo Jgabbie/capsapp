@@ -260,10 +260,11 @@ export default function Home() {
                 </View>
             </Modal>
 
+            {/* 🔥 CHANGED: Set Android behavior to undefined so it uses the native OS resize instead of forcing a white padding box */}
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} 
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20} 
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
             >
                 {/* 🔥 CHANGED THIS: Replaced 180 with 100 to remove the huge grey box void at the bottom */}
                 <ScrollView 

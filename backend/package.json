@@ -19,6 +19,8 @@
     "mongoose": "^9.2.3",
     "multer": "^2.0.2",
     "nodemailer": "^8.0.4",
+    "openai": "^6.34.0",
+    "pdf-parse": "^2.4.5",
     "uuid": "^13.0.0"
   },
   "keywords": [],
