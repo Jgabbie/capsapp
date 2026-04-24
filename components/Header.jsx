@@ -13,19 +13,23 @@ export default function Header({ openSidebar }) {
     const fetchUnread = async () => {
         if (!user?._id) return;
         try {
-            // Path must match app.use('/api/notifications', ...) in your server.js
-            const response = await api.get('/notifications/my', withUserHeader(user._id));
-            const count = (response.data || []).filter(n => !n.isRead).length;
+            // 🔥 Match Web: Request 25 items
+            const response = await api.get('/notifications/my?limit=25', withUserHeader(user._id));
+            
+            // 🔥 Count unread within those 25 items (Should result in 22)
+            const list = response.data || [];
+            const count = list.filter(n => !n.isRead).length;
+            
             setUnreadCount(count);
         } catch (error) {
-            // If this logs 404, your backend route might be singular: '/notification/my'
-            console.log("Header Notif Sync Error (Check your backend routes):", error.message);
+            console.log("Header Sync Error:", error.message);
         }
     };
 
     useEffect(() => {
         fetchUnread();
         
+        // Keep the badge updated whenever the user navigates back to the current screen
         const unsubscribe = cs.addListener('focus', () => {
             fetchUnread();
         });
@@ -63,7 +67,8 @@ export default function Header({ openSidebar }) {
                         <View style={{
                             position: 'absolute', right: -2, top: -2,
                             backgroundColor: '#ff4d4f', borderRadius: 10,
-                            width: 18, height: 18, justifyContent: 'center', alignItems: 'center',
+                            minWidth: 18, height: 18, paddingHorizontal: 4, // minWidth ensures it stays circular but can expand
+                            justifyContent: 'center', alignItems: 'center',
                             borderWidth: 1.5, borderColor: '#fff'
                         }}>
                             <Text style={{ color: 'white', fontSize: 9, fontWeight: 'bold' }}>

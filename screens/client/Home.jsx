@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
@@ -6,7 +6,6 @@ import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 
-// --- OPTIMIZED IMAGE IMPORT ---
 import { Image } from 'expo-image'; 
 
 import Chatbot from '../../components/Chatbot'
@@ -26,8 +25,8 @@ export default function Home() {
     const [loading, setLoading] = useState(true)
 
     const [activeDropdown, setActiveDropdown] = useState(null) 
-    const [selectedActivity, setSelectedActivity] = useState('Activities')
-    const [selectedDuration, setSelectedDuration] = useState('Duration')
+    const [selectedTag, setSelectedTag] = useState('Tags')
+    const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
 
     const [contactName, setContactName] = useState('')
     const [contactEmail, setContactEmail] = useState('')
@@ -36,7 +35,7 @@ export default function Home() {
     const [emailError, setEmailError] = useState('')
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
 
-    const activityOptions = ['All Activities', 'Adventure Type', 'Beach', 'Hiking', 'City Tour']
+    const tagOptions = ['All Tags', 'Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples']
     const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
 
     const [fontsLoaded] = useFonts({
@@ -72,7 +71,8 @@ export default function Home() {
                     }
                 }
             } catch (error) {
-                console.error("Failed to fetch packages:", error)
+                // Changed from console.error to console.log, and added .message
+                console.log("Failed to fetch packages:", error.message) 
             } finally {
                 setLoading(false)
             }
@@ -83,11 +83,11 @@ export default function Home() {
     const filteredPackages = packages.filter(pkg => {
         const matchesSearch = pkg.packageName.toLowerCase().includes(searchQuery.toLowerCase())
         
-        const matchesActivity = selectedActivity === 'Activities' || selectedActivity === 'All Activities' || 
-            (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedActivity.toLowerCase())) ||
-            pkg.packageDescription.toLowerCase().includes(selectedActivity.toLowerCase())
+        const matchesActivity = selectedTag === 'Tags' || selectedTag === 'All Tags' || 
+            (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) ||
+            pkg.packageDescription.toLowerCase().includes(selectedTag.toLowerCase())
 
-        const matchesDuration = selectedDuration === 'Duration' || selectedDuration === 'All Durations' || 
+        const matchesDuration = selectedDuration === 'Length of Stay' || selectedDuration === 'All Durations' || 
             pkg.packageDuration === parseInt(selectedDuration.split(' ')[0])
 
         return matchesSearch && matchesActivity && matchesDuration
@@ -140,39 +140,6 @@ export default function Home() {
 
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
-    const TravelCard = ({ item }) => {
-        const imageSource = item.images && item.images.length > 0 
-            ? item.images[0]
-            : require('../../assets/images/japan_imagesmall.png')
-
-        return (
-            <TouchableOpacity style={HomeStyle.card} onPress={() => cs.navigate("packagedetails", { id: item._id })}>
-                {/* --- UPDATED TO USE EXPO-IMAGE --- */}
-                <Image 
-                    source={imageSource} 
-                    style={HomeStyle.cardImage} 
-                    contentFit="cover"
-                    transition={300} 
-                />
-                {/* 🔥 NEW: Wrapper for text to give it padding inside the white box */}
-                <View style={HomeStyle.cardContent}>
-                    <Text style={HomeStyle.cardTitle} numberOfLines={1}>{item.packageName}</Text>
-                    <View style={HomeStyle.infoRow}>
-                        <Image source={require('../../assets/images/date_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
-                        <Text style={HomeStyle.infoText}>{item.packageDuration} DAYS</Text>
-                    </View>
-                    <View style={HomeStyle.infoRow}>
-                        <Image source={require('../../assets/images/location_iconsmall.png')} style={{width: 12, height: 12}} contentFit="contain" />
-                        <Text style={HomeStyle.infoText} numberOfLines={1}>
-                            {item.packageType.charAt(0).toUpperCase() + item.packageType.slice(1)}
-                        </Text>
-                    </View>
-                    <Text style={HomeStyle.priceText}>₱{item.packagePricePerPax.toLocaleString()}</Text>
-                </View>
-            </TouchableOpacity>
-        )
-    }
-
     const BannerCard = ({ item, subText }) => {
         const imageSource = item.images && item.images.length > 0 
             ? item.images[0]
@@ -180,7 +147,6 @@ export default function Home() {
 
         return (
             <View style={HomeStyle.bannerCard}>
-                 {/* --- UPDATED TO USE EXPO-IMAGE --- */}
                 <Image 
                     source={imageSource} 
                     style={HomeStyle.bannerImage} 
@@ -207,20 +173,21 @@ export default function Home() {
     const DropdownModal = () => (
         <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
             <TouchableOpacity 
-                style={HomeStyle.modalOverlay} 
+                style={HomeStyle.dropdownOverlay} 
                 activeOpacity={1} 
                 onPress={() => setActiveDropdown(null)} 
             >
-                <View style={HomeStyle.modalContent}>
-                    {activeDropdown === 'activity' ? (
-                        activityOptions.map((option, index) => {
-                            const isActive = selectedActivity === option || (selectedActivity === 'Activities' && option === 'All Activities');
+                <View style={HomeStyle.dropdownListContent}>
+                    {activeDropdown === 'tag' ? (
+                        <ScrollView style={{maxHeight: 250}} showsVerticalScrollIndicator={false}>
+                        {tagOptions.map((option, index) => {
+                            const isActive = selectedTag === option || (selectedTag === 'Tags' && option === 'All Tags');
                             return (
                                 <TouchableOpacity 
                                     key={index} 
-                                    style={[HomeStyle.modalOption, index === activityOptions.length -1 && {borderBottomWidth: 0}]}
+                                    style={[HomeStyle.modalOption, index === tagOptions.length -1 && {borderBottomWidth: 0}]}
                                     onPress={() => {
-                                        setSelectedActivity(option === 'All Activities' ? 'Activities' : option)
+                                        setSelectedTag(option === 'All Tags' ? 'Tags' : option)
                                         setActiveDropdown(null)
                                     }}
                                 >
@@ -235,16 +202,18 @@ export default function Home() {
                                     </Text>
                                 </TouchableOpacity>
                             )
-                        })
+                        })}
+                        </ScrollView>
                     ) : activeDropdown === 'duration' ? (
-                        durationOptions.map((option, index) => {
-                            const isActive = selectedDuration === option || (selectedDuration === 'Duration' && option === 'All Durations');
+                        <ScrollView style={{maxHeight: 250}} showsVerticalScrollIndicator={false}>
+                        {durationOptions.map((option, index) => {
+                            const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
                             return (
                                 <TouchableOpacity 
                                     key={index} 
                                     style={[HomeStyle.modalOption, index === durationOptions.length -1 && {borderBottomWidth: 0}]}
                                     onPress={() => {
-                                        setSelectedDuration(option === 'All Durations' ? 'Duration' : option)
+                                        setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
                                         setActiveDropdown(null)
                                     }}
                                 >
@@ -259,7 +228,8 @@ export default function Home() {
                                     </Text>
                                 </TouchableOpacity>
                             )
-                        })
+                        })}
+                        </ScrollView>
                     ) : null}
                 </View>
             </TouchableOpacity>
@@ -290,15 +260,15 @@ export default function Home() {
                 </View>
             </Modal>
 
-            {/* 🔥 UPDATED KEYBOARD AVOIDING VIEW & SCROLL VIEW 🔥 */}
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} 
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20} 
             >
+                {/* 🔥 CHANGED THIS: Replaced 180 with 100 to remove the huge grey box void at the bottom */}
                 <ScrollView 
                     style={HomeStyle.container} 
-                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 120 : 180 }} 
+                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 80 : 100 }} 
                     showsVerticalScrollIndicator={false} 
                     keyboardShouldPersistTaps="handled"
                 >
@@ -307,49 +277,44 @@ export default function Home() {
                         <Text style={HomeStyle.mainTitle}>M&RC Travel and Tours</Text>
                         <Text style={HomeStyle.byTravex}>by travex</Text>
                     </View>
+                    <Text style={HomeStyle.heroSubtitle}>
+                        Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!
+                    </Text>
 
                     <View style={HomeStyle.searchRow}>
                         <View style={HomeStyle.searchBar} >
                             <Ionicons name="search" size={16} color="#777" />
                             <TextInput
                                 style={HomeStyle.searchInput}
-                                placeholder='Search packages'
+                                placeholder='Search here...'
                                 placeholderTextColor="#777"
                                 value={searchQuery}
                                 onChangeText={(text) => setSearchQuery(text)}
                             />
                         </View>
                         <View style={HomeStyle.dropdownGroup}>
-                            <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('activity')}>
+                            <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('tag')}>
                                 <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedActivity.length > 10 ? selectedActivity.substring(0,8) + '...' : selectedActivity}
+                                    {selectedTag.length > 8 ? selectedTag.substring(0,8) + '...' : selectedTag}
                                 </Text>
                                 <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
                             </TouchableOpacity>
                             
                             <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('duration')}>
                                 <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedDuration}
+                                    {selectedDuration.length > 10 ? selectedDuration.substring(0,10) + '...' : selectedDuration}
                                 </Text>
                                 <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
                             </TouchableOpacity>
                         </View>
                     </View>
 
+                    <Text style={HomeStyle.secondMainTitle}>Your Link to the World</Text>
+
                     {loading ? (
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                     ) : (
                         <>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-                                {filteredPackages.length > 0 ? (
-                                    filteredPackages.map((pkg) => (
-                                        <TravelCard key={pkg._id} item={pkg} />
-                                    ))
-                                ) : (
-                                    <Text style={HomeStyle.noResultsText}>No packages match your search.</Text>
-                                )}
-                            </ScrollView>
-
                             {internationalPackages.length > 0 && (
                                 <>
                                     <Text style={HomeStyle.title}>Packages For You</Text>
@@ -369,6 +334,59 @@ export default function Home() {
                             )}
                         </>
                     )}
+
+                    <ImageBackground 
+                        source={require('../../assets/images/LandingPage2_Banner.png')} 
+                        style={HomeStyle.bgSectionContainer}
+                        imageStyle={{ borderRadius: 15 }}
+                    >
+                        <View style={HomeStyle.bgOverlay} />
+                        <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
+                        
+                        {/* 🔥 Added the missing description text here */}
+                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
+                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
+                        </Text>
+                        
+                        {/* 🔥 Fixed lowercase navigation target to match App.jsx */}
+                        <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
+                            <Text style={HomeStyle.bgButtonText}>BROWSE TOUR PACKAGES</Text>
+                        </TouchableOpacity>
+                    </ImageBackground>
+
+                    <View style={HomeStyle.servicesContainer}>
+                        <Text style={HomeStyle.servicesHeader}>THE <Text style={{ color: '#305797' }}>SERVICES</Text> WE OFFER</Text>
+                        <View style={HomeStyle.servicesGrid}>
+                            <View style={HomeStyle.serviceItem}>
+                                <Image source={require('../../assets/images/Packages_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Text style={HomeStyle.serviceTitle}>Tour Packages</Text>
+                            </View>
+                            <View style={HomeStyle.serviceItem}>
+                                <Image source={require('../../assets/images/Passport_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Text style={HomeStyle.serviceTitle}>Passport Assistance</Text>
+                            </View>
+                            <View style={HomeStyle.serviceItem}>
+                                <Image source={require('../../assets/images/Visa_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Text style={HomeStyle.serviceTitle}>Visa Assistance</Text>
+                            </View>
+                            <View style={HomeStyle.serviceItem}>
+                                <Image source={require('../../assets/images/Quotation_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Text style={HomeStyle.serviceTitle}>Quotations</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <ImageBackground 
+                        source={require('../../assets/images/AboutUs_BackgroundImage.jpg')} 
+                        style={HomeStyle.bgSectionContainer}
+                        imageStyle={{ borderRadius: 15 }}
+                    >
+                        <View style={HomeStyle.bgOverlay} />
+                        <Text style={HomeStyle.bgTitle}>M&RC Travel and Tours</Text>
+                        <Text style={HomeStyle.bgDesc}>
+                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
+                        </Text>
+                    </ImageBackground>
 
                     <View style={HomeStyle.contactContainer}>
                         <Text style={HomeStyle.contactTitle}>Contact Us</Text>

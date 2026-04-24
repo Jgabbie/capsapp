@@ -249,7 +249,21 @@ export default function Login() {
                                 setErrorOtp("")
                             }}
                         />
-                        {errorOtp ? <Text style={[LoginStyle.errorMessage, { marginLeft: 0, textAlign: 'center' }]}>{errorOtp}</Text> : null}
+                        {/* Change this line inside the Modal */}
+{errorOtp ? (
+    <Text style={[
+        LoginStyle.errorMessage, 
+        { 
+            marginLeft: 0,
+            marginBottom: 10, 
+            textAlign: 'center', 
+            width: '100%',     // 🔥 ADD THIS: Forces text to span the whole modal
+            alignSelf: 'center' // 🔥 ADD THIS: Extra insurance for centering
+        }
+    ]}>
+        {errorOtp}
+    </Text>
+) : null}
 
                         <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}

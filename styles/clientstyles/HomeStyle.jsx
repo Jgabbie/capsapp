@@ -7,7 +7,6 @@ const HomeStyle = StyleSheet.create({
     mainTitleContainer: {
         flexDirection: 'row',
         alignItems: 'baseline',
-        marginBottom: 12,
         paddingLeft: 5
     },
     mainTitle: {
@@ -22,6 +21,15 @@ const HomeStyle = StyleSheet.create({
         marginLeft: 5,
         fontStyle: "italic"
     },
+    heroSubtitle: {
+        fontSize: 12,
+        fontFamily: "Roboto_400Regular",
+        color: "#777",
+        paddingLeft: 5,
+        marginTop: 4,
+        marginBottom: 15,
+        paddingRight: 10
+    },
     title: {
         fontSize: 20, 
         fontFamily: "Montserrat_700Bold",
@@ -29,18 +37,25 @@ const HomeStyle = StyleSheet.create({
         color: "#305797",
         paddingLeft: 5 
     },
+    secondMainTitle: {
+        fontSize: 20, 
+        fontFamily: "Montserrat_700Bold",
+        color: "#000000",
+        paddingLeft: 5,
+        marginBottom: 20,
+    },
     searchRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
-        marginBottom: 20,
+        marginBottom: 15,
         width: '100%',
     },
     searchBar: {
         flex: 2, 
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff", // 🔥 CHANGED to white background
+        backgroundColor: "#fff",
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 6, 
@@ -51,7 +66,7 @@ const HomeStyle = StyleSheet.create({
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 14,
+        fontSize: 13,
         color: "#333",
         paddingVertical: 0, 
     },
@@ -63,12 +78,12 @@ const HomeStyle = StyleSheet.create({
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#eef3fb",
+        backgroundColor: "#fff", // Made White
         borderRadius: 15,
         paddingHorizontal: 10,
         paddingVertical: 6, 
         borderWidth: 1,
-        borderColor: "#d6e0f0",
+        borderColor: "#dbe3ef",
         height: 40, 
     },
     dropdownText: {
@@ -79,79 +94,40 @@ const HomeStyle = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 4
     },
-    modalOverlay: {
+    
+    // --- SIMPLE DROPDOWN MENU FIX ---
+    dropdownOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center'
+        backgroundColor: 'rgba(0,0,0,0.1)', // Very light dim
+        justifyContent: 'flex-start', // Anchors to top
+        alignItems: 'flex-end', // Aligns to the right side where filters are
+        paddingTop: 140, // Drops it below the header area
+        paddingRight: 15,
     },
-    modalContent: {
+    dropdownListContent: {
         backgroundColor: '#fff',
-        width: '80%',
-        borderRadius: 15,
-        paddingVertical: 10,
+        width: 180, // Narrower menu
+        borderRadius: 12,
         elevation: 5,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 4,
+        overflow: 'hidden'
     },
     modalOption: {
-        paddingVertical: 15,
+        paddingVertical: 12,
+        paddingHorizontal: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
-        alignItems: 'center'
     },
     modalOptionText: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#305797',
         fontFamily: 'Roboto_500Medium'
     },
-    
-    // 🔥 UPDATED CARD STYLES 🔥
-    card: {
-        marginRight: 15, 
-        width: 150,
-        backgroundColor: '#fff', // Added white box background
-        borderRadius: 12,        // Rounded corners for the box
-        overflow: 'hidden',      // Keeps the top of the image neat
-        elevation: 1,            // Subtle shadow
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-    },
-    cardImage: {
-        width: 150,
-        height: 100,
-        backgroundColor: '#e0e0e0' // Removed bottom margin, padding handles it now
-    },
-    cardContent: {
-        padding: 10,  // Adds neat space around the text inside the white box
-        paddingTop: 8,
-    },
-    cardTitle: {
-        fontFamily: "Montserrat_500Medium",
-        color: "#305797",
-        fontSize: 13,
-    },
-    infoRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 5,
-        marginTop: 2
-    },
-    infoText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 11,
-        color: '#555'
-    },
-    priceText: {
-        fontFamily: "Roboto_700Bold",
-        fontSize: 13,
-        color: "#333",
-        marginTop: 3
-    },
+
+    // --- BANNER CARDS ---
     bannerCard: {
         width: '95%', 
         alignSelf: 'center',
@@ -204,18 +180,92 @@ const HomeStyle = StyleSheet.create({
         width: 14,
         height: 14,
     },
-    noResultsText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 14,
-        color: "#777",
-        textAlign: 'center',
-        marginTop: 20,
-        marginBottom: 20
+
+    // --- NEW SECTIONS: BACKGROUND IMAGES ---
+    bgSectionContainer: {
+        width: '95%',
+        alignSelf: 'center',
+        padding: 25,
+        marginTop: 10,
+        marginBottom: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        minHeight: 180,
     },
-    
+    bgOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)', // Dims the background
+        borderRadius: 15,
+    },
+    bgTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 22,
+        color: "#fff",
+        textAlign: "center",
+        marginBottom: 15,
+        zIndex: 1, // Ensures text is above overlay
+    },
+    bgDesc: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#fff",
+        textAlign: "center",
+        lineHeight: 20,
+        zIndex: 1,
+    },
+    bgButton: {
+        backgroundColor: "#fff",
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        zIndex: 1,
+    },
+    bgButtonText: {
+        color: "#305797",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 12,
+    },
+
+    // --- NEW SECTIONS: SERVICES GRID ---
+    servicesContainer: {
+        paddingHorizontal: 5,
+        marginTop: 10,
+        marginBottom: 25,
+    },
+    servicesHeader: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 22,
+        color: "#333",
+        textAlign: "center",
+        marginBottom: 25,
+    },
+    servicesGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    serviceItem: {
+        width: '45%', // Two items per row
+        alignItems: 'center',
+        marginBottom: 25,
+    },
+    serviceIcon: {
+        width: 50,
+        height: 50,
+        marginBottom: 10,
+    },
+    serviceTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 13,
+        color: "#333",
+        textAlign: "center",
+    },
+
     // --- CONTACT US STYLES ---
     contactContainer: {
-        marginTop: 30,
+        marginTop: 10,
         marginBottom: 20,
         paddingHorizontal: 5
     },

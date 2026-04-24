@@ -103,5 +103,11 @@ export default StyleSheet.create({
         color: "#6b7280", 
         marginTop: 12,
         fontSize: 15
-    }
+    },
+    markAllText: {
+        fontSize: 13,
+        fontFamily: "Roboto_500Medium",
+        color: "#305797",
+        textDecorationLine: 'underline'
+    },
 });

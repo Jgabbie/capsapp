@@ -112,15 +112,17 @@ export const createUser = async (req, res) => {
 
         try {
             const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                host: 'smtp-relay.brevo.com',
+                port: 587,
+                secure: false, 
                 auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
             });
 
             const mailOptions = {
-                from: process.env.EMAIL_USER,
+                from: process.env.SENDER_EMAIL, 
                 to: email,
-                subject: 'Welcome to M&RC Travel and Tours',
-                html: generateWelcomeEmailTemplate(username)
+                subject: 'Welcome to M&RC Travel and Tours', 
+                html: generateWelcomeEmailTemplate(username) 
             };
             
             await transporter.sendMail(mailOptions);
@@ -176,13 +178,12 @@ export const loginUser = async (req, res) => {
 
         logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
         
-        // 🔥 FIXED: Added loginOnce to the response so the mobile app knows if it's their first time!
         res.status(200).json({ 
             success: true, 
             userId: user._id, 
             username: user.username, 
             role: canonicalRole(user.role),
-            loginOnce: user.loginOnce // <-- ADDED THIS
+            loginOnce: user.loginOnce 
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -254,12 +255,14 @@ export const sendResetOtp = async (req, res) => {
         await user.save();
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp-relay.brevo.com',
+            port: 587,
+            secure: false, 
             auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.SENDER_EMAIL,
             to: email,
             subject: 'M&RC Travel and Tours - Password Reset OTP',
             html: generateOTPEmailTemplate(otp, 'reset')
@@ -324,12 +327,14 @@ export const sendVerifyOtp = async (req, res) => {
         await user.save();
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp-relay.brevo.com',
+            port: 587,
+            secure: false, 
             auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.SENDER_EMAIL,
             to: email,
             subject: 'M&RC Travel and Tours - Account Verification',
             html: generateOTPEmailTemplate(otp, 'verify')
@@ -385,7 +390,6 @@ export const redirectToApp = (req, res) => {
     `);
 };
 
-// 🔥 NEW: Added the function to update loginOnce flag to prevent 404 error
 export const updateLoginOnce = async (req, res) => {
     try {
         const user = await User.findById(req.userId);

@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -16,25 +16,53 @@ export default function Notifications() {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [notifs, setNotifs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false); // Added for Pull-to-Refresh
     const [search, setSearch] = useState("");
 
-    const fetchNotifs = async () => {
+    const fetchNotifs = useCallback(async () => {
         try {
-            const res = await api.get('/notifications/my', withUserHeader(user._id));
-            setNotifs(res.data || []);
+            // 🔥 Match Web: Fetch exactly 25 items
+            const res = await api.get('/notifications/my?limit=25', withUserHeader(user._id));
+            
+            // 🔥 CRITICAL: You must set the list data here!
+            setNotifs(res.data || []); 
         } catch (e) { 
-            console.log("Notif Error:", e.message); 
+            console.log("Notif Screen Error:", e.message); 
         } finally { 
             setLoading(false); 
+            setRefreshing(false);
         }
-    };
+    }, [user?._id]);
 
     useEffect(() => {
         if (user?._id) fetchNotifs();
-    }, [user?._id]);
+    }, [fetchNotifs]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchNotifs();
+    };
+
+    const unreadCount = useMemo(
+        () => notifs.filter((item) => !item.isRead).length,
+        [notifs]
+    );
+
+    // 🔥 FEATURE MATCH: Mark All as Read (from Web)
+    const handleMarkAllRead = async () => {
+        if (unreadCount === 0) return;
+        try {
+            await api.patch('/notifications/read-all', {}, withUserHeader(user._id));
+            setNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (e) {
+            console.log("Mark all read error:", e.message);
+        }
+    };
 
     const handleMarkAsRead = async (item) => {
-        // 1. Mark it as read in the database
+        const routeState = item?.metadata?.routeState;
+        
+        // 1. Mark it as read in the database if not already read
         if (!item.isRead) {
             try {
                 await api.patch(`/notifications/${item._id}/read`, {}, withUserHeader(user._id));
@@ -44,12 +72,12 @@ export default function Notifications() {
             }
         }
         
-        // 2. Convert Web Links to Mobile Routes!
-        // E.g., Web sends "/user-transactions" -> Regex turns it into "usertransactions"
+        // 2. Navigation with Route State (Matching Web Feature)
         if (item.link) {
             try {
                 const route = item.link.replace(/[\/-]/g, '').toLowerCase();
-                navigation.navigate(route);
+                // Pass metadata routeState if it exists
+                navigation.navigate(route, routeState ? { state: routeState } : undefined);
             } catch (err) {
                 console.log("Navigation error:", err);
             }
@@ -68,11 +96,26 @@ export default function Notifications() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
             
-            <ScrollView contentContainerStyle={NotificationStyle.scrollContent} showsVerticalScrollIndicator={false}>
-                
+            <ScrollView 
+                contentContainerStyle={NotificationStyle.scrollContent} 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#305797"]} />
+                }
+            >
                 <View style={NotificationStyle.headerContainer}>
-                    <Text style={NotificationStyle.title}>Notifications</Text>
-                    <Text style={NotificationStyle.subtitle}>Stay updated with your recent activities.</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <View>
+                            <Text style={NotificationStyle.title}>Notifications</Text>
+                            <Text style={NotificationStyle.subtitle}>Stay updated with your recent activities.</Text>
+                        </View>
+                        {/* 🔥 FEATURE MATCH: Mark All as Read Button */}
+                        {unreadCount > 0 && (
+                            <TouchableOpacity onPress={handleMarkAllRead}>
+                                <Text style={NotificationStyle.markAllText}>Mark all read</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
 
                 <View style={NotificationStyle.searchContainer}>
@@ -112,7 +155,6 @@ export default function Notifications() {
                                 <View style={NotificationStyle.content}>
                                     <Text style={NotificationStyle.notifTitle}>{item.title}</Text>
                                     <Text style={NotificationStyle.notifMessage}>{item.message}</Text>
-                                    {/* Formatted to match Web: 4/4/2026, 8:46:36 PM */}
                                     <Text style={NotificationStyle.time}>
                                         {dayjs(item.createdAt).format('M/D/YYYY, h:mm A')}
                                     </Text>

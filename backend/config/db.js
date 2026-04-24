@@ -1,18 +1,16 @@
 import mongoose from "mongoose";
 
-// MongoDB connection string
-const MONGO_URI = "mongodb+srv://jgablanuza_db_user:mtTMAbnveggSPF20@travelsystem.vpnslab.mongodb.net/?appName=TravelSystem";
-// For Atlas, you can use:
-// const MONGO_URI = process.env.MONGO_URI;
-
 const connectDB = async () => {
     try {
-        // Connect without deprecated options
-        await mongoose.connect(MONGO_URI);
-        console.log("MongoDB connected");
+        // 🔥 FIX: We are no longer hardcoding this! It will now read the exact 
+        // string from your .env file (which we already made identical to the web app)
+        const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+        
+        await mongoose.connect(uri);
+        console.log("MongoDB connected successfully");
     } catch (error) {
         console.error("MongoDB connection error:", error.message);
-        process.exit(1); // Stop server if DB fails
+        process.exit(1); 
     }
 };
 
