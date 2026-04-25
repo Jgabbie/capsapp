@@ -13,6 +13,40 @@ import { useUser } from '../../context/UserContext';
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 
+// 🔥 NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
+const parseDateStringSafe = (dateStr) => {
+    if (!dateStr) return null;
+    
+    const months = { 
+        "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5, 
+        "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11,
+        "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+    };
+    
+    try {
+        const cleanStr = dateStr.replace(/,/g, '').trim();
+        const parts = cleanStr.split(/\s+/);
+        
+        // Look for [Month, Day, Year] format
+        if (parts.length === 3) {
+            const month = months[parts[0]];
+            const day = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            
+            if (month !== undefined && !isNaN(day) && !isNaN(year)) {
+                return new Date(year, month, day);
+            }
+        }
+        
+        // Fallback
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) return parsed;
+    } catch (e) {
+        return null;
+    }
+    return null;
+};
+
 export default function PaymentMode({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -30,6 +64,7 @@ export default function PaymentMode({ route, navigation }) {
 
     const totalAmount = setupData?.totalPrice || 0;
 
+    // 🔥 BULLETPROOF SCHEDULE LOGIC
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;
@@ -38,12 +73,23 @@ export default function PaymentMode({ route, navigation }) {
         };
 
         const freqWeeks = getFrequencyWeeks(frequency);
-        const today = dayjs();
+        const today = dayjs().startOf('day');
         
-        const startDateString = setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null;
-        const travelDateComputation = startDateString ? dayjs(startDateString) : today;
+        let travelDateComputation = today;
+
+        // Extract the string (e.g., "May 13, 2026")
+        const rawTravelDate = setupData?.travelDate?.startDate || (setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null);
+        
+        // Use our safe parser to convert it
+        if (rawTravelDate) {
+            const parsedJsDate = parseDateStringSafe(rawTravelDate);
+            if (parsedJsDate) {
+                travelDateComputation = dayjs(parsedJsDate).startOf('day');
+            }
+        }
 
         const maxAllowedDate = today.add(45, 'day');
+        
         const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
             ? travelDateComputation
             : maxAllowedDate;
@@ -52,9 +98,10 @@ export default function PaymentMode({ route, navigation }) {
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
         
         const paymentDates = [];
-        let nextDate = dayjs(today).add(freqWeeks, 'week');
+        let nextDate = today.add(freqWeeks, 'week');
 
-        while (nextDate.isBefore(dueCutoffDate) || nextDate.isSame(dueCutoffDate)) {
+        // Loop forward in time until we hit the travel cutoff
+        while (nextDate.isBefore(dueCutoffDate) || nextDate.isSame(dueCutoffDate, 'day')) {
             paymentDates.push(nextDate);
             nextDate = nextDate.add(freqWeeks, 'week');
         }
@@ -91,11 +138,22 @@ export default function PaymentMode({ route, navigation }) {
     };
 
     const issueDate = dayjs();
-    const lastInstallmentDate = dayjs(scheduleData.schedule[scheduleData.schedule.length - 1].date);
+    
+    const lastInstallmentDate = scheduleData.schedule.length > 0 
+        ? dayjs(scheduleData.schedule[scheduleData.schedule.length - 1].date)
+        : dayjs();
+    
     const amountToCharge = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
     const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
+    
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
+
+    const packageTitleDisplay = setupData?.pkg?.title || setupData?.pkg?.packageName || 'TOUR PACKAGE';
+    
+    const displayTravelDate = setupData?.selectedDate 
+        ? setupData.selectedDate 
+        : (setupData?.travelDate?.startDate ? `${dayjs(setupData.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(setupData.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
 
     return (
         <SafeAreaView style={PaymentStyle.safeArea}>
@@ -105,7 +163,6 @@ export default function PaymentMode({ route, navigation }) {
 
             <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
                 
-                {/* 🔥 RESTORED BACK BUTTON 🔥 */}
                 <TouchableOpacity 
                     style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
                     onPress={() => navigation.goBack()}
@@ -115,7 +172,7 @@ export default function PaymentMode({ route, navigation }) {
                 </TouchableOpacity>
 
                 <Text style={PaymentStyle.sectionTitle}>Mode of Payment</Text>
-                <Text style={PaymentStyle.sectionSubtitle}>Choose how you want to settle your booking.</Text>
+                <Text style={PaymentStyle.sectionSubtitle}>Select your mode of payment.</Text>
 
                 <View style={PaymentStyle.progressContainer}>
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>1</Text></View>
@@ -123,13 +180,18 @@ export default function PaymentMode({ route, navigation }) {
                     <View style={PaymentStyle.progressStep}><Text style={[PaymentStyle.progressText, {color: '#64748b'}]}>2</Text></View>
                 </View>
 
+                <View style={{ marginBottom: 10 }}>
+                    <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 18, color: "#1f2a44", marginBottom: 4 }}>Booking Invoice</Text>
+                    <Text style={{ fontFamily: "Roboto_400Regular", fontSize: 12, color: "#4b5563" }}>Please review your booking invoice before proceeding to payment.</Text>
+                </View>
+
                 <View style={PaymentStyle.previewButtonContainer}>
                     <View style={PaymentStyle.previewHeader}>
-                        <View style={{ flex: 1 }}>
+                        <View style={{ flex: 1, paddingRight: 10 }}>
                             <Text style={PaymentStyle.previewLabel}>Package:</Text>
-                            <Text style={PaymentStyle.previewValue} numberOfLines={1}>{setupData?.pkg?.title?.toUpperCase() || 'TOUR PACKAGE'}</Text>
+                            <Text style={PaymentStyle.previewValue} numberOfLines={2}>{packageTitleDisplay.toUpperCase()}</Text>
                         </View>
-                        <View style={{ alignItems: 'flex-end' }}>
+                        <View style={{ alignItems: 'flex-end', justifyContent: 'flex-start' }}>
                             <Text style={PaymentStyle.previewLabel}>Travelers:</Text>
                             <Text style={PaymentStyle.previewValue}>{travelerTotal} Person(s)</Text>
                         </View>
@@ -153,14 +215,17 @@ export default function PaymentMode({ route, navigation }) {
                         {paymentType === 'deposit' && <View style={PaymentStyle.radioInner} />}
                     </View>
                     <View style={PaymentStyle.modeContent}>
-                        <Text style={PaymentStyle.modeTitle}>Deposit / Installment</Text>
-                        <Text style={PaymentStyle.modeDesc}>Secure your slot with a partial payment and pay the rest in installments.</Text>
+                        <Text style={PaymentStyle.modeTitle}>Deposit</Text>
+                        <Text style={PaymentStyle.modeDesc}>Make a partial payment to secure your booking. Choose this option to pay a portion of the total amount.</Text>
                         
                         {paymentType === 'deposit' && (
-                            <TouchableOpacity style={PaymentStyle.pickerContainer} onPress={() => setShowFreqDropdown(true)}>
-                                <Text style={{fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44'}}>{frequency}</Text>
-                                <Ionicons name="chevron-down" size={18} color="#64748b" />
-                            </TouchableOpacity>
+                            <View style={{ marginTop: 12 }}>
+                                <Text style={{ fontFamily: "Montserrat_600SemiBold", fontSize: 12, color: "#1f2a44", marginBottom: 6 }}>Payment Schedule:</Text>
+                                <TouchableOpacity style={PaymentStyle.pickerContainer} onPress={() => setShowFreqDropdown(true)}>
+                                    <Text style={{fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44'}}>{frequency}</Text>
+                                    <Ionicons name="chevron-down" size={18} color="#64748b" />
+                                </TouchableOpacity>
+                            </View>
                         )}
                     </View>
                 </TouchableOpacity>
@@ -175,7 +240,7 @@ export default function PaymentMode({ route, navigation }) {
                     </View>
                     <View style={PaymentStyle.modeContent}>
                         <Text style={PaymentStyle.modeTitle}>Full Payment</Text>
-                        <Text style={PaymentStyle.modeDesc}>Settle the entire amount now for a worry-free booking experience.</Text>
+                        <Text style={PaymentStyle.modeDesc}>Pay the full amount to secure your booking and not worry about future payment deadlines.</Text>
                     </View>
                 </TouchableOpacity>
 
@@ -188,10 +253,10 @@ export default function PaymentMode({ route, navigation }) {
                                     <Text style={PaymentStyle.scheduleLabel}>{item.label}</Text>
                                     <Text style={PaymentStyle.scheduleDate}>{dayjs(item.date).format('MMM DD, YYYY')}</Text>
                                 </View>
-                                <Text style={PaymentStyle.scheduleAmount}>{formatPeso(item.amount)}</Text>
+                                <Text style={PaymentStyle.scheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
                             </View>
                         ))}
-                        <Text style={PaymentStyle.scheduleNote}>Note: A penalty of PHP 500 applies for late deposit payments.</Text>
+                        <Text style={PaymentStyle.scheduleNote}>Note: A penalty of PHP 200 applies for late deposit payments.</Text>
                     </View>
                 )}
 
@@ -247,6 +312,7 @@ export default function PaymentMode({ route, navigation }) {
                                         <Text style={PaymentStyle.invTinyLabel}>BILL TO</Text>
                                         <Text style={PaymentStyle.invCustomerName}>{customerName.toUpperCase()}</Text>
                                         <Text style={PaymentStyle.invMutedText}>{leadGuestInfo?.contact || user?.phonenum || '--'}</Text>
+                                        <Text style={PaymentStyle.invMutedText}>Travel Date: {displayTravelDate}</Text>
                                     </View>
                                     <View style={PaymentStyle.invSummaryGrid}>
                                         <View style={PaymentStyle.invSummaryCol}>
@@ -276,7 +342,7 @@ export default function PaymentMode({ route, navigation }) {
                                     <View style={PaymentStyle.invTableRow}>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{setupData?.pkg?.title}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageTitleDisplay}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>{formatPesoNumber(ratePerPax)}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>{formatPesoNumber(totalAmount)}</Text>
@@ -313,7 +379,7 @@ export default function PaymentMode({ route, navigation }) {
                                                 <Text style={PaymentStyle.invScheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
                                             </View>
                                         ))}
-                                        <Text style={PaymentStyle.invScheduleNote}>Note: A penalty of PHP 500 applies for late deposit payments.</Text>
+                                        <Text style={PaymentStyle.invScheduleNote}>Note: A penalty of PHP 200 applies for late deposit payments.</Text>
                                     </View>
                                 )}
                             </ScrollView>

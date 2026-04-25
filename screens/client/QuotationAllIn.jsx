@@ -56,7 +56,6 @@ export default function QuotationAllIn() {
     const soloExtraRate = Math.max(0, soloRate - packagePricePerPax);
     const dateSurcharge = selectedDateRate || 0;
 
-    // 🔥 NEW: Fetch Maximums from pkg or fallback to defaults
     const maxAdults = pkg?.maxAdults || 20;
     const maxChildren = pkg?.maxChildren || 10;
     const maxInfants = pkg?.maxInfants || 10;
@@ -66,6 +65,14 @@ export default function QuotationAllIn() {
             ? { adult: 1, child: 0, infant: 0 } 
             : counts;
     }, [selectedSoloGrouped, counts]);
+
+    // 🔥 NEW: Calculate Original Total (Before Discount)
+    const originalTotalAmount = useMemo(() => {
+        if (selectedSoloGrouped === 'solo') return baseSoloRate;
+        return (travelersCount.adult * basePackagePricePerPax) + 
+               (travelersCount.child * baseChildRate) + 
+               (travelersCount.infant * baseInfantRate);
+    }, [selectedSoloGrouped, travelersCount, basePackagePricePerPax, baseSoloRate, baseChildRate, baseInfantRate]);
 
     const totalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return soloRate;
@@ -84,7 +91,6 @@ export default function QuotationAllIn() {
     const updateCount = (type, action) => {
         setCounts(prev => {
             let newVal = action === 'inc' ? prev[type] + 1 : prev[type] - 1;
-            // 🔥 UPDATED: Business rule limits based on web variables
             if (type === 'adult') newVal = Math.max(2, Math.min(newVal, maxAdults));
             else if (type === 'child') newVal = Math.max(0, Math.min(newVal, maxChildren));
             else if (type === 'infant') newVal = Math.max(0, Math.min(newVal, maxInfants));
@@ -181,56 +187,63 @@ export default function QuotationAllIn() {
                     <Text style={QuotationAllInStyle.totalLabel}>TOTAL AMOUNT</Text>
                     <Text style={QuotationAllInStyle.totalValue}>{formatPeso(totalAmount)}</Text>
                     
-                    {/* Discount */}
+                    {/* 🔥 UPDATED: Dynamic Pricing Breakdown perfectly matching Web */}
                     {discountPercent > 0 && (
                         <View style={QuotationAllInStyle.pricingRow}>
-                            <Text style={QuotationAllInStyle.pricingText}>Discount per pax</Text>
-                            <Text style={QuotationAllInStyle.pricingText}>{discountPercent}%</Text>
+                            <Text style={QuotationAllInStyle.pricingText}>Discount</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{discountPercent}%</Text>
                         </View>
                     )}
 
-                    {/* Breakdown Logic */}
-                    {selectedSoloGrouped === 'solo' ? (
-                        <>
-                            <View style={QuotationAllInStyle.pricingRow}>
-                                <Text style={QuotationAllInStyle.pricingText}>Solo rate</Text>
-                                <Text style={QuotationAllInStyle.pricingText}>{formatPeso(soloExtraRate)}</Text>
-                            </View>
-                            <View style={QuotationAllInStyle.pricingRow}>
-                                <Text style={QuotationAllInStyle.pricingText}>Date surcharge</Text>
-                                <Text style={QuotationAllInStyle.pricingText}>
-                                    {dateSurcharge === 0 ? "NONE" : formatPeso(dateSurcharge)}
-                                </Text>
-                            </View>
-                        </>
-                    ) : (
-                        <>
-                            {counts.adult > 0 && (
-                                <View style={QuotationAllInStyle.pricingRow}>
-                                    <Text style={QuotationAllInStyle.pricingText}>Adults ({counts.adult} x {formatPeso(packagePricePerPax)})</Text>
-                                    <Text style={QuotationAllInStyle.pricingText}>{formatPeso(counts.adult * packagePricePerPax)}</Text>
-                                </View>
-                            )}
-                            {counts.child > 0 && (
-                                <View style={QuotationAllInStyle.pricingRow}>
-                                    <Text style={QuotationAllInStyle.pricingText}>Child ({counts.child} x {formatPeso(childRate)})</Text>
-                                    <Text style={QuotationAllInStyle.pricingText}>{formatPeso(counts.child * childRate)}</Text>
-                                </View>
-                            )}
-                            {counts.infant > 0 && (
-                                <View style={QuotationAllInStyle.pricingRow}>
-                                    <Text style={QuotationAllInStyle.pricingText}>Infant ({counts.infant} x {formatPeso(infantRate)})</Text>
-                                    <Text style={QuotationAllInStyle.pricingText}>{formatPeso(counts.infant * infantRate)}</Text>
-                                </View>
-                            )}
-                            <View style={QuotationAllInStyle.pricingRow}>
-                                <Text style={QuotationAllInStyle.pricingText}>Date surcharge</Text>
-                                <Text style={QuotationAllInStyle.pricingText}>
-                                    {dateSurcharge === 0 ? "NONE" : formatPeso(dateSurcharge * totalTravelers)}
-                                </Text>
-                            </View>
-                        </>
+                    {discountPercent > 0 && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Original total</Text>
+                            <Text style={[QuotationAllInStyle.pricingValue, { textDecorationLine: 'line-through', color: '#9aa0a6', fontFamily: 'Roboto_400Regular' }]}>
+                                {formatPeso(originalTotalAmount)}
+                            </Text>
+                        </View>
                     )}
+
+                    {discountPercent > 0 && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Discounted total</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{formatPeso(totalAmount)}</Text>
+                        </View>
+                    )}
+
+                    {selectedSoloGrouped === 'solo' && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Solo rate</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{formatPeso(soloExtraRate)}</Text>
+                        </View>
+                    )}
+
+                    {/* Additional group traveler breakdowns just for clarity if needed, otherwise matches web */}
+                    {selectedSoloGrouped === 'group' && travelersCount.adult > 0 && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Adults ({travelersCount.adult} x {formatPeso(packagePricePerPax)})</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{formatPeso(travelersCount.adult * packagePricePerPax)}</Text>
+                        </View>
+                    )}
+                    {selectedSoloGrouped === 'group' && travelersCount.child > 0 && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Children ({travelersCount.child} x {formatPeso(childRate)})</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{formatPeso(travelersCount.child * childRate)}</Text>
+                        </View>
+                    )}
+                    {selectedSoloGrouped === 'group' && travelersCount.infant > 0 && (
+                        <View style={QuotationAllInStyle.pricingRow}>
+                            <Text style={QuotationAllInStyle.pricingText}>Infants ({travelersCount.infant} x {formatPeso(infantRate)})</Text>
+                            <Text style={QuotationAllInStyle.pricingValue}>{formatPeso(travelersCount.infant * infantRate)}</Text>
+                        </View>
+                    )}
+
+                    <View style={QuotationAllInStyle.pricingRow}>
+                        <Text style={QuotationAllInStyle.pricingText}>Date surcharge</Text>
+                        <Text style={QuotationAllInStyle.pricingValue}>
+                            {dateSurcharge === 0 ? "NONE" : formatPeso(dateSurcharge * totalTravelers)}
+                        </Text>
+                    </View>
 
                     <Text style={QuotationAllInStyle.summaryNote}>
                         *All inclusions fees for this package are already factored in the total price, except for Visas and other additionals. For solo booking, rate has already been applied in the total price.
@@ -249,13 +262,13 @@ export default function QuotationAllIn() {
                     <Text style={QuotationAllInStyle.subtitle}>Select if you are traveling alone or with a group.</Text>
                 </View>
 
-                {/* Solo Selection Card */}
+                {/* 🔥 UPDATED: Solo Selection Card Image */}
                 <TouchableOpacity 
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'solo' && QuotationAllInStyle.cardSelected]}
                     onPress={() => setSelectedSoloGrouped('solo')}
                 >
-                    <Image source={require('../../assets/images/fixedallin.jpg')} style={QuotationAllInStyle.cardImage} />
+                    <Image source={require('../../assets/images/solobooking.jpg')} style={QuotationAllInStyle.cardImage} />
                     <View style={QuotationAllInStyle.cardContent}>
                         <Text style={QuotationAllInStyle.cardTitle}>Single Supplement / Solo Booking</Text>
                         <Text style={QuotationAllInStyle.cardDesc}>Book for yourself with a single traveler setup.</Text>
@@ -263,13 +276,13 @@ export default function QuotationAllIn() {
                     </View>
                 </TouchableOpacity>
 
-                {/* Group Selection Card */}
+                {/* 🔥 UPDATED: Group Selection Card Image */}
                 <TouchableOpacity 
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'group' && QuotationAllInStyle.cardSelected]}
                     onPress={() => setSelectedSoloGrouped('group')}
                 >
-                    <Image source={require('../../assets/images/allinpackage.jpg')} style={QuotationAllInStyle.cardImage} />
+                    <Image source={require('../../assets/images/groupedbooking.jpg')} style={QuotationAllInStyle.cardImage} />
                     <View style={QuotationAllInStyle.cardContent}>
                         <Text style={QuotationAllInStyle.cardTitle}>Grouped Booking</Text>
                         <Text style={QuotationAllInStyle.cardDesc}>Plan a trip for a group with shared activities.</Text>
@@ -277,7 +290,7 @@ export default function QuotationAllIn() {
                     </View>
                 </TouchableOpacity>
 
-                {/* --- 🔥 UPDATED TRAVELER COUNTERS TO MATCH WEB CARDS 🔥 --- */}
+                {/* --- TRAVELER COUNTERS --- */}
                 {selectedSoloGrouped === 'group' && (
                     <View style={QuotationAllInStyle.counterSection}>
                         <Text style={QuotationAllInStyle.counterSectionTitle}>Number of Travelers</Text>

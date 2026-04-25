@@ -5,10 +5,16 @@ import { Ionicons } from '@expo/vector-icons';
 export default function PaymentSuccess({ route, navigation }) {
     // Timer state starting at 8 seconds
     const [countdown, setCountdown] = useState(8);
+    // 🔥 NEW: Kill switch to stop the timer if the user navigates manually
+    const [isActive, setIsActive] = useState(true);
 
     useEffect(() => {
+        // 🔥 If the kill switch is flipped (user clicked a button), stop running this effect!
+        if (!isActive) return;
+
         // If countdown hits 0, auto-navigate to Home
         if (countdown === 0) {
+            setIsActive(false); // Flip the switch so it doesn't run again
             navigation.navigate('home');
             return;
         }
@@ -18,9 +24,9 @@ export default function PaymentSuccess({ route, navigation }) {
             setCountdown((prev) => prev - 1);
         }, 1000);
 
-        // Cleanup interval on unmount
+        // Cleanup interval on unmount or re-render
         return () => clearInterval(timer);
-    }, [countdown, navigation]);
+    }, [countdown, isActive, navigation]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f4f8' }}>
@@ -44,14 +50,20 @@ export default function PaymentSuccess({ route, navigation }) {
                 <View style={localStyles.buttonRow}>
                     <TouchableOpacity 
                         style={localStyles.button}
-                        onPress={() => navigation.navigate("userbookings")}
+                        onPress={() => {
+                            setIsActive(false); // 🔥 Kill the timer!
+                            navigation.navigate("userbookings");
+                        }}
                     >
                         <Text style={localStyles.buttonText}>View Bookings</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
                         style={localStyles.button}
-                        onPress={() => navigation.navigate("home")}
+                        onPress={() => {
+                            setIsActive(false); // 🔥 Kill the timer!
+                            navigation.navigate("home");
+                        }}
                     >
                         <Text style={localStyles.buttonText}>Go to Home</Text>
                     </TouchableOpacity>

@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, Modal, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from "expo-constants";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
 import { useFonts } from '@expo-google-fonts/montserrat';
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
@@ -15,6 +16,8 @@ import WishlistStyle from '../../styles/clientstyles/WishlistStyle';
 import ModalStyle from '../../styles/componentstyles/ModalStyle';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
+
+const { width } = Dimensions.get('window');
 
 const getTravelSystemApiBase = () => {
     if (Platform.OS === "web") return "http://localhost:8000";
@@ -48,7 +51,8 @@ export default function Wishlist() {
     const [activeDropdown, setActiveDropdown] = useState(null); 
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [selectedAvailability, setSelectedAvailability] = useState("All");
-    const [selectedPrice, setSelectedPrice] = useState("All");
+    // 🔥 NEW: Price Slider State
+    const [priceRange, setPriceRange] = useState([0, 100000]);
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold,
@@ -74,7 +78,6 @@ export default function Wishlist() {
                     const mapped = items.map(item => {
                         const pkg = item.packageId || item.package || item; 
                         
-                        // 🔥 FIX: Calculate total slots by summing up the dates array 🔥
                         let calculatedSlots = 0;
                         if (pkg.packageSpecificDate && Array.isArray(pkg.packageSpecificDate)) {
                             calculatedSlots = pkg.packageSpecificDate.reduce((sum, dateObj) => {
@@ -83,8 +86,6 @@ export default function Wishlist() {
                         }
 
                         const finalSlots = pkg.packageAvailableSlots ?? pkg.slots ?? calculatedSlots;
-                        
-                        // 🔥 FIX: Use the correct discount variable from your database 🔥
                         const finalDiscount = pkg.packageDiscountPercent ?? pkg.discount ?? 0;
 
                         return {
@@ -116,7 +117,6 @@ export default function Wishlist() {
     // Dropdown Lists
     const categoriesList = ["All", "Domestic", "International"];
     const availabilitiesList = ["All", "Available", "Few slots", "Sold out"];
-    const pricesList = ["All", "Under 4000", "4000-7000", "7000+"];
 
     // Filtering Logic
     const filteredPackages = useMemo(() => {
@@ -127,15 +127,13 @@ export default function Wishlist() {
             const matchesCategory = selectedCategory === "All" || item.packageType?.toLowerCase() === selectedCategory.toLowerCase();
             const matchesAvailability = selectedAvailability === "All" || item.availability === selectedAvailability;
             
-            let matchesPrice = true;
-            const price = item.packagePricePerPax;
-            if (selectedPrice === "Under 4000") matchesPrice = price < 4000;
-            if (selectedPrice === "4000-7000") matchesPrice = price >= 4000 && price <= 7000;
-            if (selectedPrice === "7000+") matchesPrice = price > 7000;
+            // 🔥 UPDATED: Price slider filter logic
+            const actualPrice = item.discount > 0 ? item.packagePricePerPax * (1 - item.discount / 100) : item.packagePricePerPax;
+            const matchesPrice = actualPrice >= priceRange[0] && actualPrice <= priceRange[1];
 
             return matchesSearch && matchesCategory && matchesAvailability && matchesPrice;
         });
-    }, [packages, searchText, selectedCategory, selectedAvailability, selectedPrice]);
+    }, [packages, searchText, selectedCategory, selectedAvailability, priceRange]);
 
     const handleRemoveConfirm = async () => {
         if (!itemToRemove) return;
@@ -180,8 +178,9 @@ export default function Wishlist() {
                         />
                     </View>
 
+                    {/* 🔥 UPDATED: Category and Availability Side-by-Side */}
                     <View style={WishlistStyle.dropdownRow}>
-                        <View style={{flex: 1}}>
+                        <View style={{flex: 1, marginRight: 8}}>
                             <Text style={WishlistStyle.filterLabel}>Category</Text>
                             <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('category')}>
                                 <Text style={WishlistStyle.dropdownText}>{selectedCategory}</Text>
@@ -189,26 +188,35 @@ export default function Wishlist() {
                             </TouchableOpacity>
                         </View>
                         
-                        <View style={{flex: 1, marginHorizontal: 8}}>
+                        <View style={{flex: 1, marginLeft: 8}}>
                             <Text style={WishlistStyle.filterLabel}>Availability</Text>
                             <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('availability')}>
                                 <Text style={WishlistStyle.dropdownText}>{selectedAvailability}</Text>
                                 <Ionicons name="chevron-down" size={14} color="#6b7280" />
                             </TouchableOpacity>
                         </View>
+                    </View>
 
-                        <View style={{flex: 1}}>
-                            <Text style={WishlistStyle.filterLabel}>Price</Text>
-                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('price')}>
-                                <Text style={WishlistStyle.dropdownText}>{selectedPrice}</Text>
-                                <Ionicons name="chevron-down" size={14} color="#6b7280" />
-                            </TouchableOpacity>
+                    {/* 🔥 NEW: Price Slider */}
+                    <Text style={[WishlistStyle.filterLabel, {marginTop: 15}]}>Price</Text>
+                    <View style={{ alignItems: 'center' }}>
+                        <View style={WishlistStyle.budgetValuesRow}>
+                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Roboto_500Medium' }}>₱{priceRange[0].toLocaleString()}</Text>
+                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Roboto_500Medium' }}>₱{priceRange[1].toLocaleString()}</Text>
                         </View>
+                        <MultiSlider 
+                            values={priceRange} 
+                            sliderLength={width - 90} 
+                            onValuesChange={(vals) => setPriceRange(vals)} 
+                            min={0} max={100000} step={1000} 
+                            selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
+                        />
                     </View>
                 </View>
 
+                {/* Dropdown Modals mapped to new layout position */}
                 {activeDropdown === 'category' && (
-                    <View style={[WishlistStyle.dropdownMenu, { left: 20 }]}>
+                    <View style={[WishlistStyle.dropdownMenu, { top: 165, left: 15 }]}>
                         {categoriesList.map(cat => (
                             <TouchableOpacity key={cat} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedCategory(cat); setActiveDropdown(null); }}>
                                 <Text style={WishlistStyle.dropdownMenuItemText}>{cat}</Text>
@@ -217,19 +225,10 @@ export default function Wishlist() {
                     </View>
                 )}
                 {activeDropdown === 'availability' && (
-                    <View style={[WishlistStyle.dropdownMenu, { left: '35%' }]}>
+                    <View style={[WishlistStyle.dropdownMenu, { top: 165, right: 15 }]}>
                         {availabilitiesList.map(avail => (
                             <TouchableOpacity key={avail} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedAvailability(avail); setActiveDropdown(null); }}>
                                 <Text style={WishlistStyle.dropdownMenuItemText}>{avail}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
-                {activeDropdown === 'price' && (
-                    <View style={[WishlistStyle.dropdownMenu, { right: 20 }]}>
-                        {pricesList.map(price => (
-                            <TouchableOpacity key={price} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedPrice(price); setActiveDropdown(null); }}>
-                                <Text style={WishlistStyle.dropdownMenuItemText}>{price}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -247,71 +246,93 @@ export default function Wishlist() {
                 ) : filteredPackages.length === 0 ? (
                     <View style={WishlistStyle.emptyStateContainer}>
                         <Image source={require('../../assets/images/empty_logo.png')} style={WishlistStyle.emptyStateImage} />
-                        <Text style={WishlistStyle.emptyStateText}>No packages found.</Text>
+                        <Text style={WishlistStyle.emptyStateText}>No packages match your filters.</Text>
                     </View>
                 ) : (
-                    filteredPackages.map((item) => (
-                        <View key={item.id} style={WishlistStyle.card}>
-                            <Image style={WishlistStyle.cardImage} source={{ uri: item.image }} />
+                    filteredPackages.map((item) => {
+                        // 🔥 Calculate display price dynamically
+                        const actualPrice = item.discount > 0 ? item.packagePricePerPax * (1 - item.discount / 100) : item.packagePricePerPax;
 
-                            <View style={WishlistStyle.cardContent}>
-                                <View style={WishlistStyle.rowBetween}>
-                                    <Text style={WishlistStyle.packageName} numberOfLines={1}>{item.title}</Text>
-                                    <View style={[WishlistStyle.tag, { backgroundColor: item.packageType?.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
-                                        <Text style={[WishlistStyle.tagText, { color: item.packageType?.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
-                                            {item.packageType?.toUpperCase()}
-                                        </Text>
+                        return (
+                            <View key={item.id} style={WishlistStyle.card}>
+                                <Image style={WishlistStyle.cardImage} source={{ uri: item.image }} />
+
+                                <View style={WishlistStyle.cardContent}>
+                                    <View style={WishlistStyle.rowBetween}>
+                                        <Text style={WishlistStyle.packageName} numberOfLines={1}>{item.title}</Text>
+                                        <View style={[WishlistStyle.tag, { backgroundColor: item.packageType?.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
+                                            <Text style={[WishlistStyle.tagText, { color: item.packageType?.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
+                                                {item.packageType?.toUpperCase()}
+                                            </Text>
+                                        </View>
                                     </View>
-                                </View>
-                                <Text style={WishlistStyle.refText}>{item.reference}</Text>
+                                    <Text style={WishlistStyle.refText}>{item.reference}</Text>
 
-                                <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 8 }]}>
-                                    <Text style={WishlistStyle.durationText}>{item.duration}</Text>
-                                    <View style={[
-                                        WishlistStyle.tag, 
-                                        { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }
-                                    ]}>
-                                        <Text style={[
-                                            WishlistStyle.tagText, 
-                                            { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }
+                                    <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 8 }]}>
+                                        <Text style={WishlistStyle.durationText}>{item.duration}</Text>
+                                        <View style={[
+                                            WishlistStyle.tag, 
+                                            { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }
                                         ]}>
-                                            {item.availability.toUpperCase()}
-                                        </Text>
+                                            <Text style={[
+                                                WishlistStyle.tagText, 
+                                                { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }
+                                            ]}>
+                                                {item.availability.toUpperCase()}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    
-                                    {item.discount > 0 ? (
-                                        <Text style={WishlistStyle.discountText}>{item.discount}% OFF</Text>
-                                    ) : (
-                                        <View style={{ minWidth: 50 }} />
-                                    )}
-                                </View>
 
-                                <Text style={WishlistStyle.slotsText}>Slots: {item.slots}</Text>
-
-                                <View style={WishlistStyle.rowBetween}>
-                                    <Text style={WishlistStyle.priceText}>{formatPeso(item.packagePricePerPax)}</Text>
-                                    <View style={WishlistStyle.actionButtons}>
-                                        <TouchableOpacity 
-                                            style={WishlistStyle.btnView} 
-                                            onPress={() => cs.navigate("packagedetails", { pkg: item.rawPackage, id: item.id })}
-                                        >
-                                            <Text style={WishlistStyle.btnViewText}>View details</Text>
-                                        </TouchableOpacity>
-                                        
-                                        <TouchableOpacity 
-                                            style={WishlistStyle.btnRemove} 
-                                            onPress={() => {
-                                                setItemToRemove(item);
-                                                setModalVisible(true);
-                                            }}
-                                        >
-                                            <Text style={WishlistStyle.btnRemoveText}>Remove</Text>
-                                        </TouchableOpacity>
+                                    {/* 🔥 NEW: Slots and Discount Badge Layout */}
+                                    <View style={[WishlistStyle.rowBetween, {marginBottom: 10}]}>
+                                        <Text style={WishlistStyle.slotsText}>Slots: {item.slots}</Text>
+                                        {item.discount > 0 && (
+                                            <View style={WishlistStyle.discountBadge}>
+                                                <Text style={WishlistStyle.discountBadgeText}>-{item.discount}%</Text>
+                                            </View>
+                                        )}
                                     </View>
+
+                                    {/* 🔥 Restored the row format, but stacked the price text vertically! */}
+<View style={WishlistStyle.rowBetween}>
+    
+    <View style={WishlistStyle.priceContainer}>
+        {item.discount > 0 && (
+            <Text style={WishlistStyle.packagePriceOld}>
+                {formatPeso(item.packagePricePerPax)}
+            </Text>
+        )}
+        
+        {/* 🔥 Removed the priceRowBox wrapper to let these stack naturally */}
+        <Text style={WishlistStyle.priceText}>{formatPeso(actualPrice)}</Text>
+        <Text style={WishlistStyle.budgetPaxText}>
+            {item.discount > 0 ? "Discounted / Pax" : "Budget / Pax"}
+        </Text>
+    </View>
+
+    <View style={WishlistStyle.actionButtons}>
+        <TouchableOpacity 
+            style={WishlistStyle.btnView} 
+            onPress={() => cs.navigate("packagedetails", { pkg: item.rawPackage, id: item.id })}
+        >
+            <Text style={WishlistStyle.btnViewText}>View details</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+            style={WishlistStyle.btnRemove} 
+            onPress={() => {
+                setItemToRemove(item);
+                setModalVisible(true);
+            }}
+        >
+            <Text style={WishlistStyle.btnRemoveText}>Remove</Text>
+        </TouchableOpacity>
+    </View>
+</View>
                                 </View>
                             </View>
-                        </View>
-                    ))
+                        )
+                    })
                 )}
             </ScrollView>
             <Chatbot />

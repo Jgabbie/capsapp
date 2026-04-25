@@ -1,42 +1,41 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
-// --- OPTIMIZED IMAGE IMPORT ---
 import { Image } from 'expo-image';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import Chatbot from "../../components/Chatbot";
-import { api } from "../../utils/api";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
 
 const { width } = Dimensions.get('window');
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
 export default function Packages({ navigation }) {
+    const { user, updateUser } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // Wishlist States
+    const [wishlistedIds, setWishlistedIds] = useState(new Set());
+    const [wishlistEntryMap, setWishlistEntryMap] = useState(new Map());
+
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    
-    // 🔥 UPDATED: Budget States (Max 100,000)
     const [budgetRange, setBudgetRange] = useState([0, 100000]);
     const [minBudgetInput, setMinBudgetInput] = useState("0");
     const [maxBudgetInput, setMaxBudgetInput] = useState("100000");
-
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
-    
-    // 🔥 UPDATED: Days States (Max 10)
     const [daysValue, setDaysValue] = useState([10]);
     const [daysInput, setDaysInput] = useState("10");
-
     const [travelersValue, setTravelersValue] = useState("");
 
     const getAvailabilityStatus = (slots) => {
@@ -47,15 +46,42 @@ export default function Packages({ navigation }) {
     };
 
     useEffect(() => {
-        const fetchPackages = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
                 setError("");
                 
-                const response = await api.get('/package/get-packages');
+                // Fetch Packages, Live Ratings, and Wishlist concurrently to match web
+                const [pkgResponse, ratingResponse, wishlistResponse] = await Promise.all([
+                    api.get('/package/get-packages'),
+                    api.get('/rating/average-ratings').catch(() => ({ data: { averagesPayload: [] } })),
+                    user?._id ? api.get('/wishlist', withUserHeader(user._id)).catch(() => ({ data: { wishlist: [] } })) : Promise.resolve({ data: { wishlist: [] } })
+                ]);
+
+                // Process Ratings Map
+                const ratingMap = new Map();
+                if (ratingResponse.data?.averagesPayload) {
+                    ratingResponse.data.averagesPayload.forEach(r => {
+                        ratingMap.set(String(r.id), Number(r.averageRating));
+                    });
+                }
+
+                // Process Wishlist Map
+                const wIds = new Set();
+                const wMap = new Map();
+                if (wishlistResponse.data?.wishlist) {
+                    wishlistResponse.data.wishlist.forEach(entry => {
+                        const pId = entry.packageId?._id || entry.packageId;
+                        if (pId) {
+                            wIds.add(String(pId));
+                            wMap.set(String(pId), String(entry._id));
+                        }
+                    });
+                }
+                setWishlistedIds(wIds);
+                setWishlistEntryMap(wMap);
                 
-                const mapped = response.data.map((item) => {
-                    // Extract exact slots calculation
+                const mapped = pkgResponse.data.map((item) => {
                     let calculatedSlots = 0;
                     if (item.packageSpecificDate && Array.isArray(item.packageSpecificDate)) {
                         calculatedSlots = item.packageSpecificDate.reduce((sum, dateObj) => {
@@ -64,23 +90,48 @@ export default function Packages({ navigation }) {
                     }
                     const finalSlots = item.packageAvailableSlots ?? item.slots ?? calculatedSlots;
 
+                    // Calculate Discounts & True Ratings matching Web
+                    const discountPercent = Number(item.packageDiscountPercent || 0);
+                    const originalPrice = Number(item.packagePricePerPax || 0);
+                    const discountedPrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
+                    const rating = ratingMap.get(String(item._id)) || ratingMap.get(String(item.packageItem)) || Number(item.averageRating) || 0;
+
                     return {
                         id: item._id,
                         title: item.packageName,
                         description: item.packageDescription,
                         image: item.images?.[0] || "https://via.placeholder.com/800x500?text=No+Image",
-                        packagePricePerPax: item.packagePricePerPax || 0,
+                        packagePricePerPax: originalPrice,
+                        discountPercent,
+                        discountedPrice,
                         duration: `${item.packageDuration || 0} Days`,
                         packageDuration: item.packageDuration || 0,
                         packageType: item.packageType || "Domestic",
                         slots: finalSlots,
                         availability: getAvailabilityStatus(finalSlots),
-                        rating: item.averageRating ? Number(item.averageRating).toFixed(1) : "0.0", // Safely fetch rating
+                        rating: rating.toFixed(1),
                         packageTags: item.packageTags || [],
                         rawItem: item 
                     };
                 });
                 setPackages(mapped);
+
+                if (user?._id) {
+                    try {
+                        const userResponse = await api.get(`/users/users/${user._id}`);
+                        const currentUser = userResponse.data.user || userResponse.data;
+                        if (currentUser && currentUser.email) {
+                            updateUser({
+                                firstname: currentUser.firstname,
+                                lastname: currentUser.lastname,
+                                email: currentUser.email,
+                                profileImage: currentUser.profileImage || currentUser.profileImageUrl || ""
+                            });
+                        }
+                    } catch (userErr) {
+                        console.log("Could not sync user data:", userErr.message);
+                    }
+                }
             } catch (err) {
                 console.log("Fetch Error: ", err.message);
                 setError("Unable to load packages. Please check your connection.");
@@ -88,8 +139,59 @@ export default function Packages({ navigation }) {
                 setLoading(false);
             }
         };
-        fetchPackages();
-    }, []);
+        fetchData();
+    }, [user?._id]);
+
+    const handleWishlistToggle = async (packageId) => {
+        if (!user?._id) {
+            Alert.alert("Login Required", "Please log in to manage your wishlist.");
+            return;
+        }
+        
+        const pId = String(packageId);
+        const isWishlisted = wishlistedIds.has(pId);
+
+        if (isWishlisted) {
+            const entryId = wishlistEntryMap.get(pId);
+            if (!entryId) return;
+
+            try {
+                await api.delete(`/wishlist/remove/${entryId}`, withUserHeader(user._id));
+                setWishlistedIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(pId);
+                    return next;
+                });
+                setWishlistEntryMap(prev => {
+                    const next = new Map(prev);
+                    next.delete(pId);
+                    return next;
+                });
+            } catch (error) {
+                console.log("Remove wishlist error", error.message);
+            }
+        } else {
+            try {
+                await api.post('/wishlist/add', { packageId: pId }, withUserHeader(user._id));
+                
+                // Re-fetch to get the exact Entry ID from the database for future deletion
+                const res = await api.get('/wishlist', withUserHeader(user._id));
+                const wIds = new Set();
+                const wMap = new Map();
+                res.data.wishlist.forEach(entry => {
+                    const id = entry.packageId?._id || entry.packageId;
+                    if (id) {
+                        wIds.add(String(id));
+                        wMap.set(String(id), String(entry._id));
+                    }
+                });
+                setWishlistedIds(wIds);
+                setWishlistEntryMap(wMap);
+            } catch (error) {
+                console.log("Add wishlist error", error.message);
+            }
+        }
+    };
 
     const tagOptions = useMemo(() => {
         const unique = new Set();
@@ -101,7 +203,7 @@ export default function Packages({ navigation }) {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
             const matchesSearch = !q || item.title.toLowerCase().includes(q) || item.packageTags.some(t => t.toLowerCase().includes(q));
-            const matchesBudget = item.packagePricePerPax >= budgetRange[0] && item.packagePricePerPax <= budgetRange[1];
+            const matchesBudget = item.discountedPrice >= budgetRange[0] && item.discountedPrice <= budgetRange[1];
             const matchesTags = selectedTags.length === 0 || selectedTags.every(t => item.packageTags.includes(t));
             const matchesType = tourType === 'All' || item.packageType.toLowerCase() === tourType.toLowerCase();
             const matchesDays = item.packageDuration <= daysValue[0];
@@ -120,7 +222,6 @@ export default function Packages({ navigation }) {
         } else {
             setMaxBudgetInput(numericValue);
             const num = Number(numericValue);
-            // 🔥 CAP AT 100000 🔥
             if (num >= budgetRange[0] && num <= 100000) setBudgetRange([budgetRange[0], num]);
         }
     };
@@ -129,10 +230,7 @@ export default function Packages({ navigation }) {
         const numericValue = value.replace(/[^0-9]/g, '');
         setDaysInput(numericValue);
         const num = Number(numericValue);
-        // 🔥 CAP AT 10 🔥
-        if (num >= 1 && num <= 10) {
-            setDaysValue([num]);
-        }
+        if (num >= 1 && num <= 10) setDaysValue([num]);
     };
 
     return (
@@ -155,7 +253,6 @@ export default function Packages({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                {/* 🔥 NEW RESULTS HEADER 🔥 */}
                 <View style={DestinationStyles.resultsHeader}>
                     <Text style={DestinationStyles.resultsTitle}>Available Packages</Text>
                     <Text style={DestinationStyles.resultsCount}>
@@ -166,7 +263,9 @@ export default function Packages({ navigation }) {
                 {loading ? <ActivityIndicator size="large" color="#305797" style={{marginTop: 50}} /> : error ? <Text style={{color:'red', textAlign:'center', marginTop: 20}}>{error}</Text> : (
                     filteredPackages.map((item) => {
                         const tv = Number(travelersValue);
-                        const displayPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
+                        const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
+                        const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
+                        const isWishlisted = wishlistedIds.has(String(item.id));
                         
                         return (
                             <View key={item.id} style={DestinationStyles.packageCard}>
@@ -178,18 +277,15 @@ export default function Packages({ navigation }) {
                                 />
                                 <View style={DestinationStyles.packageContent}>
                                     
-                                    {/* 🔥 NEW: Title and Rating Row 🔥 */}
                                     <View style={DestinationStyles.cardHeaderRow}>
-                                        <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
-                                        {item.rating && item.rating !== "0.0" ? (
-                                            <View style={DestinationStyles.ratingContainer}>
-                                                <Ionicons name="star" size={14} color="#facc15" />
-                                                <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
-                                            </View>
-                                        ) : null}
-                                    </View>
+    <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
+    {/* 🔥 Removed the "hide if 0.0" condition so the star is always visible */}
+    <View style={DestinationStyles.ratingContainer}>
+        <Ionicons name="star" size={14} color="#facc15" />
+        <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
+    </View>
+</View>
 
-                                    {/* 🔥 NEW: Type, Availability, and Duration Row 🔥 */}
                                     <View style={DestinationStyles.cardSubHeaderRow}>
                                         <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
                                             <Text style={[DestinationStyles.typeTagText, { color: item.packageType.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
@@ -204,31 +300,55 @@ export default function Packages({ navigation }) {
                                         <Text style={DestinationStyles.durationText}>{item.duration}</Text>
                                     </View>
 
-                                    {/* 🔥 NEW: Slots Text 🔥 */}
-                                    <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
-                                    
-                                    {/* Tags */}
-                                    {item.packageTags && item.packageTags.length > 0 && (
-                                        <View style={DestinationStyles.packageTagsRow}>
-                                            {item.packageTags.slice(0, 4).map((tag, index) => (
-                                                <View key={index} style={DestinationStyles.tagPill}>
-                                                    <Text style={DestinationStyles.tagText}>{tag}</Text>
+                                    <View style={DestinationStyles.cardDetailsRow}>
+                                        <View style={DestinationStyles.cardLeftColumn}>
+                                            <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
+                                            {item.packageTags && item.packageTags.length > 0 && (
+                                                <View style={DestinationStyles.packageTagsRow}>
+                                                    {item.packageTags.slice(0, 4).map((tag, index) => (
+                                                        <View key={index} style={DestinationStyles.tagPill}>
+                                                            <Text style={DestinationStyles.tagText}>{tag}</Text>
+                                                        </View>
+                                                    ))}
                                                 </View>
-                                            ))}
+                                            )}
                                         </View>
-                                    )}
+                                        
+                                        <View style={DestinationStyles.cardRightColumn}>
+                                            {item.discountPercent > 0 && (
+                                                <View style={DestinationStyles.discountBadge}>
+                                                    <Text style={DestinationStyles.discountBadgeText}>-{item.discountPercent}%</Text>
+                                                </View>
+                                            )}
+                                            <TouchableOpacity onPress={() => handleWishlistToggle(item.id)} style={{ padding: 4 }}>
+                                                <Ionicons 
+                                                    name={isWishlisted ? "heart" : "heart-outline"} 
+                                                    size={26} 
+                                                    color={isWishlisted ? "#cf1322" : "#305797"} 
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
 
-                                    {/* Footer with Price and Button */}
                                     <View style={DestinationStyles.packageFooter}>
                                         <View style={DestinationStyles.priceContainer}>
                                             {tv > 1 ? (
                                                 <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
-                                                    {formatPeso(item.packagePricePerPax)} x {tv} pax =
+                                                    {formatPeso(item.discountedPrice)} x {tv} pax =
                                                 </Text>
                                             ) : null}
+                                            
+                                            {item.discountPercent > 0 && (
+                                                <Text style={DestinationStyles.packagePriceOld}>
+                                                    {formatPeso(originalPrice)}
+                                                </Text>
+                                            )}
+
                                             <View style={DestinationStyles.priceRowBox}>
                                                 <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
-                                                <Text style={DestinationStyles.budgetPaxText}>Budget / Pax</Text>
+                                                <Text style={DestinationStyles.budgetPaxText}>
+                                                    {item.discountPercent > 0 ? "Discounted / Pax" : "Budget / Pax"}
+                                                </Text>
                                             </View>
                                         </View>
 

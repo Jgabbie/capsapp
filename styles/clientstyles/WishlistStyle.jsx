@@ -73,7 +73,6 @@ const WishlistStyle = StyleSheet.create({
     },
     dropdownMenu: {
         position: 'absolute',
-        top: 245, 
         backgroundColor: '#fff',
         borderRadius: 8,
         padding: 5,
@@ -81,7 +80,7 @@ const WishlistStyle = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e2e8f0',
         zIndex: 20,
-        width: 130
+        width: 140
     },
     dropdownMenuItem: {
         padding: 10,
@@ -92,6 +91,15 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 13,
         color: '#334155',
         fontFamily: 'Roboto_400Regular'
+    },
+    
+    // --- SLIDER STYLES ---
+    budgetValuesRow: {
+        flexDirection: "row",
+        width: "100%",
+        justifyContent: "space-between",
+        paddingHorizontal: 5,
+        marginBottom: -5
     },
 
     // --- PACKAGES HEADER ---
@@ -133,7 +141,7 @@ const WishlistStyle = StyleSheet.create({
     rowBetween: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'flex-end'
     },
     packageName: {
         fontSize: 16,
@@ -153,24 +161,45 @@ const WishlistStyle = StyleSheet.create({
         color: "#64748b",
         fontFamily: "Roboto_400Regular",
     },
-    // 🔥 NEW STYLES: Slots & Discount 🔥
+    
+    // 🔥 NEW STYLES: Slots & Discount Badge 🔥
     slotsText: {
         fontSize: 13,
         color: "#64748b",
         fontFamily: "Roboto_400Regular",
-        marginBottom: 15
     },
-    discountText: {
-        fontSize: 12,
-        fontFamily: "Montserrat_700Bold",
-        color: "#10b981", 
-        minWidth: 50,
-        textAlign: 'right'
+    discountBadge: {
+        backgroundColor: "#305797",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6
+    },
+    discountBadgeText: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 11
+    },
+
+    // 🔥 NEW STYLES: Pricing Display 🔥
+    priceContainer: {
+        flex: 1,
+    },
+    packagePriceOld: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#94a3b8",
+        textDecorationLine: "line-through",
+        marginBottom: 2
     },
     priceText: {
         fontSize: 18,
         fontFamily: "Montserrat_700Bold",
         color: "#1e293b",
+    },
+    budgetPaxText: {
+        fontSize: 11,
+        color: "#94a3b8",
+        marginTop: 2
     },
     
     // --- TAGS ---
@@ -187,12 +216,13 @@ const WishlistStyle = StyleSheet.create({
     // --- BUTTONS ---
     actionButtons: {
         flexDirection: 'row',
-        gap: 8
+        gap: 8,
+        alignItems: 'center'
     },
     btnView: {
         backgroundColor: "#305797",
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         borderRadius: 6,
     },
     btnViewText: {
@@ -200,11 +230,10 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 12,
         fontFamily: "Montserrat_600SemiBold"
     },
-    // 🔥 UPDATED: Red Background, White Text 🔥
     btnRemove: {
         backgroundColor: "#a11d33", 
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         borderRadius: 6,
     },
     btnRemoveText: {

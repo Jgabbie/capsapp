@@ -12,7 +12,9 @@ import Chatbot from '../../components/Chatbot'
 import HomeStyle from '../../styles/clientstyles/HomeStyle'
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
-import { api } from '../../utils/api' 
+
+// 🔥 IMPORTED withUserHeader to fetch wishlist safely
+import { api, withUserHeader } from '../../utils/api' 
 import { useUser } from '../../context/UserContext'
 
 export default function Home() {
@@ -23,6 +25,9 @@ export default function Home() {
     const [packages, setPackages] = useState([])
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
+    
+    // 🔥 NEW: Wishlist State
+    const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
     const [activeDropdown, setActiveDropdown] = useState(null) 
     const [selectedTag, setSelectedTag] = useState('Tags')
@@ -55,7 +60,12 @@ export default function Home() {
 
                 if (user?._id) {
                     try {
-                        const userResponse = await api.get(`/users/users/${user._id}`)
+                        // 🔥 UPDATED: Fetch user details AND wishlist simultaneously
+                        const [userResponse, wishlistResponse] = await Promise.all([
+                            api.get(`/users/users/${user._id}`),
+                            api.get('/wishlist', withUserHeader(user._id)).catch(() => ({ data: { wishlist: [] } }))
+                        ]);
+                        
                         const currentUser = userResponse.data.user || userResponse.data 
                         
                         if (currentUser && currentUser.email) {
@@ -66,12 +76,22 @@ export default function Home() {
                                 profileImage: currentUser.profileImage || currentUser.profileImageUrl || ""
                             })
                         }
+
+                        // 🔥 Set up the wishlist map
+                        const wIds = new Set();
+                        if (wishlistResponse.data?.wishlist) {
+                            wishlistResponse.data.wishlist.forEach(entry => {
+                                const pId = entry.packageId?._id || entry.packageId;
+                                if (pId) wIds.add(String(pId));
+                            });
+                        }
+                        setWishlistedIds(wIds);
+
                     } catch (userErr) {
                         console.log("Could not sync user data for sidebar:", userErr.message)
                     }
                 }
             } catch (error) {
-                // Changed from console.error to console.log, and added .message
                 console.log("Failed to fetch packages:", error.message) 
             } finally {
                 setLoading(false)
@@ -153,6 +173,26 @@ export default function Home() {
                     contentFit="cover"
                     transition={300}
                 />
+                
+                {/* 🔥 NEW: Floating Wishlist Heart */}
+                {wishlistedIds.has(String(item._id)) && (
+                    <View style={{ 
+                        position: 'absolute', 
+                        top: 12, 
+                        right: 12, 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                        borderRadius: 20, 
+                        padding: 6, 
+                        elevation: 4, 
+                        shadowColor: '#000', 
+                        shadowOffset: {width: 0, height: 2}, 
+                        shadowOpacity: 0.2, 
+                        shadowRadius: 2 
+                    }}>
+                        <Ionicons name="heart" size={22} color="#cf1322" />
+                    </View>
+                )}
+
                 <View style={HomeStyle.bannerFooter}>
                     <Text style={HomeStyle.bannerTitle}>{item.packageName}</Text>
                     <Text style={HomeStyle.bannerSub} numberOfLines={2}>
@@ -260,13 +300,11 @@ export default function Home() {
                 </View>
             </Modal>
 
-            {/* 🔥 CHANGED: Set Android behavior to undefined so it uses the native OS resize instead of forcing a white padding box */}
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
             >
-                {/* 🔥 CHANGED THIS: Replaced 180 with 100 to remove the huge grey box void at the bottom */}
                 <ScrollView 
                     style={HomeStyle.container} 
                     contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 80 : 100 }} 
@@ -344,12 +382,10 @@ export default function Home() {
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
                         
-                        {/* 🔥 Added the missing description text here */}
                         <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
                             Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
                         </Text>
                         
-                        {/* 🔥 Fixed lowercase navigation target to match App.jsx */}
                         <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
                             <Text style={HomeStyle.bgButtonText}>BROWSE TOUR PACKAGES</Text>
                         </TouchableOpacity>

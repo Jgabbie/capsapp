@@ -2,9 +2,8 @@ import { StyleSheet } from "react-native";
 
 const UserBookingsStyle = StyleSheet.create({
     container: {
-        // REMOVED flex: 1 to fix the scrolling issue!
         padding: 15,
-        backgroundColor: "#fff", 
+        backgroundColor: "#fff",
     },
     title: {
         fontSize: 20, 
@@ -163,14 +162,15 @@ const UserBookingsStyle = StyleSheet.create({
         borderRadius: 8,
         alignItems: "center",
     },
+    // 🔥 FIXED: Bloody red background
     cancelButton: {
         flex: 1,
-        backgroundColor: "#fff",
+        backgroundColor: "#8B0000",
         paddingVertical: 10,
         borderRadius: 8,
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#ff4d4f",
+        borderColor: "#8B0000",
     },
     viewButtonText: {
         color: "#fff",
@@ -178,7 +178,7 @@ const UserBookingsStyle = StyleSheet.create({
         fontSize: 12,
     },
     cancelButtonText: {
-        color: "#ff4d4f",
+        color: "#fff",
         fontFamily: "Montserrat_700Bold",
         fontSize: 12,
     },

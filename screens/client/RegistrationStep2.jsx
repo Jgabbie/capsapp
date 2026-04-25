@@ -18,11 +18,11 @@ export default function RegistrationStep2({ route, navigation }) {
 
     // --- State Management ---
     const [medicalData, setMedicalData] = useState({
-        dietary: '', // 'Yes' or 'No'
+        dietary: '', 
         dietaryDetails: '',
-        medical: '', // 'Yes' or 'No'
+        medical: '', 
         medicalDetails: '',
-        insurance: '', // 'Yes' or 'No'
+        insurance: '', 
     });
 
     const [emergency, setEmergency] = useState({
@@ -33,42 +33,35 @@ export default function RegistrationStep2({ route, navigation }) {
 
     // --- Validation Logic ---
     const isValidEmail = (email) => {
-        if (!email) return true; // Don't turn red if empty (handle empty on submit)
+        if (!email) return true; 
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
     };
 
     const isValidContact = (contact) => {
-        if (!contact) return true; // Don't turn red if empty
+        if (!contact) return true; 
         const digits = contact.replace(/\D/g, "");
-        // Valid PH numbers: 10 digits starting with 8 or 9 OR 11 digits starting with 09
         if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
         if (digits.length === 11 && digits.startsWith("09")) return true;
         return false;
     };
 
-    // Derived boolean states to trigger the red text styling
     const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
     const contactHasError = !isValidContact(emergency.contact) && emergency.contact.length > 0;
 
     // --- Proceed Handler ---
     const handleNext = () => {
-        // Dietary Validation
-        if (!medicalData.dietary) return Alert.alert("Required", "Please select Yes or No for Dietary requests.");
-        if (medicalData.dietary === 'Yes' && !medicalData.dietaryDetails.trim()) return Alert.alert("Required", "Please provide details for the Dietary request.");
+        if (!medicalData.dietary) return Alert.alert("Required", "Please select Y or N for Dietary requests.");
+        if (medicalData.dietary === 'Y' && !medicalData.dietaryDetails.trim()) return Alert.alert("Required", "Please provide details for the Dietary request.");
 
-        // Medical Validation
-        if (!medicalData.medical) return Alert.alert("Required", "Please select Yes or No for Medical conditions.");
-        if (medicalData.medical === 'Yes' && !medicalData.medicalDetails.trim()) return Alert.alert("Required", "Please provide details for the Medical conditions.");
+        if (!medicalData.medical) return Alert.alert("Required", "Please select Y or N for Medical conditions.");
+        if (medicalData.medical === 'Y' && !medicalData.medicalDetails.trim()) return Alert.alert("Required", "Please provide details for the Medical conditions.");
 
-        // Insurance Validation
-        if (!medicalData.insurance) return Alert.alert("Required", "Please select Yes or No for Travel Insurance.");
+        if (!medicalData.insurance) return Alert.alert("Required", "Please select Y or N for Travel Insurance.");
 
-        // Emergency Contact Validation
         if (!emergency.title || !emergency.fullName || !emergency.email || !emergency.contact || !emergency.relation) {
             return Alert.alert("Required", "Please complete all required fields in the Emergency Contact section.");
         }
 
-        // Block progression if validations fail
         if (emailHasError) {
             return Alert.alert("Invalid Input", "Please enter a valid email address.");
         }
@@ -79,29 +72,50 @@ export default function RegistrationStep2({ route, navigation }) {
         navigation.navigate("registrationstep3", { ...route.params, medicalData, emergency });
     };
 
-    // --- Dropdown Options ---
+    // --- Dropdown Handlers ---
+    const handleDropdownSelect = (value) => {
+        if (activeDropdown === 'dietary') {
+            setMedicalData({
+                ...medicalData, 
+                dietary: value, 
+                dietaryDetails: value === 'N' ? 'N/A' : (medicalData.dietaryDetails === 'N/A' ? '' : medicalData.dietaryDetails)
+            });
+        } else if (activeDropdown === 'medical') {
+            setMedicalData({
+                ...medicalData, 
+                medical: value, 
+                medicalDetails: value === 'N' ? 'N/A' : (medicalData.medicalDetails === 'N/A' ? '' : medicalData.medicalDetails)
+            });
+        } else if (activeDropdown === 'insurance') {
+            setMedicalData({...medicalData, insurance: value});
+        } else if (activeDropdown === 'emergencyTitle') {
+            setEmergency({...emergency, title: value});
+        }
+        setActiveDropdown(null);
+    };
+
     const renderDropdownOptions = () => {
         if (activeDropdown === 'emergencyTitle') {
             return (
                 <>
-                    <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => { setEmergency({...emergency, title: 'MR'}); setActiveDropdown(null); }}>
+                    <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => handleDropdownSelect('MR')}>
                         <Text style={RegistrationFormStyle.dropdownText}>MR</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setEmergency({...emergency, title: 'MS'}); setActiveDropdown(null); }}>
+                    <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('MS')}>
                         <Text style={RegistrationFormStyle.dropdownText}>MS</Text>
                     </TouchableOpacity>
                 </>
             );
         }
         
-        // Default to Yes/No for the others
+        // Default to Y/N for the others (matching the web format)
         return (
             <>
-                <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => { setMedicalData({...medicalData, [activeDropdown]: 'Yes'}); setActiveDropdown(null); }}>
-                    <Text style={RegistrationFormStyle.dropdownText}>Yes</Text>
+                <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => handleDropdownSelect('Y')}>
+                    <Text style={RegistrationFormStyle.dropdownText}>Y</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setMedicalData({...medicalData, [activeDropdown]: 'No'}); setActiveDropdown(null); }}>
-                    <Text style={RegistrationFormStyle.dropdownText}>No</Text>
+                <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('N')}>
+                    <Text style={RegistrationFormStyle.dropdownText}>N</Text>
                 </TouchableOpacity>
             </>
         );
@@ -115,7 +129,6 @@ export default function RegistrationStep2({ route, navigation }) {
                 <View style={RegistrationFormStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
                     
-                    {/* Header */}
                     <View style={RegistrationFormStyle.headerGold}>
                         <Text style={RegistrationFormStyle.headerGoldText}>TRAVEL REGISTRATION DETAILS</Text>
                     </View>
@@ -125,7 +138,8 @@ export default function RegistrationStep2({ route, navigation }) {
 
                     {/* Package Info */}
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 4 }]}>
-                        TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.pkg?.title}</Text>
+                        {/* 🔥 FIXED: Now properly checks for packageName first, just like Step 1 */}
+                        TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.pkg?.packageName || setupData?.pkg?.title || ''}</Text>
                     </Text>
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 15 }]}>
                         PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.selectedDate}</Text>
@@ -135,7 +149,7 @@ export default function RegistrationStep2({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={{ flex: 1 }}>
                             <Text style={RegistrationFormStyle.label}>Does anyone in your group have any dietary requests?</Text>
-                            <Text style={{ fontSize: 7, fontStyle: 'italic', color: '#666', marginBottom: 5 }}>(Applicable for tour package with meal inclusions; if not included, please select No)</Text>
+                            <Text style={{ fontSize: 7, fontStyle: 'italic', color: '#666', marginBottom: 5 }}>(Applicable for tour package with meal inclusions; if not included, please select N)</Text>
                         </View>
                         <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('dietary')}>
                             <Text style={{ fontSize: 10 }}>{medicalData.dietary || 'Y / N'}</Text>
@@ -148,8 +162,8 @@ export default function RegistrationStep2({ route, navigation }) {
                             multiline
                             value={medicalData.dietaryDetails}
                             onChangeText={(v) => setMedicalData({...medicalData, dietaryDetails: v})}
-                            editable={medicalData.dietary === 'Yes'}
-                            backgroundColor={medicalData.dietary === 'Yes' ? '#fff' : '#f0f0f0'}
+                            editable={medicalData.dietary === 'Y'}
+                            backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
                         />
                     </View>
 
@@ -157,6 +171,7 @@ export default function RegistrationStep2({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={{ flex: 1 }}>
                             <Text style={RegistrationFormStyle.label}>Does anyone in your group have any Allergies/Medical conditions?</Text>
+                            <Text style={{ fontSize: 7, fontStyle: 'italic', color: '#666', marginBottom: 5 }}>(Applicable for tour package with meal inclusions; if not included, please select N)</Text>
                         </View>
                         <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('medical')}>
                             <Text style={{ fontSize: 10 }}>{medicalData.medical || 'Y / N'}</Text>
@@ -169,16 +184,16 @@ export default function RegistrationStep2({ route, navigation }) {
                             multiline
                             value={medicalData.medicalDetails}
                             onChangeText={(v) => setMedicalData({...medicalData, medicalDetails: v})}
-                            editable={medicalData.medical === 'Yes'}
-                            backgroundColor={medicalData.medical === 'Yes' ? '#fff' : '#f0f0f0'}
+                            editable={medicalData.medical === 'Y'}
+                            backgroundColor={medicalData.medical === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
                         />
                     </View>
 
                     {/* --- TRAVEL INSURANCE --- */}
                     <View style={{ borderWidth: 1, borderColor: '#000', padding: 10, marginBottom: 15 }}>
                         <Text style={RegistrationFormStyle.label}>TRAVEL INSURANCE</Text>
-                        <Text style={{ fontSize: 7, textAlign: 'justify', marginBottom: 10 }}>
-                            We highly encourage ALL OUR CLIENTS to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.
+                        <Text style={{ fontSize: 7, textAlign: 'justify', marginBottom: 10, marginTop: 4 }}>
+                            We highly encourage <Text style={{fontWeight: 'bold'}}>ALL OUR CLIENTS</Text> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.
                         </Text>
                         
                         <View style={RegistrationFormStyle.row}>
@@ -187,12 +202,20 @@ export default function RegistrationStep2({ route, navigation }) {
                                 <Text style={{ fontSize: 10 }}>{medicalData.insurance || 'Y / N'}</Text>
                             </TouchableOpacity>
                         </View>
-                        <Text style={{ fontSize: 7, fontStyle: 'italic', marginVertical: 8, color: '#666' }}>
+
+                        <Text style={{ fontSize: 7, fontStyle: 'italic', marginVertical: 10, color: '#666' }}>
                             Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.
                         </Text>
 
+                        <View style={RegistrationFormStyle.row}>
+                            <Text style={{ fontSize: 9, flex: 1 }}>Do you agree to purchase a Travel Insurance from us?</Text>
+                            <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance')}>
+                                <Text style={{ fontSize: 10 }}>{medicalData.insurance || 'Y / N'}</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         {/* Insurance Tables */}
-                        <View style={{ borderWidth: 1, borderColor: '#000', marginTop: 5 }}>
+                        <View style={{ borderWidth: 1, borderColor: '#000', marginTop: 10 }}>
                             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#000' }}>
                                 <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#000', padding: 4, justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 8, fontFamily: "Montserrat_700Bold", textAlign: 'right' }}>If YES, please indicate details:</Text>
@@ -214,7 +237,7 @@ export default function RegistrationStep2({ route, navigation }) {
 
                     {/* --- EMERGENCY CONTACT --- */}
                     <View style={{ backgroundColor: '#ADD8E6', borderWidth: 1, borderColor: '#000', paddingVertical: 4, paddingHorizontal: 5 }}>
-                        <Text style={RegistrationFormStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular" }}>(vs. the person to contact in the event of an emergency while you are away)</Text></Text>
+                        <Text style={RegistrationFormStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
                     </View>
                     
                     <View style={{ borderWidth: 1, borderTopWidth: 0, borderColor: '#000' }}>

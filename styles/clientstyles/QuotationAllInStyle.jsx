@@ -132,6 +132,12 @@ const QuotationAllInStyle = StyleSheet.create({
         fontSize: 13,
         color: '#4e5b72',
     },
+    pricingValue: {
+        fontFamily: "Roboto_500Medium",
+        fontSize: 13,
+        color: '#1f2a44',
+        textAlign: 'right'
+    },
     summaryNote: {
         fontFamily: "Roboto_400Regular",
         fontStyle: 'italic',

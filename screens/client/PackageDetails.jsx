@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-// --- OPTIMIZED IMAGE IMPORT ---
 import { Image } from 'expo-image';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
@@ -12,6 +11,7 @@ import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import ModalStyle from "../../styles/componentstyles/ModalStyle";
 
+const { width } = Dimensions.get('window');
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
 const formatShortDate = (dateString) => {
@@ -41,14 +41,19 @@ const getImageUrl = (img) => {
 export default function PackageDetails({ route, navigation }) {
     const { user } = useUser();
     const scrollViewRef = useRef(null); 
+    const carouselRef = useRef(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     
     const [loading, setLoading] = useState(true);
     const [fullPkg, setFullPkg] = useState(null);
     const [reviews, setReviews] = useState([]);
     
+    // State to track wishlisted items for the heart icon
+    const [wishlistedIds, setWishlistedIds] = useState(new Set());
+
     const [activeTab, setActiveTab] = useState("itinerary");
     const [showReviews, setShowReviews] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     
     // Review Form States
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
@@ -107,8 +112,28 @@ export default function PackageDetails({ route, navigation }) {
                     duration: currentPkg.packageDuration || parseInt(currentPkg.duration) || 0,
                     isInternational: (currentPkg.packageType || "").toLowerCase().includes("international"),
                     image: currentPkg.image || getImageUrl(currentPkg.images?.[0]),
+                    images: currentPkg.images || [currentPkg.image],
                     packageSpecificDate: currentPkg.packageSpecificDate || [], 
+                    packageDiscountPercent: currentPkg.packageDiscountPercent || 0,
+                    packageDeposit: currentPkg.packageDeposit || 0,
+                    visaRequired: currentPkg.visaRequired || false,
+                    rawPackage: currentPkg
                 });
+
+                if (user?._id) {
+                    try {
+                        const wishRes = await api.get('/wishlist', withUserHeader(user._id));
+                        const items = wishRes.data.wishlist || wishRes.data;
+                        const ids = new Set();
+                        items.forEach(w => {
+                            const pId = w.packageId?._id || w.packageId;
+                            if (pId) ids.add(String(pId));
+                        });
+                        setWishlistedIds(ids);
+                    } catch(e) {
+                        console.log("Wishlist fetch error:", e.message);
+                    }
+                }
 
             } catch (err) {
                 console.log("Error loading package data:", err.message);
@@ -120,6 +145,19 @@ export default function PackageDetails({ route, navigation }) {
 
         loadData();
     }, [packageId, user?._id]); 
+
+    // Auto-Scrolling Image Carousel Logic
+    useEffect(() => {
+        if (!fullPkg?.images || fullPkg.images.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentImageIndex(prev => {
+                const next = (prev + 1) % fullPkg.images.length;
+                carouselRef.current?.scrollTo({ x: next * (width - 32), animated: true });
+                return next;
+            });
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [fullPkg?.images]);
 
     // Ratings Logic
     const averageRating = useMemo(() => {
@@ -163,6 +201,13 @@ export default function PackageDetails({ route, navigation }) {
         }
         try {
             await api.post('/wishlist/add', { packageId: fullPkg.id }, withUserHeader(user?._id));
+            
+            setWishlistedIds(prev => {
+                const next = new Set(prev);
+                next.add(String(fullPkg.id));
+                return next;
+            });
+
             setIsWishlistModalOpen(true);
         } catch (error) {
             const errorMsg = error.response?.data?.message?.toLowerCase() || "";
@@ -247,10 +292,15 @@ export default function PackageDetails({ route, navigation }) {
         );
     }
 
-    // 🔥 NEW: Calculate if the package is completely sold out
     const totalSlots = fullPkg.packageAvailableSlots ?? fullPkg.slots ?? 
         (fullPkg.packageSpecificDate || []).reduce((sum, dateObj) => sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0), 0);
     const isPackageSoldOut = totalSlots <= 0 || fullPkg.availability === 'Sold out';
+    
+    const discountPercent = Number(fullPkg.packageDiscountPercent || 0);
+    const basePrice = Number(fullPkg.price || 0);
+    const discountedPrice = discountPercent > 0 ? basePrice * (1 - discountPercent / 100) : basePrice;
+
+    const isWishlisted = fullPkg && wishlistedIds.has(String(fullPkg.id));
 
     return (
         <View style={DestinationStyles.detailsContainer}>
@@ -259,40 +309,120 @@ export default function PackageDetails({ route, navigation }) {
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
                 <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
+                    
                     <View style={DestinationStyles.detailsHeader}>
-                        <Text style={DestinationStyles.detailsTitle}>{fullPkg.title}</Text>
-                        <Image source={fullPkg.image} style={DestinationStyles.heroImage} contentFit="cover" transition={300} />
+                        <View style={DestinationStyles.titleRowHeader}>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: 10, paddingTop: 4 }}>
+                                <Ionicons name="arrow-back" size={24} color="#305797" />
+                            </TouchableOpacity>
+                            <Text style={DestinationStyles.detailsTitle} numberOfLines={2}>{fullPkg.title}</Text>
+                        </View>
+                        
+                        <View style={DestinationStyles.subtitleRow}>
+                            <Text style={DestinationStyles.durationText}>{fullPkg.duration} DAYS</Text>
+                            <View style={DestinationStyles.ratingContainer}>
+                                <Ionicons name="star" size={14} color="#facc15" />
+                                <Text style={DestinationStyles.ratingText}>{averageRating} ({reviews.length} reviews)</Text>
+                            </View>
+                        </View>
+                        
+                        <View style={DestinationStyles.carouselContainer}>
+                            <ScrollView 
+                                ref={carouselRef}
+                                horizontal 
+                                pagingEnabled 
+                                showsHorizontalScrollIndicator={false}
+                                onMomentumScrollEnd={(e) => {
+                                    const newIndex = Math.round(e.nativeEvent.contentOffset.x / (width - 32));
+                                    setCurrentImageIndex(newIndex);
+                                }}
+                            >
+                                {fullPkg.images.map((img, idx) => (
+                                    <Image key={idx} source={getImageUrl(img)} style={[DestinationStyles.heroImage, { width: width - 32 }]} contentFit="cover" transition={300} />
+                                ))}
+                            </ScrollView>
+                            {fullPkg.images.length > 1 && (
+                                <View style={DestinationStyles.carouselDots}>
+                                    {fullPkg.images.map((_, idx) => (
+                                        <View key={idx} style={[DestinationStyles.dot, currentImageIndex === idx && DestinationStyles.activeDot]} />
+                                    ))}
+                                </View>
+                            )}
+                        </View>
                     </View>
 
                     <View style={DestinationStyles.heroCard}>
-                        <Text style={DestinationStyles.heroDescription}>{fullPkg.description}</Text>
-                        <View style={DestinationStyles.priceRow}>
-                            <View>
-                                <Text style={DestinationStyles.priceValue}>{formatPeso(fullPkg.price)}</Text>
-                                <Text style={{fontSize: 10, color: '#777'}}>/ Pax</Text>
+                        <Text style={DestinationStyles.packageDetailsHeading}>Package Details</Text>
+                        
+                        <View style={DestinationStyles.packageDetailGrid}>
+                            <View style={DestinationStyles.packageDetailItem}>
+                                <Text style={DestinationStyles.packageDetailLabel}>Duration</Text>
+                                <Text style={DestinationStyles.packageDetailValue}>{fullPkg.duration} days</Text>
                             </View>
-                            {/* 🔥 UPDATED: Check Availability Button */}
-                            <TouchableOpacity 
-                                style={[
-                                    DestinationStyles.availabilityButton,
-                                    isPackageSoldOut && { backgroundColor: '#cbd5e1', borderColor: '#cbd5e1' }
-                                ]} 
-                                onPress={handlePrimaryAction}
-                                disabled={isPackageSoldOut}
-                            >
-                                <Text style={[
-                                    DestinationStyles.availabilityText,
-                                    isPackageSoldOut && { color: '#64748b' }
-                                ]}>
-                                    {isPackageSoldOut ? "Sold Out" : "Check Availability"}
-                                </Text>
-                            </TouchableOpacity>
+                            <View style={DestinationStyles.packageDetailItem}>
+                                <Text style={DestinationStyles.packageDetailLabel}>Type</Text>
+                                <Text style={DestinationStyles.packageDetailValue}>{fullPkg.packageType.toUpperCase()}</Text>
+                            </View>
+                            <View style={DestinationStyles.packageDetailItem}>
+                                <Text style={DestinationStyles.packageDetailLabel}>Deposit</Text>
+                                <Text style={DestinationStyles.packageDetailValue}>{formatPeso(fullPkg.packageDeposit)}</Text>
+                            </View>
+                            <View style={DestinationStyles.packageDetailItem}>
+                                <Text style={DestinationStyles.packageDetailLabel}>Visa</Text>
+                                <Text style={DestinationStyles.packageDetailValue}>{fullPkg.visaRequired ? 'Required' : 'Not required'}</Text>
+                            </View>
                         </View>
 
-                        <View style={[DestinationStyles.wishlistContainer, { flexDirection: 'row', justifyContent: 'space-between', gap: 25, marginTop: 16 }]}>
+                        <Text style={DestinationStyles.heroDescription}>{fullPkg.description}</Text>
+                    </View>
+
+                    <View style={DestinationStyles.priceCard}>
+                        <Text style={DestinationStyles.priceLabel}>PRICE PER PAX</Text>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 12 }}>
+                            {discountPercent > 0 && (
+                                <Text style={DestinationStyles.packagePriceOld}>{formatPeso(basePrice)}</Text>
+                            )}
+                            <Text style={DestinationStyles.priceValue}>{formatPeso(discountedPrice)}</Text>
+                            {discountPercent > 0 && (
+                                <Text style={DestinationStyles.discountTextOnly}>-{discountPercent}%</Text>
+                            )}
+                        </View>
+
+                        <View style={DestinationStyles.priceRowDivider} />
+
+                        <View style={DestinationStyles.priceRow}>
+                            <Text style={DestinationStyles.priceUnit}>Slots</Text>
+                            <Text style={DestinationStyles.slotsValue}>{totalSlots}</Text>
+                        </View>
+                        <View style={DestinationStyles.priceRow}>
+                            <Text style={DestinationStyles.priceUnit}>Deposit</Text>
+                            <Text style={DestinationStyles.slotsValue}>{formatPeso(fullPkg.packageDeposit)}</Text>
+                        </View>
+                        
+                        <TouchableOpacity 
+                            style={[DestinationStyles.availabilityButton, isPackageSoldOut && { backgroundColor: '#cbd5e1' }]} 
+                            onPress={handlePrimaryAction}
+                            disabled={isPackageSoldOut}
+                        >
+                            <Text style={[DestinationStyles.availabilityText, isPackageSoldOut && { color: '#64748b' }]}>
+                                {isPackageSoldOut ? "Sold Out" : "Check Availability"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={{ paddingHorizontal: 16 }}>
+                        <View style={[DestinationStyles.wishlistContainer, { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 5 }]}>
                             <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1 }]} onPress={handleWishlistAdd}>
-                                <Ionicons name="heart-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-                                <Text style={DestinationStyles.wishlistButtonText}>Wishlist</Text>
+                                <Ionicons 
+                                    name={isWishlisted ? "heart" : "heart-outline"} 
+                                    size={18} 
+                                    color={isWishlisted ? "#ff4d4f" : "#fff"} 
+                                    style={{ marginRight: 6 }} 
+                                />
+                                <Text style={DestinationStyles.wishlistButtonText}>
+                                    {isWishlisted ? "Wishlisted" : "Wishlist"}
+                                </Text>
                             </TouchableOpacity>
                             
                             <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1, backgroundColor: "#f0f2f5" }]} onPress={() => setShowReviews(!showReviews)}>
@@ -306,8 +436,6 @@ export default function PackageDetails({ route, navigation }) {
 
                     {showReviews ? (
                         <View style={DestinationStyles.sectionBody}>
-                            
-                            {/* REVIEW BREAKDOWN CARD */}
                             <View style={DestinationStyles.breakdownCard}>
                                 <View style={DestinationStyles.breakdownHeader}>
                                     <View>
@@ -375,7 +503,6 @@ export default function PackageDetails({ route, navigation }) {
                                             </View>
                                             <Text style={{ color: "#333", fontSize: 13, marginTop: 4 }}>{r.review}</Text>
 
-                                            {/* EDIT/DELETE REVIEW BUTTONS */}
                                             {isMe && (
                                                 <View style={{ flexDirection: 'row', gap: 16, marginTop: 12 }}>
                                                     <TouchableOpacity onPress={handleEditClick}>
@@ -391,7 +518,6 @@ export default function PackageDetails({ route, navigation }) {
                                 })
                             )}
 
-                            {/* REVIEW FORM */}
                             <View style={DestinationStyles.reviewContainer}>
                                 <Text style={[DestinationStyles.reviewTitle, { color: '#305797' }]}>Leave a review</Text>
                                 <View style={DestinationStyles.starsContainer}>
@@ -417,7 +543,6 @@ export default function PackageDetails({ route, navigation }) {
                                     </Text>
                                 </TouchableOpacity>
 
-                                {/* STYLED DELETE BUTTON */}
                                 {isEditingReview && (
                                     <TouchableOpacity 
                                         style={[DestinationStyles.reviewButton, { backgroundColor: '#991b1b', marginTop: 10 }]} 
@@ -431,7 +556,6 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
                     ) : (
                         <>
-                            {/* TAB BUTTONS */}
                             <View style={DestinationStyles.tabRow}>
                                 {["itinerary", "inclusions", "terms"].map((tab) => {
                                     const isActive = activeTab === tab;
@@ -454,14 +578,20 @@ export default function PackageDetails({ route, navigation }) {
                                     <View key={i} style={{ marginBottom: 15 }}>
                                         <Text style={DestinationStyles.sectionTitle}>{day.toUpperCase()}</Text>
                                         {Array.isArray(items) ? items.map((item, j) => (
-                                            <Text key={j} style={DestinationStyles.sectionText}>
-                                                • {typeof item === 'object' ? (item.activity || item.optionalActivity) : item}
-                                                {item.isOptional ? " (Optional)" : ""}
-                                            </Text>
+                                            <View key={j} style={DestinationStyles.tabItemRow}>
+                                                <Text style={DestinationStyles.tabItemDot}>•</Text>
+                                                <Text style={DestinationStyles.sectionText}>
+                                                    {typeof item === 'object' ? (item.activity || item.optionalActivity) : item}
+                                                    {item.isOptional ? " (Optional)" : ""}
+                                                </Text>
+                                            </View>
                                         )) : (
-                                            <Text style={DestinationStyles.sectionText}>
-                                                • {typeof items === 'object' ? (items.activity || items.optionalActivity) : items}
-                                            </Text>
+                                            <View style={DestinationStyles.tabItemRow}>
+                                                <Text style={DestinationStyles.tabItemDot}>•</Text>
+                                                <Text style={DestinationStyles.sectionText}>
+                                                    {typeof items === 'object' ? (items.activity || items.optionalActivity) : items}
+                                                </Text>
+                                            </View>
                                         )}
                                     </View>
                                 ))}
@@ -470,16 +600,22 @@ export default function PackageDetails({ route, navigation }) {
                                     <>
                                         <Text style={DestinationStyles.sectionTitle}>INCLUSIONS</Text>
                                         {fullPkg.packageInclusions?.length > 0 ? fullPkg.packageInclusions.map((item, i) => (
-                                            <Text key={i} style={DestinationStyles.sectionText}>
-                                                ✓ {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
-                                            </Text>
+                                            <View key={i} style={DestinationStyles.tabItemRow}>
+                                                <Text style={DestinationStyles.tabItemDot}>✓</Text>
+                                                <Text style={DestinationStyles.sectionText}>
+                                                    {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
+                                                </Text>
+                                            </View>
                                         )) : <Text style={DestinationStyles.sectionText}>None specified.</Text>}
                                         
                                         <Text style={[DestinationStyles.sectionTitle, { marginTop: 20 }]}>EXCLUSIONS</Text>
                                         {fullPkg.packageExclusions?.length > 0 ? fullPkg.packageExclusions.map((item, i) => (
-                                            <Text key={i} style={DestinationStyles.sectionText}>
-                                                ✕ {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
-                                            </Text>
+                                            <View key={i} style={DestinationStyles.tabItemRow}>
+                                                <Text style={DestinationStyles.tabItemDot}>✕</Text>
+                                                <Text style={DestinationStyles.sectionText}>
+                                                    {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
+                                                </Text>
+                                            </View>
                                         )) : <Text style={DestinationStyles.sectionText}>None specified.</Text>}
                                     </>
                                 )}
@@ -488,9 +624,12 @@ export default function PackageDetails({ route, navigation }) {
                                     <>
                                         <Text style={DestinationStyles.sectionTitle}>TERMS AND CONDITIONS</Text>
                                         {fullPkg.packageTermsConditions?.length > 0 ? fullPkg.packageTermsConditions.map((item, i) => (
-                                            <Text key={i} style={[DestinationStyles.sectionText, { marginBottom: 8 }]}>
-                                                • {typeof item === 'object' ? (item.term || item.policy) : item}
-                                            </Text>
+                                            <View key={i} style={DestinationStyles.tabItemRow}>
+                                                <Text style={DestinationStyles.tabItemDot}>•</Text>
+                                                <Text style={DestinationStyles.sectionText}>
+                                                    {typeof item === 'object' ? (item.term || item.policy) : item}
+                                                </Text>
+                                            </View>
                                         )) : <Text style={DestinationStyles.sectionText}>Standard agency terms apply.</Text>}
                                     </>
                                 )}
@@ -500,7 +639,6 @@ export default function PackageDetails({ route, navigation }) {
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* Modals remain unchanged... */}
             <Modal transparent animationType='fade' visible={isWishlistModalOpen} onRequestClose={() => setIsWishlistModalOpen(false)}>
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
@@ -530,7 +668,8 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
-            <Modal visible={isArrangementModalOpen} transparent animationType="slide">
+            {/* NATIVE ARRANGEMENT MODAL */}
+            <Modal visible={isArrangementModalOpen} transparent animationType="slide" onRequestClose={() => setIsArrangementModalOpen(false)}>
                 <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
                     <View style={DestinationStyles.arrangementModalCard}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
@@ -561,7 +700,7 @@ export default function PackageDetails({ route, navigation }) {
                                 if (selectedArrangement === 'All in Package') {
                                     setIsDateModalOpen(true);
                                 } else {
-                                    navigation.navigate("quotationform", { pkg: fullPkg, arrangement: 'Land Arrangement' }); 
+                                    navigation.navigate("quotationform", { pkg: fullPkg.rawPackage, arrangement: 'Land Arrangement' }); 
                                 }
                             }}>
                             <Text style={DestinationStyles.proceedButtonText}>Proceed</Text>
@@ -573,7 +712,8 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
-            <Modal visible={isDateModalOpen} transparent animationType="fade">
+            {/* NATIVE DATE SELECTION MODAL */}
+            <Modal visible={isDateModalOpen} transparent animationType="fade" onRequestClose={() => setIsDateModalOpen(false)}>
                 <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
                     <View style={DestinationStyles.dateSelectionModalCard}>
                         <View style={{ marginBottom: 15 }}>
@@ -583,75 +723,78 @@ export default function PackageDetails({ route, navigation }) {
                             </Text>
                         </View>
                         <ScrollView showsVerticalScrollIndicator={false}>
-    {(fullPkg?.packageSpecificDate || []).length > 0 ? (
-        (fullPkg.packageSpecificDate).map((range, index) => {
-            const isSelected = selectedSchedule === range;
-            const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
-            
-            // 🔥 NEW: Determine if the card should be completely disabled
-            const isSoldOut = range.slots <= 0;
-            
-            return (
-                <TouchableOpacity 
-                    key={index}
-                    // 🔥 NEW: Add the disabled prop and a conditional style for greyed-out look
-                    disabled={isSoldOut}
-                    style={[
-                        DestinationStyles.dateCard, 
-                        isSelected && DestinationStyles.dateCardSelected,
-                        isSoldOut && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' } 
-                    ]}
-                    // 🔥 NEW: Prevent selection if sold out
-                    onPress={() => {
-                        if (!isSoldOut) {
-                            setSelectedSchedule(range);
-                        }
-                    }}
-                    activeOpacity={isSoldOut ? 1 : 0.8}
-                >
-                    {isSelected && (
-                        <View style={DestinationStyles.selectedBadge}>
-                            <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
-                        </View>
-                    )}
-                    <View style={DestinationStyles.dateRow}>
-                        <Ionicons name="calendar-outline" size={18} color={isSoldOut ? "#9ca3af" : "#305797"} />
-                        <Text style={[DestinationStyles.dateText, isSoldOut && { color: '#9ca3af' }]}>
-                            Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
-                        </Text>
-                    </View>
-                    <View style={DestinationStyles.priceRowDate}>
-                        <Text style={[
-                            DestinationStyles.priceTextDate, 
-                            isSoldOut && { color: '#9ca3af' }
-                        ]}>
-                            {formatPeso(fullPkg.price || 0)} / pax
-                            {range.extrarate > 0 && (
-                                <Text style={{ color: isSoldOut ? '#9ca3af' : '#64748b', fontSize: 12 }}>
-                                    {` + ${formatPeso(range.extrarate)} extra`}
+                            {(fullPkg?.packageSpecificDate || []).length > 0 ? (
+                                (fullPkg.packageSpecificDate).map((range, index) => {
+                                    const isSelected = selectedSchedule === range;
+                                    const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
+                                    
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const startDate = new Date(range.startdaterange);
+                                    startDate.setHours(0, 0, 0, 0);
+                                    
+                                    const isPastOrToday = startDate.getTime() <= today.getTime();
+                                    const isSoldOut = range.slots <= 0;
+                                    const isDisabled = isSoldOut || isPastOrToday;
+                                    
+                                    return (
+                                        <TouchableOpacity 
+                                            key={index}
+                                            disabled={isDisabled}
+                                            style={[
+                                                DestinationStyles.dateCard, 
+                                                isSelected && DestinationStyles.dateCardSelected,
+                                                isDisabled && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' } 
+                                            ]}
+                                            onPress={() => {
+                                                if (!isDisabled) {
+                                                    setSelectedSchedule(range);
+                                                }
+                                            }}
+                                            activeOpacity={isDisabled ? 1 : 0.8}
+                                        >
+                                            {isSelected && (
+                                                <View style={DestinationStyles.selectedBadge}>
+                                                    <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
+                                                </View>
+                                            )}
+                                            <View style={DestinationStyles.dateRow}>
+                                                <Ionicons name="calendar-outline" size={18} color={isDisabled ? "#9ca3af" : "#305797"} />
+                                                <Text style={[DestinationStyles.dateText, isDisabled && { color: '#9ca3af' }]}>
+                                                    Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
+                                                </Text>
+                                            </View>
+                                            <View style={DestinationStyles.priceRowDate}>
+                                                <Text style={[
+                                                    DestinationStyles.priceTextDate, 
+                                                    isDisabled && { color: '#9ca3af' }
+                                                ]}>
+                                                    {formatPeso(fullPkg.price || 0)} / pax
+                                                    {range.extrarate > 0 && (
+                                                        <Text style={{ color: isDisabled ? '#9ca3af' : '#64748b', fontSize: 12 }}>
+                                                            {` + ${formatPeso(range.extrarate)} extra`}
+                                                        </Text>
+                                                    )}
+                                                </Text>
+                                                <View style={DestinationStyles.slotsBadge}>
+                                                    <Text style={[
+                                                        DestinationStyles.slotsBadgeText, 
+                                                        (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
+                                                        isDisabled && { color: '#9ca3af', fontWeight: 'bold' } 
+                                                    ]}>
+                                                        {isPastOrToday ? "Date Passed" : isSoldOut ? "Sold Out" : `${range.slots} slots left`}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })
+                            ) : (
+                                <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
+                                    No available dates for this package.
                                 </Text>
                             )}
-                        </Text>
-                        <View style={DestinationStyles.slotsBadge}>
-                            {/* 🔥 UPDATED: Keep the red warning text for 10 or below, but handle 0 separately */}
-                            <Text style={[
-                                DestinationStyles.slotsBadgeText, 
-                                (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
-                                isSoldOut && { color: '#9ca3af', fontWeight: 'bold' } 
-                            ]}>
-                                {isSoldOut ? "Sold Out" : `${range.slots} slots left`}
-                            </Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            );
-        })
-    ) : (
-        <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
-            No available dates for this package.
-        </Text>
-    )}
-</ScrollView>
+                        </ScrollView>
 
                         <View style={DestinationStyles.selectionFooter}>
                             <Text style={DestinationStyles.selectionFooterText}>
@@ -680,7 +823,7 @@ export default function PackageDetails({ route, navigation }) {
                                         const finalPrice = (fullPkg.price || 0) + (selectedSchedule.extrarate || 0);
 
                                         navigation.navigate("quotationallin", { 
-                                            pkg: fullPkg, 
+                                            pkg: fullPkg.rawPackage, 
                                             arrangement: 'All in Package', 
                                             selectedDate: dateString,
                                             selectedDatePrice: finalPrice,

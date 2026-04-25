@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaVie
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext'; 
-// 🔥 ADDED API IMPORT TO FETCH FULL USER DATA 🔥
 import { api } from '../../utils/api'; 
 
 // Helper to format date like "March 29, 2026"
@@ -34,11 +33,9 @@ export default function RegistrationStep1({ route, navigation }) {
                        (setupData?.travelerCounts?.child || 0) + 
                        (setupData?.travelerCounts?.infant || 0);
 
-    // 🔥 NEW: Check if it's a domestic package
     const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
 
-    // 🔥 NEW: State to hold the full fetched user profile
     const [fullUserData, setFullUserData] = useState(null);
 
     useEffect(() => {
@@ -55,7 +52,6 @@ export default function RegistrationStep1({ route, navigation }) {
         fetchFullProfile();
     }, [user?._id]);
 
-    // 🔥 NEW: Extract data from the full profile directly
     const userContact = fullUserData?.phonenum || fullUserData?.phone || fullUserData?.contactNumber || '';
     const userAddress = fullUserData?.homeAddress || fullUserData?.address || '';
     const userGender = fullUserData?.gender?.toLowerCase() || '';
@@ -93,7 +89,6 @@ export default function RegistrationStep1({ route, navigation }) {
     const [showTitleDropdown, setShowTitleDropdown] = useState(false);
     const currentDateLong = formatLongDate(new Date());
 
-    // 🔥 SYNC PROFILE DATA ONCE FETCHED 🔥
     useEffect(() => {
         if (fullUserData) {
             setLeadGuestInfo(prev => ({
@@ -113,14 +108,13 @@ export default function RegistrationStep1({ route, navigation }) {
         }
     }, [fullUserData, userTitle, userContact, userAddress, travelersData]);
 
-    // 🔥 UPDATED: Only check passport fields if the package is International
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
         
         if (isDomestic) {
-            return missingBasicInfo; // Passes if basic info is complete
+            return missingBasicInfo; 
         } else {
-            return missingBasicInfo || !p.passport || !p.expiry; // Fails if passport info is missing on International
+            return missingBasicInfo || !p.passport || !p.expiry; 
         }
     });
 
@@ -164,7 +158,12 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TOUR PACKAGE TITLE</Text>
-                            <TextInput style={RegistrationFormStyle.paperInput} value={setupData?.pkg?.title} editable={false} />
+                            {/* 🔥 CHANGED: Background set to white */}
+                            <TextInput 
+                                style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} 
+                                value={setupData?.pkg?.packageName || setupData?.pkg?.title || ''} 
+                                editable={false} 
+                            />
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>TOUR PACKAGE VIA</Text>
@@ -179,33 +178,35 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 0.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TITLE:</Text>
-                            {/* 🔥 LOCKED IF GENDER EXISTS IN DB 🔥 */}
+                            {/* 🔥 CHANGED: Background set to white */}
                             <TouchableOpacity 
-                                style={[RegistrationFormStyle.paperInput, { justifyContent: 'center', backgroundColor: isTitleLocked ? '#f5f5f5' : 'transparent' }]} 
+                                style={[RegistrationFormStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]} 
                                 onPress={() => setShowTitleDropdown(true)}
                                 disabled={isTitleLocked}
                             >
-                                <Text style={{ fontSize: 10, color: leadGuestInfo.title ? '#000' : '#888' }}>
+                                <Text style={{ fontSize: 10, color: leadGuestInfo.title ? '#555' : '#888' }}>
                                     {leadGuestInfo.title || "Select title"}
                                 </Text>
                             </TouchableOpacity>
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={RegistrationFormStyle.label}>FULL NAME:</Text>
-                            <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#f5f5f5', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
+                            {/* 🔥 CHANGED: Background set to white */}
+                            <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
                         </View>
                     </View>
 
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>EMAIL ADD:</Text>
-                            <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#f5f5f5', color: '#555' }]} value={user?.email || ''} editable={false} />
+                            {/* 🔥 CHANGED: Background set to white */}
+                            <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} value={user?.email || ''} editable={false} />
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>CONTACT DETAILS:</Text>
-                            {/* 🔥 LOCKED IF CONTACT EXISTS IN DB 🔥 */}
+                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput 
-                                style={[RegistrationFormStyle.paperInput, isContactLocked && { backgroundColor: '#f5f5f5', color: '#555' }]} 
+                                style={[RegistrationFormStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]} 
                                 value={leadGuestInfo.contact} 
                                 keyboardType="phone-pad" 
                                 editable={!isContactLocked}
@@ -216,9 +217,9 @@ export default function RegistrationStep1({ route, navigation }) {
 
                     <View style={RegistrationFormStyle.inputContainer}>
                         <Text style={RegistrationFormStyle.label}>ADDRESS:</Text>
-                        {/* 🔥 LOCKED IF ADDRESS EXISTS IN DB 🔥 */}
+                        {/* 🔥 CHANGED: Background set to white */}
                         <TextInput 
-                            style={[RegistrationFormStyle.paperInput, isAddressLocked && { backgroundColor: '#f5f5f5', color: '#555' }]} 
+                            style={[RegistrationFormStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]} 
                             value={leadGuestInfo.address} 
                             editable={!isAddressLocked}
                             onChangeText={(v) => setLeadGuestInfo({...leadGuestInfo, address: v})} 
@@ -229,7 +230,6 @@ export default function RegistrationStep1({ route, navigation }) {
                         <Text style={RegistrationFormStyle.headerBlueText}>PASSENGER LIST (Including Lead Guest)</Text>
                     </View>
 
-                    {/* 🔥 ALL PASSENGER DATA IS LOCKED & GREYED OUT 🔥 */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={true}>
                         <View style={RegistrationFormStyle.tableWrapper}>
                             <View style={RegistrationFormStyle.tableHeaderRow}>
@@ -244,17 +244,18 @@ export default function RegistrationStep1({ route, navigation }) {
                                 <Text style={[RegistrationFormStyle.columnHeader, { width: 75 }]}>EXPIRY</Text>
                             </View>
 
+                            {/* 🔥 CHANGED: All table cells set to transparent/white background */}
                             {passengers.map((p, i) => (
                                 <View key={i} style={RegistrationFormStyle.tableDataRow}>
-                                    <Text style={[RegistrationFormStyle.cellInput, { width: 30, textAlignVertical: 'center', backgroundColor: '#eaeaea' }]}>{i + 1}</Text>
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 50, backgroundColor: '#f5f5f5' }]} value={p.title} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 100, backgroundColor: '#f5f5f5' }]} value={p.firstName} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 100, backgroundColor: '#f5f5f5' }]} value={p.lastName} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 70, backgroundColor: '#f5f5f5' }]} value={p.room} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#f5f5f5' }]} value={p.bday} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 35, backgroundColor: '#f5f5f5' }]} value={p.age} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 80, backgroundColor: '#f5f5f5' }]} value={p.passport} editable={false} />
-                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#f5f5f5' }]} value={p.expiry} editable={false} />
+                                    <Text style={[RegistrationFormStyle.cellInput, { width: 30, textAlignVertical: 'center', backgroundColor: '#fff', color: '#555' }]}>{i + 1}</Text>
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 50, backgroundColor: '#fff', color: '#555' }]} value={p.title} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 100, backgroundColor: '#fff', color: '#555' }]} value={p.firstName} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 100, backgroundColor: '#fff', color: '#555' }]} value={p.lastName} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 70, backgroundColor: '#fff', color: '#555' }]} value={p.room} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#fff', color: '#555' }]} value={p.bday} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 35, backgroundColor: '#fff', color: '#555' }]} value={p.age} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 80, backgroundColor: '#fff', color: '#555' }]} value={p.passport} editable={false} />
+                                    <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#fff', color: '#555' }]} value={p.expiry} editable={false} />
                                 </View>
                             ))}
                         </View>
@@ -298,11 +299,13 @@ export default function RegistrationStep1({ route, navigation }) {
 
                     <View style={RegistrationFormStyle.signatureBlock}>
                         <View style={RegistrationFormStyle.sigLine}>
-                            <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#f5f5f5', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
+                            {/* 🔥 CHANGED: Background set to white */}
+                            <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#fff', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
                             <Text style={RegistrationFormStyle.sigText}>Signature over printed name</Text>
                         </View>
                         <View style={RegistrationFormStyle.sigLine}>
-                            <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#f5f5f5', color: '#555' }]} value={currentDateLong} editable={false} />
+                            {/* 🔥 CHANGED: Background set to white */}
+                            <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#fff', color: '#555' }]} value={currentDateLong} editable={false} />
                             <Text style={RegistrationFormStyle.sigText}>Date</Text>
                         </View>
                     </View>

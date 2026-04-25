@@ -51,7 +51,6 @@ export default function PaymentMethod({ route, navigation }) {
         return null;
     };
 
-    // 🔥 STABLE UPLOADER USING AXIOS 🔥
     const uploadFilesToBackend = async (endpoint, formData) => {
         try {
             const response = await api.post(endpoint, formData, {
@@ -117,7 +116,6 @@ export default function PaymentMethod({ route, navigation }) {
                         return;
                     }
                 } else {
-                    // Existing Booking -> PayMongo
                     const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: route.params.existingReference, mode: 'online' } });
                     const cancelDeepLink = Linking.createURL('paymentmethod');
 
@@ -146,16 +144,17 @@ export default function PaymentMethod({ route, navigation }) {
             const adultCount = Number(setupData?.travelerCounts?.adult) || 0;
             const childCount = Number(setupData?.travelerCounts?.child) || 0;
             const infantCount = Number(setupData?.travelerCounts?.infant) || 0;
-            const calculatedTravelers = (adultCount + childCount + infantCount) || (passengers?.length) || 1;
+            const calculatedTravelersCount = (adultCount + childCount + infantCount) || (passengers?.length) || 1;
 
             const travelDateString = setupData?.selectedDate || setupData?.travelDate || "TBD";
-            const [startDateStr, endDateStr] = travelDateString.split(" - ");
+            const dateParts = travelDateString.split(" - ");
+            
             const travelDateObj = {
-                startDate: startDateStr?.trim() || travelDateString,
-                endDate: endDateStr?.trim() || startDateStr?.trim() || travelDateString
+                startDate: dateParts[0]?.trim() || travelDateString,
+                endDate: dateParts[1]?.trim() || dateParts[0]?.trim() || travelDateString
             };
 
-            const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelers;
+            const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
 
             // 1. EXTRACT & UPLOAD DOCUMENTS TO CLOUDINARY
             const safePassengers = Array.isArray(passengers) ? passengers : [];
@@ -227,9 +226,8 @@ export default function PaymentMethod({ route, navigation }) {
             const rootPassportFiles = mappedTravelers.map(t => t.passportFile).filter(Boolean);
             const rootPhotoFiles = mappedTravelers.map(t => t.photoFile).filter(Boolean);
 
-            // 3. FORMAT EXACT WEB JSON STRUCTURE
             const mappedBookingDetails = {
-                dateOfRegistration: dayjs().format("MM/DD/YYYY"),
+                dateOfRegistration: dayjs().toISOString(),
                 travelDate: travelDateString, 
                 tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
                 tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
@@ -262,18 +260,22 @@ export default function PaymentMethod({ route, navigation }) {
 
             const initialBookingStatus = method === 'manual' ? 'Pending' : 'Not Paid';
 
+            // 🔥 FIXED: Format 'travelers' exactly how the Web App and Backend expect it [ {adult, child, infant} ]
             const finalBookingPayload = {
                 packageId: targetPackageId, 
                 checkoutToken: `mobile-tok-${Date.now()}`,
                 travelDate: travelDateObj, 
-                travelers: calculatedTravelers, 
+                travelers: [{ 
+                    adult: adultCount || calculatedTravelersCount, 
+                    child: childCount, 
+                    infant: infantCount 
+                }],
                 passportFiles: rootPassportFiles,
                 photoFiles: rootPhotoFiles,
                 bookingDetails: mappedBookingDetails,
                 status: initialBookingStatus 
             };
 
-            // Create the booking!
             const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
             const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
             const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
@@ -305,7 +307,7 @@ export default function PaymentMethod({ route, navigation }) {
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',
                         proofFileName: proofImage.fileName || 'deposit_slip.jpg',
-                        status: 'Pending' // Explicitly Pending for manual review
+                        status: 'Pending'
                     };
 
                     await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
@@ -331,7 +333,11 @@ export default function PaymentMethod({ route, navigation }) {
                     packageId: targetPackageId,
                     totalPrice: amountToPay,
                     travelDate: travelDateObj, 
-                    travelers: calculatedTravelers, 
+                    travelers: [{ 
+                        adult: adultCount || calculatedTravelersCount, 
+                        child: childCount, 
+                        infant: infantCount 
+                    }], 
                     leadEmail: user.email,
                     leadContact: leadGuestInfo?.contact || '', 
                     successUrl: successDeepLink,
@@ -436,28 +442,30 @@ export default function PaymentMethod({ route, navigation }) {
 
                         <View style={PaymentStyle.uploadSection}>
                             <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
-                            <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip.</Text>
+                            <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                            <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                            <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                            </Text>
                             
                             <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickImage}>
                                 <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                 <Text style={PaymentStyle.selectImageBtnText}>Select Receipt Image</Text>
                             </TouchableOpacity>
 
-                            <View style={PaymentStyle.imagePreviewContainer}>
-                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
-                                <View style={PaymentStyle.previewImageBox}>
-                                    {proofImage ? (
+                            {proofImage && (
+                                <View style={PaymentStyle.imagePreviewContainer}>
+                                    <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                    <View style={PaymentStyle.previewImageBox}>
                                         <View style={PaymentStyle.imageWrapper}>
                                             <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
                                             <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
                                                 <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                             </TouchableOpacity>
                                         </View>
-                                    ) : (
-                                        <Text style={PaymentStyle.noImageText}>No image selected</Text>
-                                    )}
+                                    </View>
                                 </View>
-                            </View>
+                            )}
                         </View>
                     </View>
                 )}
