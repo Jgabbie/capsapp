@@ -17,17 +17,14 @@ const generateBookingReference = () => {
 
 export const createBooking = async (req, res) => {
   // Extracting from root request body
-  const { packageId, checkoutToken, bookingDetails, travelDate, travelers } = req.body;
+  // Handle both Web format (direct fields) and Mobile format (nested in bookingPayload)
+  const rawBody = req.body.bookingPayload || req.body;
+  const { packageId, checkoutToken, bookingDetails, travelDate, travelers } = rawBody;
   const userId = req.userId;
 
   try {
-    if (!packageId || !bookingDetails || !checkoutToken) {
+    if (!packageId || !bookingDetails) {
       return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const existingBooking = await Booking.findOne({ checkoutToken });
-    if (existingBooking) {
-      return res.status(200).json(existingBooking);
     }
 
     // 🔥 WEB SYNC: Format the exact shapes the Web Backend expects
@@ -61,13 +58,12 @@ export const createBooking = async (req, res) => {
       travelDate: rootTravelDate, 
       travelers: rootTravelersCount,
       bookingDetails: bookingDetails, // Contains the full nested objects/arrays 
-      checkoutToken,
       reference: generateBookingReference(),
-      status: "Pending", // 🔥 Web requires new bookings to be Pending until paid!
+      status: "Not Paid", // New bookings start as Not Paid until payment is confirmed
     });
 
     logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageId });
-    return res.status(201).json({ booking, paymentToken: checkoutToken });
+    return res.status(201).json({ booking });
   } catch (error) {
     console.error("Create Booking Error:", error);
     return res.status(500).json({ message: "Error creating booking", error: error.message });

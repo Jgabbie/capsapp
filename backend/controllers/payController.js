@@ -2,7 +2,7 @@ import axios from "axios";
 import crypto from "crypto";
 import dayjs from "dayjs";
 import BookingModel from "../models/booking.js";
-import TransactionModel from "../models/transaction.js"; 
+import TransactionModel from "../models/transaction.js"; // 🔥 FIXED: Singular transaction.js
 import PackageModel from "../models/package.js";
 import TokenCheckoutModel from "../models/tokenCheckout.js"; 
 import logAction from "../utils/logger.js";
@@ -17,6 +17,34 @@ const generateTransactionReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
     return `TX-${timestamp}${random}`;
+};
+
+// 🔥 NEW: Added to handle the 400 Token Error on Mobile
+export const createCheckoutToken = async (req, res) => {
+    const userId = req.userId;
+    const { totalPrice, bookingId } = req.body;
+
+    try {
+        const numericTotal = Number(totalPrice || 0);
+        if (!numericTotal || Number.isNaN(numericTotal)) {
+            return res.status(400).json({ message: "Valid totalPrice is required" });
+        }
+
+        const token = crypto.randomUUID();
+        await TokenCheckoutModel.create({
+            token,
+            userId,
+            bookingId,
+            amount: numericTotal,
+            totalPrice: numericTotal,
+            createdAt: new Date(),
+            expiresAt: dayjs().add(5, 'minutes').toDate()
+        });
+
+        return res.status(201).json({ token });
+    } catch (error) {
+        return res.status(500).json({ message: "Error creating checkout token", error: error.message });
+    }
 };
 
 export const createManualPayment = async (req, res) => {
@@ -34,27 +62,24 @@ export const createManualPayment = async (req, res) => {
                 bookingDate: new Date().toISOString(),
                 travelers: Number(travelerTotal),
                 reference: generateBookingReference(),
-                status: 'Pending',
+                status: 'Not Paid', // 🔥 FIXED: Override to 'Not Paid'
                 bookingDetails 
             });
             finalBookingId = booking._id;
             bookingRef = booking.reference;
         } else if (bookingId) {
             const booking = await BookingModel.findById(bookingId);
-            booking.status = 'Pending';
+            booking.status = 'Not Paid'; // 🔥 FIXED: Override to 'Not Paid'
             if (!booking.statusHistory) booking.statusHistory = [];
-            booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
+            booking.statusHistory.push({ status: 'Not Paid', changedAt: new Date() });
             await booking.save();
             bookingRef = booking.reference;
         }
 
-        // 🔥 SAFETY FIX: Ensure we have a booking ID before creating tokens or transactions!
         if (!finalBookingId) {
             return res.status(400).json({ error: "Booking ID is required to process payment." });
         }
 
-        // 1. Create Token Checkout (Web Sync)
-        // This now perfectly matches your updated models/tokenCheckout.js
         const token = crypto.randomUUID();
         await TokenCheckoutModel.create({
             token,
@@ -64,7 +89,7 @@ export const createManualPayment = async (req, res) => {
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
-        // 2. Create Transaction Record (Web Sync)
+        // The Transaction stays 'Pending' so the Admin can verify the slip
         await TransactionModel.create({
             bookingId: finalBookingId,
             packageId,
@@ -72,7 +97,7 @@ export const createManualPayment = async (req, res) => {
             reference: generateTransactionReference(),
             amount: Number(amount),
             method: 'Manual',
-            status: 'Pending',
+            status: 'Pending', 
             proofImage,
             proofImageType,
             proofFileName,
@@ -96,7 +121,6 @@ export const createCheckoutSession = async (req, res) => {
         const { paymentPayload } = req.body;
         const pkg = await PackageModel.findById(paymentPayload.packageId);
         
-        // 🔥 WEB SYNCED COMPUTATION: 3.5% + ₱15 Fee
         const baseAmountCents = Math.round(paymentPayload.totalPrice * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
@@ -129,7 +153,6 @@ export const createCheckoutSession = async (req, res) => {
                     metadata: { 
                         userId: req.userId, 
                         packageId: paymentPayload.packageId,
-                        // 🔥 CRITICAL: Sent to PayMongo so the Webhook knows what to update!
                         bookingId: paymentPayload.bookingId, 
                         bookingReference: paymentPayload.bookingReference,
                         transactionType: "Booking Payment", 
@@ -152,7 +175,6 @@ export const createCheckoutSession = async (req, res) => {
     }
 };
 
-// Webhook handler stub
 export const handlePayMongoWebhook = async (req, res) => { 
     res.status(200).send('OK'); 
 };

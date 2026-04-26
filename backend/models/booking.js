@@ -20,7 +20,7 @@ const bookingSchema = new mongoose.Schema(
     // 🔥 FIX 1: Changed from String to Object to accept { startDate, endDate }
     travelDate: { type: Object, required: true },
     
-    travelers: { type: Number, required: true },
+    travelers: { type: Object, required: true },
     reference: { type: String, required: true, unique: true },
     
     // 🔥 FIX 2: Default to "Pending" so unpaid bookings aren't accidentally marked as Paid

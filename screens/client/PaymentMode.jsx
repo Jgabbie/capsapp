@@ -62,6 +62,8 @@ export default function PaymentMode({ route, navigation }) {
         return counts.adult + counts.child + counts.infant;
     }, [setupData]);
 
+    const travelers = setupData?.travelerCounts
+
     const totalAmount = setupData?.totalPrice || 0;
 
     // 🔥 BULLETPROOF SCHEDULE LOGIC

@@ -18,7 +18,7 @@ export default function PaymentMethod({ route, navigation }) {
     const [loading, setLoading] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     
-    const { setupData, amountToPay, paymentType, frequency, passengers, travelerUploads, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [method, setMethod] = useState('paymongo'); 
     const [proofImage, setProofImage] = useState(null);
@@ -44,13 +44,6 @@ export default function PaymentMethod({ route, navigation }) {
         setIsProceedModalOpen(true);
     };
 
-    const getFileUri = (fileObj) => {
-        if (!fileObj) return null;
-        if (typeof fileObj === 'string') return fileObj;
-        if (fileObj.uri) return fileObj.uri;
-        return null;
-    };
-
     const uploadFilesToBackend = async (endpoint, formData) => {
         try {
             const response = await api.post(endpoint, formData, {
@@ -72,7 +65,15 @@ export default function PaymentMethod({ route, navigation }) {
 
         try {
             const isExistingBooking = !!route.params.existingBookingId;
-            const targetPackageId = route.params.existingPackageId || setupData?.pkg?._id || setupData?.pkg?.id;
+            const targetPackageId = route.params.existingPackageId || setupData?.pkg?._id || setupData?.pkg?.id || setupData?.packageId || route.params.packageId;
+
+            if (!targetPackageId) {
+                Alert.alert("Error", "Package ID is missing. Cannot proceed.");
+                setLoading(false);
+                return;
+            }
+
+            const safeAmount = Number(setupData?.totalPrice || amountToPay || 0);
 
             // ==========================================================
             // SCENARIO A: PAYING FOR AN EXISTING BOOKING
@@ -86,36 +87,31 @@ export default function PaymentMethod({ route, navigation }) {
                     
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
 
-                    try {
-                        const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
-                        const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
+                    const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                    const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
 
-                        if (!proofUrl) {
-                            throw new Error("No URL returned from server.");
-                        }
-                        
-                        const manualPayload = {
-                            bookingId: route.params.existingBookingId,
-                            packageId: targetPackageId,
-                            amount: amountToPay,
-                            paymentType: paymentType || 'Full Payment',
-                            proofImage: proofUrl,
-                            proofImageType: proofImage.mimeType || 'image/jpeg',
-                            proofFileName: proofImage.fileName || 'deposit_slip.jpg',
-                            status: 'Pending' 
-                        };
+                    const manualPayload = {
+                        bookingId: route.params.existingBookingId,
+                        packageId: targetPackageId,
+                        amount: safeAmount,
+                        paymentType: paymentType || 'Full Payment',
+                        proofImage: proofUrl,
+                        proofImageType: proofImage.mimeType || 'image/jpeg',
+                        proofFileName: proofImage.fileName || 'deposit_slip.jpg',
+                        status: 'Not Paid' 
+                    };
 
-                        const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
-                        setLoading(false);
-                        navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
-                        return; 
-                    } catch (err) {
-                        console.error("Receipt Upload Error:", err);
-                        Alert.alert("Upload Error", "Failed to upload deposit slip. Please try again.");
-                        setLoading(false);
-                        return;
-                    }
+                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    setLoading(false);
+                    navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
+                    return; 
                 } else {
+                    const tokenRes = await api.post('/payment/create-checkout-token', {
+                        totalPrice: safeAmount,
+                        bookingId: route.params.existingBookingId
+                    }, withUserHeader(user?._id));
+                    const realCheckoutToken = tokenRes.data?.token;
+
                     const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: route.params.existingReference, mode: 'online' } });
                     const cancelDeepLink = Linking.createURL('paymentmethod');
 
@@ -123,9 +119,10 @@ export default function PaymentMethod({ route, navigation }) {
                         bookingId: route.params.existingBookingId,
                         bookingReference: route.params.existingReference,
                         packageId: targetPackageId,
-                        totalPrice: amountToPay,
-                        leadEmail: user.email,
-                        leadContact: leadGuestInfo?.contact || '', 
+                        totalPrice: safeAmount,
+                        checkoutToken: realCheckoutToken,
+                        leadEmail: user?.email || "guest@example.com",
+                        leadContact: leadGuestInfo?.contact || "00000000000", 
                         successUrl: successDeepLink,
                         cancelUrl: cancelDeepLink,
                     };
@@ -141,222 +138,163 @@ export default function PaymentMethod({ route, navigation }) {
             // ==========================================================
             // SCENARIO B: CREATING A BRAND NEW BOOKING
             // ==========================================================
-            const adultCount = Number(setupData?.travelerCounts?.adult) || 0;
-            const childCount = Number(setupData?.travelerCounts?.child) || 0;
-            const infantCount = Number(setupData?.travelerCounts?.infant) || 0;
-            const calculatedTravelersCount = (adultCount + childCount + infantCount) || (passengers?.length) || 1;
+            else {
+                const safeAdultCount = parseInt(setupData?.travelerCounts?.adult) || (passengers ? passengers.length : 1);
+                const safeChildCount = parseInt(setupData?.travelerCounts?.child) || 0;
+                const safeInfantCount = parseInt(setupData?.travelerCounts?.infant) || 0;
+                const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
+                
+                const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
 
-            const travelDateString = setupData?.selectedDate || setupData?.travelDate || "TBD";
-            const dateParts = travelDateString.split(" - ");
-            
-            const travelDateObj = {
-                startDate: dateParts[0]?.trim() || travelDateString,
-                endDate: dateParts[1]?.trim() || dateParts[0]?.trim() || travelDateString
-            };
+                let parsedStartDate = "TBD";
+                let parsedEndDate = "TBD";
+                const rawDate = setupData?.selectedDate || setupData?.travelDate;
 
-            const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
-
-            // 1. EXTRACT & UPLOAD DOCUMENTS TO CLOUDINARY
-            const safePassengers = Array.isArray(passengers) ? passengers : [];
-            const formData = new FormData();
-            const passportIndices = [];
-            const photoIndices = [];
-            let hasFilesToUpload = false;
-
-            safePassengers.forEach((p, i) => {
-                const tUpload = travelerUploads?.[i] || travelerUploads || {};
-                const passUri = getFileUri(tUpload.passport || p.passportFile || p.passport);
-                const photoUri = getFileUri(tUpload.photo || p.photoFile || p.photo);
-
-                if (passUri && !passUri.startsWith('http')) {
-                    const filename = passUri.split('/').pop() || `passport_${i}.jpg`;
-                    const match = /\.(\w+)$/.exec(filename);
-                    const type = match ? `image/${match[1]}` : `image/jpeg`;
-                    formData.append('files', { uri: passUri, name: filename, type });
-                    passportIndices.push(i);
-                    hasFilesToUpload = true;
+                if (typeof rawDate === 'string') {
+                    const dateParts = rawDate.split(" - ");
+                    parsedStartDate = dateParts[0]?.trim();
+                    parsedEndDate = dateParts[1]?.trim() || parsedStartDate;
+                } else if (rawDate && typeof rawDate === 'object') {
+                    parsedStartDate = rawDate.startDate;
+                    parsedEndDate = rawDate.endDate || rawDate.startDate;
                 }
-                if (photoUri && !photoUri.startsWith('http')) {
-                    const filename = photoUri.split('/').pop() || `photo_${i}.jpg`;
-                    const match = /\.(\w+)$/.exec(filename);
-                    const type = match ? `image/${match[1]}` : `image/jpeg`;
-                    formData.append('files', { uri: photoUri, name: filename, type });
-                    photoIndices.push(i);
-                    hasFilesToUpload = true;
-                }
-            });
 
-            let uploadedUrls = [];
-            if (hasFilesToUpload) {
-                try {
-                    const uploadResult = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
-                    uploadedUrls = uploadResult?.urls || uploadResult?.url || [];
-                } catch (err) {
-                    console.error("Doc Upload Error:", err);
-                    Alert.alert("Upload Error", "Failed to upload traveler documents. Please try again.");
-                    setLoading(false);
-                    return; 
-                }
-            }
+                const travelDateObj = { startDate: parsedStartDate, endDate: parsedEndDate };
 
-            // 2. UNIVERSAL TRANSLATOR
-            let urlIndex = 0;
-            const mappedTravelers = safePassengers.map((p, i) => {
-                const tUpload = travelerUploads?.[i] || travelerUploads || {};
-                let finalPassportUrl = getFileUri(tUpload.passport || p.passportFile || p.passport);
-                let finalPhotoUrl = getFileUri(tUpload.photo || p.photoFile || p.photo);
-
-                if (passportIndices.includes(i)) finalPassportUrl = uploadedUrls[urlIndex++];
-                if (photoIndices.includes(i)) finalPhotoUrl = uploadedUrls[urlIndex++];
-
-                return {
+                const safePassengers = Array.isArray(passengers) && passengers.length > 0 ? passengers : [
+                    { title: leadGuestInfo?.title || 'MR', firstName: leadGuestInfo?.fullName?.split(' ')[0] || 'Guest', lastName: leadGuestInfo?.fullName?.split(' ').slice(1).join(' ') || 'User' }
+                ];
+                
+                const mappedTravelers = safePassengers.map((p) => ({
                     title: p.title || 'MR',
-                    firstName: p.firstName || '',
-                    lastName: p.lastName || '',
+                    firstName: p.firstName || 'Guest',
+                    lastName: p.lastName || 'User',
                     roomType: p.room || p.roomType || 'N/A', 
                     age: p.age?.toString() || '0',
                     birthday: p.bday || p.birthday || p.birthdate || null, 
                     passportNo: p.passport || p.passportNo || 'N/A', 
                     passportExpiry: p.expiry || p.passportExpiry || null, 
-                    passportFile: finalPassportUrl,
-                    photoFile: finalPhotoUrl
+                    passportFile: null, 
+                    photoFile: null     
+                }));
+
+                const mappedBookingDetails = {
+                    dateOfRegistration: dayjs().toISOString(),
+                    travelDate: travelDateObj, 
+                    tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
+                    tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
+                    leadTitle: leadGuestInfo?.title || "MR",
+                    leadFullName: leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || "Guest User",
+                    leadEmail: user?.email || leadGuestInfo?.email || "guest@example.com",
+                    leadContact: leadGuestInfo?.contact || user?.phonenum || "00000000000",
+                    leadAddress: leadGuestInfo?.address || "N/A",
+                    travelers: mappedTravelers, 
+                    passportFiles: [], 
+                    photoFiles: [],    
+                    dietaryDetails: medicalData?.dietaryDetails || "",
+                    dietaryRequest: medicalData?.dietary === 'Yes' ? "Y" : "N",
+                    medicalDetails: medicalData?.medicalDetails || "",
+                    medicalRequest: medicalData?.medical === 'Yes' ? "Y" : "N",
+                    purchaseInsurance: medicalData?.insurance === 'Yes' ? "Y" : "N",
+                    ownInsurance: "N",
+                    totalPrice: safeAmount, 
+                    emergencyContact: emergency?.contact || "N/A",
+                    emergencyEmail: emergency?.email || "N/A",
+                    emergencyName: emergency?.fullName || "N/A",
+                    emergencyRelation: emergency?.relation || "N/A",
+                    emergencyTitle: emergency?.title || "MR",
+                    paymentDetails: {
+                        paymentType: paymentType || 'deposit',
+                        frequency: frequency || 'Every 2 weeks',
+                        depositAmount: depositAmount
+                    }
                 };
-            });
 
-            const rootPassportFiles = mappedTravelers.map(t => t.passportFile).filter(Boolean);
-            const rootPhotoFiles = mappedTravelers.map(t => t.photoFile).filter(Boolean);
+                // 🔥 THE FIX: Structured perfectly as an Array of Objects so Admin's [0] logic finds it
+                const travelersPayload = [
+                    { 
+                        adult: safeAdultCount, 
+                        child: safeChildCount, 
+                        infant: safeInfantCount 
+                    }
+                ];
 
-            const mappedBookingDetails = {
-                dateOfRegistration: dayjs().toISOString(),
-                travelDate: travelDateString, 
-                tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
-                tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
-                leadTitle: leadGuestInfo?.title || "MR",
-                leadFullName: leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim(),
-                leadEmail: user?.email,
-                leadContact: leadGuestInfo?.contact || user?.phonenum || "",
-                leadAddress: leadGuestInfo?.address || "",
-                travelers: mappedTravelers, 
-                passportFiles: rootPassportFiles, 
-                photoFiles: rootPhotoFiles,
-                dietaryDetails: medicalData?.dietaryDetails || "",
-                dietaryRequest: medicalData?.dietary === 'Yes' ? "Y" : "N",
-                medicalDetails: medicalData?.medicalDetails || "",
-                medicalRequest: medicalData?.medical === 'Yes' ? "Y" : "N",
-                purchaseInsurance: medicalData?.insurance === 'Yes' ? "Y" : "N",
-                ownInsurance: "N",
-                totalPrice: setupData?.totalPrice || amountToPay || 0, 
-                emergencyContact: emergency?.contact || "",
-                emergencyEmail: emergency?.email || "",
-                emergencyName: emergency?.fullName || "",
-                emergencyRelation: emergency?.relation || "",
-                emergencyTitle: emergency?.title || "MR",
-                paymentDetails: {
-                    paymentType: paymentType || 'deposit',
-                    frequency: frequency || 'Every 2 weeks',
-                    depositAmount: depositAmount
-                }
-            };
+                const finalBookingPayload = {
+                    packageId: targetPackageId, 
+                    amount: safeAmount,
+                    travelDate: travelDateObj, 
+                    travelers: travelersPayload, 
+                    passportFiles: [], 
+                    photoFiles: [],    
+                    bookingDetails: mappedBookingDetails,
+                    status: 'Not Paid' 
+                };
 
-            const initialBookingStatus = method === 'manual' ? 'Pending' : 'Not Paid';
-
-            // 🔥 FIXED: Format 'travelers' exactly how the Web App and Backend expect it [ {adult, child, infant} ]
-            const finalBookingPayload = {
-                packageId: targetPackageId, 
-                checkoutToken: `mobile-tok-${Date.now()}`,
-                travelDate: travelDateObj, 
-                travelers: [{ 
-                    adult: adultCount || calculatedTravelersCount, 
-                    child: childCount, 
-                    infant: infantCount 
-                }],
-                passportFiles: rootPassportFiles,
-                photoFiles: rootPhotoFiles,
-                bookingDetails: mappedBookingDetails,
-                status: initialBookingStatus 
-            };
-
-            const bookingSaved = await api.post('/booking/create-booking', finalBookingPayload, withUserHeader(user?._id));
-            const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
-            const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
-
-            // ==========================================================
-            // SCENARIO B.1: MANUAL PAYMENT PROCESSING
-            // ==========================================================
-            if (method === 'manual') {
-                const receiptFormData = new FormData();
-                const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : `image/jpeg`;
+                const bookingSaved = await api.post('/booking/create-booking', { bookingPayload: finalBookingPayload }, withUserHeader(user?._id));
                 
-                receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
+                const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
+                const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
+                const paymentToken = bookingSaved.data?.paymentToken;
 
-                try {
+                if (method === 'manual') {
+                    const receiptFormData = new FormData();
+                    const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : `image/jpeg`;
+                    
+                    receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
+
                     const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
                     const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
-
-                    if (!proofUrl) {
-                        throw new Error("No URL returned from server.");
-                    }
 
                     const manualPayload = {
                         bookingId: newBookingId,
                         packageId: targetPackageId,
-                        amount: amountToPay,
+                        amount: safeAmount,
                         paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',
                         proofFileName: proofImage.fileName || 'deposit_slip.jpg',
-                        status: 'Pending'
+                        status: 'Not Paid'
                     };
 
                     await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
-                } catch (err) {
-                    Alert.alert("Upload Error", "Failed to upload deposit slip.");
-                    setLoading(false);
-                    return;
-                }
 
-            } 
-            // ==========================================================
-            // SCENARIO B.2: PAYMONGO PROCESSING
-            // ==========================================================
-            else {
-                const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
-                const cancelDeepLink = Linking.createURL('paymentmethod');
+                } else {
+                    const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
+                    const cancelDeepLink = Linking.createURL('paymentmethod');
 
-                const paymentPayload = {
-                    bookingId: newBookingId,
-                    bookingReference: bookingRef,
-                    packageId: targetPackageId,
-                    totalPrice: amountToPay,
-                    travelDate: travelDateObj, 
-                    travelers: [{ 
-                        adult: adultCount || calculatedTravelersCount, 
-                        child: childCount, 
-                        infant: infantCount 
-                    }], 
-                    leadEmail: user.email,
-                    leadContact: leadGuestInfo?.contact || '', 
-                    successUrl: successDeepLink,
-                    cancelUrl: cancelDeepLink,
-                };
+                    const paymentPayload = {
+                        bookingId: newBookingId,
+                        bookingReference: bookingRef,
+                        packageId: targetPackageId,
+                        totalPrice: safeAmount,
+                        checkoutToken: paymentToken,
+                        travelDate: travelDateObj, 
+                        travelers: travelersPayload, 
+                        leadEmail: user?.email || "guest@example.com",
+                        leadContact: leadGuestInfo?.contact || "00000000000", 
+                        successUrl: successDeepLink,
+                        cancelUrl: cancelDeepLink,
+                    };
 
-                const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
-                const checkoutUrl = response.data?.data?.attributes?.checkout_url;
+                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
-                setLoading(false); 
+                    setLoading(false); 
 
-                if (checkoutUrl) {
-                    Linking.openURL(checkoutUrl);
+                    if (checkoutUrl) {
+                        Linking.openURL(checkoutUrl);
+                    }
                 }
             }
         } catch (error) {
             setLoading(false);
-            Alert.alert("Error", "Failed to process booking. Please try again.");
-            console.error(error);
+            const errMsg = error.response?.data?.message || error.message || "Failed to process booking.";
+            Alert.alert("Booking Error", errMsg);
+            console.error("Booking Error: ", error.response?.data || error.message);
         }
     };
 
@@ -385,7 +323,6 @@ export default function PaymentMethod({ route, navigation }) {
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>2</Text></View>
                 </View>
 
-                {/* --- HORIZONTAL CARDS --- */}
                 <View style={PaymentStyle.methodGridContainer}>
                     <TouchableOpacity 
                         style={[PaymentStyle.methodGridCard, method === 'paymongo' && PaymentStyle.methodGridCardSelected]}

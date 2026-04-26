@@ -85,7 +85,6 @@ export default function UserBookings() {
 
             const mappedBookings = fetchedBookings.map(b => {
                 
-                // 🔥 FIXED: Safely format dates without crashing Hermes
                 let formattedTravelDate = '--';
                 if (b.travelDate) {
                     if (typeof b.travelDate === 'string') {
@@ -94,7 +93,6 @@ export default function UserBookings() {
                         const sDate = b.travelDate.startDate;
                         const eDate = b.travelDate.endDate || sDate;
                         
-                        // Check if it's already a formatted string like "May 13, 2026"
                         if (sDate.includes(',') && !sDate.includes('T')) {
                             formattedTravelDate = sDate === eDate ? sDate : `${sDate} - ${eDate}`;
                         } else {
@@ -106,20 +104,22 @@ export default function UserBookings() {
                                 const fEnd = isNaN(parsedEnd.getTime()) ? fStart : dayjs(parsedEnd).format('MMM D, YYYY');
                                 formattedTravelDate = fStart === fEnd ? fStart : `${fStart} - ${fEnd}`;
                             } else {
-                                formattedTravelDate = sDate; // Fallback
+                                formattedTravelDate = sDate; 
                             }
                         }
                     }
                 }
 
-                // Handle reading from the array if web formats it that way
+                // 🔥 FIXED: Reads the Object format perfectly now
                 let computedTravelers = 1;
-                if (Array.isArray(b.travelers) && b.travelers.length > 0) {
-                    if (b.travelers[0].adult !== undefined) {
+                if (Array.isArray(b.travelers)) {
+                    if (b.travelers.length > 0 && b.travelers[0].adult !== undefined) {
                         computedTravelers = (b.travelers[0].adult || 0) + (b.travelers[0].child || 0) + (b.travelers[0].infant || 0);
                     } else {
-                        computedTravelers = b.travelers.length;
+                        computedTravelers = b.travelers.length || 1;
                     }
+                } else if (typeof b.travelers === 'object' && b.travelers !== null) {
+                    computedTravelers = (b.travelers.adult || 0) + (b.travelers.child || 0) + (b.travelers.infant || 0);
                 } else if (typeof b.travelers === 'number') {
                     computedTravelers = b.travelers;
                 }
