@@ -37,3 +37,23 @@ export const uploadBookingDocuments = async (req, res) => {
         res.status(500).json({ message: "Upload failed", error: err.message });
     }
 };
+
+// 🔥 SYNCED: Added Cancellation Proof Uploader from Web
+export const uploadCancellationProof = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    try {
+        const uploadResult = await uploadBufferToCloudinary(req.file, 'cancellation-proofs');
+
+        return res.status(200).json({
+            message: 'File uploaded successfully.',
+            url: uploadResult.secure_url,
+        });
+    }
+    catch (err) {
+        console.error("Cloudinary Cancel Proof Error:", err);
+        res.status(500).json({ message: "Upload failed", error: err.message });
+    }
+};

@@ -2,17 +2,23 @@ import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema(
   {
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "bookings", required: false },
+    applicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'passports', required: false }, 
+    applicationType: { type: String, required: false }, 
+    packageId: { type: mongoose.Schema.Types.ObjectId, ref: "packages", required: false }, 
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
     reference: { type: String, required: true, unique: true },
-    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Booking", required: true },
-    packageId: { type: mongoose.Schema.Types.ObjectId, ref: "Package", required: false }, // Supports Web Logic
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     amount: { type: Number, required: true },
     method: { type: String, required: true },
     status: { type: String, required: true },
-    packageName: { type: String, required: false }, // Supports Mobile Logic (Fast Rendering)
+    proofImage: { type: String },
+    proofImageType: { type: String },
+    proofFileName: { type: String },
+    paymentType: { type: String },
+    packageName: { type: String, required: false }, 
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'transactions' }
 );
 
-const Transaction = mongoose.model("Transaction", transactionSchema);
+const Transaction = mongoose.models.transactions || mongoose.model("transactions", transactionSchema);
 export default Transaction;

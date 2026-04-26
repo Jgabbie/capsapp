@@ -2,6 +2,7 @@ import { StyleSheet, Platform } from "react-native";
 
 const VisaDetailsGuidanceStyle = StyleSheet.create({
     container: {
+        flex: 1,
         padding: 20,
         backgroundColor: "#f5f7fa"
     },
@@ -41,6 +42,56 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         color: "#305797",
         marginBottom: 16
     },
+
+    // Badges for (Required) and (Optional)
+    badgeText: {
+        fontSize: 13,
+        fontFamily: "Roboto_500Medium",
+        marginLeft: 8,
+    },
+    reqBadge: {
+        color: '#dc2626', // Red color for Required
+    },
+    optBadge: {
+        color: '#6b7280', // Gray color for Optional
+    },
+
+    // Visa Fee Badge Styling
+    feeBadge: {
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        marginTop: 6,
+        marginBottom: 14,
+        borderRadius: 999,
+        backgroundColor: 'rgba(48, 87, 151, 0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(48, 87, 151, 0.25)',
+    },
+    feeBadgeText: {
+        color: '#305797',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+    },
+
+    // Link styling for Korea Visa Application form
+    linkText: {
+        fontSize: 13,
+        fontFamily: "Roboto_500Medium",
+        color: "#305797",
+        textDecorationLine: 'underline',
+        marginBottom: 4
+    },
+
+    emptyText: {
+        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
+        color: "#6b7280",
+        fontStyle: 'italic'
+    },
+
     requirementItem: {
         backgroundColor: '#f8fafc',
         paddingVertical: 14,
@@ -55,6 +106,14 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         fontFamily: "Roboto_500Medium",
         color: "#1f2937"
     },
+    requirementSubText: {
+        fontSize: 13,
+        fontFamily: "Roboto_400Regular",
+        color: "#6b7280",
+        marginTop: 4,
+    },
+
+    // Process Steps Styling
     stepRow: {
         flexDirection: 'row',
         marginBottom: 16,
@@ -76,18 +135,21 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     stepContent: {
         flex: 1,
+        justifyContent: 'center',
+        minHeight: 32, 
     },
     stepTitle: {
         fontSize: 14,
         fontFamily: "Montserrat_600SemiBold",
         color: "#1f2937",
-        marginBottom: 4,
     },
     stepDesc: {
         fontSize: 13,
         fontFamily: "Roboto_400Regular",
         color: "#6b7280",
+        marginTop: 4,
     },
+
     formLabel: {
         fontSize: 14,
         fontFamily: "Roboto_500Medium",
@@ -114,58 +176,6 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     inputTextPlaceholder: {
         color: '#9ca3af',
     },
-    textArea: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 8,
-        padding: 12,
-        fontFamily: "Roboto_400Regular",
-        fontSize: 15,
-        color: '#1f2937',
-        minHeight: 100,
-        textAlignVertical: 'top',
-        marginBottom: 24,
-    },
-    // 🔥 NEW: Styles for the Upload section
-    uploadRow: {
-        flexDirection: "row",
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-        backgroundColor: '#f8fafc',
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#f1f5f9'
-    },
-    uploadLabel: {
-        flex: 1,
-        fontSize: 13,
-        fontFamily: "Roboto_500Medium",
-        color: "#1f2937",
-        marginRight: 10
-    },
-    uploadButton: {
-        backgroundColor: "#305797",
-        borderRadius: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    uploadButtonText: {
-        color: "#fff",
-        fontSize: 12,
-        fontFamily: "Montserrat_600SemiBold"
-    },
-    fileNameText: {
-        fontSize: 12,
-        color: '#0284c7', // light blue
-        marginBottom: 12,
-        fontFamily: "Roboto_400Regular",
-        paddingHorizontal: 4
-    },
     submitButton: {
         backgroundColor: "#305797",
         paddingVertical: 14,
@@ -180,19 +190,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 15
     },
-    faqTitle: {
-        fontSize: 15,
-        fontFamily: "Montserrat_600SemiBold",
-        color: "#1f2937",
-        marginBottom: 6,
-    },
-    faqDesc: {
-        fontSize: 14,
-        fontFamily: "Roboto_400Regular",
-        color: "#4b5563",
-        marginBottom: 16,
-        lineHeight: 20,
-    },
+
     // Modal Styles
     modalOverlay: {
         flex: 1,

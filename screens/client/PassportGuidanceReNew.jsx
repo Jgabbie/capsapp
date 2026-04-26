@@ -1,7 +1,6 @@
-import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Modal, Platform, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, TouchableOpacity, Alert, ScrollView, Modal, ActivityIndicator } from 'react-native'
+import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
-import * as DocumentPicker from 'expo-document-picker'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -58,68 +57,22 @@ export default function PassportGuidanceReNew() {
     const [preferredDate, setPreferredDate] = useState(null)
     const [preferredTime, setPreferredTime] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    
-    const [activeApp, setActiveApp] = useState(null)
-    const [checkingActive, setCheckingActive] = useState(true)
 
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [showTimePickerModal, setShowTimePickerModal] = useState(false) 
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-    // 🔥 Added oldPassport
-    const [uploadedFiles, setUploadedFiles] = useState({
-        passportPhoto: null,
-        applicationForm: null,
-        psaBirthCertificate: null,
-        validGovernmentId: null,
-        oldPassport: null, 
-    })
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     })
 
-    useEffect(() => {
-        const checkActiveApplications = async () => {
-            if (!user?._id) {
-                setCheckingActive(false);
-                return;
-            }
-            try {
-                const { data } = await api.get('/passport/applications', withUserHeader(user._id));
-                const terminalStatuses = ['passport released', 'rejected', 'cancelled'];
-                const ongoingApp = data.find(app => {
-                    const appStatus = Array.isArray(app.status) ? app.status[0] : app.status;
-                    // 🔥 Check for Renew Passport
-                    return app.applicationType === 'Renew Passport' && !terminalStatuses.includes(String(appStatus).toLowerCase());
-                });
-                setActiveApp(ongoingApp || null);
-            } catch (err) {
-                console.log("Error checking applications:", err.message);
-            } finally {
-                setCheckingActive(false);
-            }
-        };
-        checkActiveApplications();
-    }, [user?._id]);
-
-    const handlePickDocument = async (fieldName) => {
-        try {
-            const picked = await DocumentPicker.getDocumentAsync({
-                type: ['application/pdf', 'image/*', 'application/msword'],
-                copyToCacheDirectory: true,
-                multiple: false,
-            })
-            if (picked.canceled) return
-            const selected = picked.assets?.[0]
-            if (!selected?.uri) return
-            setUploadedFiles((prev) => ({ ...prev, [fieldName]: selected }))
-        } catch (_error) {
-            Alert.alert('Upload failed', 'Unable to select file right now.')
-        }
-    }
+    const getMinDate = () => {
+        const minDate = new Date();
+        minDate.setDate(minDate.getDate() + 14);
+        return minDate;
+    };
 
     const onDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
@@ -146,42 +99,17 @@ export default function PassportGuidanceReNew() {
             return
         }
 
-        // 🔥 Added oldPassport to validation
-        const hasAllDocuments = uploadedFiles.passportPhoto && uploadedFiles.applicationForm && 
-                                uploadedFiles.psaBirthCertificate && uploadedFiles.validGovernmentId && uploadedFiles.oldPassport
-
-        if (!hasAllDocuments) {
-            Alert.alert('Missing files', 'Please upload all required renewal documents before submitting.')
-            return
-        }
-
         try {
             setIsSubmitting(true)
-            const formData = new FormData()
-            formData.append('dfaLocation', dfaLocation)
-            formData.append('preferredDate', formatDate(preferredDate))
-            formData.append('preferredTime', preferredTime)
-            formData.append('applicationType', 'Renew Passport')
+            
+            const payload = {
+                dfaLocation,
+                preferredDate: formatDate(preferredDate),
+                preferredTime,
+                applicationType: 'Renewal Passport' 
+            };
 
-            const appendFile = (fieldName, file) => {
-                if (!file?.uri) return
-                formData.append(fieldName, {
-                    uri: Platform.OS === 'android' ? file.uri : file.uri.replace('file://', ''),
-                    name: file.name || `${fieldName}-${Date.now()}.pdf`,
-                    type: file.mimeType || 'application/pdf',
-                })
-            }
-
-            appendFile('passportPhoto', uploadedFiles.passportPhoto)
-            appendFile('applicationForm', uploadedFiles.applicationForm)
-            appendFile('psaBirthCertificate', uploadedFiles.psaBirthCertificate)
-            appendFile('validGovernmentId', uploadedFiles.validGovernmentId)
-            appendFile('oldPassport', uploadedFiles.oldPassport) // 🔥 Appended oldPassport
-
-            const authConfig = withUserHeader(user._id);
-            await api.post('/passport/apply', formData, {
-                headers: { ...authConfig.headers, 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' }
-            })
+            await api.post('/passport/apply', payload, withUserHeader(user._id))
 
             setShowSuccessModal(true)
         } catch (error) {
@@ -233,108 +161,59 @@ export default function PassportGuidanceReNew() {
                     ))}
                 </View>
 
-                {checkingActive ? (
-                    <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
-                ) : activeApp ? (
-                    <View style={[PassportGuidanceStyle.columnCard, { alignItems: 'center', paddingVertical: 40 }]}>
-                        <Ionicons name="information-circle" size={56} color="#f5a623" style={{ marginBottom: 16 }} />
-                        <Text style={[PassportGuidanceStyle.sectionTitle, { textAlign: 'center', marginBottom: 8 }]}>Active Application Found</Text>
-                        <Text style={[PassportGuidanceStyle.subtitle, { textAlign: 'center', marginBottom: 24 }]}>
-                            You currently have an ongoing Passport Renewal application.
+                <View style={PassportGuidanceStyle.columnCard}>
+                    <Text style={PassportGuidanceStyle.sectionTitle}>Application Details</Text>
+
+                    <View style={PassportGuidanceStyle.feeBadge}>
+                        <Text style={PassportGuidanceStyle.feeBadgeText}>Renew Passport Fee PHP 2,000</Text>
+                    </View>
+
+                    <Text style={PassportGuidanceStyle.formLabel}>Select DFA location</Text>
+                    <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDfaModal(true)}>
+                        <Text style={[PassportGuidanceStyle.inputText, !dfaLocation && PassportGuidanceStyle.inputTextPlaceholder]}>
+                            {dfaLocation || 'Choose a DFA site'}
                         </Text>
-                        <TouchableOpacity 
-                            style={[PassportGuidanceStyle.submitButton, { alignSelf: 'center' }]}
-                            onPress={() => cs.navigate('passportprogress', { applicationId: activeApp._id })}
-                        >
-                            <Text style={PassportGuidanceStyle.submitText}>Track Current Application</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    <View style={PassportGuidanceStyle.columnCard}>
-                        <Text style={PassportGuidanceStyle.sectionTitle}>Application Details</Text>
+                        <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+                    </TouchableOpacity>
 
-                        <Text style={PassportGuidanceStyle.formLabel}>Select DFA location</Text>
-                        <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDfaModal(true)}>
-                            <Text style={[PassportGuidanceStyle.inputText, !dfaLocation && PassportGuidanceStyle.inputTextPlaceholder]}>
-                                {dfaLocation || 'Choose a DFA site'}
-                            </Text>
-                            <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-                        </TouchableOpacity>
+                    <Text style={PassportGuidanceStyle.formLabel}>Preferred date</Text>
+                    <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDatePicker(true)}>
+                        <Text style={[PassportGuidanceStyle.inputText, !preferredDate && PassportGuidanceStyle.inputTextPlaceholder]}>
+                            {formatDate(preferredDate)}
+                        </Text>
+                        {preferredDate ? (
+                            <TouchableOpacity onPress={() => setPreferredDate(null)}>
+                                <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                            </TouchableOpacity>
+                        ) : (
+                            <Ionicons name="calendar-outline" size={20} color="#9ca3af" />
+                        )}
+                    </TouchableOpacity>
 
-                        <Text style={PassportGuidanceStyle.formLabel}>Preferred date</Text>
-                        <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDatePicker(true)}>
-                            <Text style={[PassportGuidanceStyle.inputText, !preferredDate && PassportGuidanceStyle.inputTextPlaceholder]}>
-                                {formatDate(preferredDate)}
-                            </Text>
-                            {preferredDate ? (
-                                <TouchableOpacity onPress={() => setPreferredDate(null)}>
-                                    <Ionicons name="close-circle" size={20} color="#9ca3af" />
-                                </TouchableOpacity>
-                            ) : (
-                                <Ionicons name="calendar-outline" size={20} color="#9ca3af" />
-                            )}
-                        </TouchableOpacity>
+                    <Text style={PassportGuidanceStyle.formLabel}>Preferred time</Text>
+                    <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowTimePickerModal(true)}>
+                        <Text style={[PassportGuidanceStyle.inputText, !preferredTime && PassportGuidanceStyle.inputTextPlaceholder]}>
+                            {preferredTime || 'Select time'}
+                        </Text>
+                        {preferredTime ? (
+                            <TouchableOpacity onPress={() => setPreferredTime(null)}>
+                                <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                            </TouchableOpacity>
+                        ) : (
+                            <Ionicons name="time-outline" size={20} color="#9ca3af" />
+                        )}
+                    </TouchableOpacity>
 
-                        <Text style={PassportGuidanceStyle.formLabel}>Preferred time</Text>
-                        <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowTimePickerModal(true)}>
-                            <Text style={[PassportGuidanceStyle.inputText, !preferredTime && PassportGuidanceStyle.inputTextPlaceholder]}>
-                                {preferredTime || 'Select time'}
-                            </Text>
-                            {preferredTime ? (
-                                <TouchableOpacity onPress={() => setPreferredTime(null)}>
-                                    <Ionicons name="close-circle" size={20} color="#9ca3af" />
-                                </TouchableOpacity>
-                            ) : (
-                                <Ionicons name="time-outline" size={20} color="#9ca3af" />
-                            )}
-                        </TouchableOpacity>
+                    <TouchableOpacity style={PassportGuidanceStyle.submitButton} onPress={submitApplication} disabled={isSubmitting}>
+                        <Text style={PassportGuidanceStyle.submitText}>{isSubmitting ? 'Submitting...' : 'Submit request'}</Text>
+                    </TouchableOpacity>
 
-                        <Text style={[PassportGuidanceStyle.sectionTitle, { marginTop: 10 }]}>Upload Documents</Text>
-
-                        {[
-                            { key: 'passportPhoto', label: '2x2 Photo' },
-                            { key: 'applicationForm', label: 'Application Form' },
-                            { key: 'psaBirthCertificate', label: 'PSA Birth Certificate' },
-                            { key: 'validGovernmentId', label: 'Valid Government Issued ID' },
-                            // 🔥 Added oldPassport input
-                            { key: 'oldPassport', label: 'Old Passport' }
-                        ].map((doc) => (
-                            <View key={doc.key}>
-                                <View style={PassportGuidanceStyle.uploadRow}>
-                                    <Text style={PassportGuidanceStyle.uploadLabel}>{doc.label}</Text>
-                                    <TouchableOpacity style={PassportGuidanceStyle.uploadButton} onPress={() => handlePickDocument(doc.key)}>
-                                        <Text style={PassportGuidanceStyle.uploadButtonText}>Choose File</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                {!!uploadedFiles[doc.key]?.name && (
-                                    <Text style={PassportGuidanceStyle.fileNameText}><Ionicons name="document-attach-outline" size={12} /> {uploadedFiles[doc.key].name}</Text>
-                                )}
-                            </View>
-                        ))}
-
-                        <TouchableOpacity style={PassportGuidanceStyle.submitButton} onPress={submitApplication} disabled={isSubmitting}>
-                            <Text style={PassportGuidanceStyle.submitText}>{isSubmitting ? 'Submitting...' : 'Submit request'}</Text>
-                        </TouchableOpacity>
-
-                        <View style={{ marginTop: 40 }}>
-                            <Text style={[PassportGuidanceStyle.sectionTitle, { color: '#1f2937'}]}>FAQs</Text>
-                            <Text style={PassportGuidanceStyle.subtitle}>Find answers to common questions about the renewal passport application process.</Text>
-                            <View style={{ marginTop: 20 }}>
-                                <Text style={PassportGuidanceStyle.faqTitle}>What documents do I need to prepare?</Text>
-                                <Text style={PassportGuidanceStyle.faqDesc}>Refer to the requirements section above for a general list.</Text>
-                                <Text style={PassportGuidanceStyle.faqTitle}>How long does the process take?</Text>
-                                <Text style={PassportGuidanceStyle.faqDesc}>Processing times vary by the DFA office and the type of service.</Text>
-                                <Text style={PassportGuidanceStyle.faqTitle}>Can I reschedule my appointment?</Text>
-                                <Text style={PassportGuidanceStyle.faqDesc}>Rescheduling policies depend on the DFA office directly.</Text>
-                            </View>
-                        </View>
-                    </View>
-                )}
+                </View>
             </ScrollView>
 
             {/* Modals */}
             {showDatePicker && (
-                <DateTimePicker value={preferredDate || new Date()} mode="date" minimumDate={new Date()} onChange={onDateChange} />
+                <DateTimePicker value={preferredDate || getMinDate()} mode="date" minimumDate={getMinDate()} onChange={onDateChange} />
             )}
 
             <Modal visible={showTimePickerModal} transparent animationType="fade">
@@ -382,7 +261,7 @@ export default function PassportGuidanceReNew() {
                         </TouchableOpacity>
                         <View style={PassportGuidanceStyle.modalIconContainer}><Ionicons name="checkmark" size={32} color="#0ea5e9" /></View>
                         <Text style={PassportGuidanceStyle.modalTitle}>Application submitted</Text>
-                        <Text style={PassportGuidanceStyle.modalDesc}>Your passport application has been submitted successfully.</Text>
+                        <Text style={PassportGuidanceStyle.modalDesc}>Your passport renewal application has been submitted successfully.</Text>
                         <TouchableOpacity style={PassportGuidanceStyle.modalButton} onPress={() => { setShowSuccessModal(false); cs.navigate('userapplications'); }}>
                             <Text style={PassportGuidanceStyle.modalButtonText}>Continue</Text>
                         </TouchableOpacity>

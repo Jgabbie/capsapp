@@ -43,40 +43,11 @@ const UserApplicationsStyle = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 12,
     },
-    filterPill: {
-        paddingHorizontal: 20, // 🔥 Increased padding
-        paddingVertical: 10,   // 🔥 Increased padding
-        borderRadius: 20,
-        backgroundColor: '#fff',
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-        minWidth: 70, // 🔥 Guarantees it won't shrink too small
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    filterPillActive: {
-        backgroundColor: '#305797',
-        borderColor: '#305797',
-    },
-    filterPillText: {
-        fontSize: 13,
-        fontFamily: "Montserrat_600SemiBold",
-        color: "#4b5563",
-        textAlign: 'center', // 🔥 Centered text
-    },
-    filterPillTextActive: {
-        color: "#fff",
-    },
-    listContainer: {
-        padding: 20,
-        paddingTop: 0,
-    },
     card: {
         backgroundColor: "#fff",
         borderRadius: 12,
-        padding: 16,
         marginBottom: 16,
+        padding: 16,
         borderWidth: 1,
         borderColor: '#e5e7eb',
         ...Platform.select({
@@ -90,26 +61,35 @@ const UserApplicationsStyle = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 12,
     },
-    refText: {
-        fontSize: 13,
+    // 🔥 FIXED: This forces the text to take up remaining space, pushing the badge to the edge without overflowing it
+    headerLeft: {
+        flex: 1,
+        marginRight: 12,
+    },
+    typeLabel: {
+        fontSize: 12,
         fontFamily: "Roboto_500Medium",
         color: "#6b7280",
         marginBottom: 4,
     },
-    nameText: {
+    applicationName: {
         fontSize: 16,
-        fontFamily: "Montserrat_600SemiBold",
+        fontFamily: "Montserrat_700Bold",
         color: "#1f2937",
     },
-    statusTag: {
+    statusBadge: {
         paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingVertical: 6,
         borderRadius: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        maxWidth: 120, // 🔥 FIXED: Prevents the badge from stretching off the screen
     },
     statusText: {
-        fontSize: 11,
+        fontSize: 10, // 🔥 FIXED: Dropped size slightly so long words fit perfectly
         fontFamily: "Roboto_700Bold",
         textTransform: 'uppercase',
+        textAlign: 'center',
     },
     cardFooter: {
         flexDirection: 'row',
@@ -133,29 +113,17 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     viewButton: {
         backgroundColor: "#305797",
-        paddingHorizontal: 20, // 🔥 Increased padding
-        paddingVertical: 10,   // 🔥 Increased padding
+        paddingHorizontal: 20, 
+        paddingVertical: 10,   
         borderRadius: 6,
-        minWidth: 80, // 🔥 Guarantees width for the word "View"
+        minWidth: 80, 
         alignItems: 'center',
         justifyContent: 'center',
     },
     viewButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 13,
-        textAlign: 'center',
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 60,
-    },
-    emptyText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 15,
-        color: "#6b7280",
-        marginTop: 12,
+        fontSize: 13
     }
 });
 

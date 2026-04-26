@@ -11,11 +11,17 @@ const defaultServices = [
       "Recent passport-size photo",
       "Proof of financial capacity",
     ],
+    // 🔥 SYNCED: Added Web fields
+    visaAdditionalRequirements: [],
     visaProcessSteps: [
       "Choose your preferred visa service.",
       "Submit required documents.",
       "Agency verification and embassy submission.",
       "Wait for processing and release updates.",
+    ],
+    visaReminders: [
+      "Processing times may vary depending on the embassy.",
+      "Ensure all documents are clear and readable."
     ],
     visaType: "Tourist",
   },
@@ -29,11 +35,16 @@ const defaultServices = [
       "Recent passport-size photo",
       "Bank certificate and statement",
     ],
+    visaAdditionalRequirements: [],
     visaProcessSteps: [
       "Select service and submit requirements.",
       "Document checking and profile review.",
       "Submission to the visa center.",
       "Receive status update and release schedule.",
+    ],
+    visaReminders: [
+      "Korean embassy strictly checks bank statements.",
+      "Do not book flights until visa is approved."
     ],
     visaType: "Tourist",
   },
@@ -50,14 +61,29 @@ export const getAllServices = async (_req, res) => {
   try {
     await ensureSeedServices();
     const services = await VisaServiceModel.find({}).sort({ createdAt: -1 });
-    return res.status(200).json(services);
+    
+    // 🔥 SYNCED: Map the response to exactly match Web's payload
+    const servicesPayload = services.map(service => ({
+        visaItem: service._id, // Web uses visaItem for the ID
+        visaName: service.visaName,
+        visaDescription: service.visaDescription,
+        visaPrice: service.visaPrice,
+        visaRequirements: service.visaRequirements,
+        visaAdditionalRequirements: service.visaAdditionalRequirements || [],
+        visaProcessSteps: service.visaProcessSteps,
+        visaReminders: service.visaReminders || [],
+        visaType: service.visaType
+    }));
+
+    return res.status(200).json(servicesPayload);
   } catch (error) {
     return res.status(500).json({ message: "Error retrieving services", error: error.message });
   }
 };
 
 export const createService = async (req, res) => {
-  const { visaName, visaDescription, visaPrice, visaRequirements, visaProcessSteps, visaType } = req.body;
+  // 🔥 SYNCED: Added new fields
+  const { visaName, visaDescription, visaPrice, visaRequirements, visaAdditionalRequirements, visaProcessSteps, visaReminders, visaType } = req.body;
 
   try {
     const newService = await VisaServiceModel.create({
@@ -65,7 +91,9 @@ export const createService = async (req, res) => {
       visaDescription,
       visaPrice,
       visaRequirements,
+      visaAdditionalRequirements: Array.isArray(visaAdditionalRequirements) ? visaAdditionalRequirements : [],
       visaProcessSteps,
+      visaReminders,
       visaType,
     });
 
@@ -77,12 +105,12 @@ export const createService = async (req, res) => {
 
 export const updateService = async (req, res) => {
   const { id } = req.params;
-  const { visaName, visaDescription, visaPrice, visaRequirements, visaProcessSteps, visaType } = req.body;
+  const { visaName, visaDescription, visaPrice, visaRequirements, visaAdditionalRequirements, visaProcessSteps, visaReminders, visaType } = req.body;
 
   try {
     const updatedService = await VisaServiceModel.findByIdAndUpdate(
       id,
-      { visaName, visaDescription, visaPrice, visaRequirements, visaProcessSteps, visaType },
+      { visaName, visaDescription, visaPrice, visaRequirements, visaAdditionalRequirements, visaProcessSteps, visaReminders, visaType },
       { new: true }
     );
 
@@ -118,7 +146,20 @@ export const getService = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    return res.status(200).json(service);
+    // 🔥 SYNCED: Exact payload structure as Web
+    const servicePayload = {
+        visaItem: service._id,
+        visaName: service.visaName,
+        visaDescription: service.visaDescription,
+        visaPrice: service.visaPrice,
+        visaRequirements: service.visaRequirements,
+        visaAdditionalRequirements: service.visaAdditionalRequirements || [],
+        visaProcessSteps: service.visaProcessSteps,
+        visaReminders: service.visaReminders || [],
+        visaType: service.visaType
+    }
+
+    return res.status(200).json(servicePayload);
   } catch (error) {
     return res.status(500).json({ message: "Error retrieving service", error: error.message });
   }

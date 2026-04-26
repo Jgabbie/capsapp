@@ -48,8 +48,6 @@ export default function VisaGuidance() {
         );
     }, [services, searchQuery]);
 
-    const formatPeso = (value) => `₱ ${(Number(value) || 0).toLocaleString("en-PH")}`;
-
     if (!fontsLoaded) return null;
 
     return (
@@ -63,14 +61,14 @@ export default function VisaGuidance() {
             >
                 <View style={VisaGuidanceStyle.headerContainer}>
                     <Text style={VisaGuidanceStyle.title}>Visa Services</Text>
-                    <Text style={VisaGuidanceStyle.subtitle}>Search and filter the visa type you need to apply.</Text>
+                    <Text style={VisaGuidanceStyle.subtitle}>Search and filter the visa you need to apply.</Text>
                 </View>
 
                 <View style={VisaGuidanceStyle.searchContainer}>
                     <Ionicons name="search" size={20} color="#9ca3af" />
                     <TextInput
                         style={VisaGuidanceStyle.searchInput}
-                        placeholder="Search visa type"
+                        placeholder="Search visa"
                         placeholderTextColor="#9ca3af"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -87,14 +85,14 @@ export default function VisaGuidance() {
                 ) : filteredServices.length === 0 ? (
                     <Text style={VisaGuidanceStyle.emptyText}>No visa services found.</Text>
                 ) : (
-                    filteredServices.map((item) => (
-                        <View key={item._id} style={VisaGuidanceStyle.card}>
+                    filteredServices.map((item, index) => (
+                        <View key={item.visaItem || item._id || index} style={VisaGuidanceStyle.card}>
                             <View style={VisaGuidanceStyle.cardContent}>
                                 <Text style={VisaGuidanceStyle.visaTitle}>{item.visaName}</Text>
                                 <Text style={VisaGuidanceStyle.description} numberOfLines={2}>
                                     {item.visaDescription}
                                 </Text>
-                                <Text style={VisaGuidanceStyle.price}>{formatPeso(item.visaPrice)}</Text>
+                                <Text style={VisaGuidanceStyle.price}>₱ {item.visaPrice}</Text>
                             </View>
 
                             <TouchableOpacity 

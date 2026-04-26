@@ -14,9 +14,9 @@ const VisaGuidanceStyle = StyleSheet.create({
         marginTop: 10,
     },
     title: {
-        fontSize: 22, // Reduced size
+        fontSize: 22, 
         fontFamily: "Montserrat_700Bold",
-        color: "#305797", // Changed to TRAVEX Blue
+        color: "#305797", 
         marginBottom: 6
     },
     subtitle: {

@@ -40,6 +40,8 @@ export default function PassportGuidance() {
                 >
                     <Text style={PassportGuidanceStyle.selectionTitle}>New Passport</Text>
                     <Text style={PassportGuidanceStyle.selectionDesc}>Apply for a passport for first-time applicants.</Text>
+                    {/* 🔥 ADDED: Price exactly like the web */}
+                    <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -49,6 +51,8 @@ export default function PassportGuidance() {
                 >
                     <Text style={PassportGuidanceStyle.selectionTitle}>Renew Passport</Text>
                     <Text style={PassportGuidanceStyle.selectionDesc}>Renew your existing passport quickly.</Text>
+                    {/* 🔥 ADDED: Price exactly like the web */}
+                    <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
                 </TouchableOpacity>
 
             </ScrollView>

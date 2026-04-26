@@ -9,13 +9,6 @@ const generateApplicationNumber = () => {
   return `APP-${timestamp}-${randomPart}`;
 };
 
-// 🔥 FIXED: Return simple string URLs for the Web Admin
-const getUploadedFileUrl = (req, fieldName) => {
-  const file = req.files?.[fieldName]?.[0];
-  if (!file) return null;
-  return `${req.protocol}://${req.get("host")}/uploads/applications/${file.filename}`;
-};
-
 export const applyVisa = async (req, res) => {
   const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
   const userId = req.userId;
@@ -29,38 +22,12 @@ export const applyVisa = async (req, res) => {
     const service = await VisaServiceModel.findById(serviceId).select("visaName");
 
     if (!service) {
-      return res.status(404).json({ message: "Visa service not found" });
-    }
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // 🔥 FIXED: Format as simple URLs for the Web backend
-    const submittedDocuments = {
-      validPassport: getUploadedFileUrl(req, "validPassport"),
-      completedVisaApplicationForm: getUploadedFileUrl(req, "completedVisaApplicationForm"),
-      passportSizePhoto: getUploadedFileUrl(req, "passportSizePhoto"),
-      bankCertificateAndStatement: getUploadedFileUrl(req, "bankCertificateAndStatement"),
-    };
-
-    const hasAllDocuments =
-      submittedDocuments.validPassport &&
-      submittedDocuments.completedVisaApplicationForm &&
-      submittedDocuments.passportSizePhoto &&
-      submittedDocuments.bankCertificateAndStatement;
-
-    if (!hasAllDocuments) {
-      return res.status(400).json({
-        message:
-          "Please upload all visa requirements: valid passport, completed visa application form, recent passport-size photo, and bank certificate/statement",
-      });
+      return res.status(404).json({ message: "Service not found" });
     }
 
     const applicantName = `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.username;
 
-    const application = await VisaApplicationModel.create({
-      applicationNumber: generateApplicationNumber(),
+    const newApplication = await VisaApplicationModel.create({
       userId,
       serviceId,
       serviceName: service.visaName,
@@ -68,16 +35,20 @@ export const applyVisa = async (req, res) => {
       preferredDate,
       preferredTime,
       purposeOfTravel,
-      submittedDocuments, 
+      applicationNumber: generateApplicationNumber(),
+      status: ["Application Submitted"],
+      currentStepIndex: 0,
+      submittedDocuments: {}, // Empty, just like passport
+      documents: {}
     });
 
-    logAction('APPLY_VISA', userId, { "Visa Application Created": `Application Number: ${application.applicationNumber}` });
-    return res.status(201).json({
-      message: "Visa application submitted successfully",
-      application,
-    });
+    if (typeof logAction === 'function') {
+        logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
+    }
+
+    return res.status(201).json(newApplication);
   } catch (error) {
-    return res.status(500).json({ message: "Error creating visa application", error: error.message });
+    return res.status(500).json({ message: "Error applying for visa", error: error.message });
   }
 };
 
@@ -102,7 +73,6 @@ export const getVisaApplications = async (req, res) => {
   }
 };
 
-// 🔥 NEW: Function to handle the user choosing a suggested appointment for Visa 🔥
 export const chooseAppointment = async (req, res) => {
   const { id } = req.params;
   const { date, time } = req.body;
@@ -117,18 +87,16 @@ export const chooseAppointment = async (req, res) => {
       return res.status(404).json({ message: "Visa application not found" });
     }
 
-    // Update the preferred date and time with the selected option
     application.preferredDate = date;
     application.preferredTime = time;
     
     await application.save();
 
     return res.status(200).json({ 
-        message: "Preferred appointment schedule updated", 
+        message: "Preferred schedule updated successfully", 
         application 
     });
   } catch (error) {
-    console.error("Error updating preferred appointment schedule:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Error updating schedule", error: error.message });
   }
 };

@@ -48,6 +48,12 @@ const PassportGuidanceStyle = StyleSheet.create({
         color: "#6b7280",
         fontFamily: "Roboto_400Regular",
     },
+    selectionPrice: {
+        fontSize: 15,
+        fontFamily: "Roboto_500Medium",
+        color: "#374151",
+        marginTop: 12,
+    },
     // Used on the Form Screens
     columnCard: {
         backgroundColor: "#fff",
@@ -64,6 +70,27 @@ const PassportGuidanceStyle = StyleSheet.create({
         color: "#305797",
         marginBottom: 16
     },
+    
+    // 🔥 NEW: Passport Fee Badge Styling
+    feeBadge: {
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        marginTop: 6,
+        marginBottom: 14,
+        borderRadius: 999,
+        backgroundColor: 'rgba(48, 87, 151, 0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(48, 87, 151, 0.25)',
+    },
+    feeBadgeText: {
+        color: '#305797',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+    },
+
     requirementItem: {
         backgroundColor: '#f8fafc',
         paddingVertical: 14,
