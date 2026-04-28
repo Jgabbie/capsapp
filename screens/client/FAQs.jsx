@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
@@ -39,6 +39,21 @@ const faqData = [
         category: 'Services',
         question: 'Do you offer visa and passport services?',
         answer: 'Yes. Visit the Services page for passport and visa assistance options.'
+    },
+    {
+        category: 'Services',
+        question: 'What documents do I need to prepare?',
+        answer: 'Refer to the requirements section above for a general list. Specific services may have additional requirements.'
+    },
+    {
+        category: 'Services',
+        question: 'How long does the process take?',
+        answer: 'Processing times vary by the DFA office and Embassy and the type of service you are applying for. After submission, you will receive updates on your application status.'
+    },
+    {
+        category: 'Services',
+        question: 'Can I reschedule my appointment?',
+        answer: 'Rescheduling policies depend on the DFA office. If you need to change your appointment, please contact the DFA office directly.'
     }
 ];
 
@@ -85,11 +100,16 @@ export default function FAQs() {
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <ScrollView contentContainerStyle={FAQsStyle.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     
-                    {/* Hero Section */}
-                    <View style={FAQsStyle.heroSection}>
+                    {/* Hero Section with Background Image */}
+                    <ImageBackground 
+                        source={require('../../assets/images/FAQs_BackgroundImage.jpg')}
+                        style={FAQsStyle.heroSection}
+                        imageStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+                    >
+                        <View style={FAQsStyle.heroOverlay} />
                         <Text style={FAQsStyle.heroTitle}>General FAQs</Text>
                         <Text style={FAQsStyle.heroSubtitle}>Find quick answers about bookings, payments, and services.</Text>
-                    </View>
+                    </ImageBackground>
 
                     {/* Horizontal Categories Filter */}
                     <View>

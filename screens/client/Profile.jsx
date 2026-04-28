@@ -55,6 +55,7 @@ export default function Profile() {
     const [errors, setErrors] = useState({
         firstname: "",
         lastname: "",
+        email: "",
         phonenum: ""
     })
 
@@ -132,7 +133,7 @@ export default function Profile() {
 
                 // Extract unique tags for Moods
                 const uniqueTags = new Set();
-                const packagesData = tagsRes.data?.data || tagsRes.data || []; // Handle different nested data structures
+                const packagesData = tagsRes.data?.data || tagsRes.data || []; 
                 
                 packagesData.forEach((pkg) => {
                     pkg.packageTags?.forEach((tag) => uniqueTags.add(tag));
@@ -187,6 +188,10 @@ export default function Profile() {
             if (value === "") return "Last name is required.";
             if (value.length < 2) return "Must be at least 2 characters.";
             if (/[ -]$/.test(value)) return "Must not end with a space or dash.";
+        }
+        if (field === "email") {
+            if (value === "") return "Email is required.";
+            if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) return "Invalid email format.";
         }
         if (field === "phonenum") {
             const rawDigits = value.replace(/\D/g, "")
@@ -255,6 +260,7 @@ export default function Profile() {
         const nextErrors = {
             firstname: validate('firstname', userData.firstname),
             lastname: validate('lastname', userData.lastname),
+            email: validate('email', userData.email),
             phonenum: validate('phonenum', userData.phonenum)
         }
         setErrors(nextErrors)
@@ -298,7 +304,7 @@ export default function Profile() {
 
     const cancelEdit = () => {
         setUserData(originalData)
-        setErrors({ firstname: "", lastname: "", phonenum: "" })
+        setErrors({ firstname: "", lastname: "", email: "", phonenum: "" })
         setEditing(false)
     }
 
@@ -376,6 +382,9 @@ export default function Profile() {
                         )}
                     </View>
 
+                    {/* 🔥 NEW ROLE DISPLAY HERE 🔥 */}
+                    <Text style={ProfileStyle.roleSubtitle}>Customer</Text>
+
                     <Text style={ProfileStyle.profileLabel}>Username</Text>
                     <TextInput value={userData.username} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
 
@@ -401,7 +410,15 @@ export default function Profile() {
                     </View>
 
                     <Text style={ProfileStyle.profileLabel}>Email Address</Text>
-                    <TextInput value={userData.email} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
+                    <TextInput 
+                        value={userData.email} 
+                        editable={editing} 
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        onChangeText={(text) => valueHandler('email', text.trim())}
+                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.email && ProfileStyle.profileInputsError]} 
+                    />
+                    {errors.email ? <Text style={ProfileStyle.errorMessage}>{errors.email}</Text> : null}
 
                     <Text style={ProfileStyle.profileLabel}>Phone Number</Text>
                     <View style={[ProfileStyle.phoneInputContainer, !editing && ProfileStyle.profileInputsDisabled, errors.phonenum && ProfileStyle.profileInputsError]}>
@@ -431,7 +448,7 @@ export default function Profile() {
                         {editing && <Ionicons name="chevron-down" size={16} color="#666" />}
                     </TouchableOpacity>
 
-                    <Text style={ProfileStyle.profileLabel}>Birthdate</Text>
+                    <Text style={ProfileStyle.profileLabel}>Date of Birth</Text>
                     <TouchableOpacity 
                         style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]} 
                         disabled={!editing} onPress={() => setShowDatePicker(true)}
@@ -455,9 +472,6 @@ export default function Profile() {
                         onChangeText={(text) => valueHandler('nationality', text)}
                         style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]} 
                     />
-
-                    <Text style={ProfileStyle.profileLabel}>Role</Text>
-                    <TextInput value={userData.role} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
 
                     {userData.isAccountVerified && (
                         <View style={ProfileStyle.verifiedBadge}>

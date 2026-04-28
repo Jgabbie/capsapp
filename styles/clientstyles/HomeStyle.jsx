@@ -78,7 +78,7 @@ const HomeStyle = StyleSheet.create({
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff", // Made White
+        backgroundColor: "#fff", 
         borderRadius: 15,
         paddingHorizontal: 10,
         paddingVertical: 6, 
@@ -94,19 +94,17 @@ const HomeStyle = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 4
     },
-    
-    // --- SIMPLE DROPDOWN MENU FIX ---
     dropdownOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.1)', // Very light dim
-        justifyContent: 'flex-start', // Anchors to top
-        alignItems: 'flex-end', // Aligns to the right side where filters are
-        paddingTop: 140, // Drops it below the header area
+        backgroundColor: 'rgba(0,0,0,0.1)', 
+        justifyContent: 'flex-start', 
+        alignItems: 'flex-end', 
+        paddingTop: 140, 
         paddingRight: 15,
     },
     dropdownListContent: {
         backgroundColor: '#fff',
-        width: 180, // Narrower menu
+        width: 180, 
         borderRadius: 12,
         elevation: 5,
         shadowColor: "#000",
@@ -181,7 +179,7 @@ const HomeStyle = StyleSheet.create({
         height: 14,
     },
 
-    // --- NEW SECTIONS: BACKGROUND IMAGES ---
+    // --- BACKGROUND IMAGES ---
     bgSectionContainer: {
         width: '95%',
         alignSelf: 'center',
@@ -195,7 +193,7 @@ const HomeStyle = StyleSheet.create({
     },
     bgOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)', // Dims the background
+        backgroundColor: 'rgba(0,0,0,0.5)', 
         borderRadius: 15,
     },
     bgTitle: {
@@ -204,7 +202,7 @@ const HomeStyle = StyleSheet.create({
         color: "#fff",
         textAlign: "center",
         marginBottom: 15,
-        zIndex: 1, // Ensures text is above overlay
+        zIndex: 1, 
     },
     bgDesc: {
         fontFamily: "Roboto_400Regular",
@@ -227,7 +225,7 @@ const HomeStyle = StyleSheet.create({
         fontSize: 12,
     },
 
-    // --- NEW SECTIONS: SERVICES GRID ---
+    // --- SERVICES GRID ---
     servicesContainer: {
         paddingHorizontal: 5,
         marginTop: 10,
@@ -247,7 +245,7 @@ const HomeStyle = StyleSheet.create({
         paddingHorizontal: 10,
     },
     serviceItem: {
-        width: '45%', // Two items per row
+        width: '45%', 
         alignItems: 'center',
         marginBottom: 25,
     },
@@ -283,6 +281,53 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 20,
         textAlign: "justify"
     },
+    contactInfoCard: {
+        backgroundColor: "#305797",
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+    },
+    contactInfoTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 18,
+        color: "#fff",
+        marginBottom: 5,
+    },
+    contactInfoSubtitle: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#e0eaff",
+        marginBottom: 20,
+    },
+    contactInfoItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 15,
+    },
+    contactInfoIcon: {
+        marginRight: 10,
+        marginTop: 2,
+    },
+    contactInfoTextContainer: {
+        flex: 1,
+    },
+    contactInfoLabel: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 12,
+        color: "#fff",
+        marginBottom: 3,
+    },
+    contactInfoText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#e0eaff",
+        lineHeight: 20,
+    },
     contactCard: {
         backgroundColor: "#fff",
         borderRadius: 16,
@@ -300,7 +345,6 @@ const HomeStyle = StyleSheet.create({
         fontSize: 16,
         color: "#333",
         marginBottom: 15,
-        textAlign: "center"
     },
     inputWrapper: {
         marginBottom: 15,
@@ -354,6 +398,32 @@ const HomeStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: "Montserrat_700Bold",
         fontSize: 15
+    },
+
+    // --- SUBJECT MODAL STYLES ---
+    subjectModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    subjectModalBox: {
+        backgroundColor: '#fff',
+        width: '85%',
+        borderRadius: 12,
+        paddingVertical: 10,
+        elevation: 5,
+    },
+    subjectOption: {
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    subjectOptionText: {
+        fontSize: 15,
+        fontFamily: 'Roboto_400Regular',
+        color: '#333',
     },
 
     // --- SUCCESS MODAL STYLES ---

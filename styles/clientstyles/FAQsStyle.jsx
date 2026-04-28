@@ -9,27 +9,34 @@ const FAQsStyle = StyleSheet.create({
         paddingBottom: 40
     },
     heroSection: {
-        backgroundColor: "#e9f1ff", 
-        paddingVertical: 35,
+        paddingVertical: 50,
         paddingHorizontal: 20,
         alignItems: "center",
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        marginBottom: 20
+        justifyContent: "center",
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        marginBottom: 20,
+        overflow: 'hidden'
+    },
+    heroOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.6)', 
     },
     heroTitle: {
         fontSize: 26,
         fontFamily: "Montserrat_700Bold",
-        color: "#1e3a68",
+        color: "#ffffff",
         marginBottom: 8,
-        textAlign: "center"
+        textAlign: "center",
+        zIndex: 1
     },
     heroSubtitle: {
         fontSize: 14,
         fontFamily: "Roboto_400Regular",
-        color: "#4b5563",
+        color: "#ffffff",
         textAlign: "center",
-        paddingHorizontal: 10
+        paddingHorizontal: 10,
+        zIndex: 1
     },
     filterScroll: {
         paddingHorizontal: 20,

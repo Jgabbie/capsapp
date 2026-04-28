@@ -284,6 +284,14 @@ const ProfileStyle = StyleSheet.create({
     chipTextSelected: {
         color: '#fff',
         fontFamily: 'Roboto_500Medium',
+    },
+    roleSubtitle: {
+    fontSize: 13,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#305797",
+    textAlign: "center",
+    marginTop: -10,  // This pulls it up closer to the name
+    marginBottom: 20 // Pushes the Personal Info card down a bit
     }
 });
 

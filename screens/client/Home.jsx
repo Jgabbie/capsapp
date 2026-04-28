@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
@@ -13,7 +13,6 @@ import HomeStyle from '../../styles/clientstyles/HomeStyle'
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
 
-// 🔥 IMPORTED withUserHeader to fetch wishlist safely
 import { api, withUserHeader } from '../../utils/api' 
 import { useUser } from '../../context/UserContext'
 
@@ -26,22 +25,32 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
     
-    // 🔥 NEW: Wishlist State
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
     const [activeDropdown, setActiveDropdown] = useState(null) 
     const [selectedTag, setSelectedTag] = useState('Tags')
     const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
 
+    // Contact Form States
     const [contactName, setContactName] = useState('')
     const [contactEmail, setContactEmail] = useState('')
+    const [contactSubject, setContactSubject] = useState('')
     const [contactMessage, setContactMessage] = useState('')
     const [submittingContact, setSubmittingContact] = useState(false)
     const [emailError, setEmailError] = useState('')
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
+    const [isSubjectModalVisible, setSubjectModalVisible] = useState(false)
 
     const tagOptions = ['All Tags', 'Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples']
     const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
+    
+    const subjectOptions = [
+        'Passport Assistance Inquiry',
+        'Visa Assistance Inquiry',
+        'Booking Inquiry',
+        'Quotation Inquiry',
+        'Travel Agency Inquiry'
+    ]
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -60,7 +69,6 @@ export default function Home() {
 
                 if (user?._id) {
                     try {
-                        // 🔥 UPDATED: Fetch user details AND wishlist simultaneously
                         const [userResponse, wishlistResponse] = await Promise.all([
                             api.get(`/users/users/${user._id}`),
                             api.get('/wishlist', withUserHeader(user._id)).catch(() => ({ data: { wishlist: [] } }))
@@ -77,7 +85,6 @@ export default function Home() {
                             })
                         }
 
-                        // 🔥 Set up the wishlist map
                         const wIds = new Set();
                         if (wishlistResponse.data?.wishlist) {
                             wishlistResponse.data.wishlist.forEach(entry => {
@@ -140,6 +147,7 @@ export default function Home() {
             const payload = {
                 name: contactName,
                 email: contactEmail,
+                subject: contactSubject, // 🔥 FIXED: Sent subject to backend
                 message: contactMessage
             };
             
@@ -148,17 +156,19 @@ export default function Home() {
             
             setContactName('');
             setContactEmail('');
+            setContactSubject('');
             setContactMessage('');
             setEmailError('');
             
         } catch (error) {
             console.log("Contact submit error:", error.message);
+            Alert.alert("Failed to Send Message", "There was an error sending your message. Please try again later.");
         } finally {
             setSubmittingContact(false);
         }
     }
 
-    const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
+    const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     const BannerCard = ({ item, subText }) => {
         const imageSource = item.images && item.images.length > 0 
@@ -174,20 +184,11 @@ export default function Home() {
                     transition={300}
                 />
                 
-                {/* 🔥 NEW: Floating Wishlist Heart */}
                 {wishlistedIds.has(String(item._id)) && (
                     <View style={{ 
-                        position: 'absolute', 
-                        top: 12, 
-                        right: 12, 
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        borderRadius: 20, 
-                        padding: 6, 
-                        elevation: 4, 
-                        shadowColor: '#000', 
-                        shadowOffset: {width: 0, height: 2}, 
-                        shadowOpacity: 0.2, 
-                        shadowRadius: 2 
+                        position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                        borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000', 
+                        shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.2, shadowRadius: 2 
                     }}>
                         <Ionicons name="heart" size={22} color="#cf1322" />
                     </View>
@@ -212,11 +213,7 @@ export default function Home() {
 
     const DropdownModal = () => (
         <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
-            <TouchableOpacity 
-                style={HomeStyle.dropdownOverlay} 
-                activeOpacity={1} 
-                onPress={() => setActiveDropdown(null)} 
-            >
+            <TouchableOpacity style={HomeStyle.dropdownOverlay} activeOpacity={1} onPress={() => setActiveDropdown(null)}>
                 <View style={HomeStyle.dropdownListContent}>
                     {activeDropdown === 'tag' ? (
                         <ScrollView style={{maxHeight: 250}} showsVerticalScrollIndicator={false}>
@@ -231,13 +228,7 @@ export default function Home() {
                                         setActiveDropdown(null)
                                     }}
                                 >
-                                    <Text style={[
-                                        HomeStyle.modalOptionText,
-                                        { 
-                                            color: isActive ? '#305797' : '#555', 
-                                            fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' 
-                                        }
-                                    ]}>
+                                    <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
                                         {option}
                                     </Text>
                                 </TouchableOpacity>
@@ -257,13 +248,7 @@ export default function Home() {
                                         setActiveDropdown(null)
                                     }}
                                 >
-                                    <Text style={[
-                                        HomeStyle.modalOptionText,
-                                        { 
-                                            color: isActive ? '#305797' : '#555', 
-                                            fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' 
-                                        }
-                                    ]}>
+                                    <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
                                         {option}
                                     </Text>
                                 </TouchableOpacity>
@@ -285,15 +270,34 @@ export default function Home() {
 
             <DropdownModal />
 
+            {/* Subject Selection Modal */}
+            <Modal visible={isSubjectModalVisible} transparent={true} animationType="fade">
+                <TouchableOpacity style={HomeStyle.subjectModalOverlay} activeOpacity={1} onPress={() => setSubjectModalVisible(false)}>
+                    <View style={HomeStyle.subjectModalBox}>
+                        {subjectOptions.map((option, index) => (
+                            <TouchableOpacity 
+                                key={index} 
+                                style={[HomeStyle.subjectOption, index === subjectOptions.length - 1 && { borderBottomWidth: 0 }]}
+                                onPress={() => {
+                                    setContactSubject(option);
+                                    setSubjectModalVisible(false);
+                                }}
+                            >
+                                <Text style={[HomeStyle.subjectOptionText, contactSubject === option && { color: '#305797', fontFamily: 'Montserrat_600SemiBold' }]}>
+                                    {option}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
             <Modal visible={isSuccessModalVisible} transparent={true} animationType="fade">
                 <View style={HomeStyle.successModalOverlay}>
                     <View style={HomeStyle.successModalBox}>
                         <Text style={HomeStyle.successModalTitle}>Your message has been sent</Text>
                         <Text style={HomeStyle.successModalSub}>Kindly check your email for responses.</Text>
-                        <TouchableOpacity 
-                            style={HomeStyle.successModalButton}
-                            onPress={() => setSuccessModalVisible(false)}
-                        >
+                        <TouchableOpacity style={HomeStyle.successModalButton} onPress={() => setSuccessModalVisible(false)}>
                             <Text style={HomeStyle.successModalButtonText}>Continue</Text>
                         </TouchableOpacity>
                     </View>
@@ -381,11 +385,9 @@ export default function Home() {
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
-                        
                         <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
                             Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
                         </Text>
-                        
                         <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
                             <Text style={HomeStyle.bgButtonText}>BROWSE TOUR PACKAGES</Text>
                         </TouchableOpacity>
@@ -431,8 +433,30 @@ export default function Home() {
                             Have questions or need assistance? Our friendly customer support team is here to help you with all your travel needs. Whether you’re looking for more information about our tour packages, need help with booking, or want to customize your itinerary, we’re just a message away. Contact us today and let us make your travel dreams a reality!
                         </Text>
 
+                        {/* 🔥 NEW: Contact Information Card (Blue) */}
+                        <View style={HomeStyle.contactInfoCard}>
+                            <Text style={HomeStyle.contactInfoTitle}>Contact Information</Text>
+                            <Text style={HomeStyle.contactInfoSubtitle}>We are here to help you plan your trip.</Text>
+
+                            <View style={HomeStyle.contactInfoItem}>
+                                <Ionicons name="location-outline" size={24} color="#fff" style={HomeStyle.contactInfoIcon} />
+                                <View style={HomeStyle.contactInfoTextContainer}>
+                                    <Text style={HomeStyle.contactInfoLabel}>VISIT US</Text>
+                                    <Text style={HomeStyle.contactInfoText}>2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1, Brgy. San Antonio, Parañaque, Philippines, 1715</Text>
+                                </View>
+                            </View>
+
+                            <View style={HomeStyle.contactInfoItem}>
+                                <Ionicons name="time-outline" size={24} color="#fff" style={HomeStyle.contactInfoIcon} />
+                                <View style={HomeStyle.contactInfoTextContainer}>
+                                    <Text style={HomeStyle.contactInfoLabel}>OFFICE HOURS</Text>
+                                    <Text style={HomeStyle.contactInfoText}>Monday - Saturday: 9:00 AM - 6:00 PM</Text>
+                                </View>
+                            </View>
+                        </View>
+
                         <View style={HomeStyle.contactCard}>
-                            <Text style={HomeStyle.contactCardTitle}>Send us a message:</Text>
+                            <Text style={HomeStyle.contactCardTitle}>You have an inquiry? Send us a message!</Text>
                             
                             <TextInput
                                 style={HomeStyle.contactInput}
@@ -454,6 +478,20 @@ export default function Home() {
                                 />
                                 {emailError ? <Text style={HomeStyle.errorText}>{emailError}</Text> : null}
                             </View>
+
+                            {/* 🔥 NEW: Subject Dropdown Input */}
+                            <TouchableOpacity 
+                                style={[HomeStyle.contactInput, { justifyContent: 'center' }]} 
+                                onPress={() => setSubjectModalVisible(true)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ color: contactSubject ? '#333' : '#999', fontFamily: 'Roboto_400Regular' }}>
+                                        {contactSubject || "Select subject"}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={16} color="#999" />
+                                </View>
+                            </TouchableOpacity>
                             
                             <TextInput
                                 style={HomeStyle.contactTextArea}

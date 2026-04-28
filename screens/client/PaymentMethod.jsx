@@ -101,12 +101,12 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid' 
                     };
 
-                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    const response = await api.post('/pay/manual', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
                     return; 
                 } else {
-                    const tokenRes = await api.post('/payment/create-checkout-token', {
+                    const tokenRes = await api.post('/pay/create-checkout-token', {
                         totalPrice: safeAmount,
                         bookingId: route.params.existingBookingId
                     }, withUserHeader(user?._id));
@@ -127,7 +127,7 @@ export default function PaymentMethod({ route, navigation }) {
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/pay/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
                     setLoading(false); 
                     if (checkoutUrl) Linking.openURL(checkoutUrl);
@@ -210,7 +210,7 @@ export default function PaymentMethod({ route, navigation }) {
                     }
                 };
 
-                // 🔥 THE FIX: Structured perfectly as an Array of Objects so Admin's [0] logic finds it
+                // Array of Objects format for the Mongoose schema compatibility
                 const travelersPayload = [
                     { 
                         adult: safeAdultCount, 
@@ -258,7 +258,7 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    await api.post('/pay/manual', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
 
@@ -280,7 +280,7 @@ export default function PaymentMethod({ route, navigation }) {
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/pay/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
                     setLoading(false); 

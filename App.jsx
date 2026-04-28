@@ -21,6 +21,12 @@ import UserTransactions from './screens/client/UserTransactions';
 import BookingInvoice from './screens/client/BookingInvoice';
 import UserApplications from './screens/client/UserApplications';
 
+// 🔥 RESTORED QUOTATION IMPORTS
+import UserPackageQuotation from './screens/client/UserPackageQuotation';
+import UserQuotationRequest from './screens/client/UserQuotationRequest';
+import QuotationCheckout from './screens/client/QuotationCheckout';
+import QuotationForm from './screens/client/QuotationForm';
+
 import PassportGuidance from './screens/client/PassportGuidance';
 import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
 import PassportGuidanceReNew from './screens/client/PassportGuidanceReNew';
@@ -30,124 +36,81 @@ import VisaGuidance from './screens/client/VisaGuidance';
 import VisaDetailsGuidance from './screens/client/VisaDetailsGuidance';
 import VisaProgress from './screens/client/VisaProgress';
 
-import UserPackageQuotation from './screens/client/UserPackageQuotation';
-import UserQuotationRequest from './screens/client/UserQuotationRequest';
-import QuotationCheckout from './screens/client/QuotationCheckout';
-import QuotationForm from './screens/client/QuotationForm';
-import Notifications from './screens/client/Notifications';
-
-// 🔥 ALL-IN PACKAGE FLOW IMPORTS 🔥
-import QuotationAllIn from './screens/client/QuotationAllIn';
-import BookingReview from './screens/client/BookingReview';
-import BookingUploads from './screens/client/BookingUploads';
-import RegistrationStep1 from './screens/client/RegistrationStep1';
-import RegistrationStep2 from './screens/client/RegistrationStep2';
-import RegistrationStep3 from './screens/client/RegistrationStep3';
-import RegistrationStep4 from './screens/client/RegistrationStep4';
-
-// 🔥 NEW PAYMENT FLOW IMPORTS 🔥
-import PaymentMode from './screens/client/PaymentMode';
 import PaymentMethod from './screens/client/PaymentMethod';
+import PaymentMode from './screens/client/PaymentMode';
 import PaymentSuccess from './screens/client/PaymentSuccess';
+
+import SuccessfulPaymentPassport from './screens/client/SuccessfulPaymentPassport';
+import SuccessfulPaymentVisa from './screens/client/SuccessfulPaymentVisa';
 
 import AboutUs from './screens/client/AboutUs';
 import FAQs from './screens/client/FAQs';
+
 import { UserProvider, useUser } from './context/UserContext';
 
-// 🔥 UPDATED: Maps old 'user'/'users' to 'customer' just in case of old tokens
-const normalizeRole = (role) => {
-  const normalized = String(role || '').trim().toLowerCase();
-  if (normalized === 'user' || normalized === 'users') return 'customer'; 
-  return normalized;
-};
+const MyScreen = createNativeStackNavigator();
+
+const prefix = Linking.createURL('/');
 
 function AppNavigator() {
-  const { user, clearUser } = useUser();
-  const role = normalizeRole(user?.role);
-  const isAdmin = role === 'admin';
-  const isCustomer = role === 'customer'; // 🔥 CHANGED FROM isUsers to isCustomer
+  const { user, loading } = useUser();
 
-  useEffect(() => {
-    // If they have an ID, but aren't an admin or customer, boot them out
-    if (user?._id && !isAdmin && !isCustomer) { 
-      clearUser();
-    }
-  }, [user?._id, isAdmin, isCustomer, clearUser]);
-
-  const MyScreen = createNativeStackNavigator();
-
-  // --- 🔗 DEEP LINKING CONFIGURATION 🔗 ---
-  const prefix = Linking.createURL('/');
-  
   const linking = {
-    prefixes: [prefix, 'travex://'], 
+    prefixes: [prefix, 'capsapp://'],
     config: {
       screens: {
-        login: 'login', 
+        resetpassconfirm: 'resetpassconfirm',
+        paymentmethod: 'paymentmethod',
+        paymentsuccess: 'paymentsuccess',
+        successfulpaymentpassport: 'successfulpaymentpassport',
+        successfulpaymentvisa: 'successfulpaymentvisa',
+        home: 'home',
       },
     },
   };
 
+  if (loading) {
+    return null; 
+  }
+
   return (
     <NavigationContainer linking={linking}>
       <MyScreen.Navigator screenOptions={{ headerShown: false }}>
-
-        {!user?._id ? (
-          // --- AUTHENTICATION STACK ---
+        
+        {!user ? (
           <>
             <MyScreen.Screen name="splash" component={SplashScreen} />
             <MyScreen.Screen name="login" component={Login} />
             <MyScreen.Screen name="signup" component={Signup} />
-            <MyScreen.Screen name="resetpassword" component={PasswordReset} />
+            <MyScreen.Screen name="passwordreset" component={PasswordReset} />
             <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
           </>
         ) : (
-          // --- MAIN APP STACK ---
           <>
-            {/* 🔥 MAGIC TRICK: If it's their first login, this becomes the default first screen! */}
-            {user?.loginOnce === false && (
-                <MyScreen.Screen name="UserPreference" component={UserPreference} />
-            )}
-
             <MyScreen.Screen name="home" component={Home} />
             <MyScreen.Screen name="profile" component={Profile} />
-            
-            {/* For normal routing if they aren't forced into it */}
-            {user?.loginOnce !== false && (
-                <MyScreen.Screen name="UserPreference" component={UserPreference} />
-            )}
-
+            <MyScreen.Screen name="userpreference" component={UserPreference} />
             <MyScreen.Screen name="packages" component={Packages} />
-            {/* ... keep the rest of your screens below ... */}
             <MyScreen.Screen name="packagedetails" component={PackageDetails} />
             <MyScreen.Screen name="wishlist" component={Wishlist} />
+            
+            <MyScreen.Screen name="userbookings" component={UserBookings} />
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />
             <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
-            <MyScreen.Screen name="userbookings" component={UserBookings} />
             <MyScreen.Screen name="userapplications" component={UserApplications} />
-            <MyScreen.Screen name="notifications" component={Notifications} />
 
-            {/* --- 🔥 ALL-IN BOOKING FLOW 🔥 --- */}
-            <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
-            <MyScreen.Screen name="bookingreview" component={BookingReview} />
-            <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
-            <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
-            <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
-            <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
-            <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
-
-            {/* --- 🔥 PAYMENT FLOW 🔥 --- */}
-            <MyScreen.Screen name="paymentmode" component={PaymentMode} />
-            <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
-            <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
-
-            {/* Quotation Screens (Private Tour) */}
+            {/* 🔥 RESTORED QUOTATION SCREENS */}
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="quotationform" component={QuotationForm} />
+            
+            <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
+            <MyScreen.Screen name="paymentmode" component={PaymentMode} />
+            <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
+            <MyScreen.Screen name="successfulpaymentpassport" component={SuccessfulPaymentPassport} />
+            <MyScreen.Screen name="successfulpaymentvisa" component={SuccessfulPaymentVisa} />
 
-            {/* Guidance Screens */}
             <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
             <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} />
             <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} />
