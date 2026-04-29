@@ -20,8 +20,17 @@ import UserBookings from './screens/client/UserBookings';
 import UserTransactions from './screens/client/UserTransactions';
 import BookingInvoice from './screens/client/BookingInvoice';
 import UserApplications from './screens/client/UserApplications';
+import BookingReview from './screens/client/BookingReview';
+import BookingUploads from './screens/client/BookingUploads';
+
+// 🔥 REGISTRATION STEPS
+import RegistrationStep1 from './screens/client/RegistrationStep1';
+import RegistrationStep2 from './screens/client/RegistrationStep2';
+import RegistrationStep3 from './screens/client/RegistrationStep3';
+import RegistrationStep4 from './screens/client/RegistrationStep4';
 
 // 🔥 RESTORED QUOTATION IMPORTS
+import QuotationAllIn from './screens/client/QuotationAllIn';
 import UserPackageQuotation from './screens/client/UserPackageQuotation';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
@@ -98,8 +107,17 @@ function AppNavigator() {
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />
             <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
             <MyScreen.Screen name="userapplications" component={UserApplications} />
+            <MyScreen.Screen name="bookingreview" component={BookingReview} />
+            <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
+
+            {/* 🔥 REGISTRATION STEPS */}
+            <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
+            <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
+            <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
+            <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
 
             {/* 🔥 RESTORED QUOTATION SCREENS */}
+            <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />

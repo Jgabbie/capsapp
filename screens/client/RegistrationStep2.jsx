@@ -22,7 +22,8 @@ export default function RegistrationStep2({ route, navigation }) {
         dietaryDetails: '',
         medical: '', 
         medicalDetails: '',
-        insurance: '', 
+        insurance1: '',
+        insurance2: '',
     });
 
     const [emergency, setEmergency] = useState({
@@ -56,7 +57,8 @@ export default function RegistrationStep2({ route, navigation }) {
         if (!medicalData.medical) return Alert.alert("Required", "Please select Y or N for Medical conditions.");
         if (medicalData.medical === 'Y' && !medicalData.medicalDetails.trim()) return Alert.alert("Required", "Please provide details for the Medical conditions.");
 
-        if (!medicalData.insurance) return Alert.alert("Required", "Please select Y or N for Travel Insurance.");
+        if (!medicalData.insurance1) return Alert.alert("Required", "Please select Y or N for Travel Insurance.");
+        if (!medicalData.insurance2) return Alert.alert("Required", "Please select Y or N for the second Travel Insurance confirmation.");
 
         if (!emergency.title || !emergency.fullName || !emergency.email || !emergency.contact || !emergency.relation) {
             return Alert.alert("Required", "Please complete all required fields in the Emergency Contact section.");
@@ -86,8 +88,10 @@ export default function RegistrationStep2({ route, navigation }) {
                 medical: value, 
                 medicalDetails: value === 'N' ? 'N/A' : (medicalData.medicalDetails === 'N/A' ? '' : medicalData.medicalDetails)
             });
-        } else if (activeDropdown === 'insurance') {
-            setMedicalData({...medicalData, insurance: value});
+        } else if (activeDropdown === 'insurance1') {
+            setMedicalData({...medicalData, insurance1: value});
+        } else if (activeDropdown === 'insurance2') {
+            setMedicalData({...medicalData, insurance2: value});
         } else if (activeDropdown === 'emergencyTitle') {
             setEmergency({...emergency, title: value});
         }
@@ -198,19 +202,19 @@ export default function RegistrationStep2({ route, navigation }) {
                         
                         <View style={RegistrationFormStyle.row}>
                             <Text style={{ fontSize: 9, flex: 1 }}>Do you agree to purchase a Travel Insurance from us?</Text>
-                            <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance')}>
-                                <Text style={{ fontSize: 10 }}>{medicalData.insurance || 'Y / N'}</Text>
+                            <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance1')}>
+                                <Text style={{ fontSize: 10 }}>{medicalData.insurance1 || 'Y / N'}</Text>
                             </TouchableOpacity>
                         </View>
 
                         <Text style={{ fontSize: 7, fontStyle: 'italic', marginVertical: 10, color: '#666' }}>
-                            Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.
+                            Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary. Kindly email us immediately at <Text style={{ color: '#1d4ed8', fontWeight: '700' }}>info1@mrctravel.com</Text> if you plan to purchase travel insurance from us.
                         </Text>
 
                         <View style={RegistrationFormStyle.row}>
                             <Text style={{ fontSize: 9, flex: 1 }}>Do you agree to purchase a Travel Insurance from us?</Text>
-                            <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance')}>
-                                <Text style={{ fontSize: 10 }}>{medicalData.insurance || 'Y / N'}</Text>
+                            <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance2')}>
+                                <Text style={{ fontSize: 10 }}>{medicalData.insurance2 || 'Y / N'}</Text>
                             </TouchableOpacity>
                         </View>
 

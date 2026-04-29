@@ -298,7 +298,13 @@ export default function PackageDetails({ route, navigation }) {
     
     const discountPercent = Number(fullPkg.packageDiscountPercent || 0);
     const basePrice = Number(fullPkg.price || 0);
+    const baseDeposit = Number(fullPkg.packageDeposit || 0);
     const discountedPrice = discountPercent > 0 ? basePrice * (1 - discountPercent / 100) : basePrice;
+    const discountedDeposit = discountPercent > 0
+        ? baseDeposit * (1 - discountPercent / 100)
+        : baseDeposit;
+
+    const cancellationPolicy = "All tour packages will not be converted to any travel funds in case the tour will not push through whether it be government mandated, due to natural calamities, etc. Tour package purchase is non-refundable, non-reroutable, non-rebookable, and non-transferable unless otherwise stated and is due to natural calamities and force majeur that is beyond our control otherwise NON-REFUNDABLE.";
 
     const isWishlisted = fullPkg && wishlistedIds.has(String(fullPkg.id));
 
@@ -365,7 +371,12 @@ export default function PackageDetails({ route, navigation }) {
                             </View>
                             <View style={DestinationStyles.packageDetailItem}>
                                 <Text style={DestinationStyles.packageDetailLabel}>Deposit</Text>
-                                <Text style={DestinationStyles.packageDetailValue}>{formatPeso(fullPkg.packageDeposit)}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
+                                    {discountPercent > 0 && (
+                                        <Text style={DestinationStyles.packagePriceOld}>{formatPeso(baseDeposit)}</Text>
+                                    )}
+                                    <Text style={DestinationStyles.packageDetailValue}>{formatPeso(discountedDeposit)}</Text>
+                                </View>
                             </View>
                             <View style={DestinationStyles.packageDetailItem}>
                                 <Text style={DestinationStyles.packageDetailLabel}>Visa</Text>
@@ -397,7 +408,12 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
                         <View style={DestinationStyles.priceRow}>
                             <Text style={DestinationStyles.priceUnit}>Deposit</Text>
-                            <Text style={DestinationStyles.slotsValue}>{formatPeso(fullPkg.packageDeposit)}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                                {discountPercent > 0 && (
+                                    <Text style={DestinationStyles.packagePriceOld}>{formatPeso(baseDeposit)}</Text>
+                                )}
+                                <Text style={DestinationStyles.slotsValue}>{formatPeso(discountedDeposit)}</Text>
+                            </View>
                         </View>
                         
                         <TouchableOpacity 
@@ -409,6 +425,12 @@ export default function PackageDetails({ route, navigation }) {
                                 {isPackageSoldOut ? "Sold Out" : "Check Availability"}
                             </Text>
                         </TouchableOpacity>
+
+                        <View style={DestinationStyles.policyDivider} />
+                        <View style={DestinationStyles.cancellationPolicyBox}>
+                            <Text style={DestinationStyles.cancellationPolicyTitle}>CANCELLATION POLICY</Text>
+                            <Text style={DestinationStyles.cancellationPolicyText}>{cancellationPolicy}</Text>
+                        </View>
                     </View>
 
                     <View style={{ paddingHorizontal: 16 }}>
@@ -826,6 +848,7 @@ export default function PackageDetails({ route, navigation }) {
                                             pkg: fullPkg.rawPackage, 
                                             arrangement: 'All in Package', 
                                             selectedDate: dateString,
+                                            selectedDateSlots: Number(selectedSchedule.slots || selectedSchedule.availableSlots || 0),
                                             selectedDatePrice: finalPrice,
                                             selectedDateRate: selectedSchedule.extrarate || 0
                                         }); 

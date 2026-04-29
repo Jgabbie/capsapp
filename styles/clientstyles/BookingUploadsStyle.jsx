@@ -94,11 +94,17 @@ const BookingUploadsStyle = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    titleSelect: {
+        flex: 0,
+        width: 96,
+        minHeight: 52,
+    },
     inputText: {
         fontSize: 13,
         fontFamily: "Roboto_400Regular",
         color: "#1f2a44",
         flex: 1,
+        textAlignVertical: 'center',
     },
     placeholderText: {
         color: '#9ca3af',

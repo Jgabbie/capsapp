@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -31,7 +31,34 @@ export default function QuotationAllIn() {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     // Destructure passed data from PackageDetails/Date Modal
-    const { pkg, selectedDate, selectedDatePrice, selectedDateRate } = route.params || {};
+    const { pkg, selectedDate, selectedDateSlots, selectedDatePrice, selectedDateRate } = route.params || {};
+
+    // 🔥 FIXED: Prefer the actual slot count passed from the date picker
+    const getAvailableSlots = () => {
+        const directSlotCount = Number(selectedDateSlots);
+        if (Number.isFinite(directSlotCount) && directSlotCount > 0) return directSlotCount;
+
+        if (!selectedDate || !pkg?.packageSpecificDate) return 999;
+        
+        const dateSpecific = pkg.packageSpecificDate.find(d => {
+            // Format 1: "May 8 - May 12"
+            const format1 = `${new Date(d.startdaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(d.enddaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            
+            // Format 2: "May 8, 2026 - May 12, 2026"
+            const format2 = `${new Date(d.startdaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(d.enddaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            
+            return selectedDate === format1 || selectedDate === format2;
+        });
+        
+        if (dateSpecific) {
+            const slotCount = Number(dateSpecific.slots || dateSpecific.availableSlots || 0);
+            return Number.isFinite(slotCount) && slotCount > 0 ? slotCount : 999;
+        }
+        return 999;
+    };
+
+    const availableSlots = getAvailableSlots();
+    const isGroupBookingDisabled = availableSlots < 2;
 
     // 1. Local State for Selection
     const [selectedSoloGrouped, setSelectedSoloGrouped] = useState("solo");
@@ -60,11 +87,63 @@ export default function QuotationAllIn() {
     const maxChildren = pkg?.maxChildren || 10;
     const maxInfants = pkg?.maxInfants || 10;
 
+    // 🔥 Cap max travelers based on available slots
+    // With 2 slots: 2 adults, 0 children, 0 infants (locked)
+    // With 3 slots: 3 adults, 1 child max, 1 infant max, etc.
+    const maxTravelersFromSlots = availableSlots;
+    const effectiveMaxAdults = Math.min(maxAdults, maxTravelersFromSlots);
+    const effectiveMaxChildren = Math.min(maxChildren, Math.max(0, maxTravelersFromSlots - 2));
+    const effectiveMaxInfants = Math.min(maxInfants, Math.max(0, maxTravelersFromSlots - 2));
+
     const travelersCount = useMemo(() => {
         return selectedSoloGrouped === 'solo' 
             ? { adult: 1, child: 0, infant: 0 } 
             : counts;
     }, [selectedSoloGrouped, counts]);
+
+    useEffect(() => {
+        if (selectedSoloGrouped === 'solo') {
+            setCounts({ adult: 1, child: 0, infant: 0 });
+            return;
+        }
+
+        if (availableSlots < 2) {
+            setCounts({ adult: 2, child: 0, infant: 0 });
+            return;
+        }
+
+        setCounts(prev => {
+            const nextCounts = {
+                adult: Math.max(2, Math.min(prev.adult, effectiveMaxAdults)),
+                child: Math.max(0, Math.min(prev.child, effectiveMaxChildren)),
+                infant: Math.max(0, Math.min(prev.infant, effectiveMaxInfants)),
+            };
+
+            let total = nextCounts.adult + nextCounts.child + nextCounts.infant;
+            if (total <= maxTravelersFromSlots) {
+                return nextCounts;
+            }
+
+            let overflow = total - maxTravelersFromSlots;
+            let child = nextCounts.child;
+            let infant = nextCounts.infant;
+            let adult = nextCounts.adult;
+
+            const reduceChild = Math.min(overflow, child);
+            child -= reduceChild;
+            overflow -= reduceChild;
+
+            const reduceInfant = Math.min(overflow, infant);
+            infant -= reduceInfant;
+            overflow -= reduceInfant;
+
+            if (overflow > 0) {
+                adult = Math.max(2, adult - overflow);
+            }
+
+            return { adult, child, infant };
+        });
+    }, [selectedSoloGrouped, availableSlots, effectiveMaxAdults, effectiveMaxChildren, effectiveMaxInfants, maxTravelersFromSlots]);
 
     // 🔥 NEW: Calculate Original Total (Before Discount)
     const originalTotalAmount = useMemo(() => {
@@ -91,9 +170,27 @@ export default function QuotationAllIn() {
     const updateCount = (type, action) => {
         setCounts(prev => {
             let newVal = action === 'inc' ? prev[type] + 1 : prev[type] - 1;
-            if (type === 'adult') newVal = Math.max(2, Math.min(newVal, maxAdults));
-            else if (type === 'child') newVal = Math.max(0, Math.min(newVal, maxChildren));
-            else if (type === 'infant') newVal = Math.max(0, Math.min(newVal, maxInfants));
+            
+            if (type === 'adult') {
+                newVal = Math.max(2, Math.min(newVal, effectiveMaxAdults));
+                // If this would exceed total slots, cap it
+                if (prev.child + prev.infant + newVal > maxTravelersFromSlots) {
+                    newVal = Math.max(2, Math.min(newVal, maxTravelersFromSlots - prev.child - prev.infant));
+                }
+            } else if (type === 'child') {
+                newVal = Math.max(0, Math.min(newVal, effectiveMaxChildren));
+                // If this would exceed total slots, cap it
+                if (prev.adult + prev.infant + newVal > maxTravelersFromSlots) {
+                    newVal = Math.max(0, Math.min(newVal, maxTravelersFromSlots - prev.adult - prev.infant));
+                }
+            } else if (type === 'infant') {
+                newVal = Math.max(0, Math.min(newVal, effectiveMaxInfants));
+                // If this would exceed total slots, cap it
+                if (prev.adult + prev.child + newVal > maxTravelersFromSlots) {
+                    newVal = Math.max(0, Math.min(newVal, maxTravelersFromSlots - prev.adult - prev.child));
+                }
+            }
+            
             return { ...prev, [type]: newVal };
         });
     };
@@ -279,19 +376,20 @@ export default function QuotationAllIn() {
                 {/* 🔥 UPDATED: Group Selection Card Image */}
                 <TouchableOpacity 
                     activeOpacity={0.9}
-                    style={[QuotationAllInStyle.card, selectedSoloGrouped === 'group' && QuotationAllInStyle.cardSelected]}
-                    onPress={() => setSelectedSoloGrouped('group')}
+                    style={[QuotationAllInStyle.card, selectedSoloGrouped === 'group' && QuotationAllInStyle.cardSelected, isGroupBookingDisabled && { opacity: 0.5 }]}
+                    onPress={() => !isGroupBookingDisabled && setSelectedSoloGrouped('group')}
+                    disabled={isGroupBookingDisabled}
                 >
                     <Image source={require('../../assets/images/groupedbooking.jpg')} style={QuotationAllInStyle.cardImage} />
                     <View style={QuotationAllInStyle.cardContent}>
                         <Text style={QuotationAllInStyle.cardTitle}>Grouped Booking</Text>
                         <Text style={QuotationAllInStyle.cardDesc}>Plan a trip for a group with shared activities.</Text>
-                        <Text style={QuotationAllInStyle.cardNoteRed}>Note: Group booking requires a minimum of 2 travelers.</Text>
+                        <Text style={QuotationAllInStyle.cardNoteRed}>Note: Group booking should have a minimum of 2 travelers.</Text>
                     </View>
                 </TouchableOpacity>
 
                 {/* --- TRAVELER COUNTERS --- */}
-                {selectedSoloGrouped === 'group' && (
+                {selectedSoloGrouped === 'group' && !isGroupBookingDisabled && (
                     <View style={QuotationAllInStyle.counterSection}>
                         <Text style={QuotationAllInStyle.counterSectionTitle}>Number of Travelers</Text>
                         <Text style={[QuotationAllInStyle.subtitle, { marginBottom: 15 }]}>Kindly indicate the number of travelers in each category.</Text>
@@ -301,48 +399,52 @@ export default function QuotationAllIn() {
                             <Text style={QuotationAllInStyle.counterLabel}>Adult</Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(packagePricePerPax)} per adult</Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>
-                                <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{maxAdults}
+                                <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxAdults}
                             </Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>Ages 12 and above</Text>
                             
                             <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
-                                <TouchableOpacity onPress={() => updateCount('adult', 'dec')} style={QuotationAllInStyle.counterBtn}><Ionicons name="remove" size={18} color="#305797" /></TouchableOpacity>
+                                <TouchableOpacity onPress={() => updateCount('adult', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult <= 2}><Ionicons name="remove" size={18} color={counts.adult <= 2 ? "#ccc" : "#305797"} /></TouchableOpacity>
                                 <Text style={QuotationAllInStyle.counterValue}>{counts.adult}</Text>
-                                <TouchableOpacity onPress={() => updateCount('adult', 'inc')} style={QuotationAllInStyle.counterBtn}><Ionicons name="add" size={18} color="#305797" /></TouchableOpacity>
+                                <TouchableOpacity onPress={() => updateCount('adult', 'inc')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult >= effectiveMaxAdults}><Ionicons name="add" size={18} color={counts.adult >= effectiveMaxAdults ? "#ccc" : "#305797"} /></TouchableOpacity>
                             </View>
                         </View>
 
-                        {/* CHILD CARD */}
-                        <View style={QuotationAllInStyle.travelerCard}>
-                            <Text style={QuotationAllInStyle.counterLabel}>Child</Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(childRate)} per child</Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>
-                                <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{maxChildren}
-                            </Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>Ages 3-11</Text>
-                            
-                            <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
-                                <TouchableOpacity onPress={() => updateCount('child', 'dec')} style={QuotationAllInStyle.counterBtn}><Ionicons name="remove" size={18} color="#305797" /></TouchableOpacity>
-                                <Text style={QuotationAllInStyle.counterValue}>{counts.child}</Text>
-                                <TouchableOpacity onPress={() => updateCount('child', 'inc')} style={QuotationAllInStyle.counterBtn}><Ionicons name="add" size={18} color="#305797" /></TouchableOpacity>
+                        {/* CHILD CARD - HIDDEN IF MAX IS 0 */}
+                        {effectiveMaxChildren > 0 && (
+                            <View style={QuotationAllInStyle.travelerCard}>
+                                <Text style={QuotationAllInStyle.counterLabel}>Child</Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(childRate)} per child</Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>
+                                    <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxChildren}
+                                </Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>Ages 3-11</Text>
+                                
+                                <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
+                                    <TouchableOpacity onPress={() => updateCount('child', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.child <= 0}><Ionicons name="remove" size={18} color={counts.child <= 0 ? "#ccc" : "#305797"} /></TouchableOpacity>
+                                    <Text style={QuotationAllInStyle.counterValue}>{counts.child}</Text>
+                                    <TouchableOpacity onPress={() => updateCount('child', 'inc')} style={QuotationAllInStyle.counterBtn} disabled={counts.child >= effectiveMaxChildren}><Ionicons name="add" size={18} color={counts.child >= effectiveMaxChildren ? "#ccc" : "#305797"} /></TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
+                        )}
 
-                        {/* INFANT CARD */}
-                        <View style={[QuotationAllInStyle.travelerCard, { marginBottom: 0 }]}>
-                            <Text style={QuotationAllInStyle.counterLabel}>Infant</Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(infantRate)} per infant</Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>
-                                <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{maxInfants}
-                            </Text>
-                            <Text style={QuotationAllInStyle.travelerDetailText}>Ages 0-2</Text>
-                            
-                            <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
-                                <TouchableOpacity onPress={() => updateCount('infant', 'dec')} style={QuotationAllInStyle.counterBtn}><Ionicons name="remove" size={18} color="#305797" /></TouchableOpacity>
-                                <Text style={QuotationAllInStyle.counterValue}>{counts.infant}</Text>
-                                <TouchableOpacity onPress={() => updateCount('infant', 'inc')} style={QuotationAllInStyle.counterBtn}><Ionicons name="add" size={18} color="#305797" /></TouchableOpacity>
+                        {/* INFANT CARD - HIDDEN IF MAX IS 0 */}
+                        {effectiveMaxInfants > 0 && (
+                            <View style={[QuotationAllInStyle.travelerCard, { marginBottom: 0 }]}>
+                                <Text style={QuotationAllInStyle.counterLabel}>Infant</Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(infantRate)} per infant</Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>
+                                    <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxInfants}
+                                </Text>
+                                <Text style={QuotationAllInStyle.travelerDetailText}>Ages 0-2</Text>
+                                
+                                <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
+                                    <TouchableOpacity onPress={() => updateCount('infant', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.infant <= 0}><Ionicons name="remove" size={18} color={counts.infant <= 0 ? "#ccc" : "#305797"} /></TouchableOpacity>
+                                    <Text style={QuotationAllInStyle.counterValue}>{counts.infant}</Text>
+                                    <TouchableOpacity onPress={() => updateCount('infant', 'inc')} style={QuotationAllInStyle.counterBtn} disabled={counts.infant >= effectiveMaxInfants}><Ionicons name="add" size={18} color={counts.infant >= effectiveMaxInfants ? "#ccc" : "#305797"} /></TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
+                        )}
                     </View>
                 )}
 
@@ -352,7 +454,6 @@ export default function QuotationAllIn() {
                 >
                     <Text style={QuotationAllInStyle.proceedButtonText}>Proceed to Details</Text>
                 </TouchableOpacity>
-
             </ScrollView>
         </SafeAreaView>
     );

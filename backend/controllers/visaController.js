@@ -52,28 +52,34 @@ export const applyVisa = async (req, res) => {
   }
 };
 
-export const getVisaApplications = async (req, res) => {
+ export const getUserVisaApplications = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.userId).select("role");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const isAdmin = String(user.role || "").toLowerCase() === "admin";
-    const query = isAdmin ? {} : { userId: req.userId };
-
-    const applications = await VisaApplicationModel.find(query)
-      .populate("userId", "firstname lastname username")
+    const userId = req.userId;
+    const applications = await VisaApplicationModel.find({ userId })
       .populate("serviceId", "visaName")
       .sort({ createdAt: -1 });
-
-    return res.status(200).json(applications);
+    res.status(200).json(applications);
   } catch (error) {
-    return res.status(500).json({ message: "Error fetching visa applications", error: error.message });
+    res.status(500).json({ message: "Error fetching user visa applications", error: error.message });
   }
 };
 
-export const chooseAppointment = async (req, res) => {
+ export const getVisaApplicationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await VisaApplicationModel.findById(id)
+      .populate("userId", "firstname lastname username")
+      .populate("serviceId", "visaName");
+    if (!application) {
+      return res.status(404).json({ message: "Visa application not found" });
+    }
+    res.status(200).json(application);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching visa application", error: error.message });
+  }
+};
+
+ export const chooseAppointment = async (req, res) => {
   const { id } = req.params;
   const { date, time } = req.body;
 
@@ -87,6 +93,10 @@ export const chooseAppointment = async (req, res) => {
       return res.status(404).json({ message: "Visa application not found" });
     }
 
+    if (application.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
     application.preferredDate = date;
     application.preferredTime = time;
     
@@ -98,5 +108,37 @@ export const chooseAppointment = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Error updating schedule", error: error.message });
+  }
+};
+
+ export const updateVisaApplicationWithDocs = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+    const { preferredDate, preferredTime, purposeOfTravel, submittedDocuments } = req.body;
+
+    const application = await VisaApplicationModel.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Visa application not found" });
+    }
+
+    if (application.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
+    application.preferredDate = preferredDate || application.preferredDate;
+    application.preferredTime = preferredTime || application.preferredTime;
+    application.purposeOfTravel = purposeOfTravel || application.purposeOfTravel;
+    application.submittedDocuments = submittedDocuments || application.submittedDocuments;
+
+    await application.save();
+
+    if (typeof logAction === 'function') {
+      logAction('UPDATE_VISA_APPLICATION', userId, { "Application Number": application.applicationNumber });
+    }
+
+    res.status(200).json({ message: "Visa application updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating visa application", error: error.message });
   }
 };

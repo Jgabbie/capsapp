@@ -5,14 +5,12 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext'; 
 import { api } from '../../utils/api'; 
 
-// Helper to format date like "March 29, 2026"
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateVal).toLocaleDateString('en-US', options);
 };
 
-// Helper to calculate age from YYYY-MM-DD
 const calculateAge = (birthdateString) => {
     if (!birthdateString || birthdateString.length < 10) return "";
     const today = new Date();
@@ -23,6 +21,39 @@ const calculateAge = (birthdateString) => {
         age--;
     }
     return age.toString();
+};
+
+const assignRooms = (travelers) => {
+    if (!travelers || travelers.length === 0) return [];
+
+    const roomState = {
+        SINGLE: { number: 1, count: 0, max: 1 },
+        DOUBLE: { number: 1, count: 0, max: 2 },
+        TWIN: { number: 1, count: 0, max: 2 },
+        TRIPLE: { number: 1, count: 0, max: 3 }
+    };
+
+    return travelers.map(t => {
+        let rType = String(t.roomType || '').trim().toUpperCase();
+        
+        let baseType = '';
+        if (rType.includes('TWIN')) baseType = 'TWIN';
+        else if (rType.includes('DOUBLE')) baseType = 'DOUBLE';
+        else if (rType.includes('TRIPLE')) baseType = 'TRIPLE';
+        else if (rType.includes('SINGLE')) baseType = 'SINGLE';
+
+        if (!baseType) return rType; 
+
+        const state = roomState[baseType];
+        
+        if (state.count >= state.max) {
+            state.number += 1;
+            state.count = 0;
+        }
+        
+        state.count += 1;
+        return `${baseType} ${state.number}`;
+    });
 };
 
 export default function RegistrationStep1({ route, navigation }) {
@@ -57,26 +88,29 @@ export default function RegistrationStep1({ route, navigation }) {
     const userGender = fullUserData?.gender?.toLowerCase() || '';
     const userTitle = userGender === 'male' ? 'MR' : (userGender === 'female' ? 'MS' : '');
     
-    // Check if fields should be locked
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
+            const assignedRooms = assignRooms(travelersData); 
             return travelersData.map((t, index) => ({
                 title: t.title || '', 
                 firstName: t.firstName || '',
                 lastName: t.lastName || '',
-                room: t.roomType || '',
+                room: assignedRooms[index], 
                 bday: t.birthdate || '',
                 age: calculateAge(t.birthdate) || '', 
-                passport: t.passportNo || '',
-                expiry: t.passportExpiry || ''
+                // 🔥 AUTO-FILL "N/A" IF DOMESTIC
+                passport: isDomestic ? 'N/A' : (t.passportNo || ''),
+                expiry: isDomestic ? 'N/A' : (t.passportExpiry || '')
             }));
         }
         return Array(totalCount).fill({
-            title: '', firstName: '', lastName: '', room: '', bday: '', age: '', passport: '', expiry: ''
+            title: '', firstName: '', lastName: '', room: '', bday: '', age: '', 
+            passport: isDomestic ? 'N/A' : '', 
+            expiry: isDomestic ? 'N/A' : ''
         });
     });
 
@@ -103,14 +137,27 @@ export default function RegistrationStep1({ route, navigation }) {
                 if (!next[0].title && userTitle) {
                     next[0].title = userTitle;
                 }
+                if (travelersData && travelersData.length > 0) {
+                    const assignedRooms = assignRooms(travelersData); 
+                    return next.map((passenger, index) => {
+                        const sourceTraveler = travelersData[index];
+                        if (!sourceTraveler) return passenger;
+                        return {
+                            ...passenger,
+                            room: assignedRooms[index],
+                            // 🔥 ENSURE "N/A" STAYS IF IT RE-RENDERS
+                            passport: isDomestic ? 'N/A' : (sourceTraveler.passportNo || passenger.passport),
+                            expiry: isDomestic ? 'N/A' : (sourceTraveler.passportExpiry || passenger.expiry)
+                        };
+                    });
+                }
                 return next;
             });
         }
-    }, [fullUserData, userTitle, userContact, userAddress, travelersData]);
+    }, [fullUserData, userTitle, userContact, userAddress, travelersData, isDomestic]);
 
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
-        
         if (isDomestic) {
             return missingBasicInfo; 
         } else {
@@ -124,9 +171,24 @@ export default function RegistrationStep1({ route, navigation }) {
             return;
         }
 
-        if (isTableIncomplete) {
-            Alert.alert("Missing Information", "Please ensure all fields in the Uploads step are complete.");
-            return;
+        for (let i = 0; i < passengers.length; i++) {
+            const p = passengers[i];
+            
+            if (!p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age) {
+                Alert.alert("Missing Information", `Please go back to Uploads and complete the basic details for Passenger ${i + 1}.`);
+                return;
+            }
+            
+            if (!isDomestic) {
+                if (!p.passport) {
+                    Alert.alert("Missing Information", `Please go back to Uploads and enter the passport number for Passenger ${i + 1}.`);
+                    return;
+                }
+                if (!p.expiry) {
+                    Alert.alert("Missing Information", `Please go back to Uploads and select the passport expiry for Passenger ${i + 1}.`);
+                    return;
+                }
+            }
         }
 
         navigation.navigate("registrationstep2", { setupData, travelerUploads, passengers, leadGuestInfo });
@@ -158,7 +220,6 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TOUR PACKAGE TITLE</Text>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput 
                                 style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} 
                                 value={setupData?.pkg?.packageName || setupData?.pkg?.title || ''} 
@@ -178,7 +239,6 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 0.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TITLE:</Text>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TouchableOpacity 
                                 style={[RegistrationFormStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]} 
                                 onPress={() => setShowTitleDropdown(true)}
@@ -191,7 +251,6 @@ export default function RegistrationStep1({ route, navigation }) {
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={RegistrationFormStyle.label}>FULL NAME:</Text>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
                         </View>
                     </View>
@@ -199,12 +258,10 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>EMAIL ADD:</Text>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} value={user?.email || ''} editable={false} />
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>CONTACT DETAILS:</Text>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput 
                                 style={[RegistrationFormStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]} 
                                 value={leadGuestInfo.contact} 
@@ -217,7 +274,6 @@ export default function RegistrationStep1({ route, navigation }) {
 
                     <View style={RegistrationFormStyle.inputContainer}>
                         <Text style={RegistrationFormStyle.label}>ADDRESS:</Text>
-                        {/* 🔥 CHANGED: Background set to white */}
                         <TextInput 
                             style={[RegistrationFormStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]} 
                             value={leadGuestInfo.address} 
@@ -244,7 +300,6 @@ export default function RegistrationStep1({ route, navigation }) {
                                 <Text style={[RegistrationFormStyle.columnHeader, { width: 75 }]}>EXPIRY</Text>
                             </View>
 
-                            {/* 🔥 CHANGED: All table cells set to transparent/white background */}
                             {passengers.map((p, i) => (
                                 <View key={i} style={RegistrationFormStyle.tableDataRow}>
                                     <Text style={[RegistrationFormStyle.cellInput, { width: 30, textAlignVertical: 'center', backgroundColor: '#fff', color: '#555' }]}>{i + 1}</Text>
@@ -254,6 +309,7 @@ export default function RegistrationStep1({ route, navigation }) {
                                     <TextInput style={[RegistrationFormStyle.cellInput, { width: 70, backgroundColor: '#fff', color: '#555' }]} value={p.room} editable={false} />
                                     <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#fff', color: '#555' }]} value={p.bday} editable={false} />
                                     <TextInput style={[RegistrationFormStyle.cellInput, { width: 35, backgroundColor: '#fff', color: '#555' }]} value={p.age} editable={false} />
+                                    {/* Will render N/A correctly */}
                                     <TextInput style={[RegistrationFormStyle.cellInput, { width: 80, backgroundColor: '#fff', color: '#555' }]} value={p.passport} editable={false} />
                                     <TextInput style={[RegistrationFormStyle.cellInput, { width: 75, backgroundColor: '#fff', color: '#555' }]} value={p.expiry} editable={false} />
                                 </View>
@@ -299,12 +355,10 @@ export default function RegistrationStep1({ route, navigation }) {
 
                     <View style={RegistrationFormStyle.signatureBlock}>
                         <View style={RegistrationFormStyle.sigLine}>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#fff', color: '#555' }]} value={`${user?.firstname || ''} ${user?.lastname || ''}`} editable={false} />
                             <Text style={RegistrationFormStyle.sigText}>Signature over printed name</Text>
                         </View>
                         <View style={RegistrationFormStyle.sigLine}>
-                            {/* 🔥 CHANGED: Background set to white */}
                             <TextInput style={[RegistrationFormStyle.paperInput, { width: '100%', textAlign: 'center', backgroundColor: '#fff', color: '#555' }]} value={currentDateLong} editable={false} />
                             <Text style={RegistrationFormStyle.sigText}>Date</Text>
                         </View>

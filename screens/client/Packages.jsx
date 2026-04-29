@@ -29,9 +29,9 @@ export default function Packages({ navigation }) {
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [budgetRange, setBudgetRange] = useState([0, 100000]);
+    const [budgetRange, setBudgetRange] = useState([0, 200000]);
     const [minBudgetInput, setMinBudgetInput] = useState("0");
-    const [maxBudgetInput, setMaxBudgetInput] = useState("100000");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("200000");
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
     const [daysValue, setDaysValue] = useState([10]);
@@ -222,7 +222,7 @@ export default function Packages({ navigation }) {
         } else {
             setMaxBudgetInput(numericValue);
             const num = Number(numericValue);
-            if (num >= budgetRange[0] && num <= 100000) setBudgetRange([budgetRange[0], num]);
+            if (num >= budgetRange[0] && num <= 200000) setBudgetRange([budgetRange[0], num]);
         }
     };
 
@@ -239,8 +239,21 @@ export default function Packages({ navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView style={DestinationStyles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+                <View style={DestinationStyles.heroBanner}>
+                    <Image
+                        source={require('../../assets/images/Destination_BackgroundImage.jpg')}
+                        style={DestinationStyles.heroBannerImage}
+                        contentFit="cover"
+                        transition={300}
+                    />
+                    <View style={DestinationStyles.heroBannerOverlay}>
+                        <Text style={DestinationStyles.heroBannerTitle}>Find your destination</Text>
+                        <Text style={DestinationStyles.heroBannerSubtitle}>Plan trips that match your budget and travel style.</Text>
+                    </View>
+                </View>
+
                 <Text style={DestinationStyles.heroTitle}>Destinations & Packages</Text>
-                <Text style={DestinationStyles.heroSubtitle}>Find the best tour packages that match your budget.</Text>
+                <Text style={DestinationStyles.heroSubtitle}>Find the best tour packages that match your budget, activities, and schedule.</Text>
 
                 <View style={DestinationStyles.searchRow}>
                     <View style={DestinationStyles.searchBar}>
@@ -400,10 +413,10 @@ export default function Packages({ navigation }) {
                                         setMinBudgetInput(String(vals[0]));
                                         setMaxBudgetInput(String(vals[1]));
                                     }} 
-                                    min={0} max={100000} step={1000} 
+                                    min={0} max={200000} step={1000} 
                                     selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
                                 />
-                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱100,000</Text>
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱200,000</Text>
                             </View>
 
                             <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>

@@ -16,6 +16,73 @@ const formatDate = (date) => {
     return date.toISOString().split('T')[0]; 
 };
 
+// 🔥 CALCULATE AGE FROM BIRTHDATE
+const computeAge = (birthDate) => {
+    if (!birthDate) return null;
+    const birth = new Date(birthDate);
+    if (isNaN(birth.getTime())) return null;
+    
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age -= 1;
+    }
+    
+    return age < 0 ? null : age;
+};
+
+// 🔥 GET BIRTHDAY BOUNDS (MIN AND MAX DATES) BASED ON TRAVELER TYPE
+const getBirthdayBounds = (travelerType) => {
+    const today = new Date();
+    const category = String(travelerType || '').toLowerCase();
+    
+    if (category === 'infant') {
+        const maxDate = new Date(today); // Today
+        const minDate = new Date(today);
+        minDate.setFullYear(minDate.getFullYear() - 2); // 2 years ago
+        
+        return {
+            minDate: minDate,
+            maxDate: maxDate,
+            minAge: 0,
+            maxAge: 2
+        };
+    }
+    
+    if (category === 'child') {
+        const maxDate = new Date(today);
+        maxDate.setFullYear(maxDate.getFullYear() - 3); // 3 years ago
+        const minDate = new Date(today);
+        minDate.setFullYear(minDate.getFullYear() - 11); // 11 years ago
+        
+        return {
+            minDate: minDate,
+            maxDate: maxDate,
+            minAge: 3,
+            maxAge: 11
+        };
+    }
+    
+    // Adult
+    const adultMaxDate = new Date(today);
+    adultMaxDate.setFullYear(adultMaxDate.getFullYear() - 12);
+
+    return {
+        minDate: null,
+        maxDate: adultMaxDate, // 12+ years old
+        minAge: 12,
+        maxAge: null
+    };
+};
+
+// 🔥 CHECK IF TRAVELER TYPE IS MINOR (CHILD OR INFANT)
+const isMinorTravelerType = (travelerType) => {
+    const normalized = String(travelerType || '').toLowerCase();
+    return normalized === 'child' || normalized === 'infant';
+};
+
 export default function BookingUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -41,26 +108,40 @@ export default function BookingUploads({ route, navigation }) {
 
     const getRoomOptions = () => {
         if (bookingType === 'Solo Booking') return ['SINGLE'];
-        if (totalTravelers === 2 || totalTravelers === 4) return ['TWIN', 'DOUBLE'];
-        if (totalTravelers === 3) return ['TRIPLE'];
+        // Grouped booking: Always show TWIN, DOUBLE, TRIPLE
         return ['TWIN', 'DOUBLE', 'TRIPLE'];
     };
     const roomOptions = getRoomOptions();
 
     const [travelersData, setTravelersData] = useState(() => {
         return Array.from({ length: totalTravelers }).map((_, index) => {
+            const travelerType = index < counts.adult ? 'Adult' : index < counts.adult + counts.child ? 'Child' : 'Infant';
+            
+            let initialRoomType = '';
+            
+            if (bookingType === 'Solo Booking') {
+                initialRoomType = 'SINGLE';
+            } else if (bookingType === 'Group Booking') {
+                // For grouped booking, set TWIN as default for adults, N/A for child/infant
+                if (isMinorTravelerType(travelerType)) {
+                    initialRoomType = 'N/A';
+                } else {
+                    initialRoomType = 'TWIN'; // TWIN is the base/default for group
+                }
+            }
+            
             if (index === 0 && user) {
                 return {
                     title: user.title || '', 
                     firstName: user.firstname || '',
                     lastName: user.lastname || '',
-                    roomType: bookingType === 'Solo Booking' ? 'SINGLE' : '',
+                    roomType: initialRoomType,
                     birthdate: '', passportNo: '', passportExpiry: ''
                 };
             }
             return {
                 title: '', firstName: '', lastName: '', 
-                roomType: bookingType === 'Solo Booking' ? 'SINGLE' : '', 
+                roomType: initialRoomType, 
                 birthdate: '', passportNo: '', passportExpiry: ''
             };
         });
@@ -70,6 +151,28 @@ export default function BookingUploads({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null); 
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
+
+    // 🔥 ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
+    useEffect(() => {
+        setTravelersData(prevData => 
+            prevData.map((traveler, index) => {
+                const travelerType = travelerTypes[index];
+                
+                if (isMinorTravelerType(travelerType)) {
+                    // Child/Infant must have N/A room type
+                    if (traveler.roomType !== 'N/A') {
+                        return { ...traveler, roomType: 'N/A' };
+                    }
+                } else if (bookingType === 'Group Booking') {
+                    // Adult in group booking: ensure TWIN as default if not set
+                    if (!traveler.roomType) {
+                        return { ...traveler, roomType: 'TWIN' };
+                    }
+                }
+                return traveler;
+            })
+        );
+    }, [travelerTypes, bookingType]);
 
     const updateTraveler = (index, field, value) => {
         const newData = [...travelersData];
@@ -99,6 +202,13 @@ export default function BookingUploads({ route, navigation }) {
     const maxBirthDate = new Date(); 
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
+
+    // 🔥 GET BIRTHDAY BOUNDS FOR CURRENT TRAVELER IN DATE PICKER
+    const getBirthdayLimits = (travelerIndex) => {
+        const travelerType = travelerTypes[travelerIndex];
+        const bounds = getBirthdayBounds(travelerType);
+        return bounds;
+    };
 
     const openDatePicker = (index, type) => {
         const existingDateStr = travelersData[index][type];
@@ -176,7 +286,7 @@ export default function BookingUploads({ route, navigation }) {
                         <View style={BookingUploadsStyle.formSection}>
                             <View style={BookingUploadsStyle.formRow}>
                                 <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 0.35 }]} 
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]} 
                                     onPress={() => setActiveDropdown({ index, type: 'title' })}
                                 >
                                     <Text style={[BookingUploadsStyle.inputText, !t.title && BookingUploadsStyle.placeholderText]}>
@@ -191,17 +301,19 @@ export default function BookingUploads({ route, navigation }) {
 
                             <View style={BookingUploadsStyle.formRow}>
                                 <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} 
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]} 
                                     onPress={() => {
-                                        if (bookingType !== 'Solo Booking') {
+                                        // Only allow room selection for adults and solo bookings
+                                        if (bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index])) {
                                             setActiveDropdown({ index, type: 'roomType' });
                                         }
                                     }}
+                                    disabled={isMinorTravelerType(travelerTypes[index])}
                                 >
                                     <Text style={[BookingUploadsStyle.inputText, !t.roomType && BookingUploadsStyle.placeholderText]}>
                                         {t.roomType || 'Room type'}
                                     </Text>
-                                    {bookingType !== 'Solo Booking' && <Ionicons name="chevron-down" size={14} color="#9ca3af" />}
+                                    {bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index]) && <Ionicons name="chevron-down" size={14} color="#9ca3af" />}
                                 </TouchableOpacity>
 
                                 <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'birthdate')}>
@@ -268,7 +380,8 @@ export default function BookingUploads({ route, navigation }) {
                                     <Text style={BookingUploadsStyle.dropdownItemText}>{opt}</Text>
                                 </TouchableOpacity>
                             ))
-                        ) : (
+                        ) : activeDropdown?.type === 'roomType' ? (
+                            // Only show room options for adults
                             roomOptions.map(opt => (
                                 <TouchableOpacity key={opt} style={BookingUploadsStyle.dropdownItem} onPress={() => {
                                     updateTraveler(activeDropdown.index, 'roomType', opt);
@@ -277,7 +390,7 @@ export default function BookingUploads({ route, navigation }) {
                                     <Text style={BookingUploadsStyle.dropdownItemText}>{opt}</Text>
                                 </TouchableOpacity>
                             ))
-                        )}
+                        ) : null}
                     </View>
                 </TouchableOpacity>
             </Modal>
@@ -298,8 +411,8 @@ export default function BookingUploads({ route, navigation }) {
                                 value={datePickerConfig.currentDate}
                                 mode="date"
                                 display="spinner"
-                                maximumDate={datePickerConfig.type === 'birthdate' ? maxBirthDate : undefined}
-                                minimumDate={datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined}
+                                maximumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).maxDate : undefined}
+                                minimumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).minDate : (datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined)}
                                 onChange={onDateSelected}
                             />
                         </View>
@@ -309,8 +422,8 @@ export default function BookingUploads({ route, navigation }) {
                         value={datePickerConfig.currentDate}
                         mode="date"
                         display="default"
-                        maximumDate={datePickerConfig.type === 'birthdate' ? maxBirthDate : undefined}
-                        minimumDate={datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined}
+                        maximumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).maxDate : undefined}
+                        minimumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).minDate : (datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined)}
                         onChange={onDateSelected}
                     />
                 )

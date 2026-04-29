@@ -31,11 +31,20 @@ const visaApplicationSchema = new mongoose.Schema(
     // Web Document Storage
     submittedDocuments: { type: Object },
     
-    // 🔥 NEW: Explicitly define the schedules array so Mongoose fetches it! 🔥
+    // Explicitly define the schedules array so Mongoose fetches it
     suggestedAppointmentSchedules: [{
         date: { type: String },
         time: { type: String }
     }],
+    suggestedAppointmentScheduleChosen: {
+      date: { type: String, default: "" },
+      time: { type: String, default: "" }
+    },
+    passportReleaseOption: { type: String },
+    deliveryAddress: { type: String },
+    deliveryFee: { type: Number, default: 0 },
+    deliveryDate: { type: String, default: "" },
+    archivedAt: { type: Date, default: null },
 
     // Kept for mobile upload compatibility
     documents: {
