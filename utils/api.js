@@ -2,7 +2,7 @@ import axios from "axios";
 import { Platform } from "react-native";
 
 
-const DEPLOYED_URL = "https://travexmobile.onrender.com/api";
+const DEPLOYED_URL = "https://api.mrctravelandtours.com/api";
 
 const getApiBaseUrl = () => {
   if (Platform.OS === "web") {
@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
   }
 
   
-  return "http://192.168.1.8:5000/api";
+  return DEPLOYED_URL;
 };
 
 const API_BASE_URL = getApiBaseUrl();

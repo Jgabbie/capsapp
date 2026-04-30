@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "capsapp",
-    "slug": "capsapp",
+    "slug": "travexmobile",
     "version": "1.0.0",
     "scheme": "travex",
     "orientation": "portrait",
@@ -34,6 +34,12 @@
       "expo-web-browser",
       "expo-image",
       "expo-sharing"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6ff5da90-d76c-48b2-b00e-a233881fb3f1"
+      }
+    },
+    "owner": "mariondev"
   }
 }

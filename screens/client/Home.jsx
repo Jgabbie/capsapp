@@ -381,7 +381,7 @@ export default function Home() {
                     <ImageBackground 
                         source={require('../../assets/images/LandingPage2_Banner.png')} 
                         style={HomeStyle.bgSectionContainer}
-                        imageStyle={{ borderRadius: 15 }}
+                        
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
@@ -418,7 +418,7 @@ export default function Home() {
                     <ImageBackground 
                         source={require('../../assets/images/AboutUs_BackgroundImage.jpg')} 
                         style={HomeStyle.bgSectionContainer}
-                        imageStyle={{ borderRadius: 15 }}
+                        
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>M&RC Travel and Tours</Text>
