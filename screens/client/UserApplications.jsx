@@ -17,7 +17,7 @@ export default function UserApplications() {
     const cs = useNavigation();
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    
+
     const [fontsLoaded] = useFonts({
         Montserrat_600SemiBold,
         Montserrat_700Bold,
@@ -25,7 +25,7 @@ export default function UserApplications() {
         Roboto_500Medium,
         Roboto_700Bold
     });
-    
+
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -49,6 +49,8 @@ export default function UserApplications() {
                     ref: v.applicationNumber
                 }));
 
+                console.log(visas)
+
                 const passports = (passportRes.data || []).map(p => ({
                     key: p._id,
                     type: 'Passport',
@@ -58,10 +60,12 @@ export default function UserApplications() {
                     ref: p.applicationNumber
                 }));
 
+                console.log(passports)
+
                 const combined = [...visas, ...passports].sort((a, b) => new Date(b.date) - new Date(a.date));
                 setApplications(combined);
             } catch (error) {
-                Alert.alert("Error", "Could not load applications.");
+                Alert.alert("Error", error.response?.data?.message || "Could not load applications.");
             } finally {
                 setLoading(false);
             }
@@ -119,7 +123,7 @@ export default function UserApplications() {
                             return (
                                 <View key={item.key || index} style={UserApplicationsStyle.card}>
                                     <View style={UserApplicationsStyle.cardHeader}>
-                                        
+
                                         {/* 🔥 FIXED: Added headerLeft to handle flex space cleanly */}
                                         <View style={UserApplicationsStyle.headerLeft}>
                                             <Text style={UserApplicationsStyle.typeLabel}>{item.ref}</Text>
@@ -134,13 +138,13 @@ export default function UserApplications() {
                                             </Text>
                                         </View>
                                     </View>
-                                    
+
                                     <View style={UserApplicationsStyle.cardFooter}>
                                         <View>
                                             <Text style={UserApplicationsStyle.dateLabel}>Application Date</Text>
                                             <Text style={UserApplicationsStyle.dateText}>{dayjs(item.date).format('MMM D, YYYY')}</Text>
                                         </View>
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             style={UserApplicationsStyle.viewButton}
                                             onPress={() => {
                                                 if (item.type === 'Visa') {
