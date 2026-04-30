@@ -11,10 +11,11 @@ export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
     const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SENDER_EMAIL;
     const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
-    
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+
     console.log('Received contact form submission:', { name, email, subject, message });
 
-    if (!name || !email || !subject || !message) {
+    if (!name || !normalizedEmail || !subject || !message) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -36,10 +37,10 @@ export const sendContactEmail = async (req, res) => {
 
     try {
         // 1. Email sent to the Company (You)
-        await transporter.sendMail({
+        const companyResult = await transporter.sendMail({
             from: `"M&RC Travel and Tours" <${senderEmail}>`,
             to: companyEmail,
-            replyTo: email,
+            replyTo: normalizedEmail,
             subject: `New Inquiry from ${name} - ${subject}`,
             attachments: logoAttachment ? [logoAttachment] : [],
             html: `
@@ -51,7 +52,7 @@ export const sendContactEmail = async (req, res) => {
                         
                         <p style="color:#555; font-size:15px; margin-bottom: 8px;"><strong>Subject:</strong> ${subject}</p>
                         <p style="color:#555; font-size:15px; margin-bottom: 8px;"><strong>Name:</strong> ${name}</p>
-                        <p style="color:#555; font-size:15px; margin-bottom: 15px;"><strong>Email:</strong> ${email}</p>
+                        <p style="color:#555; font-size:15px; margin-bottom: 15px;"><strong>Email:</strong> ${normalizedEmail}</p>
                         <p style="color:#555; font-size:15px; margin-bottom: 8px;"><strong>Message:</strong></p>
                         
                         <div style="background: #f4f6f8; padding: 15px; border-left: 4px solid #305797; white-space: pre-wrap; margin-bottom:10px;">${message}</div>
@@ -68,10 +69,12 @@ export const sendContactEmail = async (req, res) => {
                 </div>`
         });
 
+        console.log('Contact email sent to company:', companyResult?.messageId);
+
         // 2. Auto-reply sent to the Customer
-        await transporter.sendMail({
+        const customerResult = await transporter.sendMail({
             from: `"M&RC Travel and Tours" <${senderEmail}>`,
-            to: email,
+            to: normalizedEmail,
             subject: `We received your inquiry: ${subject}`,
             attachments: logoAttachment ? [logoAttachment] : [],
             html: `
@@ -110,6 +113,8 @@ export const sendContactEmail = async (req, res) => {
                     </div>
                 </div>`
         });
+
+        console.log('Auto-reply sent to customer:', customerResult?.messageId);
 
         res.status(200).json({ success: true, message: 'Message sent successfully' });
 
