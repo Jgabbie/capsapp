@@ -73,10 +73,20 @@ export const chooseAppointment = async (req, res) => {
       return res.status(404).json({ message: "Passport application not found" });
     }
 
+    // Ensure the requester owns this application
+    if (application.userId && application.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
     application.preferredDate = date;
     application.preferredTime = time;
-    
+    application.suggestedAppointmentScheduleChosen = { date, time };
+
     await application.save();
+
+    if (typeof logAction === 'function') {
+      logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
+    }
 
     return res.status(200).json({ 
         message: "Preferred schedule updated successfully", 
