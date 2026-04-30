@@ -215,7 +215,7 @@ export default function Login() {
                 
                 <Text style={LoginStyle.loginLinksDivider}>|</Text>
                 
-                <TouchableOpacity onPress={() => { cs.navigate("resetpassword") }}>
+                <TouchableOpacity onPress={() => { cs.navigate("passwordreset") }}>
                     <Text style={LoginStyle.loginLinks}>Forgot password</Text>
                 </TouchableOpacity>
             </View>

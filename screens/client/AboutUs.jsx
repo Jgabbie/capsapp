@@ -86,7 +86,7 @@ export default function AboutUs() {
                 </View>
 
                 <View style={[AboutUsStyle.card, AboutUsStyle.section]}>
-                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}>Accreditations</Text>
+                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}>WHY BOOK WITH US?</Text>
 
                     <View style={{ alignItems: 'center', marginBottom: 30 }}>
                         <Image

@@ -12,7 +12,7 @@ const AboutUsStyle = StyleSheet.create({
         marginBottom: 25,
     },
     mainTitle: {
-        fontSize: 28,
+        fontSize: 25,
         fontFamily: 'Montserrat_700Bold',
         color: '#305797',
         marginBottom: 15,

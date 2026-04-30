@@ -22,6 +22,7 @@ import BookingInvoice from './screens/client/BookingInvoice';
 import UserApplications from './screens/client/UserApplications';
 import BookingReview from './screens/client/BookingReview';
 import BookingUploads from './screens/client/BookingUploads';
+import Notifications from './screens/client/Notifications';
 
 // 🔥 REGISTRATION STEPS
 import RegistrationStep1 from './screens/client/RegistrationStep1';
@@ -74,6 +75,7 @@ function AppNavigator() {
         successfulpaymentpassport: 'successfulpaymentpassport',
         successfulpaymentvisa: 'successfulpaymentvisa',
         home: 'home',
+        notifications: 'notifications',
       },
     },
   };
@@ -109,6 +111,7 @@ function AppNavigator() {
             <MyScreen.Screen name="userapplications" component={UserApplications} />
             <MyScreen.Screen name="bookingreview" component={BookingReview} />
             <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
+            <MyScreen.Screen name="notifications" component={Notifications} />
 
             {/* 🔥 REGISTRATION STEPS */}
             <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />

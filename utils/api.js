@@ -2,7 +2,7 @@ import axios from "axios";
 import { Platform } from "react-native";
 
 
-const DEPLOYED_URL = "https://api.mrctravelandtours.com/api";
+const DEPLOYED_URL = "https://travelapp-dbpid.ondigitalocean.app/api";
 
 const getApiBaseUrl = () => {
   if (Platform.OS === "web") {
