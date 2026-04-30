@@ -566,7 +566,7 @@ export const createCheckoutSessionVisa = async (req, res) => {
 
 
 //paymongo webhook handler
-const handlePayMongoWebhook = async (req, res) => {
+export const handlePayMongoWebhook = async (req, res) => {
     console.log('🚀 Webhook HIT!');
     res.status(200).send('OK'); // respond instantly
     console.log('✅ RESPONSE SENT');
@@ -1288,7 +1288,7 @@ const handlePayMongoWebhook = async (req, res) => {
     }
 };
 
-const createCheckoutToken = async (req, res) => {
+export const createCheckoutToken = async (req, res) => {
     const userId = req.userId;
     const { totalPrice } = req.body
 
