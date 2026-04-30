@@ -228,22 +228,10 @@ export default function VisaProgress() {
                 return;
             }
 
-            const tokenRes = await api.post('/payment/create-checkout-token', {
-                totalPrice: Number(servicePrice),
-                bookingId: application._id
-            }, withUserHeader(user._id));
-
-            const token = tokenRes.data?.token;
-            if (!token) throw new Error('Failed to create checkout token');
-
             const sessionRes = await api.post('/payment/create-checkout-session-visa', {
-                checkoutToken: token,
                 totalPrice: Number(servicePrice),
-                packageName: application.serviceName || 'Visa Application',
                 applicationId: application._id,
-                applicationNumber: application.applicationNumber,
-                successUrl: '',
-                cancelUrl: ''
+                applicationNumber: application.applicationNumber
             }, withUserHeader(user._id));
 
             const hostedUrl = sessionRes.data?.data?.attributes?.hosted_url || sessionRes.data?.data?.attributes?.url || sessionRes.data?.redirectUrl || sessionRes.data?.url;

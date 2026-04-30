@@ -424,54 +424,9 @@ export const createCheckoutSessionVisa = async (req, res) => {
     const { applicationId, applicationNumber, totalPrice } = req.body;
     const userId = req.userId;
 
-    if (!applicationId || !applicationNumber || !totalPrice) {
-        return res.status(400).json({ error: "Missing required fields." });
-    }
-
-    const token = crypto.randomUUID();
-
-    const tokenCheckoutVisa = await TokenCheckoutVisaModel.create({
-        token,
-        userId,
-        applicationId,
-        amount: totalPrice,
-        expiresAt: dayjs().add(5, 'minutes').toDate()
-    });
-
-
-    // Safely handle both flat payloads and nested { paymentPayload } structures
-    const actualPayload = paymentPayload || req.body;
-
-    const convenienceFeeCents = Math.round(totalPrice * 0.035 * 100) + 1500; // 3.5% + 15 PHP in cents
-    const baseAmountCents = Math.round(totalPrice * 100);
-    const finalTotalCents = baseAmountCents + convenienceFeeCents;
-
-    const email = await UserModel.findById(userId).select('email');
-    const username = await UserModel.findById(userId).select('username');
-
-    const metadata = {
-        userId,
-        applicationId,
-        applicationNumber,
-        applicationType: "Visa Application",
-        baseAmountCents,
-        convenienceFeeCents,
-        totalAmountCents: finalTotalCents,
-    };
-
     try {
-        const tokenToUse = actualPayload.checkoutToken || checkoutToken;
-        const priceToUse = actualPayload.totalPrice || totalPrice;
-        const applicationIdToUse = actualPayload.applicationId || applicationId;
-        const applicationNumberToUse = actualPayload.applicationNumber || applicationNumber;
-
-        if (!tokenToUse || !priceToUse || !applicationIdToUse) {
-            return res.status(400).json({ message: "checkoutToken, totalPrice, and applicationId are required" });
-        }
-
-        const tokenRecord = await TokenCheckoutVisaModel.findOne({ token: tokenToUse });
-        if (!tokenRecord) {
-            return res.status(404).json({ message: "Invalid or expired checkout token" });
+        if (!applicationId || !applicationNumber || !totalPrice) {
+            return res.status(400).json({ message: "applicationId, applicationNumber, and totalPrice are required" });
         }
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
@@ -479,14 +434,28 @@ export const createCheckoutSessionVisa = async (req, res) => {
             return res.status(500).json({ message: "PAYMONGO_SECRET_KEY is not configured" });
         }
 
-        let pkgName = packageName || actualPayload.packageName || "Passport Application";
-        if (actualPayload.packageId && pkgName === "Tour Package") {
-            const pkg = await PackageModel.findById(actualPayload.packageId);
-            if (pkg) pkgName = pkg.packageName;
+        const parsedAmount = Number(totalPrice);
+        if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+            return res.status(400).json({ message: "totalPrice must be a valid positive number" });
         }
 
-        // Web Synced Computation: 3.5% + ₱15 Fee
-        const baseAmountCents = Math.round(Number(priceToUse) * 100);
+        const token = crypto.randomUUID();
+        const expiresAt = dayjs().add(5, 'minutes').toDate();
+
+        await TokenCheckoutVisaModel.create({
+            token,
+            userId,
+            applicationId,
+            amount: parsedAmount,
+            expiresAt,
+        });
+
+        const pkgName = "Visa Application";
+
+        const successUrl = 'myapp://payment-success';
+        const cancelUrl = 'myapp://payment-cancel';
+
+        const baseAmountCents = Math.round(parsedAmount * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
@@ -494,26 +463,22 @@ export const createCheckoutSessionVisa = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: "CapsApp User",
+                        email: "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
                         { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
-                    success_url: 'myapp://payment-success',
-                    cancel_url: 'myapp://payment-cancel',
-                    cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
                     metadata: {
                         userId: req.userId,
-                        token: tokenToUse,
-                        applicationId: applicationIdToUse,
-                        applicationNumber: applicationNumberToUse,
+                        token,
+                        applicationId,
+                        applicationNumber,
                         applicationType: "Visa Application",
-                        packageId: actualPayload.packageId,
-                        bookingId: actualPayload.bookingId,
-                        bookingReference: actualPayload.bookingReference,
                         transactionType: "Visa Payment",
                         baseAmountCents,
                         convenienceFeeCents,
@@ -1292,15 +1257,25 @@ export const handlePayMongoWebhook = async (req, res) => {
 
 export const createCheckoutToken = async (req, res) => {
     const userId = req.userId;
-    const { totalPrice } = req.body
+    const { totalPrice, amount, bookingId } = req.body;
 
     const token = crypto.randomUUID();
+
+    if (!bookingId) {
+        return res.status(400).json({ message: 'bookingId is required' });
+    }
+
+    const parsedAmount = Number(amount ?? totalPrice);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ message: 'A valid amount is required' });
+    }
 
     await TokenCheckout.create({
         token,
         userId,
-        totalPrice: totalPrice || 29000,
-        createdAt: new Date(),
+        bookingId,
+        amount: parsedAmount,
+        expiresAt: dayjs().add(5, 'minutes').toDate(),
     });
 
     res.status(201).json({ token });
