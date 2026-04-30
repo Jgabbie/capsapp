@@ -202,25 +202,10 @@ export default function VisaProgress() {
                 }
 
                 const manualPayload = {
-                    packageId: application.serviceId?._id || application.serviceId,
-                    travelDate: {
-                        startDate: application.preferredDate,
-                        endDate: application.preferredDate,
-                    },
-                    travelerTotal: 1,
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
                     amount: Number(servicePrice),
-                    paymentType: 'Full Payment',
                     proofImage: proofUrl,
-                    proofImageType: type,
-                    proofFileName: filename,
-                    bookingDetails: {
-                        applicationId: application._id,
-                        applicationNumber: application.applicationNumber,
-                        applicantName: application.applicantName,
-                        serviceName: application.serviceName,
-                        preferredDate: application.preferredDate,
-                        preferredTime: application.preferredTime,
-                    },
                 };
 
                 await api.post('/payment/manual-visa', manualPayload, withUserHeader(user._id));
@@ -234,11 +219,12 @@ export default function VisaProgress() {
                 applicationNumber: application.applicationNumber
             }, withUserHeader(user._id));
 
-            const hostedUrl = sessionRes.data?.data?.attributes?.hosted_url || sessionRes.data?.data?.attributes?.url || sessionRes.data?.redirectUrl || sessionRes.data?.url;
-            if (hostedUrl) {
-                Linking.openURL(hostedUrl).catch(() => {
-                    Alert.alert('Payment', 'Unable to open payment URL.');
-                });
+            const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
+
+            if (!hostedUrl) {
+                console.log('Missing checkout_url:', sessionRes.data);
+                Alert.alert('Error', 'Checkout URL not returned from server.');
+                return;
             } else {
                 Alert.alert('Payment', 'Checkout session created. Complete payment on the next screen.');
             }
