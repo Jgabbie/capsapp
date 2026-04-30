@@ -3,11 +3,9 @@ import VisaServiceModel from "../models/visaService.js";
 import UserModel from "../models/users.js";
 import logAction from "../utils/logger.js";
 
-const generateApplicationNumber = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `APP-${timestamp}-${randomPart}`;
-};
+const generateApplicationNumber = () =>
+  `APP-VISA-${Math.floor(100000000 + Math.random() * 900000000)}`;
+
 
 export const applyVisa = async (req, res) => {
   const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
@@ -43,7 +41,7 @@ export const applyVisa = async (req, res) => {
     });
 
     if (typeof logAction === 'function') {
-        logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
+      logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
     }
 
     return res.status(201).json(newApplication);
@@ -52,7 +50,7 @@ export const applyVisa = async (req, res) => {
   }
 };
 
- export const getUserVisaApplications = async (req, res) => {
+export const getUserVisaApplications = async (req, res) => {
   try {
     const userId = req.userId;
     const applications = await VisaApplicationModel.find({ userId })
@@ -64,7 +62,7 @@ export const applyVisa = async (req, res) => {
   }
 };
 
- export const getVisaApplicationById = async (req, res) => {
+export const getVisaApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
     const application = await VisaApplicationModel.findById(id)
@@ -79,7 +77,7 @@ export const applyVisa = async (req, res) => {
   }
 };
 
- export const chooseAppointment = async (req, res) => {
+export const chooseAppointment = async (req, res) => {
   const { id } = req.params;
   const { date, time } = req.body;
 
@@ -99,19 +97,23 @@ export const applyVisa = async (req, res) => {
 
     application.preferredDate = date;
     application.preferredTime = time;
-    
+    application.suggestedAppointmentScheduleChosen = {
+      date,
+      time
+    };
+
     await application.save();
 
-    return res.status(200).json({ 
-        message: "Preferred schedule updated successfully", 
-        application 
+    return res.status(200).json({
+      message: "Preferred schedule updated successfully",
+      application
     });
   } catch (error) {
     return res.status(500).json({ message: "Error updating schedule", error: error.message });
   }
 };
 
- export const updateVisaApplicationWithDocs = async (req, res) => {
+export const updateVisaApplicationWithDocs = async (req, res) => {
   try {
     const userId = req.userId;
     const { id } = req.params;

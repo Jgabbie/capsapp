@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -15,25 +16,51 @@ export default function PassportProgress() {
     const route = useRoute()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
-    
+
     const applicationId = route.params?.applicationId;
 
     const [application, setApplication] = useState(null)
     const [loading, setLoading] = useState(true)
-    
+
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
+    const [customPreferredDate, setCustomPreferredDate] = useState(null);
+    const [customPreferredTime, setCustomPreferredTime] = useState(null);
+    const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+    const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
+
+    const normalizeScheduleSlot = (slot) => {
+        if (!slot || typeof slot !== 'object') {
+            return { date: '', time: '' };
+        }
+
+        const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
+        const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
+
+        const parsedDate = rawDate ? dayjs(rawDate) : null;
+        const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
+
+        let time = '';
+        if (rawTime) {
+            const parsedTime = dayjs(String(rawTime), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
+            time = parsedTime.isValid() ? parsedTime.format('HH:mm') : String(rawTime);
+        } else if (parsedDate?.isValid()) {
+            time = parsedDate.format('HH:mm');
+        }
+
+        return { date, time };
+    };
 
     const fetchApplicationDetails = async () => {
         if (!user?._id || !applicationId) return;
-        
+
         try {
             setLoading(true);
             const appRes = await api.get('/passport/applications', withUserHeader(user._id));
             const appData = appRes.data.find(app => app._id === applicationId);
-            
+
             if (!appData) throw new Error("Application not found in your list.");
-            
+
             setApplication(appData);
         } catch (error) {
             console.log("Error fetching details:", error.message);
@@ -53,9 +80,16 @@ export default function PassportProgress() {
             return;
         }
 
-        const selected = application.suggestedAppointmentSchedules[selectedScheduleIndex];
+        const isOthersOption = selectedScheduleIndex === 'others';
+        const selected = isOthersOption
+            ? {
+                date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
+                time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
+            }
+            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
+
         if (!selected?.date || !selected?.time) {
-            Alert.alert("Error", "Selected option is missing date or time.");
+            Alert.alert("Error", "Please provide both date and time.");
             return;
         }
 
@@ -68,7 +102,11 @@ export default function PassportProgress() {
 
             Alert.alert("Success", "Appointment schedule confirmed!");
             setSelectedScheduleIndex(null);
-            
+            setCustomPreferredDate(null);
+            setCustomPreferredTime(null);
+            setShowCustomDatePicker(false);
+            setShowCustomTimePicker(false);
+
             await fetchApplicationDetails();
         } catch (error) {
             console.log(error);
@@ -88,22 +126,45 @@ export default function PassportProgress() {
     }, [application]);
 
     const steps = [
-        "Application submitted",
-        "Application approved",
-        "Payment complete",
-        "Documents uploaded",
-        "Documents approved",
-        "Documents received",
-        "Documents submitted",
+        "Application Submitted",
+        "Application Approved",
+        "Payment Complete",
+        "Documents Uploaded",
+        "Documents Approved",
+        "Documents Received",
+        "Documents Submitted",
         "Processing by DFA",
-        "DFA approved",
-        "Passport released"
+        "DFA Approved",
+        "Passport Released"
     ];
 
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
     }, [steps, appStatus]);
+
+    const isOthersSelected = selectedScheduleIndex === 'others';
+    const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
+        !isOthersSelected || (customPreferredDate && customPreferredTime)
+    );
+
+    const handleCustomDateChange = (_event, selectedDate) => {
+        if (selectedDate) {
+            setCustomPreferredDate(selectedDate);
+        }
+        if (Platform.OS !== 'ios') {
+            setShowCustomDatePicker(false);
+        }
+    };
+
+    const handleCustomTimeChange = (_event, selectedTime) => {
+        if (selectedTime) {
+            setCustomPreferredTime(selectedTime);
+        }
+        if (Platform.OS !== 'ios') {
+            setShowCustomTimePicker(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -131,7 +192,7 @@ export default function PassportProgress() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PassportProgressStyle.scrollContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={PassportProgressStyle.headerContainer}>
                     <TouchableOpacity onPress={() => cs.goBack()} style={PassportProgressStyle.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#1f2937" />
@@ -142,12 +203,12 @@ export default function PassportProgress() {
                 {/* Application Info Card */}
                 <View style={PassportProgressStyle.card}>
                     <Text style={PassportProgressStyle.cardTitle}>Application Info</Text>
-                    
+
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Reference</Text>
                         <Text style={PassportProgressStyle.infoValue}>{application.applicationNumber || application.applicationId || application._id}</Text>
                     </View>
-                    
+
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Status</Text>
                         <View style={PassportProgressStyle.statusTag}>
@@ -192,31 +253,88 @@ export default function PassportProgress() {
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
-                        
+
                         {application.suggestedAppointmentSchedules?.length > 0 ? (
                             <>
                                 <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your DFA appointment.</Text>
-                                
+
                                 {application.suggestedAppointmentSchedules.map((slot, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[
-                                            PassportProgressStyle.optionCard,
-                                            selectedScheduleIndex === index && PassportProgressStyle.optionCardSelected
-                                        ]}
-                                        onPress={() => setSelectedScheduleIndex(index)}
-                                    >
-                                        <View style={PassportProgressStyle.optionTag}>
-                                            <Text style={PassportProgressStyle.optionTagText}>Option {index + 1}</Text>
-                                        </View>
-                                        <Text style={PassportProgressStyle.optionDate}>{dayjs(slot.date).format("MMM DD, YYYY")}</Text>
-                                        <Text style={PassportProgressStyle.optionTime}>{slot.time}</Text>
-                                    </TouchableOpacity>
+                                    (() => {
+                                        const normalizedSlot = normalizeScheduleSlot(slot);
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[
+                                                    PassportProgressStyle.optionCard,
+                                                    selectedScheduleIndex === index && PassportProgressStyle.optionCardSelected
+                                                ]}
+                                                onPress={() => setSelectedScheduleIndex(index)}
+                                            >
+                                                <View style={PassportProgressStyle.optionTag}>
+                                                    <Text style={PassportProgressStyle.optionTagText}>Option {index + 1}</Text>
+                                                </View>
+                                                <Text style={PassportProgressStyle.optionDate}>
+                                                    {normalizedSlot.date ? dayjs(normalizedSlot.date).format("MMM DD, YYYY") : 'No date provided'}
+                                                </Text>
+                                                <Text style={PassportProgressStyle.optionTime}>{normalizedSlot.time || 'No time provided'}</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })()
                                 ))}
-                                
-                                <TouchableOpacity 
-                                    style={[PassportProgressStyle.submitBtn, selectedScheduleIndex === null && { opacity: 0.5 }]}
-                                    disabled={selectedScheduleIndex === null || confirmingSchedule}
+
+                                <TouchableOpacity
+                                    style={[
+                                        PassportProgressStyle.optionCard,
+                                        isOthersSelected && PassportProgressStyle.optionCardSelected
+                                    ]}
+                                    onPress={() => setSelectedScheduleIndex('others')}
+                                >
+                                    <View style={PassportProgressStyle.optionTag}>
+                                        <Text style={PassportProgressStyle.optionTagText}>Others</Text>
+                                    </View>
+                                    <Text style={PassportProgressStyle.optionDate}>Enter your preferred date and time</Text>
+                                    <Text style={PassportProgressStyle.optionTime}>Pick both values from the native date and time pickers.</Text>
+
+                                    {isOthersSelected && (
+                                        <View style={{ marginTop: 14 }}>
+                                            <TouchableOpacity
+                                                onPress={() => setShowCustomDatePicker(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#d1d5db',
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 12,
+                                                    marginBottom: 10,
+                                                    backgroundColor: '#fff',
+                                                }}
+                                            >
+                                                <Text style={{ color: customPreferredDate ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                    {customPreferredDate ? dayjs(customPreferredDate).format('MMM D, YYYY') : 'Select Preferred Date'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => setShowCustomTimePicker(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#d1d5db',
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 12,
+                                                    backgroundColor: '#fff',
+                                                }}
+                                            >
+                                                <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                    {customPreferredTime ? dayjs(customPreferredTime).format('hh:mm A') : 'Select Preferred Time'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[PassportProgressStyle.submitBtn, !canConfirmSchedule && { opacity: 0.5 }]}
+                                    disabled={!canConfirmSchedule}
                                     onPress={handleConfirmSchedule}
                                 >
                                     {confirmingSchedule ? <ActivityIndicator color="#fff" /> : <Text style={PassportProgressStyle.submitBtnText}>Confirm Selected Date</Text>}
@@ -229,11 +347,53 @@ export default function PassportProgress() {
                     </View>
                 )}
 
+                <Modal visible={showCustomDatePicker} transparent animationType="fade" onRequestClose={() => setShowCustomDatePicker(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomDatePicker(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                                <View style={{ padding: 16, borderBottomWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797' }}>Select Preferred Date</Text>
+                                    <TouchableOpacity onPress={() => setShowCustomDatePicker(false)}>
+                                        <Ionicons name="close" size={22} color="#9ca3af" />
+                                    </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                    value={customPreferredDate || new Date()}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={handleCustomDateChange}
+                                />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={showCustomTimePicker} transparent animationType="fade" onRequestClose={() => setShowCustomTimePicker(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomTimePicker(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                                <View style={{ padding: 16, borderBottomWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797' }}>Select Preferred Time</Text>
+                                    <TouchableOpacity onPress={() => setShowCustomTimePicker(false)}>
+                                        <Ionicons name="close" size={22} color="#9ca3af" />
+                                    </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                    value={customPreferredTime || new Date()}
+                                    mode="time"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={handleCustomTimeChange}
+                                />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
                 {/* Submitted Documents Display */}
                 {application.submittedDocuments && Object.keys(application.submittedDocuments).length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Submitted Documents</Text>
-                        
+
                         {application.submittedDocuments.passportPhoto && (
                             <View style={PassportProgressStyle.docRow}>
                                 <Text style={PassportProgressStyle.docLabel}>Passport Photo</Text>
@@ -299,7 +459,7 @@ export default function PassportProgress() {
                                             <View style={[PassportProgressStyle.stepLine, isCompleted && !isActive ? PassportProgressStyle.stepLineActive : {}]} />
                                         )}
                                     </View>
-                                    
+
                                     <View style={PassportProgressStyle.stepContent}>
                                         <Text style={isCompleted ? PassportProgressStyle.stepTitleActive : PassportProgressStyle.stepTitleInactive}>
                                             {step}

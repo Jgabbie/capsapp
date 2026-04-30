@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -15,7 +16,7 @@ export default function VisaProgress() {
     const route = useRoute()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
-    
+
     const applicationId = route.params?.applicationId;
 
     const [application, setApplication] = useState(null)
@@ -23,29 +24,54 @@ export default function VisaProgress() {
     const [dynamicSteps, setDynamicSteps] = useState([])
     const [loading, setLoading] = useState(true)
 
-    // 🔥 NEW STATES FOR SUGGESTED SCHEDULES 🔥
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
+    const [customPreferredDate, setCustomPreferredDate] = useState(null);
+    const [customPreferredTime, setCustomPreferredTime] = useState(null);
+    const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+    const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
+
+    const normalizeScheduleSlot = (slot) => {
+        if (!slot || typeof slot !== 'object') {
+            return { date: '', time: '' };
+        }
+
+        const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
+        const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
+
+        const parsedDate = rawDate ? dayjs(rawDate) : null;
+        const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
+
+        let time = '';
+        if (rawTime) {
+            const parsedTime = dayjs(String(rawTime), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
+            time = parsedTime.isValid() ? parsedTime.format('HH:mm') : String(rawTime);
+        } else if (parsedDate?.isValid()) {
+            time = parsedDate.format('HH:mm');
+        }
+
+        return { date, time };
+    };
 
     const fetchApplicationDetails = async () => {
         if (!user?._id || !applicationId) return;
-        
+
         try {
             setLoading(true);
-            
+
             const appRes = await api.get('/visa/applications', withUserHeader(user._id));
             const appData = appRes.data.find(app => app._id === applicationId);
-            
+
             if (!appData) throw new Error("Application not found in your list.");
-            
+
             setApplication(appData);
 
             if (appData?.serviceId) {
                 const serviceId = appData.serviceId._id || appData.serviceId;
                 const servRes = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id));
-                
+
                 setServicePrice(servRes.data?.visaPrice || 0);
-                
+
                 if (servRes.data?.visaProcessSteps && servRes.data.visaProcessSteps.length > 0) {
                     setDynamicSteps(servRes.data.visaProcessSteps);
                 }
@@ -62,16 +88,23 @@ export default function VisaProgress() {
         fetchApplicationDetails();
     }, [user?._id, applicationId]);
 
-    // 🔥 NEW FUNCTION: Submit the chosen appointment to the backend 🔥
+
     const handleConfirmSchedule = async () => {
         if (selectedScheduleIndex === null) {
             Alert.alert("Notice", "Please select an appointment option first.");
             return;
         }
 
-        const selected = application.suggestedAppointmentSchedules[selectedScheduleIndex];
+        const isOthersOption = selectedScheduleIndex === 'others';
+        const selected = isOthersOption
+            ? {
+                date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
+                time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
+            }
+            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
+
         if (!selected?.date || !selected?.time) {
-            Alert.alert("Error", "Selected option is missing date or time.");
+            Alert.alert("Error", "Please provide both date and time.");
             return;
         }
 
@@ -84,7 +117,11 @@ export default function VisaProgress() {
 
             Alert.alert("Success", "Appointment schedule confirmed!");
             setSelectedScheduleIndex(null);
-            
+            setCustomPreferredDate(null);
+            setCustomPreferredTime(null);
+            setShowCustomDatePicker(false);
+            setShowCustomTimePicker(false);
+
             await fetchApplicationDetails();
         } catch (error) {
             console.log(error);
@@ -126,6 +163,29 @@ export default function VisaProgress() {
         return Math.max(0, index);
     }, [steps, appStatus]);
 
+    const isOthersSelected = selectedScheduleIndex === 'others';
+    const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
+        !isOthersSelected || (customPreferredDate && customPreferredTime)
+    );
+
+    const handleCustomDateChange = (_event, selectedDate) => {
+        if (selectedDate) {
+            setCustomPreferredDate(selectedDate);
+        }
+        if (Platform.OS !== 'ios') {
+            setShowCustomDatePicker(false);
+        }
+    };
+
+    const handleCustomTimeChange = (_event, selectedTime) => {
+        if (selectedTime) {
+            setCustomPreferredTime(selectedTime);
+        }
+        if (Platform.OS !== 'ios') {
+            setShowCustomTimePicker(false);
+        }
+    };
+
     if (loading) {
         return (
             <View style={{ flex: 1, backgroundColor: '#f5f7fa', justifyContent: 'center', alignItems: 'center' }}>
@@ -152,7 +212,7 @@ export default function VisaProgress() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={VisaProgressStyle.scrollContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={VisaProgressStyle.headerContainer}>
                     <TouchableOpacity onPress={() => cs.goBack()} style={VisaProgressStyle.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#1f2937" />
@@ -163,12 +223,12 @@ export default function VisaProgress() {
                 {/* Application Info Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
-                    
+
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Reference</Text>
                         <Text style={VisaProgressStyle.infoValue}>{application.applicationNumber || application._id}</Text>
                     </View>
-                    
+
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Status</Text>
                         <View style={VisaProgressStyle.statusTag}>
@@ -209,35 +269,92 @@ export default function VisaProgress() {
                     </View>
                 </View>
 
-                {/* 🔥 SUGGESTED APPOINTMENTS CARD 🔥 */}
+
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Suggested Appointment Options</Text>
-                        
+
                         {application.suggestedAppointmentSchedules?.length > 0 ? (
                             <>
                                 <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your Embassy appointment.</Text>
-                                
+
                                 {application.suggestedAppointmentSchedules.map((slot, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[
-                                            VisaProgressStyle.optionCard,
-                                            selectedScheduleIndex === index && VisaProgressStyle.optionCardSelected
-                                        ]}
-                                        onPress={() => setSelectedScheduleIndex(index)}
-                                    >
-                                        <View style={VisaProgressStyle.optionTag}>
-                                            <Text style={VisaProgressStyle.optionTagText}>Option {index + 1}</Text>
-                                        </View>
-                                        <Text style={VisaProgressStyle.optionDate}>{dayjs(slot.date).format("MMM DD, YYYY")}</Text>
-                                        <Text style={VisaProgressStyle.optionTime}>{slot.time}</Text>
-                                    </TouchableOpacity>
+                                    (() => {
+                                        const normalizedSlot = normalizeScheduleSlot(slot);
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[
+                                                    VisaProgressStyle.optionCard,
+                                                    selectedScheduleIndex === index && VisaProgressStyle.optionCardSelected
+                                                ]}
+                                                onPress={() => setSelectedScheduleIndex(index)}
+                                            >
+                                                <View style={VisaProgressStyle.optionTag}>
+                                                    <Text style={VisaProgressStyle.optionTagText}>Option {index + 1}</Text>
+                                                </View>
+                                                <Text style={VisaProgressStyle.optionDate}>
+                                                    {normalizedSlot.date ? dayjs(normalizedSlot.date).format("MMM DD, YYYY") : 'No date provided'}
+                                                </Text>
+                                                <Text style={VisaProgressStyle.optionTime}>{normalizedSlot.time || 'No time provided'}</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })()
                                 ))}
-                                
-                                <TouchableOpacity 
-                                    style={[VisaProgressStyle.submitBtn, selectedScheduleIndex === null && { opacity: 0.5 }]}
-                                    disabled={selectedScheduleIndex === null || confirmingSchedule}
+
+                                <TouchableOpacity
+                                    style={[
+                                        VisaProgressStyle.optionCard,
+                                        isOthersSelected && VisaProgressStyle.optionCardSelected
+                                    ]}
+                                    onPress={() => setSelectedScheduleIndex('others')}
+                                >
+                                    <View style={VisaProgressStyle.optionTag}>
+                                        <Text style={VisaProgressStyle.optionTagText}>Others</Text>
+                                    </View>
+                                    <Text style={VisaProgressStyle.optionDate}>Enter your preferred date and time</Text>
+                                    <Text style={VisaProgressStyle.optionTime}>Pick both values from the native date and time pickers.</Text>
+
+                                    {isOthersSelected && (
+                                        <View style={{ marginTop: 14 }}>
+                                            <TouchableOpacity
+                                                onPress={() => setShowCustomDatePicker(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#d1d5db',
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 12,
+                                                    marginBottom: 10,
+                                                    backgroundColor: '#fff',
+                                                }}
+                                            >
+                                                <Text style={{ color: customPreferredDate ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                    {customPreferredDate ? dayjs(customPreferredDate).format('MMM D, YYYY') : 'Select Preferred Date'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => setShowCustomTimePicker(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: '#d1d5db',
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 12,
+                                                    backgroundColor: '#fff',
+                                                }}
+                                            >
+                                                <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                    {customPreferredTime ? dayjs(customPreferredTime).format('hh:mm A') : 'Select Preferred Time'}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[VisaProgressStyle.submitBtn, !canConfirmSchedule && { opacity: 0.5 }]}
+                                    disabled={!canConfirmSchedule}
                                     onPress={handleConfirmSchedule}
                                 >
                                     {confirmingSchedule ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>Confirm Selected Date</Text>}
@@ -253,7 +370,7 @@ export default function VisaProgress() {
                 {application.submittedDocuments && Object.keys(application.submittedDocuments).length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Submitted Documents</Text>
-                        
+
                         {application.submittedDocuments.validPassport && (
                             <View style={VisaProgressStyle.docRow}>
                                 <Text style={VisaProgressStyle.docLabel}>Valid Passport</Text>
@@ -311,7 +428,7 @@ export default function VisaProgress() {
                                             <View style={[VisaProgressStyle.stepLine, isCompleted && !isActive ? VisaProgressStyle.stepLineActive : {}]} />
                                         )}
                                     </View>
-                                    
+
                                     <View style={VisaProgressStyle.stepContent}>
                                         <Text style={isCompleted ? VisaProgressStyle.stepTitleActive : VisaProgressStyle.stepTitleInactive}>
                                             {step.charAt(0).toUpperCase() + step.slice(1)}
@@ -325,6 +442,36 @@ export default function VisaProgress() {
                         })}
                     </View>
                 </View>
+
+                <Modal visible={showCustomDatePicker} transparent animationType="fade" onRequestClose={() => setShowCustomDatePicker(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomDatePicker(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                                <DateTimePicker
+                                    value={customPreferredDate || new Date()}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={handleCustomDateChange}
+                                />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={showCustomTimePicker} transparent animationType="fade" onRequestClose={() => setShowCustomTimePicker(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomTimePicker(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                                <DateTimePicker
+                                    value={customPreferredTime || new Date()}
+                                    mode="time"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={handleCustomTimeChange}
+                                />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
 
             </ScrollView>
         </View>

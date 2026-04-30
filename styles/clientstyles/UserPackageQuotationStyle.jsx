@@ -19,7 +19,7 @@ const UserPackageQuotationStyle = StyleSheet.create({
     fontFamily: "Roboto_400Regular",
     marginBottom: 20,
   },
-  
+
   // --- Search & Filter ---
   filterSection: {
     marginBottom: 24,
@@ -106,7 +106,7 @@ const UserPackageQuotationStyle = StyleSheet.create({
     fontFamily: "Montserrat_600SemiBold",
     fontSize: 11,
   },
-  
+
   // --- Card Body ---
   cardBody: {
     marginBottom: 15,
@@ -151,68 +151,96 @@ const UserPackageQuotationStyle = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: "center",
-    marginTop: 60, 
+    marginTop: 60,
   },
   emptyImage: {
     width: 120,
     height: 120,
     marginBottom: 10,
-    opacity: 0.8, 
+    opacity: 0.8,
   },
   emptyText: {
-    color: "#9ca3af", 
+    color: "#9ca3af",
     fontSize: 15,
     fontFamily: "Roboto_400Regular",
   },
 
   // --- MODAL STYLES (Matched to Web Look) ---
-  modalOverlay: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(0,0,0,0.5)', 
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 20,
   },
-  modalContainer: { 
-    backgroundColor: '#fff', 
-    padding: 20, 
-    borderRadius: 12, 
-    width: width > 500 ? 400 : '95%', 
+  modalContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    width: width > 500 ? 400 : '95%',
     maxWidth: 400,
     elevation: 10,
   },
-  modalHeaderRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: 15, 
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
     paddingBottom: 12,
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderColor: '#eee',
   },
-  modalTitleText: { 
-    fontSize: 16, 
-    fontFamily: 'Montserrat_700Bold', 
+  modalTitleText: {
+    fontSize: 16,
+    fontFamily: 'Montserrat_700Bold',
     color: '#305797',
   },
-  tagContainer: { 
-    flexDirection: 'column', 
+  tagContainer: {
+    flexDirection: 'column',
   },
-  modalStatusTag: { 
-    paddingVertical: 12, 
-    borderBottomWidth: 1, 
-    borderColor: '#f0f0f0', 
+  modalStatusTag: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#f0f0f0',
   },
   modalStatusTagSelected: {
-    backgroundColor: '#f8faff', 
+    backgroundColor: '#f8faff',
   },
-  modalStatusText: { 
-    color: '#333', 
-    fontFamily: 'Roboto_400Regular', 
+  modalStatusText: {
+    color: '#333',
+    fontFamily: 'Roboto_400Regular',
     fontSize: 14,
     textAlign: 'center'
   },
   modalStatusTextSelected: {
+    color: '#305797',
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  timeSlotButton: {
+    flexBasis: '30%',
+    borderWidth: 1,
+    borderColor: '#d9d9d9',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  timeSlotButtonSelected: {
+    borderColor: '#305797',
+    backgroundColor: '#f8faff',
+  },
+  timeSlotText: {
+    fontSize: 12,
+    color: '#333',
+    fontFamily: 'Roboto_400Regular',
+  },
+  timeSlotTextSelected: {
     color: '#305797',
     fontFamily: 'Montserrat_600SemiBold',
   },

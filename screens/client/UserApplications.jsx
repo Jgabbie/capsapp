@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+import { Calendar } from 'react-native-calendars';
 
 import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
@@ -29,6 +30,10 @@ export default function UserApplications() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [statusFilter, setStatusFilter] = useState('Status');
+    const [applicationDateFilter, setApplicationDateFilter] = useState(null);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [showDateModal, setShowDateModal] = useState(false);
 
     useEffect(() => {
         const fetchApplications = async () => {
@@ -49,8 +54,6 @@ export default function UserApplications() {
                     ref: v.applicationNumber
                 }));
 
-                console.log(visas)
-
                 const passports = (passportRes.data || []).map(p => ({
                     key: p._id,
                     type: 'Passport',
@@ -59,8 +62,6 @@ export default function UserApplications() {
                     status: p.status,
                     ref: p.applicationNumber
                 }));
-
-                console.log(passports)
 
                 const combined = [...visas, ...passports].sort((a, b) => new Date(b.date) - new Date(a.date));
                 setApplications(combined);
@@ -73,11 +74,43 @@ export default function UserApplications() {
         fetchApplications();
     }, [user?._id]);
 
-    const filteredApps = applications.filter(app =>
-        app.serviceName.toLowerCase().includes(searchText.toLowerCase()) ||
-        app.ref.toLowerCase().includes(searchText.toLowerCase()) ||
-        app.status.toLowerCase().includes(searchText.toLowerCase())
-    );
+    const statusOptions = useMemo(() => {
+        const uniqueStatuses = [...new Set(applications
+            .map((app) => String(app.status || '').trim())
+            .filter(Boolean))];
+        return ['All', ...uniqueStatuses];
+    }, [applications]);
+
+    const filteredApps = useMemo(() => {
+        return applications.filter((app) => {
+            const search = searchText.trim().toLowerCase();
+            const serviceName = String(app.serviceName || '').toLowerCase();
+            const ref = String(app.ref || '').toLowerCase();
+            const status = String(app.status || '').toLowerCase();
+
+            const matchesSearch =
+                search === '' ||
+                serviceName.includes(search) ||
+                ref.includes(search) ||
+                status.includes(search);
+
+            const matchesStatus =
+                statusFilter === 'Status' ||
+                statusFilter === 'All' ||
+                status === String(statusFilter).toLowerCase();
+
+            const matchesDate =
+                !applicationDateFilter ||
+                dayjs(app.date).format('YYYY-MM-DD') === applicationDateFilter;
+
+            return matchesSearch && matchesStatus && matchesDate;
+        });
+    }, [applications, searchText, statusFilter, applicationDateFilter]);
+
+    const handleDateChange = (day) => {
+        setApplicationDateFilter(day.dateString);
+        setShowDateModal(false);
+    };
 
     const getStatusStyle = (status) => {
         const s = String(status || '').toLowerCase();
@@ -94,20 +127,63 @@ export default function UserApplications() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
                 <View style={UserApplicationsStyle.headerContainer}>
                     <Text style={UserApplicationsStyle.title}>My Applications</Text>
                     <Text style={UserApplicationsStyle.subtitle}>Track your ongoing visa and passport applications.</Text>
 
-                    <View style={UserApplicationsStyle.searchContainer}>
-                        <Ionicons name="search" size={20} color="#9ca3af" />
-                        <TextInput
-                            style={UserApplicationsStyle.searchInput}
-                            placeholder="Search applications..."
-                            value={searchText}
-                            onChangeText={setSearchText}
-                        />
+                    <View style={UserApplicationsStyle.filterSection}>
+                        <View style={UserApplicationsStyle.searchContainer}>
+                            <Ionicons name="search" size={18} color="#9ca3af" />
+                            <TextInput
+                                style={UserApplicationsStyle.searchInput}
+                                placeholder="Search applications..."
+                                placeholderTextColor="#9ca3af"
+                                value={searchText}
+                                onChangeText={setSearchText}
+                            />
+                            {searchText !== '' && (
+                                <TouchableOpacity onPress={() => setSearchText('')}>
+                                    <Ionicons name="close-circle" size={18} color="#d1d5db" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        <View style={UserApplicationsStyle.dropdownGroup}>
+                            <TouchableOpacity
+                                style={UserApplicationsStyle.dropdownButton}
+                                onPress={() => setShowStatusModal(true)}
+                            >
+                                <Text style={UserApplicationsStyle.dropdownText}>
+                                    {statusFilter === 'All' ? 'Status' : statusFilter}
+                                </Text>
+                                <Ionicons name="chevron-down" size={12} color="#9ca3af" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={UserApplicationsStyle.dropdownButton}
+                                onPress={() => setShowDateModal(true)}
+                            >
+                                <Text style={UserApplicationsStyle.dropdownText}>
+                                    {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'App Date'}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
+                            </TouchableOpacity>
+
+                            {(statusFilter !== 'Status' && statusFilter !== 'All') || applicationDateFilter ? (
+                                <TouchableOpacity
+                                    style={UserApplicationsStyle.clearFilterBtn}
+                                    onPress={() => {
+                                        setStatusFilter('Status');
+                                        setApplicationDateFilter(null);
+                                    }}
+                                >
+                                    <Ionicons name="refresh-circle" size={30} color="#ff4d4f" />
+                                </TouchableOpacity>
+                            ) : null}
+                        </View>
                     </View>
+
                 </View>
 
                 <View style={UserApplicationsStyle.filterScroll}>
@@ -163,6 +239,94 @@ export default function UserApplications() {
                     )}
                 </View>
             </ScrollView>
+
+            <Modal
+                visible={showStatusModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowStatusModal(false)}
+            >
+                <TouchableOpacity
+                    style={UserApplicationsStyle.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowStatusModal(false)}
+                >
+                    <TouchableWithoutFeedback>
+                        <View style={UserApplicationsStyle.modalContainer}>
+                            <View style={UserApplicationsStyle.modalHeaderRow}>
+                                <Text style={UserApplicationsStyle.modalTitleText}>Select Status</Text>
+                                <TouchableOpacity onPress={() => setShowStatusModal(false)}>
+                                    <Ionicons name="close" size={22} color="#9ca3af" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={UserApplicationsStyle.tagContainer}>
+                                {statusOptions.map((status) => {
+                                    const isSelected =
+                                        (statusFilter === 'Status' && status === 'All') || status === statusFilter;
+                                    return (
+                                        <TouchableOpacity
+                                            key={status}
+                                            style={[
+                                                UserApplicationsStyle.modalStatusTag,
+                                                isSelected && UserApplicationsStyle.modalStatusTagSelected,
+                                            ]}
+                                            onPress={() => {
+                                                setStatusFilter(status);
+                                                setShowStatusModal(false);
+                                            }}
+                                        >
+                                            <Text
+                                                style={[
+                                                    UserApplicationsStyle.modalStatusText,
+                                                    isSelected && UserApplicationsStyle.modalStatusTextSelected,
+                                                ]}
+                                            >
+                                                {status}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={showDateModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowDateModal(false)}
+            >
+                <TouchableOpacity
+                    style={UserApplicationsStyle.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowDateModal(false)}
+                >
+                    <TouchableWithoutFeedback>
+                        <View style={UserApplicationsStyle.modalContainer}>
+                            <View style={UserApplicationsStyle.modalHeaderRow}>
+                                <Text style={UserApplicationsStyle.modalTitleText}>Application Date</Text>
+                                <TouchableOpacity onPress={() => setShowDateModal(false)}>
+                                    <Ionicons name="close" size={22} color="#9ca3af" />
+                                </TouchableOpacity>
+                            </View>
+                            <Calendar
+                                onDayPress={handleDateChange}
+                                markedDates={applicationDateFilter ? {
+                                    [applicationDateFilter]: { selected: true, selectedColor: '#305797' },
+                                } : {}}
+                                theme={{
+                                    selectedDayBackgroundColor: '#305797',
+                                    todayTextColor: '#305797',
+                                    arrowColor: '#305797',
+                                }}
+                            />
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
