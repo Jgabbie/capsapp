@@ -11,7 +11,7 @@ export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
     
     // Use SMTP_USER (verified Brevo sender) for best deliverability
-    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const senderEmail = process.env.SENDER_EMAIL;
     const companyEmail = process.env.COMPANY_EMAIL;
     const normalizedEmail = String(email || "").trim().toLowerCase();
 
