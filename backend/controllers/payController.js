@@ -19,33 +19,8 @@ const generateTransactionReference = () => {
     return `TX-${timestamp}${random}`;
 };
 
-export const createCheckoutToken = async (req, res) => {
-    const userId = req.userId;
-    const { totalPrice, bookingId } = req.body;
 
-    try {
-        const numericTotal = Number(totalPrice || 0);
-        if (!numericTotal || Number.isNaN(numericTotal)) {
-            return res.status(400).json({ message: "Valid totalPrice is required" });
-        }
 
-        const token = crypto.randomUUID();
-
-        await TokenCheckout.create({
-            token,
-            userId,
-            bookingId,
-            amount: numericTotal,
-            totalPrice: numericTotal,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
-        });
-
-        return res.status(201).json({ token });
-    } catch (error) {
-        return res.status(500).json({ message: "Error creating checkout token", error: error.message });
-    }
-};
 
 export const createCheckoutSession = async (req, res) => {
     const { checkoutToken, totalPrice, packageName, successUrl, cancelUrl, paymentPayload } = req.body;
@@ -125,8 +100,6 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 
-
-
 export const createCheckoutSessionPassport = async (req, res) => {
     const { checkoutToken, totalPrice, packageName, successUrl, cancelUrl, paymentPayload } = req.body;
 
@@ -203,7 +176,6 @@ export const createCheckoutSessionPassport = async (req, res) => {
         return res.status(500).json({ message: "Error creating checkout session", error: error.response?.data || error.message });
     }
 };
-
 
 
 export const createCheckoutSessionVisa = async (req, res) => {
@@ -553,37 +525,6 @@ export const createManualPayment = async (req, res) => {
     }
 };
 
-
-
-
-
-export const createCheckoutToken = async (req, res) => {
-    const userId = req.userId;
-    const { totalPrice, bookingId } = req.body;
-
-    try {
-        const numericTotal = Number(totalPrice || 0);
-        if (!numericTotal || Number.isNaN(numericTotal)) {
-            return res.status(400).json({ message: "Valid totalPrice is required" });
-        }
-
-        const token = crypto.randomUUID();
-
-        await TokenCheckout.create({
-            token,
-            userId,
-            bookingId,
-            amount: numericTotal,
-            totalPrice: numericTotal,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
-        });
-
-        return res.status(201).json({ token });
-    } catch (error) {
-        return res.status(500).json({ message: "Error creating checkout token", error: error.message });
-    }
-};
 
 export const createCheckoutSession = async (req, res) => {
     const { checkoutToken, totalPrice, packageName, successUrl, cancelUrl, paymentPayload } = req.body;
