@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import TokenCheckout from "../models/tokenCheckout.js";
 import TokenCheckoutVisaModel from "../models/tokencheckoutvisa.js";
 import TokenCheckoutPassportModel from "../models/tokencheckoutpassport.js";
+import VisaApplicationModel from "../models/visaApplication.js";
+import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
 import PackageModel from "../models/package.js";
@@ -503,8 +505,8 @@ export const createCheckoutSessionVisa = async (req, res) => {
                         email: "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: 1, currency: "PHP" },
+                        // { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: successUrl,

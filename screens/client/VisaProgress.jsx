@@ -221,12 +221,19 @@ export default function VisaProgress() {
 
             const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
 
+            console.log('CHECKOUT URL:', hostedUrl);
+
             if (!hostedUrl) {
-                console.log('Missing checkout_url:', sessionRes.data);
-                Alert.alert('Error', 'Checkout URL not returned from server.');
+                Alert.alert('Error', 'No checkout URL received');
                 return;
+            }
+
+            const canOpen = await Linking.canOpenURL(hostedUrl);
+
+            if (canOpen) {
+                await Linking.openURL(hostedUrl);
             } else {
-                Alert.alert('Payment', 'Checkout session created. Complete payment on the next screen.');
+                Alert.alert('Error', 'Cannot open checkout page');
             }
         } catch (error) {
             console.error('Payment start error:', error?.response?.data || error.message || error);
