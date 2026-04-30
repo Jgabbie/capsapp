@@ -64,6 +64,7 @@ const prefix = Linking.createURL('/');
 
 function AppNavigator() {
   const { user, loading } = useUser();
+  const initialRoute = user ? (user.loginOnce ? "home" : "userpreference") : "splash";
 
   const linking = {
     prefixes: [prefix, 'capsapp://'],
@@ -86,7 +87,11 @@ function AppNavigator() {
 
   return (
     <NavigationContainer linking={linking}>
-      <MyScreen.Navigator screenOptions={{ headerShown: false }}>
+      <MyScreen.Navigator
+        key={initialRoute}
+        initialRouteName={initialRoute}
+        screenOptions={{ headerShown: false }}
+      >
         
         {!user ? (
           <>
