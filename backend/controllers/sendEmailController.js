@@ -9,21 +9,22 @@ const __dirname = path.dirname(__filename);
 
 export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
-    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SENDER_EMAIL;
-    const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
+    
+    // Use SMTP_USER (verified Brevo sender) for best deliverability
+    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const companyEmail = process.env.COMPANY_EMAIL;
     const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    console.log('Received contact form submission:', { name, email, subject, message });
+    console.log('Received contact form submission:', { name, normalizedEmail, subject, companyEmail });
 
     if (!name || !normalizedEmail || !subject || !message) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    if (!senderEmail) {
-        return res.status(500).json({ message: 'Email service is not configured. Missing sender credentials.' });
+    if (!senderEmail || !companyEmail) {
+        return res.status(500).json({ message: 'Email service is not configured. Missing SMTP_USER or COMPANY_EMAIL.' });
     }
 
-    // 🔥 FIXED: Added contentDisposition 'inline' so it doesn't show as a downloadable attachment
     const logoPath = path.join(__dirname, '../../assets/images/Logo.png');
     const logoAttachment = fs.existsSync(logoPath)
         ? {
@@ -36,9 +37,9 @@ export const sendContactEmail = async (req, res) => {
         : null;
 
     try {
-        // 1. Email sent to the Company (You)
+        // 1. Email sent to the Company (Admin)
         const companyResult = await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${senderEmail}>`,
+            from: senderEmail,
             to: companyEmail,
             replyTo: normalizedEmail,
             subject: `New Inquiry from ${name} - ${subject}`,
@@ -46,8 +47,6 @@ export const sendContactEmail = async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; color:#333; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-                        <img src="cid:companyLogo" alt="M&RC Travel and Tours" style="max-width: 150px; margin-bottom: 25px; display: block;" />
-                        
                         <h2 style="color: #305797; margin-bottom:15px; font-size: 22px;">New Inquiry Details</h2>
                         
                         <p style="color:#555; font-size:15px; margin-bottom: 8px;"><strong>Subject:</strong> ${subject}</p>
@@ -69,26 +68,20 @@ export const sendContactEmail = async (req, res) => {
                 </div>`
         });
 
-        console.log('Contact email sent to company:', companyResult?.messageId);
+        console.log('✅ Contact email sent to admin:', companyEmail, '| Message ID:', companyResult?.messageId);
 
         // 2. Auto-reply sent to the Customer
         const customerResult = await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${senderEmail}>`,
+            from: senderEmail,
             to: normalizedEmail,
-            subject: `We received your inquiry: ${subject}`,
+            subject: 'We received your inquiry: ' + subject,
             attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family:Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-                        <img src="cid:companyLogo" alt="M&RC Travel and Tours" style="max-width: 150px; margin-bottom: 25px; display: block;" />
+                        <h2 style="color:#305797; margin-bottom:15px; font-size: 22px;">Welcome to M&RC Travel and Tours</h2>
                         
-                        <h2 style="color:#305797; margin-bottom:15px; font-size: 22px;">
-                            Welcome to M&RC Travel and Tours
-                        </h2>
-                        
-                        <p style="color:#555; font-size:16px; margin-bottom: 12px;">
-                            Hello <b>${name}</b>,
-                        </p>
+                        <p style="color:#555; font-size:16px; margin-bottom: 12px;">Hello <b>${name}</b>,</p>
                         
                         <p style="color:#555; font-size:15px; line-height:1.6; margin-bottom: 12px;">
                             Your message has been received and we will get back to you soon.
@@ -114,12 +107,12 @@ export const sendContactEmail = async (req, res) => {
                 </div>`
         });
 
-        console.log('Auto-reply sent to customer:', customerResult?.messageId);
+        console.log('✅ Auto-reply sent to customer:', normalizedEmail, '| Message ID:', customerResult?.messageId);
 
         res.status(200).json({ success: true, message: 'Message sent successfully' });
 
     } catch (error) {
-        console.error('Email error:', error);
+        console.error('❌ Email error:', error.message);
         res.status(500).json({ message: 'Failed to send email', error: error.message });
     }
 };
