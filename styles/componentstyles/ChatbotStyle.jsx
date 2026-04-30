@@ -111,7 +111,8 @@ const ChatbotStyle = StyleSheet.create({
         alignItems: "flex-end",
         borderTopWidth: 1,
         borderTopColor: "#e5e7eb",
-        paddingVertical: 10,
+        paddingTop: 10,        // 🔥 Keep the top padding at 10
+        paddingBottom: 80,     // 🔥 ADD THIS (Increase this number if you need it even higher)
         paddingHorizontal: 15,
         backgroundColor: "#fff",
         gap: 10
