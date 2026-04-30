@@ -8,9 +8,7 @@ const getApiBaseUrl = () => {
   if (Platform.OS === "web") {
     return "http://localhost:5000/api";
   }
-
-  
-  return "http://192.168.1.8:5000/api";
+  return "http://192.168.1.18:5000/api";
 };
 
 const API_BASE_URL = getApiBaseUrl();
