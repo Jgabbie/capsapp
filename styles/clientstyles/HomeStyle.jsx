@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 const HomeStyle = StyleSheet.create({
     container: {
@@ -181,20 +181,20 @@ const HomeStyle = StyleSheet.create({
 
     // --- BACKGROUND IMAGES ---
     bgSectionContainer: {
-        width: '95%',
-        alignSelf: 'center',
-        padding: 25,
+        marginHorizontal: -15, // 🔥 Makes it full width (sagad sa gilid)
+        paddingVertical: 40,   // 🔥 Increased padding to show more of the image
+        paddingHorizontal: 30,
         marginTop: 10,
         marginBottom: 25,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
-        minHeight: 180,
+        minHeight: 230, // 🔥 Increased height so it isn't cut off
     },
     bgOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)', 
-        borderRadius: 15,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        // 🔥 Removed borderRadius so it flushes with the screen edges perfectly
     },
     bgTitle: {
         fontFamily: "Montserrat_700Bold",
