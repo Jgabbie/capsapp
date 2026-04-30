@@ -30,16 +30,21 @@ export const sendContactEmail = async (req, res) => {
         ? {
             filename: 'Logo.png',
             path: logoPath,
-            cid: 'companyLogo',
+            cid: 'companyLogo', // This ID is used to display the image in the HTML
             contentDisposition: 'inline',
             contentType: 'image/png'
         }
         : null;
 
+    // 🔥 FIXED: We now actually insert the image into the HTML!
+    const logoHtml = logoAttachment 
+        ? `<div style="text-align: center; margin-bottom: 20px;"><img src="cid:companyLogo" alt="M&RC Travel and Tours" style="max-width: 150px; height: auto;" /></div>` 
+        : ``;
+
     try {
         // 1. Email sent to the Company (Admin)
         const companyResult = await transporter.sendMail({
-            from: senderEmail,
+            from: `"M&RC Travel and Tours" <${senderEmail}>`, // 🔥 STRICT FORMATTING TO PREVENT SILENT DROPS
             to: companyEmail,
             replyTo: normalizedEmail,
             subject: `New Inquiry from ${name} - ${subject}`,
@@ -47,6 +52,7 @@ export const sendContactEmail = async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; color:#333; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+                        ${logoHtml}
                         <h2 style="color: #305797; margin-bottom:15px; font-size: 22px;">New Inquiry Details</h2>
                         
                         <p style="color:#555; font-size:15px; margin-bottom: 8px;"><strong>Subject:</strong> ${subject}</p>
@@ -72,19 +78,20 @@ export const sendContactEmail = async (req, res) => {
 
         // 2. Auto-reply sent to the Customer
         const customerResult = await transporter.sendMail({
-            from: senderEmail,
+            from: `"M&RC Travel and Tours" <${senderEmail}>`, // 🔥 STRICT FORMATTING
             to: normalizedEmail,
             subject: 'We received your inquiry: ' + subject,
             attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family:Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+                        ${logoHtml}
                         <h2 style="color:#305797; margin-bottom:15px; font-size: 22px;">Welcome to M&RC Travel and Tours</h2>
                         
                         <p style="color:#555; font-size:16px; margin-bottom: 12px;">Hello <b>${name}</b>,</p>
                         
                         <p style="color:#555; font-size:15px; line-height:1.6; margin-bottom: 12px;">
-                            Your message has been received and we will get back to you soon.
+                            Your message regarding "<strong>${subject}</strong>" has been received and we will get back to you soon.
                         </p>
                         
                         <p style="color:#555; font-size:15px; line-height:1.6; margin-bottom: 12px;">
