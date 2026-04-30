@@ -29,11 +29,11 @@ export const applyPassport = async (req, res) => {
       applicationNumber: randomApplicationNumber(),
       status: "Application submitted",
       submittedDocuments: {}, // Empty, since files are no longer required on creation
-      documents: {} 
+      documents: {}
     });
 
     if (typeof logAction === 'function') {
-        logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
+      logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
     }
 
     return res.status(201).json(application);
@@ -88,9 +88,9 @@ export const chooseAppointment = async (req, res) => {
       logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
     }
 
-    return res.status(200).json({ 
-        message: "Preferred schedule updated successfully", 
-        application 
+    return res.status(200).json({
+      message: "Preferred schedule updated successfully",
+      application
     });
   } catch (error) {
     return res.status(500).json({ message: "Error updating schedule", error: error.message });
