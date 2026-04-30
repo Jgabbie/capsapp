@@ -1,5 +1,6 @@
 import transporter from '../config/nodemailer.js';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 // Setup directory paths to fetch the Logo from your frontend assets folder
@@ -8,6 +9,8 @@ const __dirname = path.dirname(__filename);
 
 export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
+    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SENDER_EMAIL;
+    const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
     
     console.log('Received contact form submission:', { name, email, subject, message });
 
@@ -15,23 +18,30 @@ export const sendContactEmail = async (req, res) => {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
+    if (!senderEmail) {
+        return res.status(500).json({ message: 'Email service is not configured. Missing sender credentials.' });
+    }
+
     // 🔥 FIXED: Added contentDisposition 'inline' so it doesn't show as a downloadable attachment
-    const logoAttachment = {
-        filename: 'Logo.png',
-        path: path.join(__dirname, '../../assets/images/Logo.png'),
-        cid: 'companyLogo',
-        contentDisposition: 'inline', 
-        contentType: 'image/png'
-    };
+    const logoPath = path.join(__dirname, '../../assets/images/Logo.png');
+    const logoAttachment = fs.existsSync(logoPath)
+        ? {
+            filename: 'Logo.png',
+            path: logoPath,
+            cid: 'companyLogo',
+            contentDisposition: 'inline',
+            contentType: 'image/png'
+        }
+        : null;
 
     try {
         // 1. Email sent to the Company (You)
         await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
-            to: process.env.COMPANY_EMAIL || process.env.SENDER_EMAIL,
+            from: `"M&RC Travel and Tours" <${senderEmail}>`,
+            to: companyEmail,
             replyTo: email,
             subject: `New Inquiry from ${name} - ${subject}`,
-            attachments: [logoAttachment],
+            attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family: Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; color:#333; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
@@ -60,10 +70,10 @@ export const sendContactEmail = async (req, res) => {
 
         // 2. Auto-reply sent to the Customer
         await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+            from: `"M&RC Travel and Tours" <${senderEmail}>`,
             to: email,
             subject: `We received your inquiry: ${subject}`,
-            attachments: [logoAttachment],
+            attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family:Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
