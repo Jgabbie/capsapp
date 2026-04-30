@@ -2,6 +2,8 @@ import crypto from "crypto";
 import axios from "axios";
 import dayjs from "dayjs";
 import TokenCheckout from "../models/tokenCheckout.js";
+import TokenCheckoutVisaModel from "../models/tokencheckoutvisa.js";
+import TokenCheckoutPassportModel from "../models/tokencheckoutpassport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
 import PackageModel from "../models/package.js";
@@ -57,7 +59,7 @@ export const createManualPaymentPassport = async (req, res) => {
         }
 
         const token = crypto.randomUUID();
-        await TokenCheckout.create({
+        await TokenCheckoutPassportModel.create({
             token,
             userId,
             bookingId: finalBookingId,
@@ -134,7 +136,7 @@ export const createManualPaymentVisa = async (req, res) => {
         }
 
         const token = crypto.randomUUID();
-        await TokenCheckout.create({
+        await TokenCheckoutVisaModel.create({
             token,
             userId,
             bookingId: finalBookingId,
@@ -350,7 +352,7 @@ export const createCheckoutSessionPassport = async (req, res) => {
             return res.status(400).json({ message: "checkoutToken, totalPrice, and applicationId are required" });
         }
 
-        const tokenRecord = await TokenCheckout.findOne({ token: tokenToUse });
+        const tokenRecord = await TokenCheckoutPassportModel.findOne({ token: tokenToUse });
         if (!tokenRecord) {
             return res.status(404).json({ message: "Invalid or expired checkout token" });
         }
@@ -467,7 +469,7 @@ export const createCheckoutSessionVisa = async (req, res) => {
             return res.status(400).json({ message: "checkoutToken, totalPrice, and applicationId are required" });
         }
 
-        const tokenRecord = await TokenCheckout.findOne({ token: tokenToUse });
+        const tokenRecord = await TokenCheckoutVisaModel.findOne({ token: tokenToUse });
         if (!tokenRecord) {
             return res.status(404).json({ message: "Invalid or expired checkout token" });
         }
@@ -1294,7 +1296,7 @@ export const createCheckoutToken = async (req, res) => {
 
     const token = crypto.randomUUID();
 
-    await TokenCheckoutModel.create({
+    await TokenCheckout.create({
         token,
         userId,
         totalPrice: totalPrice || 29000,
