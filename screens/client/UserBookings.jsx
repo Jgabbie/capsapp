@@ -33,6 +33,7 @@ export default function UserBookings() {
     const [isTravelDateOpen, setTravelDateOpen] = useState(false)
     
     // Cancellation Modal States
+    const [isCancelPolicyModalOpen, setCancelPolicyModalOpen] = useState(false)
     const [isCancelModalOpen, setCancelModalOpen] = useState(false)
     const [selectedBookingId, setSelectedBookingId] = useState(null)
     const [cancelReason, setCancelReason] = useState('')
@@ -41,9 +42,18 @@ export default function UserBookings() {
     const [cancelImage, setCancelImage] = useState(null)
     const [showCancelReasonDropdown, setShowCancelReasonDropdown] = useState(false)
 
+    const formatStatusLabel = (value) => {
+        return String(value || '')
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+    }
+
     const getComputedStatus = (booking) => {
         const rawStatus = booking.status || '';
-        const formatted = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+        const formatted = formatStatusLabel(rawStatus);
         const normalized = formatted.toLowerCase();
 
         if (normalized === 'cancelled' || normalized === 'cancellation requested') {
@@ -307,7 +317,7 @@ export default function UserBookings() {
                                         <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
                                     </TouchableOpacity>
                                     {(item.computedStatus !== 'Cancelled' && item.computedStatus !== 'Cancellation Requested') && (
-                                        <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelModalOpen(true); }}>
+                                        <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelPolicyModalOpen(true); }}>
                                             <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     )}
@@ -371,6 +381,35 @@ export default function UserBookings() {
                                 onDayPress={(day) => { setTravelDateFilter(day.dateString); setTravelDateOpen(false); }} 
                                 theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
                             />
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal transparent visible={isCancelPolicyModalOpen} animationType="fade">
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setCancelPolicyModalOpen(false)}>
+                    <TouchableWithoutFeedback>
+                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 24, position: 'relative' }]}>
+                            <TouchableOpacity
+                                onPress={() => setCancelPolicyModalOpen(false)}
+                                style={{ position: 'absolute', top: 14, right: 14, padding: 4 }}
+                            >
+                                <Ionicons name="close" size={22} color="#b3b3b3" />
+                            </TouchableOpacity>
+
+                            <Text style={[ModalStyle.modalTitle, { color: '#305797', fontSize: 20, textAlign: 'center', marginBottom: 10 }]}>Continue Cancellation?</Text>
+                            <Text style={[ModalStyle.modalText, { marginBottom: 14, textAlign: 'center', color: '#555', lineHeight: 22 }]}>Please review our cancellation policy before proceeding.</Text>
+                            <Text style={[ModalStyle.modalText, { marginBottom: 12, textAlign: 'center', color: '#555', lineHeight: 22 }]}>All tour packages will not be converted to any travel funds in case the tour will not push through whether it be government mandated, due to natural calamities, etc. Tour package purchase is non-refundable, non-reroutable, non-rebookable, and non-transferable unless otherwise stated and is due to natural calamities and force majeure that is beyond our control otherwise NON-REFUNDABLE.</Text>
+                            <Text style={{ fontSize: 13, fontStyle: 'italic', color: '#ff4d4f', textAlign: 'center', marginBottom: 18, lineHeight: 20 }}>Note: Cancellation of bookings is allowed but will be subject for reviewing and approval.</Text>
+
+                            <View style={ModalStyle.modalButtonContainer}>
+                                <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#305797', flex: 1, marginRight: 5 }]} onPress={() => { setCancelPolicyModalOpen(false); setCancelModalOpen(true); }}>
+                                    <Text style={ModalStyle.modalButtonText}>Continue</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#9E2847', flex: 1, marginLeft: 5 }]} onPress={() => setCancelPolicyModalOpen(false)}>
+                                    <Text style={ModalStyle.modalButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
@@ -454,7 +493,7 @@ export default function UserBookings() {
                                     </View>
 
                                     <View style={ModalStyle.modalButtonContainer}>
-                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#9f2b46', flex: 1, marginRight: 5 }]} onPress={() => { setCancelModalOpen(false); setCancelImage(null); setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); }}>
+                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#305797', flex: 1, marginRight: 5 }]} onPress={() => { setCancelModalOpen(false); setCancelImage(null); setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); }}>
                                             <Text style={ModalStyle.modalButtonText}>Keep Booking</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#8B0000', flex: 1, marginLeft: 5 }]} onPress={handleCancelBooking}>

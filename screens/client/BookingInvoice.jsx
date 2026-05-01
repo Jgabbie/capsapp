@@ -136,7 +136,7 @@ export default function BookingInvoice({ route, navigation }) {
         ? "Not Paid" : (paidAmount >= totalPrice ? "Fully Paid" : "Partial");
 
     const getPaymentStatus = () => {
-        if (booking?.status === 'Cancelled' || booking?.status === 'cancellation requested' || rawBooking?.computedStatus === 'Cancelled') return { label: booking?.status || 'Cancelled', color: "#555", bg: "#eee" };
+        if (booking?.status === 'Cancelled' || booking?.status === 'Cancellation Requested' || rawBooking?.computedStatus === 'Cancelled') return { label: booking?.status || 'Cancelled', color: "#555", bg: "#eee" };
         if (transactionStatus === "Fully Paid" || transactionStatus === "Paid") return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
         if (transactionStatus === "Not Paid") return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" }; 
         return { label: "Balance Due", color: "#d48806", bg: "#fffbe6" };
@@ -629,7 +629,7 @@ export default function BookingInvoice({ route, navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && booking?.status !== 'cancellation requested' && rawBooking?.computedStatus !== 'Cancelled' && (
+                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && booking?.status !== 'Cancellation Requested' && rawBooking?.computedStatus !== 'Cancelled' && (
                         <View style={BookingInvoiceStyle.card}>
                             <Text style={BookingInvoiceStyle.cardTitle}>Payment Methods</Text>
                             <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16 }]}>Select a payment method to complete your booking.</Text>

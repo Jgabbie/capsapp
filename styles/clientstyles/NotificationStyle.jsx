@@ -64,7 +64,7 @@ export default StyleSheet.create({
         width: 10, 
         height: 10, 
         borderRadius: 5, 
-        backgroundColor: "#305797" // Blue for unread
+        backgroundColor: "#b81e1e" // Red for unread
     },
     dotRead: { 
         width: 10, 
