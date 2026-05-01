@@ -6,7 +6,7 @@ const UserBookingsStyle = StyleSheet.create({
         backgroundColor: "#fff",
     },
     title: {
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         marginBottom: 5,
@@ -22,7 +22,7 @@ const UserBookingsStyle = StyleSheet.create({
 
     // --- SEARCH & FILTERS ---
     searchRow: {
-        flexDirection: "column", 
+        flexDirection: "column",
         gap: 12,
         marginBottom: 20,
         width: '100%',
@@ -31,10 +31,10 @@ const UserBookingsStyle = StyleSheet.create({
         width: '100%',
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc", 
-        borderRadius: 20, 
+        backgroundColor: "#f6f8fc",
+        borderRadius: 20,
         paddingHorizontal: 12,
-        height: 40, 
+        height: 40,
         borderWidth: 1,
         borderColor: "#dbe3ef",
     },
@@ -49,24 +49,24 @@ const UserBookingsStyle = StyleSheet.create({
     filterRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8, 
+        gap: 8,
     },
     dropdownButton: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#eef3fb", 
-        borderRadius: 15, 
+        backgroundColor: "#eef3fb",
+        borderRadius: 15,
         paddingHorizontal: 10,
-        height: 40, 
+        height: 40,
         borderWidth: 1,
-        borderColor: "#d6e0f0", 
+        borderColor: "#d6e0f0",
         justifyContent: 'space-between',
         minWidth: 90,
     },
     dropdownText: {
-        fontSize: 11, 
+        fontSize: 11,
         color: "#305797",
-        fontFamily: "Roboto_400Regular", 
+        fontFamily: "Roboto_400Regular",
     },
 
     // --- MODAL STYLES ---
@@ -111,8 +111,7 @@ const UserBookingsStyle = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        borderWidth: 1,
-        borderColor: "#eee",
+        borderWidth: 1, borderColor: "#eee",
     },
     cardHeader: {
         flexDirection: "row",
@@ -182,7 +181,7 @@ const UserBookingsStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         fontSize: 12,
     },
-    
+
     // --- EMPTY STATE STYLES ---
     emptyContainer: {
         alignItems: 'center',
@@ -190,7 +189,7 @@ const UserBookingsStyle = StyleSheet.create({
         marginTop: 60,
     },
     emptyImage: {
-        width: 150, 
+        width: 150,
         height: 150,
         resizeMode: 'contain',
         opacity: 0.8,
