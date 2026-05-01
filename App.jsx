@@ -52,6 +52,8 @@ import PaymentSuccess from './screens/client/PaymentSuccess';
 
 import SuccessfulPaymentPassport from './screens/client/SuccessfulPaymentPassport';
 import SuccessfulPaymentVisa from './screens/client/SuccessfulPaymentVisa';
+import SuccessfulManualPaymentVisa from './screens/client/SuccessfulManualPaymentVisa';
+import SuccessfulManualPaymentPassport from './screens/client/SuccessfulManualPaymentPassport';
 
 import AboutUs from './screens/client/AboutUs';
 import FAQs from './screens/client/FAQs';
@@ -82,7 +84,7 @@ function AppNavigator() {
   };
 
   if (loading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -92,7 +94,7 @@ function AppNavigator() {
         initialRouteName={initialRoute}
         screenOptions={{ headerShown: false }}
       >
-        
+
         {!user ? (
           <>
             <MyScreen.Screen name="splash" component={SplashScreen} />
@@ -109,7 +111,7 @@ function AppNavigator() {
             <MyScreen.Screen name="packages" component={Packages} />
             <MyScreen.Screen name="packagedetails" component={PackageDetails} />
             <MyScreen.Screen name="wishlist" component={Wishlist} />
-            
+
             <MyScreen.Screen name="userbookings" component={UserBookings} />
             <MyScreen.Screen name="usertransactions" component={UserTransactions} />
             <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
@@ -130,12 +132,14 @@ function AppNavigator() {
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="quotationform" component={QuotationForm} />
-            
+
             <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
             <MyScreen.Screen name="paymentmode" component={PaymentMode} />
             <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
             <MyScreen.Screen name="successfulpaymentpassport" component={SuccessfulPaymentPassport} />
             <MyScreen.Screen name="successfulpaymentvisa" component={SuccessfulPaymentVisa} />
+            <MyScreen.Screen name="successfulmanualpaymentvisa" component={SuccessfulManualPaymentVisa} />
+            <MyScreen.Screen name="successfulmanualpaymentpassport" component={SuccessfulManualPaymentPassport} />
 
             <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
             <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} />
@@ -144,7 +148,7 @@ function AppNavigator() {
             <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
             <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
             <MyScreen.Screen name="visaprogress" component={VisaProgress} />
-            
+
             <MyScreen.Screen name="aboutus" component={AboutUs} />
             <MyScreen.Screen name="faqs" component={FAQs} />
           </>

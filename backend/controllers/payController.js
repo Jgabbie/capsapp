@@ -11,6 +11,7 @@ import TransactionModel from "../models/transaction.js";
 import Notification from "../models/notification.js";
 import PackageModel from "../models/package.js";
 import User from "../models/users.js";
+import transporter from "../config/nodemailer.js";
 import logAction from "../utils/logger.js";
 
 const generateBookingReference = () => {

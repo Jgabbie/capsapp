@@ -2,12 +2,14 @@ import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
+import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
@@ -33,6 +35,8 @@ export default function PassportProgress() {
     const [paymentAmount, setPaymentAmount] = useState('');
     const [proofImage, setProofImage] = useState(null);
     const [creatingPayment, setCreatingPayment] = useState(false);
+    const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
+    const [uploadedDocuments, setUploadedDocuments] = useState({});
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -67,6 +71,7 @@ export default function PassportProgress() {
             if (!appData) throw new Error("Application not found in your list.");
 
             setApplication(appData);
+            setUploadedDocuments(appData.submittedDocuments || {});
         } catch (error) {
             console.log("Error fetching details:", error.message);
             Alert.alert('Error', 'Unable to load application details.');
@@ -91,7 +96,7 @@ export default function PassportProgress() {
                 date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
                 time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
             }
-            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
+            : normalizeScheduleSlot(appointmentOptions[selectedScheduleIndex]);
 
         if (!selected?.date || !selected?.time) {
             Alert.alert("Error", "Please provide both date and time.");
@@ -147,6 +152,63 @@ export default function PassportProgress() {
         });
 
         return response.data;
+    };
+
+    const pickAndUploadPassportDocument = async (documentKey) => {
+        if (!application?._id) return;
+
+        const picked = await DocumentPicker.getDocumentAsync({
+            type: ['image/*', 'application/pdf'],
+            copyToCacheDirectory: true,
+            multiple: false,
+        });
+
+        if (picked.canceled) return;
+
+        const file = picked.assets?.[0];
+        if (!file?.uri) {
+            Alert.alert('Error', 'No file selected.');
+            return;
+        }
+
+        const formData = new FormData();
+        if (Platform.OS === 'web' && file.file) {
+            formData.append('files', file.file, file.name || `${documentKey}-${Date.now()}`);
+        } else {
+            formData.append('files', {
+                uri: file.uri,
+                name: file.name || `${documentKey}-${Date.now()}`,
+                type: file.mimeType || 'application/octet-stream',
+            });
+        }
+
+        try {
+            setUploadingDocumentKey(documentKey);
+
+            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+            const uploadedUrl = uploadRes?.urls?.[0];
+
+            if (!uploadedUrl) {
+                throw new Error('Failed to upload document');
+            }
+
+            const nextDocuments = {
+                ...uploadedDocuments,
+                [documentKey]: uploadedUrl,
+            };
+
+            await api.put(`/passport/applications/${application._id}/documents`, {
+                submittedDocuments: nextDocuments,
+            }, withUserHeader(user._id));
+
+            setUploadedDocuments(nextDocuments);
+            Alert.alert('Success', 'Document uploaded successfully.');
+            await fetchApplicationDetails();
+        } catch (error) {
+            Alert.alert('Error', error?.response?.data?.message || error.message || 'Unable to upload document.');
+        } finally {
+            setUploadingDocumentKey(null);
+        }
     };
 
     const handleStartPayment = async () => {
@@ -205,7 +267,7 @@ export default function PassportProgress() {
                 };
 
                 await api.post('/pay/manual-passport', manualPayload, withUserHeader(user._id));
-                Alert.alert('Success', 'Manual payment submitted successfully.');
+                cs.navigate('successfulmanualpaymentpassport');
                 return;
             }
 
@@ -268,6 +330,26 @@ export default function PassportProgress() {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
     }, [steps, appStatus]);
+
+    const appointmentOptions = useMemo(() => {
+        if (Array.isArray(application?.suggestedAppointmentSchedules) && application.suggestedAppointmentSchedules.length > 0) {
+            return application.suggestedAppointmentSchedules;
+        }
+
+        if (application?.preferredDate && application?.preferredTime) {
+            return [{ date: application.preferredDate, time: application.preferredTime }];
+        }
+
+        return [];
+    }, [application]);
+
+    const passportRequirements = useMemo(() => ([
+        { key: 'passportPhoto', label: 'Passport Photo' },
+        { key: 'birthCertificate', label: 'Birth Certificate' },
+        { key: 'applicationForm', label: 'Application Form' },
+        { key: 'govId', label: 'Government ID' },
+        { key: 'oldPassport', label: 'Old Passport' },
+    ]), []);
 
     const isOthersSelected = selectedScheduleIndex === 'others';
     const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
@@ -414,7 +496,7 @@ export default function PassportProgress() {
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual Payment</Text>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual</Text>
                                     <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'manual' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
                                         {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
                                     </View>
@@ -433,38 +515,49 @@ export default function PassportProgress() {
 
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
-                                <TouchableOpacity
-                                    onPress={pickProofImage}
-                                    style={{
-                                        borderWidth: 1,
-                                        borderColor: '#d1d5db',
-                                        borderRadius: 10,
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 14,
-                                        backgroundColor: '#fff',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: 8,
-                                    }}
-                                >
-                                    <Ionicons name="cloud-upload-outline" size={20} color="#305797" />
-                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold' }}>
-                                        {proofImage ? 'Change Proof Image' : 'Upload Proof of Payment'}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                {proofImage && (
-                                    <View style={{ marginTop: 12, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 10, backgroundColor: '#fff' }}>
-                                        <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Preview</Text>
-                                        <View style={{ borderRadius: 10, overflow: 'hidden', backgroundColor: '#f8fafc' }}>
-                                            <Image source={{ uri: proofImage.uri }} style={{ width: '100%', height: 180 }} resizeMode="contain" />
-                                        </View>
-                                        <TouchableOpacity onPress={() => setProofImage(null)} style={{ marginTop: 10, alignSelf: 'flex-end' }}>
-                                            <Text style={{ color: '#ef4444', fontFamily: 'Montserrat_600SemiBold', fontSize: 12 }}>Remove Image</Text>
-                                        </TouchableOpacity>
+                                <View style={PaymentStyle.manualBankSection}>
+                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={PaymentStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO Unibank', acc: '0012-3456-7890' },
+                                            { name: 'BPI', acc: '9876-5432-10' },
+                                            { name: 'Metro Bank', acc: '0012-3456-7890' },
+                                            { name: 'Land Bank', acc: '9876-5432-10' },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
+                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                            </View>
+                                        ))}
                                     </View>
-                                )}
+
+                                    <View style={PaymentStyle.uploadSection}>
+                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>Our team will manually verify your payment within 1-2 business days.</Text>
+
+                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
+                                        </TouchableOpacity>
+
+                                        {proofImage && (
+                                            <View style={PaymentStyle.imagePreviewContainer}>
+                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                                <View style={PaymentStyle.previewImageBox}>
+                                                    <View style={PaymentStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
                             </View>
                         )}
 
@@ -478,16 +571,60 @@ export default function PassportProgress() {
                     </View>
                 )}
 
+                {appStatus.toLowerCase() === 'payment complete' && (
+                    <View style={PassportProgressStyle.card}>
+                        <Text style={PassportProgressStyle.cardTitle}>Upload Files</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Upload the required passport documents below.</Text>
+
+                        <View style={{ gap: 12 }}>
+                            {passportRequirements.map((doc) => {
+                                const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
+
+                                return (
+                                    <View key={doc.key} style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14, backgroundColor: '#fff' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 6 }}>{doc.label}</Text>
+                                        <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>PDF, JPG, or PNG</Text>
+
+                                        <TouchableOpacity
+                                            onPress={() => pickAndUploadPassportDocument(doc.key)}
+                                            style={{
+                                                backgroundColor: '#305797',
+                                                borderRadius: 10,
+                                                paddingVertical: 12,
+                                                alignItems: 'center',
+                                                opacity: uploadingDocumentKey === doc.key ? 0.7 : 1,
+                                            }}
+                                            disabled={uploadingDocumentKey === doc.key}
+                                        >
+                                            {uploadingDocumentKey === doc.key ? (
+                                                <ActivityIndicator color="#fff" />
+                                            ) : (
+                                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
+                                                    {uploadedUrl ? 'Replace File' : 'Upload File'}
+                                                </Text>
+                                            )}
+                                        </TouchableOpacity>
+
+                                        {uploadedUrl ? (
+                                            <Text style={{ color: '#16a34a', fontSize: 12, marginTop: 8 }}>File uploaded</Text>
+                                        ) : null}
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
+
                 {/* 🔥 SUGGESTED APPOINTMENTS CARD 🔥 */}
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
-                        {application.suggestedAppointmentSchedules?.length > 0 ? (
+                        {appointmentOptions.length > 0 ? (
                             <>
                                 <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your DFA appointment.</Text>
 
-                                {application.suggestedAppointmentSchedules.map((slot, index) => (
+                                {appointmentOptions.map((slot, index) => (
                                     (() => {
                                         const normalizedSlot = normalizeScheduleSlot(slot);
                                         return (
@@ -580,12 +717,6 @@ export default function PassportProgress() {
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomDatePicker(false)}>
                         <TouchableWithoutFeedback>
                             <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                                <View style={{ padding: 16, borderBottomWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797' }}>Select Preferred Date</Text>
-                                    <TouchableOpacity onPress={() => setShowCustomDatePicker(false)}>
-                                        <Ionicons name="close" size={22} color="#9ca3af" />
-                                    </TouchableOpacity>
-                                </View>
                                 <DateTimePicker
                                     value={customPreferredDate || new Date()}
                                     mode="date"
@@ -601,12 +732,6 @@ export default function PassportProgress() {
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomTimePicker(false)}>
                         <TouchableWithoutFeedback>
                             <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                                <View style={{ padding: 16, borderBottomWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797' }}>Select Preferred Time</Text>
-                                    <TouchableOpacity onPress={() => setShowCustomTimePicker(false)}>
-                                        <Ionicons name="close" size={22} color="#9ca3af" />
-                                    </TouchableOpacity>
-                                </View>
                                 <DateTimePicker
                                     value={customPreferredTime || new Date()}
                                     mode="time"
