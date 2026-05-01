@@ -8,6 +8,7 @@ import VisaApplicationModel from "../models/visaApplication.js";
 import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
+import Notification from "../models/notification.js";
 import PackageModel from "../models/package.js";
 import User from "../models/users.js";
 import logAction from "../utils/logger.js";
