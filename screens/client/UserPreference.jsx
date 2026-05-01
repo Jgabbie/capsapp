@@ -6,6 +6,7 @@ import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
 
 import UserPreferenceStyle from '../../styles/clientstyles/UserPreferenceStyle';
 import { api, withUserHeader } from '../../utils/api';
+import { extractPackageTags } from '../../utils/packageTags';
 import { useUser } from '../../context/UserContext';
 
 export default function UserPreference() {
@@ -32,20 +33,10 @@ export default function UserPreference() {
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const response = await api.get('/package/get-packages-for-users');
-                const unique = new Set();
-                (response.data || response || []).forEach((pkg) => {
-                    pkg.packageTags?.forEach((tag) => unique.add(tag));
-                });
-                
-                // If the DB has tags, use them. Otherwise, fall back to default dummy tags
-                if (unique.size > 0) {
-                    setMoodOptions(Array.from(unique));
-                } else {
-                    setMoodOptions(['Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples', 'Winter']);
-                }
+                const response = await api.get('/package/get-packages');
+                setMoodOptions(extractPackageTags(response.data));
             } catch (error) {
-                setMoodOptions(['Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples', 'Winter']); 
+                setMoodOptions([]);
             }
         };
         fetchTags();

@@ -29,7 +29,7 @@ export default function Home() {
 
     const [activeDropdown, setActiveDropdown] = useState(null)
     const [selectedTag, setSelectedTag] = useState('Tags')
-    const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
+    const [selectedDuration, setSelectedDuration] = useState('Duration')
 
     // Contact Form States
     const [contactName, setContactName] = useState('')
@@ -114,7 +114,7 @@ export default function Home() {
             (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) ||
             pkg.packageDescription.toLowerCase().includes(selectedTag.toLowerCase())
 
-        const matchesDuration = selectedDuration === 'Length of Stay' || selectedDuration === 'All Durations' ||
+        const matchesDuration = selectedDuration === 'Duration' || selectedDuration === 'All Durations' ||
             pkg.packageDuration === parseInt(selectedDuration.split(' ')[0])
 
         return matchesSearch && matchesActivity && matchesDuration
@@ -214,7 +214,7 @@ export default function Home() {
     const DropdownModal = () => (
         <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
             <TouchableOpacity style={HomeStyle.dropdownOverlay} activeOpacity={1} onPress={() => setActiveDropdown(null)}>
-                <View style={HomeStyle.dropdownListContent}>
+                <View style={HomeStyle.dropdownCenteredContent}>
                     {activeDropdown === 'tag' ? (
                         <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
                             {tagOptions.map((option, index) => {
@@ -238,13 +238,13 @@ export default function Home() {
                     ) : activeDropdown === 'duration' ? (
                         <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
                             {durationOptions.map((option, index) => {
-                                const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
+                                const isActive = selectedDuration === option || (selectedDuration === 'Duration' && option === 'All Durations');
                                 return (
                                     <TouchableOpacity
                                         key={index}
                                         style={[HomeStyle.modalOption, index === durationOptions.length - 1 && { borderBottomWidth: 0 }]}
                                         onPress={() => {
-                                            setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
+                                            setSelectedDuration(option === 'All Durations' ? 'Duration' : option)
                                             setActiveDropdown(null)
                                         }}
                                     >
@@ -320,39 +320,45 @@ export default function Home() {
                         <Text style={HomeStyle.mainTitle}>M&RC Travel and Tours</Text>
                         <Text style={HomeStyle.byTravex}>by travex</Text>
                     </View>
-                    <Text style={HomeStyle.heroSubtitle}>
-                        Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!
-                    </Text>
-
-                    <View style={HomeStyle.searchRow}>
-                        <View style={HomeStyle.searchBar} >
-                            <Ionicons name="search" size={16} color="#777" />
-                            <TextInput
-                                style={HomeStyle.searchInput}
-                                placeholder='Search here...'
-                                placeholderTextColor="#777"
-                                value={searchQuery}
-                                onChangeText={(text) => setSearchQuery(text)}
-                            />
+                    <ImageBackground
+                        source={require('../../assets/images/LandingPage_Banner.png')}
+                        style={HomeStyle.heroContainer}
+                        resizeMode="cover"
+                        imageStyle={{ width: '100%', height: '100%' }}
+                    >
+                        <View style={HomeStyle.heroOverlay} />
+                        <View style={HomeStyle.heroContentWrapper}>
+                            <Text style={HomeStyle.heroTitle}>Your Link to the World</Text>
+                            <Text style={HomeStyle.heroSubtitleWhite}>Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!</Text>
+                            
+                            <View style={HomeStyle.heroFiltersWrapper}>
+                                <View style={HomeStyle.heroSearchBar}>
+                                    <Ionicons name="search" size={16} color="#777" />
+                                    <TextInput
+                                        style={HomeStyle.heroSearchInput}
+                                        placeholder='Search here...'
+                                        placeholderTextColor="#999"
+                                        value={searchQuery}
+                                        onChangeText={(text) => setSearchQuery(text)}
+                                    />
+                                </View>
+                                <View style={HomeStyle.heroButtonsRow}>
+                                    <TouchableOpacity style={HomeStyle.heroFilterButton} onPress={() => setActiveDropdown('tag')}>
+                                        <Text style={HomeStyle.heroFilterText} numberOfLines={1}>
+                                            {selectedTag.length > 12 ? selectedTag.substring(0, 12) + '...' : selectedTag}
+                                        </Text>
+                                        <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={HomeStyle.heroFilterButton} onPress={() => setActiveDropdown('duration')}>
+                                        <Text style={HomeStyle.heroFilterText} numberOfLines={1}>
+                                            {selectedDuration.length > 12 ? selectedDuration.substring(0, 12) + '...' : selectedDuration}
+                                        </Text>
+                                        <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         </View>
-                        <View style={HomeStyle.dropdownGroup}>
-                            <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('tag')}>
-                                <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedTag.length > 8 ? selectedTag.substring(0, 8) + '...' : selectedTag}
-                                </Text>
-                                <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('duration')}>
-                                <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedDuration.length > 10 ? selectedDuration.substring(0, 10) + '...' : selectedDuration}
-                                </Text>
-                                <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    <Text style={HomeStyle.secondMainTitle}>Your Link to the World</Text>
+                    </ImageBackground>
 
                     {loading ? (
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />

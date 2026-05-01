@@ -14,6 +14,7 @@ import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import ProfileStyle from '../../styles/clientstyles/ProfileStyle'
 
 import { api, withUserHeader } from '../../utils/api' 
+import { extractPackageTags } from '../../utils/packageTags'
 import { useUser } from '../../context/UserContext'
 
 export default function Profile() {
@@ -124,27 +125,14 @@ export default function Profile() {
                 const [bookingsRes, reviewsRes, tagsRes, prefRes] = await Promise.all([
                     api.get('/booking/my-bookings', withUserHeader(user._id)).catch(() => ({ data: [] })),
                     api.get('/rating/my-ratings', withUserHeader(user._id)).catch(() => ({ data: [] })),
-                    api.get('/package/get-packages-for-users', withUserHeader(user._id)).catch(() => ({ data: [] })),
+                    api.get('/package/get-packages', withUserHeader(user._id)).catch(() => ({ data: [] })),
                     api.get('/preferences/me', withUserHeader(user._id)).catch(() => ({ data: null }))
                 ]);
 
                 setRecentBookings(bookingsRes.data?.bookings || bookingsRes.data || []);
                 setRecentReviews(reviewsRes.data?.ratings || reviewsRes.data || []);
 
-                // Extract unique tags for Moods
-                const uniqueTags = new Set();
-                const packagesData = tagsRes.data?.data || tagsRes.data || []; 
-                
-                packagesData.forEach((pkg) => {
-                    pkg.packageTags?.forEach((tag) => uniqueTags.add(tag));
-                });
-                
-                // 🔥 ADDED FALLBACK JUST LIKE THE OTHER SCREEN 🔥
-                if (uniqueTags.size > 0) {
-                    setMoodOptions(Array.from(uniqueTags));
-                } else {
-                    setMoodOptions(['Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples', 'Winter']);
-                }
+                setMoodOptions(extractPackageTags(tagsRes.data));
 
                 // Set user preferences
                 if (prefRes.data?.preferrences) {

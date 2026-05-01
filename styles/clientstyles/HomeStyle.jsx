@@ -44,6 +44,88 @@ const HomeStyle = StyleSheet.create({
         paddingLeft: 5,
         marginBottom: 20,
     },
+    // --- HERO BANNER ---
+    heroContainer: {
+        width: '100%',
+        height: 300,
+        marginHorizontal: -15, // 🔥 Makes it full width (sagad sa gilid)
+        marginTop: 20,
+        marginBottom: 20,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#000'
+    },
+    heroOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.35)'
+    },
+    heroContentWrapper: {
+        zIndex: 1,
+        width: '100%',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        justifyContent: 'center'
+    },
+    heroTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 32,
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 8
+    },
+    heroSubtitleWhite: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 16,
+        lineHeight: 18
+    },
+    heroFiltersWrapper: {
+        width: '100%',
+        marginTop: 12
+    },
+    heroSearchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        paddingHorizontal: 14,
+        marginBottom: 10,
+        height: 48
+    },
+    heroSearchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 13,
+        color: '#333',
+        paddingVertical: 0
+    },
+    heroButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 12
+    },
+    heroFilterButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+        flex: 0.48,
+        justifyContent: 'center',
+        height: 42
+    },
+    heroFilterText: {
+        fontSize: 12,
+        color: '#305797',
+        fontFamily: 'Roboto_400Regular',
+        flex: 1
+    },
     searchRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -96,15 +178,13 @@ const HomeStyle = StyleSheet.create({
     },
     dropdownOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.1)', 
-        justifyContent: 'flex-start', 
-        alignItems: 'flex-end', 
-        paddingTop: 140, 
-        paddingRight: 15,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
-    dropdownListContent: {
+    dropdownCenteredContent: {
         backgroundColor: '#fff',
-        width: 180, 
+        width: '80%',
         borderRadius: 12,
         elevation: 5,
         shadowColor: "#000",
@@ -118,11 +198,14 @@ const HomeStyle = StyleSheet.create({
         paddingHorizontal: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     modalOptionText: {
         fontSize: 14,
         color: '#305797',
-        fontFamily: 'Roboto_500Medium'
+        fontFamily: 'Roboto_500Medium',
+        textAlign: 'center'
     },
 
     // --- BANNER CARDS ---
