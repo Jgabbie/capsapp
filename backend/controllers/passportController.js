@@ -27,7 +27,7 @@ export const applyPassport = async (req, res) => {
       preferredTime,
       applicationType,
       applicationNumber: randomApplicationNumber(),
-      status: "Application submitted",
+      status: "Application Submitted",
       submittedDocuments: {}, // Empty, since files are no longer required on creation
       documents: {}
     });

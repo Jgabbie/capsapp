@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
+import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 
@@ -209,7 +210,7 @@ export default function VisaProgress() {
                 };
 
                 await api.post('/payment/manual-visa', manualPayload, withUserHeader(user._id));
-                Alert.alert('Success', 'Manual payment submitted successfully.');
+                cs.navigate('successfulmanualpaymentvisa');
                 return;
             }
 
@@ -421,38 +422,51 @@ export default function VisaProgress() {
 
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
-                                <TouchableOpacity
-                                    onPress={pickProofImage}
-                                    style={{
-                                        borderWidth: 1,
-                                        borderColor: '#d1d5db',
-                                        borderRadius: 10,
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 14,
-                                        backgroundColor: '#fff',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: 8,
-                                    }}
-                                >
-                                    <Ionicons name="cloud-upload-outline" size={20} color="#305797" />
-                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold' }}>
-                                        {proofImage ? 'Change Proof Image' : 'Upload Proof of Payment'}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                {proofImage && (
-                                    <View style={{ marginTop: 12, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 10, backgroundColor: '#fff' }}>
-                                        <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Preview</Text>
-                                        <View style={{ borderRadius: 10, overflow: 'hidden', backgroundColor: '#f8fafc' }}>
-                                            <Image source={{ uri: proofImage.uri }} style={{ width: '100%', height: 180 }} resizeMode="contain" />
-                                        </View>
-                                        <TouchableOpacity onPress={() => setProofImage(null)} style={{ marginTop: 10, alignSelf: 'flex-end' }}>
-                                            <Text style={{ color: '#ef4444', fontFamily: 'Montserrat_600SemiBold', fontSize: 12 }}>Remove Image</Text>
-                                        </TouchableOpacity>
+                                <View style={PaymentStyle.manualBankSection}>
+                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={PaymentStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO Unibank', acc: '0012-3456-7890' },
+                                            { name: 'BPI', acc: '9876-5432-10' },
+                                            { name: 'Metro Bank', acc: '0012-3456-7890' },
+                                            { name: 'Land Bank', acc: '9876-5432-10' },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
+                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                            </View>
+                                        ))}
                                     </View>
-                                )}
+
+                                    <View style={PaymentStyle.uploadSection}>
+                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                            Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                        </Text>
+
+                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
+                                        </TouchableOpacity>
+
+                                        {proofImage && (
+                                            <View style={PaymentStyle.imagePreviewContainer}>
+                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                                <View style={PaymentStyle.previewImageBox}>
+                                                    <View style={PaymentStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
                             </View>
                         )}
 
