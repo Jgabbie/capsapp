@@ -145,7 +145,7 @@ export const createManualPaymentVisa = async (req, res) => {
         const visaApp = await VisaApplicationModel.findById(applicationId);
         const user = await User.findById(userId).select('email username');
 
-        await NotificationModel.create({
+        await Notification.create({
             userId,
             title: "Manual Payment Submitted",
             message: `Your manual payment for visa application ${visaApp.applicationNumber} has been submitted and is pending review.`,
@@ -725,7 +725,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 console.log("Visa payment status updated:", updatedVisa.status);
             }
 
-            await NotificationModel.create({
+            await Notification.create({
                 userId: user._id,
                 title: 'Visa Payment Successful',
                 message: `Your visa application ${metadata.applicationNumber} was successful.`,
@@ -826,7 +826,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             }
             console.log("Updated status:", updatedApp.status);
 
-            await NotificationModel.create({
+            await Notification.create({
                 userId: user._id,
                 title: 'Passport Payment Successful',
                 message: `Your passport application ${metadata.applicationNumber} was successful.`,
@@ -926,7 +926,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             await updateBookingPaymentStatus(metadata.bookingId);
 
-            await NotificationModel.create({
+            await Notification.create({
                 userId: user._id,
                 title: 'Installment Payment Successful',
                 message: `Your installment payment for booking ${metadata.bookingReference} was successful.`,
@@ -1070,7 +1070,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 await updateBookingPaymentStatus(booking._id);
             }
 
-            await NotificationModel.create({
+            await Notification.create({
                 userId: user._id,
                 title: 'Booking Confirmed',
                 message: `Your booking ${booking.reference} has been confirmed.`,
@@ -1223,7 +1223,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 await updateBookingPaymentStatus(booking._id);
             }
 
-            await NotificationModel.create({
+            await Notification.create({
                 userId: user._id,
                 title: 'Booking Quotation Confirmed',
                 message: `Your booking Quotation ${booking.reference} has been confirmed.`,
