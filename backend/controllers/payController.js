@@ -9,6 +9,7 @@ import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
 import PackageModel from "../models/package.js";
+import User from "../models/users.js";
 import logAction from "../utils/logger.js";
 
 const generateBookingReference = () => {
@@ -141,7 +142,7 @@ export const createManualPaymentVisa = async (req, res) => {
 
 
         const visaApp = await VisaApplicationModel.findById(applicationId);
-        const user = await UserModel.findById(userId).select('email username');
+        const user = await User.findById(userId).select('email username');
 
         await NotificationModel.create({
             userId,
@@ -680,7 +681,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             return console.log('missing metadata:', metadata);
         }
 
-        const user = await UserModel.findById(metadata.userId);
+        const user = await User.findById(metadata.userId);
         if (!user) return console.log('user not found for metadata userId:', metadata.userId);
 
         console.log('metadata:', metadata);
