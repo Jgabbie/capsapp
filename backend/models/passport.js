@@ -43,6 +43,10 @@ const passportSchema = new mongoose.Schema(
       date: { type: String },
       time: { type: String }
     }],
+    ChosenAppointmentSchedule: {
+      date: { type: String, default: "" },
+      time: { type: String, default: "" }
+    },
     submittedDocuments: {
       birthCertificate: { type: String },
       applicationForm: { type: String },

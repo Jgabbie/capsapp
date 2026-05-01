@@ -31,7 +31,7 @@ export default function UserBookings() {
     const [isStatusModalOpen, setStatusModalOpen] = useState(false)
     const [isBookingDateOpen, setBookingDateOpen] = useState(false)
     const [isTravelDateOpen, setTravelDateOpen] = useState(false)
-    
+
     // Cancellation Modal States
     const [isCancelPolicyModalOpen, setCancelPolicyModalOpen] = useState(false)
     const [isCancelModalOpen, setCancelModalOpen] = useState(false)
@@ -71,11 +71,11 @@ export default function UserBookings() {
 
     const getStatusStyle = (status) => {
         const normalized = String(status || '').trim().toLowerCase();
-        if (normalized === 'not paid') return { bg: '#fff1f0', text: '#cf1322' }; 
-        if (normalized === 'pending') return { bg: '#fffbe6', text: '#d48806' }; 
-        if (normalized === 'fully paid' || normalized === 'successful') return { bg: '#f6ffed', text: '#389e0d' }; 
-        if (normalized === 'cancelled' || normalized === 'cancellation requested') return { bg: '#f5f5f5', text: '#555555' }; 
-        return { bg: '#f0f5ff', text: '#2f54eb' }; 
+        if (normalized === 'not paid') return { bg: '#fff1f0', text: '#cf1322' };
+        if (normalized === 'pending') return { bg: '#fffbe6', text: '#d48806' };
+        if (normalized === 'fully paid' || normalized === 'successful') return { bg: '#f6ffed', text: '#389e0d' };
+        if (normalized === 'cancelled' || normalized === 'cancellation requested') return { bg: '#f5f5f5', text: '#555555' };
+        return { bg: '#f0f5ff', text: '#2f54eb' };
     };
 
     const fetchBookings = async () => {
@@ -83,18 +83,18 @@ export default function UserBookings() {
         try {
             setLoading(true)
             const response = await api.get('/booking/my-bookings', withUserHeader(user._id))
-            
+
             let fetchedBookings = [];
             if (Array.isArray(response.data)) {
                 fetchedBookings = response.data;
             } else if (response.data && Array.isArray(response.data.bookings)) {
                 fetchedBookings = response.data.bookings;
             } else if (response.data && typeof response.data === 'object') {
-                 fetchedBookings = [response.data];
+                fetchedBookings = [response.data];
             }
 
             const mappedBookings = fetchedBookings.map(b => {
-                
+
                 let formattedTravelDate = '--';
                 if (b.travelDate) {
                     if (typeof b.travelDate === 'string') {
@@ -102,19 +102,19 @@ export default function UserBookings() {
                     } else if (b.travelDate.startDate) {
                         const sDate = b.travelDate.startDate;
                         const eDate = b.travelDate.endDate || sDate;
-                        
+
                         if (sDate.includes(',') && !sDate.includes('T')) {
                             formattedTravelDate = sDate === eDate ? sDate : `${sDate} - ${eDate}`;
                         } else {
                             const parsedStart = new Date(sDate);
                             const parsedEnd = new Date(eDate);
-                            
+
                             if (!isNaN(parsedStart.getTime())) {
                                 const fStart = dayjs(parsedStart).format('MMM D, YYYY');
                                 const fEnd = isNaN(parsedEnd.getTime()) ? fStart : dayjs(parsedEnd).format('MMM D, YYYY');
                                 formattedTravelDate = fStart === fEnd ? fStart : `${fStart} - ${fEnd}`;
                             } else {
-                                formattedTravelDate = sDate; 
+                                formattedTravelDate = sDate;
                             }
                         }
                     }
@@ -144,7 +144,7 @@ export default function UserBookings() {
             });
 
             setBookings(mappedBookings);
-            
+
         } catch (error) {
             console.log("BOOKING CRASH REASON:", error.response?.data || error.message);
             setBookings([])
@@ -158,14 +158,14 @@ export default function UserBookings() {
     const filteredBookings = useMemo(() => {
         return bookings.filter((item) => {
             const needle = searchText.trim().toLowerCase();
-            const matchesSearch = !needle || 
-                item.reference?.toLowerCase().includes(needle) || 
+            const matchesSearch = !needle ||
+                item.reference?.toLowerCase().includes(needle) ||
                 (item.packageId?.packageName || '').toLowerCase().includes(needle) ||
                 item.computedStatus.toLowerCase().includes(needle);
-            
+
             const matchesStatus = statusFilter === 'All' || item.computedStatus === statusFilter;
             const matchesBookingDate = !bookingDateFilter || dayjs(item.createdAt).format('YYYY-MM-DD') === bookingDateFilter;
-            
+
             let matchesTravelDate = true;
             if (travelDateFilter) {
                 const formattedFilter = dayjs(travelDateFilter).format('MMM D, YYYY');
@@ -181,7 +181,7 @@ export default function UserBookings() {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            base64: true, 
+            base64: true,
             quality: 0.7,
         });
 
@@ -215,14 +215,14 @@ export default function UserBookings() {
             };
 
             await api.post(`/booking/cancel/${selectedBookingId}`, payload, withUserHeader(user._id));
-            
+
             setLoadingCancel(false);
             setCancelModalOpen(false);
-            
+
             setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); setCancelImage(null);
-            
+
             Alert.alert("Success", "Cancellation request sent successfully.");
-            fetchBookings(); 
+            fetchBookings();
         } catch (error) {
             setLoadingCancel(false);
             Alert.alert("Error", "Unable to cancel booking. Please try again.");
@@ -234,9 +234,9 @@ export default function UserBookings() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView 
-                style={UserBookingsStyle.container} 
-                contentContainerStyle={{ paddingBottom: 40 }} 
+            <ScrollView
+                style={UserBookingsStyle.container}
+                contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
             >
                 <Text style={UserBookingsStyle.title}>My Bookings</Text>
@@ -285,8 +285,8 @@ export default function UserBookings() {
                     <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
                 ) : filteredBookings.length === 0 ? (
                     <View style={UserBookingsStyle.emptyContainer}>
-                        <Image 
-                            source={require('../../assets/images/empty_logo.png')} 
+                        <Image
+                            source={require('../../assets/images/empty_logo.png')}
                             style={UserBookingsStyle.emptyImage}
                         />
                         <Text style={UserBookingsStyle.emptyText}>No Data yet</Text>
@@ -298,7 +298,7 @@ export default function UserBookings() {
                             <View key={item._id} style={UserBookingsStyle.bookingCard}>
                                 <View style={UserBookingsStyle.cardHeader}>
                                     <Text style={UserBookingsStyle.bookingRef}>{item.reference}</Text>
-                                    
+
                                     <View style={[UserBookingsStyle.statusBadge, { backgroundColor: statusStyle.bg }]}>
                                         <Text style={[UserBookingsStyle.bookingStatus, { color: statusStyle.text, fontWeight: 'bold' }]}>
                                             {item.computedStatus}
@@ -307,10 +307,10 @@ export default function UserBookings() {
                                 </View>
                                 <View style={UserBookingsStyle.cardBody}>
                                     <Text style={UserBookingsStyle.packageName}>{item.packageId?.packageName || 'Tour Package'}</Text>
-                                    <Text style={UserBookingsStyle.detailText}>📅 Travel Date: {item.formattedTravelDate}</Text>
-                                    <Text style={UserBookingsStyle.detailText}>📝 Booking Date: {item.formattedBookingDate}</Text>
-                                    <Text style={UserBookingsStyle.detailText}>👥 Travelers: {item.travelersCountDisplay}</Text>
-                                    <Text style={UserBookingsStyle.detailText}>🏷️ Package Type: {(item.packageId?.packageType || 'Fixed').toUpperCase()}</Text>
+                                    <Text style={UserBookingsStyle.detailText}> Travel Date: {item.formattedTravelDate}</Text>
+                                    <Text style={UserBookingsStyle.detailText}> Booking Date: {item.formattedBookingDate}</Text>
+                                    <Text style={UserBookingsStyle.detailText}> Travelers: {item.travelersCountDisplay}</Text>
+                                    <Text style={UserBookingsStyle.detailText}> Package Type: {(item.packageId?.packageType || 'Fixed').toUpperCase()}</Text>
                                 </View>
                                 <View style={UserBookingsStyle.cardActions}>
                                     <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
@@ -336,16 +336,16 @@ export default function UserBookings() {
                                 Select Status
                             </Text>
                             {['All', 'Not Paid', 'Pending', 'Fully Paid', 'Cancellation Requested', 'Cancelled'].map((status, index) => (
-                                <TouchableOpacity 
-                                    key={status} 
+                                <TouchableOpacity
+                                    key={status}
                                     style={[
                                         UserBookingsStyle.modalOption,
                                         { borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#f0f0f0' }
-                                    ]} 
+                                    ]}
                                     onPress={() => { setStatusFilter(status); setStatusModalOpen(false); }}
                                 >
-                                    <Text style={{ 
-                                        fontSize: 15, 
+                                    <Text style={{
+                                        fontSize: 15,
                                         color: statusFilter === status ? '#305797' : '#555',
                                         fontFamily: statusFilter === status ? 'Montserrat_700Bold' : 'Roboto_400Regular'
                                     }}>
@@ -363,8 +363,8 @@ export default function UserBookings() {
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
                             <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Booking Date</Text>
-                            <Calendar 
-                                onDayPress={(day) => { setBookingDateFilter(day.dateString); setBookingDateOpen(false); }} 
+                            <Calendar
+                                onDayPress={(day) => { setBookingDateFilter(day.dateString); setBookingDateOpen(false); }}
                                 theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
                             />
                         </View>
@@ -377,8 +377,8 @@ export default function UserBookings() {
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
                             <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Travel Date</Text>
-                            <Calendar 
-                                onDayPress={(day) => { setTravelDateFilter(day.dateString); setTravelDateOpen(false); }} 
+                            <Calendar
+                                onDayPress={(day) => { setTravelDateFilter(day.dateString); setTravelDateOpen(false); }}
                                 theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
                             />
                         </View>
@@ -416,7 +416,7 @@ export default function UserBookings() {
             </Modal>
 
             <Modal transparent visible={isCancelModalOpen} animationType="fade">
-                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => {if (!loadingCancel) setCancelModalOpen(false)}}>
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => { if (!loadingCancel) setCancelModalOpen(false) }}>
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '90%', padding: 24 }]}>
                             {loadingCancel ? (
@@ -428,20 +428,20 @@ export default function UserBookings() {
                                 <>
                                     <Text style={[ModalStyle.modalTitle, { color: '#305797', fontSize: 20, textAlign: 'center', marginBottom: 10 }]}>Confirm Cancellation</Text>
                                     <Text style={[ModalStyle.modalText, { marginBottom: 20, textAlign: 'center', color: '#555' }]}>Are you sure you want to cancel this booking?</Text>
-                                    
-                                    <TouchableOpacity 
+
+                                    <TouchableOpacity
                                         style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 10, backgroundColor: '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                                         onPress={() => setShowCancelReasonDropdown(!showCancelReasonDropdown)}
                                     >
                                         <Text style={{ color: cancelReason ? '#333' : '#888', fontFamily: 'Roboto_400Regular' }}>{cancelReason || 'Select a reason'}</Text>
                                         <Ionicons name="chevron-down" size={16} color="#888" />
                                     </TouchableOpacity>
-                                    
+
                                     {showCancelReasonDropdown && (
                                         <View style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' }}>
                                             {['Medical Concern', 'Schedule Conflict', 'Other'].map((reason, idx) => (
-                                                <TouchableOpacity 
-                                                    key={reason} 
+                                                <TouchableOpacity
+                                                    key={reason}
                                                     style={{ padding: 12, borderBottomWidth: idx === 2 ? 0 : 1, borderBottomColor: '#eee' }}
                                                     onPress={() => { setCancelReason(reason); setShowCancelReasonDropdown(false); }}
                                                 >
@@ -469,8 +469,8 @@ export default function UserBookings() {
                                     />
 
                                     <View style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}>
-                                        <TouchableOpacity 
-                                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#305797', borderRadius: 6, paddingVertical: 10, width: '100%' }} 
+                                        <TouchableOpacity
+                                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#305797', borderRadius: 6, paddingVertical: 10, width: '100%' }}
                                             onPress={pickCancelImage}
                                         >
                                             <Ionicons name="push-outline" size={18} color="#305797" style={{ marginRight: 8 }} />
@@ -481,9 +481,9 @@ export default function UserBookings() {
 
                                         {cancelImage && (
                                             <View style={{ alignItems: 'center', marginTop: 15 }}>
-                                                <Image 
-                                                    source={{ uri: cancelImage.uri }} 
-                                                    style={{ width: 120, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' }} 
+                                                <Image
+                                                    source={{ uri: cancelImage.uri }}
+                                                    style={{ width: 120, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' }}
                                                 />
                                                 <Text style={{ fontSize: 11, color: '#555', marginTop: 8 }}>{cancelImage.fileName || 'image.jpg'}</Text>
                                             </View>

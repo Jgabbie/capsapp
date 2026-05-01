@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Lin
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -37,6 +38,8 @@ export default function VisaProgress() {
     const [paymentMethod, setPaymentMethod] = useState('paymongo');
     const [creatingPayment, setCreatingPayment] = useState(false);
     const [proofImage, setProofImage] = useState(null);
+    const [uploadingRequirementKey, setUploadingRequirementKey] = useState(null);
+    const [uploadedRequirements, setUploadedRequirements] = useState({});
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -275,6 +278,16 @@ export default function VisaProgress() {
         const requirementText = typeof item === 'object' ? item.req : item;
         const requirementDesc = typeof item === 'object' ? item.desc : '';
 
+        const sanitizeKey = (text) => {
+            return String(text || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+        };
+
+        const reqKey = sanitizeKey(requirementText);
+        const uploadedUrl = uploadedRequirements[reqKey] || application?.submittedDocuments?.[reqKey];
+
         return (
             <View key={index} style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: '#eef2f7' }}>
                 <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: requirementDesc ? 4 : 0 }}>
@@ -285,8 +298,89 @@ export default function VisaProgress() {
                         {requirementDesc}
                     </Text>
                 ) : null}
+
+                {typeof item === 'object' && (item.isReq === 'Required' || String(item.isReq).toLowerCase() === 'required') ? (
+                    <View style={{ marginTop: 10 }}>
+                        <TouchableOpacity
+                            onPress={() => pickAndUploadVisaDocument(reqKey, requirementText)}
+                            style={{
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingVertical: 10,
+                                alignItems: 'center',
+                                opacity: uploadingRequirementKey === reqKey ? 0.7 : 1,
+                                marginTop: 6,
+                            }}
+                            disabled={uploadingRequirementKey === reqKey}
+                        >
+                            {uploadingRequirementKey === reqKey ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>{uploadedUrl ? 'Replace File' : 'Upload File'}</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        {uploadedUrl ? (
+                            <View style={{ marginTop: 8 }}>
+                                <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
+                                <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
+                                    <Text style={{ color: '#305797', fontSize: 12, marginTop: 6 }}>View Document</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : null}
+                    </View>
+                ) : null}
             </View>
         );
+    };
+
+    const pickAndUploadVisaDocument = async (reqKey, label) => {
+        if (!application?._id) return;
+
+        try {
+            setUploadingRequirementKey(reqKey);
+
+            const picked = await DocumentPicker.getDocumentAsync({
+                type: ['image/*', 'application/pdf'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (picked.canceled) return;
+
+            const file = picked.assets?.[0] || picked;
+            if (!file?.uri) return;
+
+            const formData = new FormData();
+            const filename = file.name || file.uri.split('/').pop();
+            const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
+            const ext = match ? match[1].toLowerCase() : 'pdf';
+            const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
+
+            formData.append('files', {
+                uri: file.uri,
+                name: filename,
+                type: mimeType,
+            });
+
+            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+            const uploadedUrl = uploadRes?.uploadedUrls?.[0] || uploadRes?.urls?.[0] || uploadRes?.url || uploadRes?.data?.secure_url;
+
+            if (!uploadedUrl) throw new Error('Upload failed');
+
+            // Persist to backend
+            await api.put(`/visa/applications/${application._id}/documents`, {
+                submittedDocuments: { [reqKey]: uploadedUrl }
+            }, withUserHeader(user._id));
+
+            setUploadedRequirements(prev => ({ ...prev, [reqKey]: uploadedUrl }));
+            await fetchApplicationDetails();
+        } catch (error) {
+            console.error('Upload error:', error?.response?.data || error.message || error);
+            Alert.alert('Error', 'Failed to upload document.');
+        } finally {
+            setUploadingRequirementKey(null);
+        }
     };
 
     const isOthersSelected = selectedScheduleIndex === 'others';
@@ -443,7 +537,7 @@ export default function VisaProgress() {
                         </View>
 
 
-                        {appStatus.toLowerCase() === 'payment complete' && (serviceRequirements.length > 0 || serviceAdditionalRequirements.length > 0) && (
+                        {appStatus.toLowerCase() === 'payment complete' && (serviceRequirements.length > 0) && (
                             <View style={VisaProgressStyle.card}>
                                 <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                                 <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -455,15 +549,6 @@ export default function VisaProgress() {
                                         <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Required Documents</Text>
                                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
                                             {serviceRequirements.map(renderRequirementItem)}
-                                        </View>
-                                    </View>
-                                )}
-
-                                {serviceAdditionalRequirements.length > 0 && (
-                                    <View>
-                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Additional Requirements</Text>
-                                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                                            {serviceAdditionalRequirements.map(renderRequirementItem)}
                                         </View>
                                     </View>
                                 )}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as Linking from 'expo-linking'; 
+import * as Linking from 'expo-linking';
 import dayjs from "dayjs";
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
@@ -17,15 +17,15 @@ export default function PaymentMethod({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
-    
+
     const { setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [method, setMethod] = useState('paymongo'); 
+    const [method, setMethod] = useState('paymongo');
     const [proofImage, setProofImage] = useState(null);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'], 
+            mediaTypes: ['images'],
             allowsEditing: true,
             base64: true,
             quality: 0.5,
@@ -60,7 +60,7 @@ export default function PaymentMethod({ route, navigation }) {
     };
 
     const executePaymentFlow = async () => {
-        setIsProceedModalOpen(false); 
+        setIsProceedModalOpen(false);
         setLoading(true);
 
         try {
@@ -84,7 +84,7 @@ export default function PaymentMethod({ route, navigation }) {
                     const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
                     const match = /\.(\w+)$/.exec(filename);
                     const type = match ? `image/${match[1]}` : `image/jpeg`;
-                    
+
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
 
                     const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
@@ -98,13 +98,13 @@ export default function PaymentMethod({ route, navigation }) {
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',
                         proofFileName: proofImage.fileName || 'deposit_slip.jpg',
-                        status: 'Not Paid' 
+                        status: 'Not Paid'
                     };
 
-                    const response = await api.post('/pay/manual', manualPayload, withUserHeader(user?._id));
+                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
-                    return; 
+                    return;
                 } else {
                     const tokenRes = await api.post('/pay/create-checkout-token', {
                         totalPrice: safeAmount,
@@ -122,16 +122,16 @@ export default function PaymentMethod({ route, navigation }) {
                         totalPrice: safeAmount,
                         checkoutToken: realCheckoutToken,
                         leadEmail: user?.email || "guest@example.com",
-                        leadContact: leadGuestInfo?.contact || "00000000000", 
+                        leadContact: leadGuestInfo?.contact || "00000000000",
                         successUrl: successDeepLink,
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/pay/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
-                    setLoading(false); 
+                    setLoading(false);
                     if (checkoutUrl) Linking.openURL(checkoutUrl);
-                    return; 
+                    return;
                 }
             }
 
@@ -143,7 +143,7 @@ export default function PaymentMethod({ route, navigation }) {
                 const safeChildCount = parseInt(setupData?.travelerCounts?.child) || 0;
                 const safeInfantCount = parseInt(setupData?.travelerCounts?.infant) || 0;
                 const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
-                
+
                 const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
 
                 let parsedStartDate = "TBD";
@@ -164,23 +164,23 @@ export default function PaymentMethod({ route, navigation }) {
                 const safePassengers = Array.isArray(passengers) && passengers.length > 0 ? passengers : [
                     { title: leadGuestInfo?.title || 'MR', firstName: leadGuestInfo?.fullName?.split(' ')[0] || 'Guest', lastName: leadGuestInfo?.fullName?.split(' ').slice(1).join(' ') || 'User' }
                 ];
-                
+
                 const mappedTravelers = safePassengers.map((p) => ({
                     title: p.title || 'MR',
                     firstName: p.firstName || 'Guest',
                     lastName: p.lastName || 'User',
-                    roomType: p.room || p.roomType || 'N/A', 
+                    roomType: p.room || p.roomType || 'N/A',
                     age: p.age?.toString() || '0',
-                    birthday: p.bday || p.birthday || p.birthdate || null, 
-                    passportNo: p.passport || p.passportNo || 'N/A', 
-                    passportExpiry: p.expiry || p.passportExpiry || null, 
-                    passportFile: null, 
-                    photoFile: null     
+                    birthday: p.bday || p.birthday || p.birthdate || null,
+                    passportNo: p.passport || p.passportNo || 'N/A',
+                    passportExpiry: p.expiry || p.passportExpiry || null,
+                    passportFile: null,
+                    photoFile: null
                 }));
 
                 const mappedBookingDetails = {
                     dateOfRegistration: dayjs().toISOString(),
-                    travelDate: travelDateObj, 
+                    travelDate: travelDateObj,
                     tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
                     tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
                     leadTitle: leadGuestInfo?.title || "MR",
@@ -188,16 +188,16 @@ export default function PaymentMethod({ route, navigation }) {
                     leadEmail: user?.email || leadGuestInfo?.email || "guest@example.com",
                     leadContact: leadGuestInfo?.contact || user?.phonenum || "00000000000",
                     leadAddress: leadGuestInfo?.address || "N/A",
-                    travelers: mappedTravelers, 
-                    passportFiles: [], 
-                    photoFiles: [],    
+                    travelers: mappedTravelers,
+                    passportFiles: [],
+                    photoFiles: [],
                     dietaryDetails: medicalData?.dietaryDetails || "",
                     dietaryRequest: medicalData?.dietary === 'Yes' ? "Y" : "N",
                     medicalDetails: medicalData?.medicalDetails || "",
                     medicalRequest: medicalData?.medical === 'Yes' ? "Y" : "N",
                     purchaseInsurance: medicalData?.insurance === 'Yes' ? "Y" : "N",
                     ownInsurance: "N",
-                    totalPrice: safeAmount, 
+                    totalPrice: safeAmount,
                     emergencyContact: emergency?.contact || "N/A",
                     emergencyEmail: emergency?.email || "N/A",
                     emergencyName: emergency?.fullName || "N/A",
@@ -212,27 +212,27 @@ export default function PaymentMethod({ route, navigation }) {
 
                 // Array of Objects format for the Mongoose schema compatibility
                 const travelersPayload = [
-                    { 
-                        adult: safeAdultCount, 
-                        child: safeChildCount, 
-                        infant: safeInfantCount 
+                    {
+                        adult: safeAdultCount,
+                        child: safeChildCount,
+                        infant: safeInfantCount
                     }
                 ];
 
                 const finalBookingPayload = {
-                    packageId: targetPackageId, 
+                    packageId: targetPackageId,
                     amount: safeAmount,
-                    travelDate: travelDateObj, 
-                    travelers: travelersPayload, 
-                    passportFiles: [], 
-                    photoFiles: [],    
+                    travelDate: travelDateObj,
+                    travelers: travelersPayload,
+                    passportFiles: [],
+                    photoFiles: [],
                     bookingDetails: mappedBookingDetails,
-                    status: 'Not Paid' 
+                    status: 'Not Paid'
                 };
 
                 const bookingSaved = await api.post('/booking/create-booking', { bookingPayload: finalBookingPayload }, withUserHeader(user?._id));
-                
-                const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id; 
+
+                const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id;
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
                 const paymentToken = bookingSaved.data?.paymentToken;
 
@@ -241,7 +241,7 @@ export default function PaymentMethod({ route, navigation }) {
                     const filename = proofImage.uri.split('/').pop() || 'deposit.jpg';
                     const match = /\.(\w+)$/.exec(filename);
                     const type = match ? `image/${match[1]}` : `image/jpeg`;
-                    
+
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
 
                     const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
@@ -272,10 +272,10 @@ export default function PaymentMethod({ route, navigation }) {
                         packageId: targetPackageId,
                         totalPrice: safeAmount,
                         checkoutToken: paymentToken,
-                        travelDate: travelDateObj, 
-                        travelers: travelersPayload, 
+                        travelDate: travelDateObj,
+                        travelers: travelersPayload,
                         leadEmail: user?.email || "guest@example.com",
-                        leadContact: leadGuestInfo?.contact || "00000000000", 
+                        leadContact: leadGuestInfo?.contact || "00000000000",
                         successUrl: successDeepLink,
                         cancelUrl: cancelDeepLink,
                     };
@@ -283,7 +283,7 @@ export default function PaymentMethod({ route, navigation }) {
                     const response = await api.post('/pay/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
-                    setLoading(false); 
+                    setLoading(false);
 
                     if (checkoutUrl) {
                         Linking.openURL(checkoutUrl);
@@ -305,9 +305,9 @@ export default function PaymentMethod({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
-                
-                <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
+
+                <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }}
                     onPress={() => navigation.goBack()}
                 >
                     <Ionicons name="arrow-back" size={16} color="#fff" />
@@ -318,13 +318,13 @@ export default function PaymentMethod({ route, navigation }) {
                 <Text style={PaymentStyle.sectionSubtitle}>Select a payment method to complete your booking.</Text>
 
                 <View style={PaymentStyle.progressContainer}>
-                    <View style={[PaymentStyle.progressStep, {backgroundColor: '#305797'}]}><Ionicons name="checkmark" size={14} color="#fff" /></View>
-                    <View style={[PaymentStyle.progressLine, {backgroundColor: '#305797'}]} />
+                    <View style={[PaymentStyle.progressStep, { backgroundColor: '#305797' }]}><Ionicons name="checkmark" size={14} color="#fff" /></View>
+                    <View style={[PaymentStyle.progressLine, { backgroundColor: '#305797' }]} />
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>2</Text></View>
                 </View>
 
                 <View style={PaymentStyle.methodGridContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[PaymentStyle.methodGridCard, method === 'paymongo' && PaymentStyle.methodGridCardSelected]}
                         onPress={() => setMethod('paymongo')}
                         activeOpacity={0.9}
@@ -341,7 +341,7 @@ export default function PaymentMethod({ route, navigation }) {
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[PaymentStyle.methodGridCard, method === 'manual' && PaymentStyle.methodGridCardSelected]}
                         onPress={() => setMethod('manual')}
                         activeOpacity={0.9}
@@ -361,7 +361,7 @@ export default function PaymentMethod({ route, navigation }) {
 
                 {method === 'manual' && (
                     <View style={PaymentStyle.manualBankSection}>
-                        <Text style={[PaymentStyle.sectionTitle, {fontSize: 16, marginBottom: 12}]}>Available Bank Accounts</Text>
+                        <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={PaymentStyle.bankGrid}>
                             {[
                                 { name: 'BDO Unibank', acc: '0012-3456-7890' },
@@ -384,7 +384,7 @@ export default function PaymentMethod({ route, navigation }) {
                             <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
                                 Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
                             </Text>
-                            
+
                             <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickImage}>
                                 <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                 <Text style={PaymentStyle.selectImageBtnText}>Select Receipt Image</Text>
@@ -407,8 +407,8 @@ export default function PaymentMethod({ route, navigation }) {
                     </View>
                 )}
 
-                <TouchableOpacity 
-                    style={[QuotationAllInStyle.proceedButton, {marginTop: 20}]} 
+                <TouchableOpacity
+                    style={[QuotationAllInStyle.proceedButton, { marginTop: 20 }]}
                     onPress={handleProceedClick}
                     disabled={loading}
                 >
@@ -422,10 +422,10 @@ export default function PaymentMethod({ route, navigation }) {
                         <TouchableOpacity style={localStyles.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
                             <Ionicons name="close" size={24} color="#9ca3af" />
                         </TouchableOpacity>
-                        
+
                         <Text style={localStyles.modalTitle}>Proceed to Payment</Text>
                         <Text style={localStyles.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
-                        
+
                         <View style={localStyles.modalButtonRow}>
                             <TouchableOpacity style={localStyles.proceedBtn} onPress={executePaymentFlow}>
                                 <Text style={localStyles.proceedBtnText}>Proceed</Text>
