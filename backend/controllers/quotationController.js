@@ -42,7 +42,9 @@ export const createQuotation = async (req, res) => {
 // --- CLIENT: Fetch User's Own List ---
 export const getUserQuotations = async (req, res) => {
   try {
-    const quotations = await Quotation.find({ userId: req.userId }).sort({ createdAt: -1 });
+    const quotations = await Quotation.find({ userId: req.userId })
+      .populate('packageId', 'packageName packageType')
+      .sort({ createdAt: -1 });
     return res.status(200).json(quotations);
   } catch (error) {
     return res.status(500).json({ message: "Error fetching quotations", error: error.message });
@@ -52,7 +54,8 @@ export const getUserQuotations = async (req, res) => {
 // --- CLIENT: Fetch Specific Quotation Details ---
 export const getQuotation = async (req, res) => {
   try {
-    const quotation = await Quotation.findById(req.params.id);
+    const quotation = await Quotation.findById(req.params.id)
+      .populate('packageId', 'packageName packageType');
 
     if (!quotation) return res.status(404).json({ message: "Quotation not found" });
 
@@ -103,7 +106,9 @@ export const requestRevision = async (req, res) => {
 // --- ADMIN: Fetch All Global Quotations ---
 export const getAllQuotations = async (_req, res) => {
   try {
-    const quotations = await Quotation.find({}).sort({ createdAt: -1 });
+    const quotations = await Quotation.find({})
+      .populate('packageId', 'packageName packageType')
+      .sort({ createdAt: -1 });
     return res.status(200).json(quotations);
   } catch (error) {
     return res.status(500).json({ message: "Error fetching quotations", error: error.message });
@@ -113,7 +118,8 @@ export const getAllQuotations = async (_req, res) => {
 // --- ADMIN: Fetch Specific Quotation (No User Check) ---
 export const adminGetQuotation = async (req, res) => {
   try {
-    const quotation = await Quotation.findById(req.params.id);
+    const quotation = await Quotation.findById(req.params.id)
+      .populate('packageId', 'packageName packageType');
 
     if (!quotation) {
       return res.status(404).json({ message: "Quotation not found" });
