@@ -95,11 +95,29 @@ export default function UserTransactions() {
         return `₱${Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
+    const getItemType = (item) => {
+        // Determine if transaction is for Visa Application or Tour Package booking
+        // Backend stores visa applications with applicationId and applicationType: "Visa Application"
+        if (item.applicationId && item.applicationType === 'Visa Application') {
+            return 'Visa Application';
+        }
+        if (item.bookingId) {
+            return 'Tour Package';
+        }
+        // Fallback to applicationType if present
+        if (item.applicationType) {
+            return item.applicationType;
+        }
+        return 'Tour Package';
+    };
+
     const handleDownloadReceipt = async () => {
         if (!selectedTransaction) return;
         try {
             // 🔥 FIXED DESCRIPTION IN PDF 🔥
-            const safePackageName = selectedTransaction.bookingId?.packageId?.packageName || selectedTransaction.packageName || selectedTransaction.bookingId?.packageName || "Tour Package";
+            const safePackageName = selectedTransaction.applicationId && selectedTransaction.applicationType === 'Visa Application' 
+                ? 'Visa Application'
+                : selectedTransaction.bookingId?.packageId?.packageName || selectedTransaction.packageName || selectedTransaction.bookingId?.packageName || "Tour Package";
             
             const htmlContent = `
                 <html>
@@ -276,8 +294,11 @@ export default function UserTransactions() {
                 ) : (
                     filteredTransactions.map((item) => {
                         const statusStyle = getStatusStyle(item.status);
-                        // 🔥 FIXED PACKAGE NAME ON CARD 🔥
+                        // Get package name for tour bookings
                         const pName = item.bookingId?.packageId?.packageName || item.packageName || item.bookingId?.packageName || "Tour Package";
+                        const itemType = getItemType(item);
+                        // Determine card title: "Visa Application" for visas, package name for tours
+                        const cardTitle = itemType === 'Visa Application' ? 'Visa Application' : pName;
                         
                         return (
                             <View key={item._id} style={UserTransactionStyle.transactionCard}>
@@ -291,7 +312,11 @@ export default function UserTransactions() {
                                 </View>
 
                                 <View style={UserTransactionStyle.cardBody}>
-                                    <Text style={UserTransactionStyle.packageName} numberOfLines={1}>{pName}</Text>
+                                    <Text style={UserTransactionStyle.packageName} numberOfLines={1}>{cardTitle}</Text>
+                                    <View style={UserTransactionStyle.detailRow}>
+                                        <Text style={UserTransactionStyle.detailLabel}>Items:</Text>
+                                        <Text style={UserTransactionStyle.detailValue}>{itemType === 'Visa Application' ? 'Visa Application' : pName}</Text>
+                                    </View>
                                     <View style={UserTransactionStyle.detailRow}>
                                         {/* 🔥 FIXED LABEL: Date -> Date and Time 🔥 */}
                                         <Text style={UserTransactionStyle.detailLabel}>Date and Time:</Text>
@@ -461,7 +486,9 @@ export default function UserTransactions() {
                                             
                                             {/* 🔥 FIXED DESCRIPTION IN MODAL 🔥 */}
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 3 }]} numberOfLines={2}>
-                                                {selectedTransaction.bookingId?.packageId?.packageName || selectedTransaction.packageName || selectedTransaction.bookingId?.packageName || "Tour Package"}
+                                                {selectedTransaction.applicationId && selectedTransaction.applicationType === 'Visa Application' 
+                                                    ? 'Visa Application' 
+                                                    : selectedTransaction.bookingId?.packageId?.packageName || selectedTransaction.packageName || selectedTransaction.bookingId?.packageName || "Tour Package"}
                                             </Text>
                                             
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 2, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
