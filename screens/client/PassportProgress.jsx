@@ -615,7 +615,7 @@ export default function PassportProgress() {
                     </View>
                 )}
 
-                {/* 🔥 SUGGESTED APPOINTMENTS CARD 🔥 */}
+
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
@@ -707,7 +707,6 @@ export default function PassportProgress() {
                                 </TouchableOpacity>
                             </>
                         ) : (
-                            /* 🔥 EMPTY STATE DISPLAYED HERE 🔥 */
                             <Text style={{ color: '#6b7280', fontSize: 14 }}>No suggested dates yet. Please check back later.</Text>
                         )}
                     </View>
