@@ -83,9 +83,7 @@ export default function UserPackageQuotation() {
     };
 
     const getRequestedDateForItem = (item) => {
-        // Use preferredDates if available (mobile/web), else createdAt
-        const preferred = item?.travelDetails?.preferredDates || item?.quotationDetails?.preferredDates || item?.travelDetails?.preferredDate || item?.quotationDetails?.preferredDate;
-        if (preferred) return preferred;
+        // Return the date the quotation was requested (creation date)
         return dayjs(item.createdAt).format("MMM DD, YYYY");
     };
 
@@ -234,8 +232,10 @@ export default function UserPackageQuotation() {
                 ) : (
                     filteredQuotations.map((item) => {
                         const sStyle = getStatusStyle(item.status);
+                        // Get package name - prefer stored packageName (works for both web and mobile), fallback to populated packageId
                         const pName = item.packageName || item.packageId?.packageName || "Tour Package";
-                        const pType = item.packageId?.packageType || "N/A";
+                        // Get package type - try packageId first, then quotationDetails/travelDetails
+                        const pType = item.packageId?.packageType || item.quotationDetails?.packageType || item.travelDetails?.packageType || "DOMESTIC";
 
                         return (
                             <View key={item._id} style={styles.quoteCard}>
