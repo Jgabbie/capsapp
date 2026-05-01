@@ -140,7 +140,7 @@ export const createManualPaymentVisa = async (req, res) => {
         });
 
 
-        const visaApp = await VisaModel.findById(applicationId);
+        const visaApp = await VisaApplicationModel.findById(applicationId);
         const user = await UserModel.findById(userId).select('email username');
 
         await NotificationModel.create({
@@ -497,6 +497,8 @@ export const createCheckoutSessionVisa = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100; // ₱1.00 for testing
+
         const payload = {
             data: {
                 attributes: {
@@ -505,8 +507,8 @@ export const createCheckoutSessionVisa = async (req, res) => {
                         email: "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: 1, currency: "PHP" },
-                        // { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
+                        // 
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: successUrl,
@@ -707,7 +709,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             console.log('Created transaction for visa application:', metadata.applicationId);
 
-            const updatedVisa = await VisaModel.findOneAndUpdate(
+            const updatedVisa = await VisaApplicationModel.findOneAndUpdate(
                 { _id: metadata.applicationId }, // filter object
                 {
                     $set: { status: ["Payment Complete"], currentStepIndex: 1 } // replace array & update progress
