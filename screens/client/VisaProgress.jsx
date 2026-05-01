@@ -23,6 +23,8 @@ export default function VisaProgress() {
 
     const [application, setApplication] = useState(null)
     const [servicePrice, setServicePrice] = useState(0)
+    const [serviceRequirements, setServiceRequirements] = useState([])
+    const [serviceAdditionalRequirements, setServiceAdditionalRequirements] = useState([])
     const [dynamicSteps, setDynamicSteps] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -76,6 +78,8 @@ export default function VisaProgress() {
                 const servRes = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id));
 
                 setServicePrice(servRes.data?.visaPrice || 0);
+                setServiceRequirements(Array.isArray(servRes.data?.visaRequirements) ? servRes.data.visaRequirements : []);
+                setServiceAdditionalRequirements(Array.isArray(servRes.data?.visaAdditionalRequirements) ? servRes.data.visaAdditionalRequirements : []);
 
                 if (servRes.data?.visaProcessSteps && servRes.data.visaProcessSteps.length > 0) {
                     setDynamicSteps(servRes.data.visaProcessSteps);
@@ -267,6 +271,24 @@ export default function VisaProgress() {
         return Math.max(0, index);
     }, [steps, appStatus]);
 
+    const renderRequirementItem = (item, index) => {
+        const requirementText = typeof item === 'object' ? item.req : item;
+        const requirementDesc = typeof item === 'object' ? item.desc : '';
+
+        return (
+            <View key={index} style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: '#eef2f7' }}>
+                <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: requirementDesc ? 4 : 0 }}>
+                    {requirementText}
+                </Text>
+                {requirementDesc ? (
+                    <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, lineHeight: 18 }}>
+                        {requirementDesc}
+                    </Text>
+                ) : null}
+            </View>
+        );
+    };
+
     const isOthersSelected = selectedScheduleIndex === 'others';
     const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
         !isOthersSelected || (customPreferredDate && customPreferredTime)
@@ -420,6 +442,33 @@ export default function VisaProgress() {
                             </TouchableOpacity>
                         </View>
 
+
+                        {appStatus.toLowerCase() === 'payment complete' && (serviceRequirements.length > 0 || serviceAdditionalRequirements.length > 0) && (
+                            <View style={VisaProgressStyle.card}>
+                                <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
+                                <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                                    Please prepare and upload the following requirements for your visa application.
+                                </Text>
+
+                                {serviceRequirements.length > 0 && (
+                                    <View style={{ marginBottom: serviceAdditionalRequirements.length > 0 ? 18 : 0 }}>
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Required Documents</Text>
+                                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                                            {serviceRequirements.map(renderRequirementItem)}
+                                        </View>
+                                    </View>
+                                )}
+
+                                {serviceAdditionalRequirements.length > 0 && (
+                                    <View>
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Additional Requirements</Text>
+                                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                                            {serviceAdditionalRequirements.map(renderRequirementItem)}
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
+                        )}
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
                                 <View style={PaymentStyle.manualBankSection}>

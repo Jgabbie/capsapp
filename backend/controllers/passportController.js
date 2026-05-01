@@ -28,6 +28,9 @@ export const applyPassport = async (req, res) => {
       applicationType,
       applicationNumber: randomApplicationNumber(),
       status: "Application Submitted",
+      suggestedAppointmentSchedules: [
+        { date: preferredDate, time: preferredTime }
+      ],
       submittedDocuments: {}, // Empty, since files are no longer required on creation
       documents: {}
     });
@@ -94,5 +97,45 @@ export const chooseAppointment = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Error updating schedule", error: error.message });
+  }
+};
+
+export const updatePassportApplicationWithDocs = async (req, res) => {
+  const { id } = req.params;
+  const { submittedDocuments } = req.body;
+
+  try {
+    if (!submittedDocuments || typeof submittedDocuments !== 'object') {
+      return res.status(400).json({ message: "submittedDocuments is required" });
+    }
+
+    const application = await PassportModel.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Passport application not found" });
+    }
+
+    if (application.userId && application.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
+    application.submittedDocuments = {
+      ...(application.submittedDocuments || {}),
+      ...submittedDocuments,
+    };
+
+    application.status = "Documents Uploaded";
+
+    await application.save();
+
+    if (typeof logAction === 'function') {
+      logAction('PASSPORT_DOCUMENTS_UPLOADED', req.userId, { Application: application._id });
+    }
+
+    return res.status(200).json({
+      message: "Passport documents updated successfully",
+      application,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating passport documents", error: error.message });
   }
 };

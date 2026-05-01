@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -34,6 +35,8 @@ export default function PassportProgress() {
     const [paymentAmount, setPaymentAmount] = useState('');
     const [proofImage, setProofImage] = useState(null);
     const [creatingPayment, setCreatingPayment] = useState(false);
+    const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
+    const [uploadedDocuments, setUploadedDocuments] = useState({});
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -68,6 +71,7 @@ export default function PassportProgress() {
             if (!appData) throw new Error("Application not found in your list.");
 
             setApplication(appData);
+            setUploadedDocuments(appData.submittedDocuments || {});
         } catch (error) {
             console.log("Error fetching details:", error.message);
             Alert.alert('Error', 'Unable to load application details.');
@@ -92,7 +96,7 @@ export default function PassportProgress() {
                 date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
                 time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
             }
-            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
+            : normalizeScheduleSlot(appointmentOptions[selectedScheduleIndex]);
 
         if (!selected?.date || !selected?.time) {
             Alert.alert("Error", "Please provide both date and time.");
@@ -148,6 +152,63 @@ export default function PassportProgress() {
         });
 
         return response.data;
+    };
+
+    const pickAndUploadPassportDocument = async (documentKey) => {
+        if (!application?._id) return;
+
+        const picked = await DocumentPicker.getDocumentAsync({
+            type: ['image/*', 'application/pdf'],
+            copyToCacheDirectory: true,
+            multiple: false,
+        });
+
+        if (picked.canceled) return;
+
+        const file = picked.assets?.[0];
+        if (!file?.uri) {
+            Alert.alert('Error', 'No file selected.');
+            return;
+        }
+
+        const formData = new FormData();
+        if (Platform.OS === 'web' && file.file) {
+            formData.append('files', file.file, file.name || `${documentKey}-${Date.now()}`);
+        } else {
+            formData.append('files', {
+                uri: file.uri,
+                name: file.name || `${documentKey}-${Date.now()}`,
+                type: file.mimeType || 'application/octet-stream',
+            });
+        }
+
+        try {
+            setUploadingDocumentKey(documentKey);
+
+            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+            const uploadedUrl = uploadRes?.urls?.[0];
+
+            if (!uploadedUrl) {
+                throw new Error('Failed to upload document');
+            }
+
+            const nextDocuments = {
+                ...uploadedDocuments,
+                [documentKey]: uploadedUrl,
+            };
+
+            await api.put(`/passport/applications/${application._id}/documents`, {
+                submittedDocuments: nextDocuments,
+            }, withUserHeader(user._id));
+
+            setUploadedDocuments(nextDocuments);
+            Alert.alert('Success', 'Document uploaded successfully.');
+            await fetchApplicationDetails();
+        } catch (error) {
+            Alert.alert('Error', error?.response?.data?.message || error.message || 'Unable to upload document.');
+        } finally {
+            setUploadingDocumentKey(null);
+        }
     };
 
     const handleStartPayment = async () => {
@@ -269,6 +330,26 @@ export default function PassportProgress() {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
     }, [steps, appStatus]);
+
+    const appointmentOptions = useMemo(() => {
+        if (Array.isArray(application?.suggestedAppointmentSchedules) && application.suggestedAppointmentSchedules.length > 0) {
+            return application.suggestedAppointmentSchedules;
+        }
+
+        if (application?.preferredDate && application?.preferredTime) {
+            return [{ date: application.preferredDate, time: application.preferredTime }];
+        }
+
+        return [];
+    }, [application]);
+
+    const passportRequirements = useMemo(() => ([
+        { key: 'passportPhoto', label: 'Passport Photo' },
+        { key: 'birthCertificate', label: 'Birth Certificate' },
+        { key: 'applicationForm', label: 'Application Form' },
+        { key: 'govId', label: 'Government ID' },
+        { key: 'oldPassport', label: 'Old Passport' },
+    ]), []);
 
     const isOthersSelected = selectedScheduleIndex === 'others';
     const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
@@ -490,16 +571,60 @@ export default function PassportProgress() {
                     </View>
                 )}
 
+                {appStatus.toLowerCase() === 'payment complete' && (
+                    <View style={PassportProgressStyle.card}>
+                        <Text style={PassportProgressStyle.cardTitle}>Upload Files</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Upload the required passport documents below.</Text>
+
+                        <View style={{ gap: 12 }}>
+                            {passportRequirements.map((doc) => {
+                                const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
+
+                                return (
+                                    <View key={doc.key} style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14, backgroundColor: '#fff' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 6 }}>{doc.label}</Text>
+                                        <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>PDF, JPG, or PNG</Text>
+
+                                        <TouchableOpacity
+                                            onPress={() => pickAndUploadPassportDocument(doc.key)}
+                                            style={{
+                                                backgroundColor: '#305797',
+                                                borderRadius: 10,
+                                                paddingVertical: 12,
+                                                alignItems: 'center',
+                                                opacity: uploadingDocumentKey === doc.key ? 0.7 : 1,
+                                            }}
+                                            disabled={uploadingDocumentKey === doc.key}
+                                        >
+                                            {uploadingDocumentKey === doc.key ? (
+                                                <ActivityIndicator color="#fff" />
+                                            ) : (
+                                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
+                                                    {uploadedUrl ? 'Replace File' : 'Upload File'}
+                                                </Text>
+                                            )}
+                                        </TouchableOpacity>
+
+                                        {uploadedUrl ? (
+                                            <Text style={{ color: '#16a34a', fontSize: 12, marginTop: 8 }}>File uploaded</Text>
+                                        ) : null}
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
+
                 {/* 🔥 SUGGESTED APPOINTMENTS CARD 🔥 */}
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
-                        {application.suggestedAppointmentSchedules?.length > 0 ? (
+                        {appointmentOptions.length > 0 ? (
                             <>
                                 <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your DFA appointment.</Text>
 
-                                {application.suggestedAppointmentSchedules.map((slot, index) => (
+                                {appointmentOptions.map((slot, index) => (
                                     (() => {
                                         const normalizedSlot = normalizeScheduleSlot(slot);
                                         return (
