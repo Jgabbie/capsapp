@@ -66,11 +66,12 @@ const getBirthdayBounds = (travelerType) => {
     }
     
     // Adult
+    const adultMinDate = new Date(1935, 0, 1);
     const adultMaxDate = new Date(today);
     adultMaxDate.setFullYear(adultMaxDate.getFullYear() - 12);
 
     return {
-        minDate: null,
+        minDate: adultMinDate,
         maxDate: adultMaxDate, // 12+ years old
         minAge: 12,
         maxAge: null

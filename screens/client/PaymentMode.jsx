@@ -12,6 +12,7 @@ import { useUser } from '../../context/UserContext';
 
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
+const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
 
 // 🔥 NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
 const parseDateStringSafe = (dateStr) => {
@@ -323,7 +324,9 @@ export default function PaymentMode({ route, navigation }) {
                                         </View>
                                         <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
                                             <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>PLEASE PAY</Text>
-                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 10}]}>PHP {formatPesoNumber(amountToCharge)}</Text>
+                                            <Text style={[PaymentStyle.invSummaryValue, { color: '#fff', fontSize: 11 }]}>
+                                                {formatPesoDisplay(totalAmount)}
+                                            </Text>
                                         </View>
                                         <View style={PaymentStyle.invSummaryCol}>
                                             <Text style={PaymentStyle.invTinyLabel}>DUE DATE</Text>
@@ -346,8 +349,8 @@ export default function PaymentMode({ route, navigation }) {
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageTitleDisplay}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>{formatPesoNumber(ratePerPax)}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>{formatPesoNumber(totalAmount)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(ratePerPax)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalAmount)}</Text>
                                     </View>
                                 </View>
 
@@ -362,7 +365,7 @@ export default function PaymentMode({ route, navigation }) {
                                     <View style={PaymentStyle.invTotalContainer}>
                                         <View style={PaymentStyle.invTotalRow}>
                                             <Text style={PaymentStyle.invTotalLabel}>TOTAL DUE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(totalAmount)}</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>{formatPesoDisplay(totalAmount)}</Text>
                                         </View>
                                         <Text style={PaymentStyle.invThankYou}>THANK YOU.</Text>
                                     </View>

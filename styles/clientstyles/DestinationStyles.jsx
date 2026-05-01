@@ -106,7 +106,7 @@ const DestinationStyles = StyleSheet.create({
   discountTextOnly: { color: "#cf1322", fontWeight: "800", fontSize: 14, marginLeft: 8 },
 
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: "90%" },
+  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 50, maxHeight: "90%" },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: "#305797" },
   modalBody: { paddingBottom: 20 },

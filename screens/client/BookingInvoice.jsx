@@ -118,6 +118,7 @@ export default function BookingInvoice({ route, navigation }) {
 
     const formatCurrency = (value) => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
     const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const formatPesoDisplay = (value) => `${formatPesoNumber(value)} PHP`;
 
     const totalPrice = Number(booking?.totalPrice || bookingDetails?.totalPrice || 0);
     const computedPaidFromTxns = transactions
@@ -911,7 +912,9 @@ export default function BookingInvoice({ route, navigation }) {
                                         </View>
                                         <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
                                             <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>TOTAL PRICE</Text>
-                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 10}]}>PHP {formatPesoNumber(totalPrice)}</Text>
+                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 11}]}>
+                                                {formatPesoDisplay(totalPrice)}
+                                            </Text>
                                         </View>
                                         <View style={PaymentStyle.invSummaryCol}>
                                             <Text style={PaymentStyle.invTinyLabel}>DUE DATE</Text>
@@ -934,8 +937,8 @@ export default function BookingInvoice({ route, navigation }) {
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Package</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageName}</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>1</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>{formatPesoNumber(totalPrice)}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>{formatPesoNumber(totalPrice)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(totalPrice)}</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalPrice)}</Text>
                                     </View>
                                 </View>
 
@@ -950,15 +953,15 @@ export default function BookingInvoice({ route, navigation }) {
                                     <View style={[PaymentStyle.invTotalContainer, { flex: 1.5 }]}>
                                         <View style={PaymentStyle.invTotalRow}>
                                             <Text style={PaymentStyle.invTotalLabel}>TOTAL PRICE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(totalPrice)}</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>{formatPesoDisplay(totalPrice)}</Text>
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { borderTopWidth: 0 }]}>
                                             <Text style={PaymentStyle.invTotalLabel}>PAID TO DATE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(paidAmount)}</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>{formatPesoDisplay(paidAmount)}</Text>
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { backgroundColor: '#f4f6f8', paddingHorizontal: 4, paddingVertical: 10 }]}>
                                             <Text style={[PaymentStyle.invTotalLabel, { color: '#b91c1c' }]}>REMAINING BAL.</Text>
-                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>PHP {formatPesoNumber(remainingBalance)}</Text>
+                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>{formatPesoDisplay(remainingBalance)}</Text>
                                         </View>
                                         <Text style={[PaymentStyle.invThankYou, { marginTop: 5 }]}>THANK YOU.</Text>
                                     </View>

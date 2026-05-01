@@ -60,16 +60,33 @@ export default function UserPackageQuotation() {
     useFocusEffect(useCallback(() => { fetchQuotations(); }, [user?._id]));
 
     // --- HELPER LOGIC FOR TRAVELERS ---
-    const calculateTotalTravelers = (travelersValue) => {
-        if (typeof travelersValue === 'number') {
-            return travelersValue;
-        }
+    const getTravelersObject = (item) => {
+        // Prefer mobile payload structure
+        if (item?.travelDetails && item.travelDetails.travelers) return item.travelDetails.travelers;
+        // Then web payload structure
+        if (item?.quotationDetails && item.quotationDetails.travelers) return item.quotationDetails.travelers;
+        // Legacy or alternate shapes
+        if (item?.travelers) return item.travelers;
+        if (item?.travelerCounts) return item.travelerCounts;
+        return null;
+    };
+
+    const calculateTotalTravelers = (item) => {
+        const travelersValue = getTravelersObject(item);
+        if (typeof travelersValue === 'number') return travelersValue;
         if (travelersValue && typeof travelersValue === 'object') {
             return (Number(travelersValue.adult) || 0) +
                 (Number(travelersValue.child) || 0) +
                 (Number(travelersValue.infant) || 0);
         }
-        return 1;
+        return 0;
+    };
+
+    const getRequestedDateForItem = (item) => {
+        // Use preferredDates if available (mobile/web), else createdAt
+        const preferred = item?.travelDetails?.preferredDates || item?.quotationDetails?.preferredDates || item?.travelDetails?.preferredDate || item?.quotationDetails?.preferredDate;
+        if (preferred) return preferred;
+        return dayjs(item.createdAt).format("MMM DD, YYYY");
     };
 
     // --- FILTERING LOGIC ---
@@ -242,12 +259,12 @@ export default function UserPackageQuotation() {
 
                                     <View style={styles.detailRow}>
                                         <Text style={styles.detailLabel}>Travelers:</Text>
-                                        <Text style={styles.detailValue}>{calculateTotalTravelers(item.travelDetails?.travelers)}</Text>
+                                        <Text style={styles.detailValue}>{calculateTotalTravelers(item)}</Text>
                                     </View>
 
                                     <View style={styles.detailRow}>
                                         <Text style={styles.detailLabel}>Requested Date:</Text>
-                                        <Text style={styles.detailValue}>{dayjs(item.createdAt).format("MMM DD, YYYY")}</Text>
+                                        <Text style={styles.detailValue}>{getRequestedDateForItem(item)}</Text>
                                     </View>
                                 </View>
 

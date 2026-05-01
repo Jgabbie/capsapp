@@ -238,7 +238,7 @@ export default function Packages({ navigation }) {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView style={DestinationStyles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={DestinationStyles.container} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
                 <View style={DestinationStyles.heroBanner}>
                     <Image
                         source={require('../../assets/images/Destination_BackgroundImage.jpg')}

@@ -104,6 +104,9 @@ export default function QuotationForm({ route, navigation }) {
 
     const [errors, setErrors] = useState({});
 
+    // Selected slot capacity (from chosen preferred date). Default to 20 (web limit).
+    const [selectedSlotCapacity, setSelectedSlotCapacity] = useState(20);
+
     const [isHotelModalOpen, setHotelModalOpen] = useState(false);
     const [isAirlineModalOpen, setAirlineModalOpen] = useState(false);
     const [isDateModalOpen, setDateModalOpen] = useState(false);
@@ -117,6 +120,9 @@ export default function QuotationForm({ route, navigation }) {
         }
     }, [travelerType, adultCount]);
 
+    // Maximum allowed passengers: depends on selected slot capacity (default to 20 if none selected)
+    const maxAllowed = useMemo(() => Number(selectedSlotCapacity || 20), [selectedSlotCapacity]);
+
 
     // --- VALIDATION LOGIC ---
     const validate = () => {
@@ -125,6 +131,7 @@ export default function QuotationForm({ route, navigation }) {
         const totalTravelers = travelerType === 'solo' ? 1 : Math.max(0, adultCount) + Math.max(0, childCount) + Math.max(0, infantCount);
 
         if (!totalTravelers || totalTravelers < 1) newErrors.travelers = "Please enter the number of travelers";
+        if (totalTravelers > maxAllowed) newErrors.travelers = `Total travelers exceed allowed maximum (${maxAllowed}).`;
         
         if (packageCategory !== 'Land Arrangement') {
             if (!preferredAirlines.trim() && airlines.length > 0) newErrors.preferredAirlines = "Please provide your preferred airlines";
@@ -182,8 +189,7 @@ export default function QuotationForm({ route, navigation }) {
                 flightDetails,
                 packageCategory,
                 // Include both spellings used by your Web (Domestic vs Intl)
-                preferredDates: preferredDate, 
-                prefferedDate: preferredDate 
+                preferredDates: preferredDate
             };
 
             // 🔥 THE UNIVERSAL PAYLOAD 🔥
@@ -284,7 +290,7 @@ export default function QuotationForm({ route, navigation }) {
                         onPress={() => setPackageCategory('All in Package')}
                     >
                         <Text style={QuotationFormStyle.selectionTitle}>All-in Package</Text>
-                        <Text style={QuotationFormStyle.selectionDesc}>Includes flights, hotel, and tours.</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>This selection includes flights, hotel, and tours.</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
@@ -292,7 +298,7 @@ export default function QuotationForm({ route, navigation }) {
                         onPress={() => setPackageCategory('Land Arrangement')}
                     >
                         <Text style={QuotationFormStyle.selectionTitle}>Land Arrangement</Text>
-                        <Text style={QuotationFormStyle.selectionDesc}>Excludes flights. Best if you have your own tickets.</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>This section excludes flights. Best if you have your own tickets.</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -301,13 +307,14 @@ export default function QuotationForm({ route, navigation }) {
                     
                     {/* 🔥 NEW TRAVELERS SELECTOR TO MATCH WEB 🔥 */}
                     <Text style={QuotationFormStyle.inputLabel}>Travelers <Text style={{color: 'red'}}>*</Text></Text>
+                    <Text style={{ color: '#444', marginTop: 6, marginBottom: 8 }}>Maximum allowed: {maxAllowed} passenger{maxAllowed > 1 ? 's' : ''}</Text>
                     
                     <TouchableOpacity 
                         style={[QuotationFormStyle.selectionCard, travelerType === 'solo' && QuotationFormStyle.selectionCardActive]}
                         onPress={() => setTravelerType('solo')}
                     >
                         <Text style={QuotationFormStyle.selectionTitle}>Solo</Text>
-                        <Text style={QuotationFormStyle.selectionDesc}>Note: If you are a solo traveler, an additional single supplement rate may apply.</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>If you are a solo traveler, an additional single supplement rate may apply.</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
@@ -315,7 +322,7 @@ export default function QuotationForm({ route, navigation }) {
                         onPress={() => setTravelerType('group')}
                     >
                         <Text style={QuotationFormStyle.selectionTitle}>Group</Text>
-                        <Text style={QuotationFormStyle.selectionDesc}>Note: Group bookings may have different pricing and availability. The maximum pax allowed per booking is 2 or more.</Text>
+                        <Text style={QuotationFormStyle.selectionDesc}>Group bookings may have different pricing and availability. The maximum pax allowed per booking is 2 or more.</Text>
                     </TouchableOpacity>
 
                     {travelerType === 'group' && (
@@ -327,7 +334,18 @@ export default function QuotationForm({ route, navigation }) {
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
                                     </TouchableOpacity>
                                     <Text style={QuotationFormStyle.travelerCounterValue}>{adultCount}</Text>
-                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setAdultCount(adultCount + 1)}>
+                                    <TouchableOpacity
+                                        style={QuotationFormStyle.travelerCounterBtn}
+                                        onPress={() => {
+                                            const currentTotal = adultCount + childCount + infantCount;
+                                            if (currentTotal + 1 > maxAllowed) {
+                                                Alert.alert('Limit reached', `You can only add up to ${maxAllowed} passengers for the selected date.`);
+                                                return;
+                                            }
+                                            setAdultCount(adultCount + 1);
+                                        }}
+                                        disabled={(adultCount + childCount + infantCount) >= maxAllowed}
+                                    >
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -340,7 +358,18 @@ export default function QuotationForm({ route, navigation }) {
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
                                     </TouchableOpacity>
                                     <Text style={QuotationFormStyle.travelerCounterValue}>{childCount}</Text>
-                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setChildCount(childCount + 1)}>
+                                    <TouchableOpacity
+                                        style={QuotationFormStyle.travelerCounterBtn}
+                                        onPress={() => {
+                                            const currentTotal = adultCount + childCount + infantCount;
+                                            if (currentTotal + 1 > maxAllowed) {
+                                                Alert.alert('Limit reached', `You can only add up to ${maxAllowed} passengers for the selected date.`);
+                                                return;
+                                            }
+                                            setChildCount(childCount + 1);
+                                        }}
+                                        disabled={(adultCount + childCount + infantCount) >= maxAllowed}
+                                    >
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -353,7 +382,18 @@ export default function QuotationForm({ route, navigation }) {
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
                                     </TouchableOpacity>
                                     <Text style={QuotationFormStyle.travelerCounterValue}>{infantCount}</Text>
-                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setInfantCount(infantCount + 1)}>
+                                    <TouchableOpacity
+                                        style={QuotationFormStyle.travelerCounterBtn}
+                                        onPress={() => {
+                                            const currentTotal = adultCount + childCount + infantCount;
+                                            if (currentTotal + 1 > maxAllowed) {
+                                                Alert.alert('Limit reached', `You can only add up to ${maxAllowed} passengers for the selected date.`);
+                                                return;
+                                            }
+                                            setInfantCount(infantCount + 1);
+                                        }}
+                                        disabled={(adultCount + childCount + infantCount) >= maxAllowed}
+                                    >
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>+</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -374,7 +414,7 @@ export default function QuotationForm({ route, navigation }) {
                                 <Ionicons name="chevron-down" size={16} color="#bfbfbf" />
                             </TouchableOpacity>
                             {errors.preferredAirlines && <Text style={QuotationFormStyle.errorText}>{errors.preferredAirlines}</Text>}
-                            <Text style={QuotationFormStyle.helperNote}>Note: Airfare may increase from the usual inclusion in the package, if you choose an airline other than the fixed one.</Text>
+                            <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444' }]}>Note: Airfare may increase from the usual inclusion in the package, if you choose an airline other than the fixed one.</Text>
                         </View>
                     )}
 
@@ -390,7 +430,7 @@ export default function QuotationForm({ route, navigation }) {
                             <Ionicons name="chevron-down" size={16} color="#bfbfbf" />
                         </TouchableOpacity>
                         {errors.preferredHotels && <Text style={QuotationFormStyle.errorText}>{errors.preferredHotels}</Text>}
-                        <Text style={QuotationFormStyle.helperNote}>Note: Hotel rates may increase if you choose a hotel other than the fixed one.</Text>
+                        <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444' }]}>Note: Hotel rates may increase if you choose a hotel other than the fixed one. Rates may also increase or decrease depending on the stars of the chosen hotel.</Text>
                     </View>
 
                     {/* 🔥 UPDATED DATES TO MATCH WEB SELECTOR 🔥 */}
@@ -507,7 +547,7 @@ export default function QuotationForm({ route, navigation }) {
                     )}
 
                     <Text style={QuotationFormStyle.sectionTitle}>Itinerary Notes</Text>
-                    <Text style={[QuotationFormStyle.helperNote, { marginBottom: 15, marginTop: 0 }]}>Type "NONE" if you wish to not have any changes for that day.</Text>
+                    <Text style={[QuotationFormStyle.helperNote, { marginBottom: 15, marginTop: 0 }]}>Provide any additional information or modifications you would like to make to the itinerary.</Text>
                     
                     {itineraryLabels.map((label, index) => (
                         <View key={index} style={QuotationFormStyle.inputGroup}>
@@ -526,6 +566,8 @@ export default function QuotationForm({ route, navigation }) {
                         </View>
                     ))}
                     {errors.itineraryNotes && <Text style={[QuotationFormStyle.errorText, {marginTop: -10, marginBottom: 15}]}>{errors.itineraryNotes}</Text>}
+
+                    <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444', marginTop: 4 }]}>Note: If you wish to not have any changes in the following Itinerary, kindly type "NONE" in the fields of the Itinerary notes.</Text>
                 </View>
 
                 {/* --- ADDITIONAL COMMENTS --- */}
@@ -610,10 +652,12 @@ export default function QuotationForm({ route, navigation }) {
                                                     key={i} 
                                                     style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0', backgroundColor: hasSlots ? '#fff' : '#f9f9f9', opacity: hasSlots ? 1 : 0.5 }} 
                                                     disabled={!hasSlots}
-                                                    onPress={() => { 
-                                                        setPreferredDate(`${rangeString} (Slots: ${range.slots})`); 
-                                                        setDateModalOpen(false); 
-                                                    }}
+                                                            onPress={() => { 
+                                                                setPreferredDate(`${rangeString} (Slots: ${range.slots})`);
+                                                                // Save the numeric slot capacity for enforcement (cap to 20)
+                                                                setSelectedSlotCapacity(Number(range.slots) || 0);
+                                                                setDateModalOpen(false); 
+                                                            }}
                                                 >
                                                     <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
                                                     <Text style={{ fontFamily: 'Roboto_400Regular', color: hasSlots ? '#305797' : '#e74c3c', textAlign: 'center', fontSize: 12, marginTop: 4 }}>

@@ -1,6 +1,6 @@
 // import { jsPDF } from "jspdf";
 
-const formatCurrency = (value) => `PHP ${Number(value || 0).toFixed(2)}`;
+const formatCurrency = (value) => `PHP ${Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const generateBookingInvoicePdf = ({
   company,
