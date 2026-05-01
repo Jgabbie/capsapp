@@ -20,21 +20,21 @@ const visaApplicationSchema = new mongoose.Schema(
     preferredTime: { type: String, required: true },
     purposeOfTravel: { type: String, required: true },
     applicationNumber: { type: String, required: true, unique: true },
-    
+
     // Status as an array to match web
     status: {
       type: [String],
       default: ["Application Submitted"],
     },
     currentStepIndex: { type: Number, default: 0 },
-    
+
     // Web Document Storage
     submittedDocuments: { type: Object },
-    
+
     // Explicitly define the schedules array so Mongoose fetches it
     suggestedAppointmentSchedules: [{
-        date: { type: String },
-        time: { type: String }
+      date: { type: String },
+      time: { type: String }
     }],
     suggestedAppointmentScheduleChosen: {
       date: { type: String, default: "" },
@@ -54,7 +54,7 @@ const visaApplicationSchema = new mongoose.Schema(
       bankCertificateAndStatement: { type: uploadedFileSchema, default: () => ({}) },
     },
   },
-  { timestamps: true, collection: "visas", strict: false } 
+  { timestamps: true, collection: "visas", strict: false }
 );
 
 const VisaApplicationModel =

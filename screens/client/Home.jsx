@@ -6,28 +6,28 @@ import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 
-import { Image } from 'expo-image'; 
+import { Image } from 'expo-image';
 
 import Chatbot from '../../components/Chatbot'
 import HomeStyle from '../../styles/clientstyles/HomeStyle'
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
 
-import { api, withUserHeader } from '../../utils/api' 
+import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
 export default function Home() {
     const cs = useNavigation()
-    const { user, updateUser } = useUser() 
+    const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
-    
+
     const [packages, setPackages] = useState([])
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
-    
+
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
-    const [activeDropdown, setActiveDropdown] = useState(null) 
+    const [activeDropdown, setActiveDropdown] = useState(null)
     const [selectedTag, setSelectedTag] = useState('Tags')
     const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
 
@@ -43,7 +43,7 @@ export default function Home() {
 
     const tagOptions = ['All Tags', 'Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples']
     const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
-    
+
     const subjectOptions = [
         'Passport Assistance Inquiry',
         'Visa Assistance Inquiry',
@@ -73,9 +73,9 @@ export default function Home() {
                             api.get(`/users/users/${user._id}`),
                             api.get('/wishlist', withUserHeader(user._id)).catch(() => ({ data: { wishlist: [] } }))
                         ]);
-                        
-                        const currentUser = userResponse.data.user || userResponse.data 
-                        
+
+                        const currentUser = userResponse.data.user || userResponse.data
+
                         if (currentUser && currentUser.email) {
                             updateUser({
                                 firstname: currentUser.firstname,
@@ -99,7 +99,7 @@ export default function Home() {
                     }
                 }
             } catch (error) {
-                console.log("Failed to fetch packages:", error.message) 
+                console.log("Failed to fetch packages:", error.message)
             } finally {
                 setLoading(false)
             }
@@ -109,12 +109,12 @@ export default function Home() {
 
     const filteredPackages = packages.filter(pkg => {
         const matchesSearch = pkg.packageName.toLowerCase().includes(searchQuery.toLowerCase())
-        
-        const matchesActivity = selectedTag === 'Tags' || selectedTag === 'All Tags' || 
+
+        const matchesActivity = selectedTag === 'Tags' || selectedTag === 'All Tags' ||
             (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) ||
             pkg.packageDescription.toLowerCase().includes(selectedTag.toLowerCase())
 
-        const matchesDuration = selectedDuration === 'Length of Stay' || selectedDuration === 'All Durations' || 
+        const matchesDuration = selectedDuration === 'Length of Stay' || selectedDuration === 'All Durations' ||
             pkg.packageDuration === parseInt(selectedDuration.split(' ')[0])
 
         return matchesSearch && matchesActivity && matchesDuration
@@ -150,16 +150,16 @@ export default function Home() {
                 subject: contactSubject, // 🔥 FIXED: Sent subject to backend
                 message: contactMessage
             };
-            
+
             await api.post('/email/contact', payload);
             setSuccessModalVisible(true);
-            
+
             setContactName('');
             setContactEmail('');
             setContactSubject('');
             setContactMessage('');
             setEmailError('');
-            
+
         } catch (error) {
             console.log("Contact submit error:", error.message);
             Alert.alert("Failed to Send Message", "There was an error sending your message. Please try again later.");
@@ -171,24 +171,24 @@ export default function Home() {
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     const BannerCard = ({ item, subText }) => {
-        const imageSource = item.images && item.images.length > 0 
+        const imageSource = item.images && item.images.length > 0
             ? item.images[0]
             : require('../../assets/images/southkorea_image.png')
 
         return (
             <View style={HomeStyle.bannerCard}>
-                <Image 
-                    source={imageSource} 
-                    style={HomeStyle.bannerImage} 
+                <Image
+                    source={imageSource}
+                    style={HomeStyle.bannerImage}
                     contentFit="cover"
                     transition={300}
                 />
-                
+
                 {wishlistedIds.has(String(item._id)) && (
-                    <View style={{ 
-                        position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000', 
-                        shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.2, shadowRadius: 2 
+                    <View style={{
+                        position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2
                     }}>
                         <Ionicons name="heart" size={22} color="#cf1322" />
                     </View>
@@ -205,7 +205,7 @@ export default function Home() {
                     onPress={() => cs.navigate("packagedetails", { id: item._id })}
                 >
                     <Text style={HomeStyle.viewAllText}>View Package</Text>
-                    <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, {tintColor: "#fff"}]} contentFit="contain" />
+                    <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, { tintColor: "#fff" }]} contentFit="contain" />
                 </TouchableOpacity>
             </View>
         )
@@ -216,44 +216,44 @@ export default function Home() {
             <TouchableOpacity style={HomeStyle.dropdownOverlay} activeOpacity={1} onPress={() => setActiveDropdown(null)}>
                 <View style={HomeStyle.dropdownListContent}>
                     {activeDropdown === 'tag' ? (
-                        <ScrollView style={{maxHeight: 250}} showsVerticalScrollIndicator={false}>
-                        {tagOptions.map((option, index) => {
-                            const isActive = selectedTag === option || (selectedTag === 'Tags' && option === 'All Tags');
-                            return (
-                                <TouchableOpacity 
-                                    key={index} 
-                                    style={[HomeStyle.modalOption, index === tagOptions.length -1 && {borderBottomWidth: 0}]}
-                                    onPress={() => {
-                                        setSelectedTag(option === 'All Tags' ? 'Tags' : option)
-                                        setActiveDropdown(null)
-                                    }}
-                                >
-                                    <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
+                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
+                            {tagOptions.map((option, index) => {
+                                const isActive = selectedTag === option || (selectedTag === 'Tags' && option === 'All Tags');
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[HomeStyle.modalOption, index === tagOptions.length - 1 && { borderBottomWidth: 0 }]}
+                                        onPress={() => {
+                                            setSelectedTag(option === 'All Tags' ? 'Tags' : option)
+                                            setActiveDropdown(null)
+                                        }}
+                                    >
+                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            })}
                         </ScrollView>
                     ) : activeDropdown === 'duration' ? (
-                        <ScrollView style={{maxHeight: 250}} showsVerticalScrollIndicator={false}>
-                        {durationOptions.map((option, index) => {
-                            const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
-                            return (
-                                <TouchableOpacity 
-                                    key={index} 
-                                    style={[HomeStyle.modalOption, index === durationOptions.length -1 && {borderBottomWidth: 0}]}
-                                    onPress={() => {
-                                        setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
-                                        setActiveDropdown(null)
-                                    }}
-                                >
-                                    <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
+                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
+                            {durationOptions.map((option, index) => {
+                                const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[HomeStyle.modalOption, index === durationOptions.length - 1 && { borderBottomWidth: 0 }]}
+                                        onPress={() => {
+                                            setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
+                                            setActiveDropdown(null)
+                                        }}
+                                    >
+                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            })}
                         </ScrollView>
                     ) : null}
                 </View>
@@ -275,8 +275,8 @@ export default function Home() {
                 <TouchableOpacity style={HomeStyle.subjectModalOverlay} activeOpacity={1} onPress={() => setSubjectModalVisible(false)}>
                     <View style={HomeStyle.subjectModalBox}>
                         {subjectOptions.map((option, index) => (
-                            <TouchableOpacity 
-                                key={index} 
+                            <TouchableOpacity
+                                key={index}
                                 style={[HomeStyle.subjectOption, index === subjectOptions.length - 1 && { borderBottomWidth: 0 }]}
                                 onPress={() => {
                                     setContactSubject(option);
@@ -304,18 +304,18 @@ export default function Home() {
                 </View>
             </Modal>
 
-            <KeyboardAvoidingView 
-                style={{ flex: 1 }} 
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
             >
-                <ScrollView 
-                    style={HomeStyle.container} 
-                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 80 : 100 }} 
-                    showsVerticalScrollIndicator={false} 
+                <ScrollView
+                    style={HomeStyle.container}
+                    contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 80 : 100 }}
+                    showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    
+
                     <View style={HomeStyle.mainTitleContainer}>
                         <Text style={HomeStyle.mainTitle}>M&RC Travel and Tours</Text>
                         <Text style={HomeStyle.byTravex}>by travex</Text>
@@ -338,14 +338,14 @@ export default function Home() {
                         <View style={HomeStyle.dropdownGroup}>
                             <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('tag')}>
                                 <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedTag.length > 8 ? selectedTag.substring(0,8) + '...' : selectedTag}
+                                    {selectedTag.length > 8 ? selectedTag.substring(0, 8) + '...' : selectedTag}
                                 </Text>
                                 <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
                             </TouchableOpacity>
-                            
+
                             <TouchableOpacity style={HomeStyle.dropdownButton} onPress={() => setActiveDropdown('duration')}>
                                 <Text style={HomeStyle.dropdownText} numberOfLines={1}>
-                                    {selectedDuration.length > 10 ? selectedDuration.substring(0,10) + '...' : selectedDuration}
+                                    {selectedDuration.length > 10 ? selectedDuration.substring(0, 10) + '...' : selectedDuration}
                                 </Text>
                                 <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
                             </TouchableOpacity>
@@ -378,10 +378,10 @@ export default function Home() {
                         </>
                     )}
 
-                    <ImageBackground 
-                        source={require('../../assets/images/LandingPage2_Banner.png')} 
+                    <ImageBackground
+                        source={require('../../assets/images/LandingPage2_Banner.png')}
                         style={HomeStyle.bgSectionContainer}
-                        
+
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
@@ -415,10 +415,10 @@ export default function Home() {
                         </View>
                     </View>
 
-                    <ImageBackground 
-                        source={require('../../assets/images/AboutUs_BackgroundImage.jpg')} 
+                    <ImageBackground
+                        source={require('../../assets/images/AboutUs_BackgroundImage.jpg')}
                         style={HomeStyle.bgSectionContainer}
-                        
+
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>M&RC Travel and Tours</Text>
@@ -457,7 +457,7 @@ export default function Home() {
 
                         <View style={HomeStyle.contactCard}>
                             <Text style={HomeStyle.contactCardTitle}>You have an inquiry? Send us a message!</Text>
-                            
+
                             <TextInput
                                 style={HomeStyle.contactInput}
                                 placeholder="Your Name"
@@ -465,7 +465,7 @@ export default function Home() {
                                 value={contactName}
                                 onChangeText={(text) => setContactName(text.replace(/[^a-zA-Z\s]/g, ''))}
                             />
-                            
+
                             <View style={HomeStyle.inputWrapper}>
                                 <TextInput
                                     style={[HomeStyle.contactInput, emailError ? HomeStyle.inputErrorBorder : null, { marginBottom: 0 }]}
@@ -480,8 +480,8 @@ export default function Home() {
                             </View>
 
                             {/* 🔥 NEW: Subject Dropdown Input */}
-                            <TouchableOpacity 
-                                style={[HomeStyle.contactInput, { justifyContent: 'center' }]} 
+                            <TouchableOpacity
+                                style={[HomeStyle.contactInput, { justifyContent: 'center' }]}
                                 onPress={() => setSubjectModalVisible(true)}
                                 activeOpacity={0.7}
                             >
@@ -492,7 +492,7 @@ export default function Home() {
                                     <Ionicons name="chevron-down" size={16} color="#999" />
                                 </View>
                             </TouchableOpacity>
-                            
+
                             <TextInput
                                 style={HomeStyle.contactTextArea}
                                 placeholder="Your Message"
@@ -504,7 +504,7 @@ export default function Home() {
                                 onChangeText={setContactMessage}
                             />
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[HomeStyle.contactSubmitBtn, !isContactFormValid && HomeStyle.contactSubmitBtnDisabled]}
                                 disabled={!isContactFormValid || submittingContact}
                                 onPress={handleContactSubmit}
@@ -517,7 +517,7 @@ export default function Home() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    
+
                 </ScrollView>
             </KeyboardAvoidingView>
 

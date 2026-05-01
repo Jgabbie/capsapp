@@ -29,11 +29,11 @@ export const applyPassport = async (req, res) => {
       applicationNumber: randomApplicationNumber(),
       status: "Application submitted",
       submittedDocuments: {}, // Empty, since files are no longer required on creation
-      documents: {} 
+      documents: {}
     });
 
     if (typeof logAction === 'function') {
-        logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
+      logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
     }
 
     return res.status(201).json(application);
@@ -73,14 +73,24 @@ export const chooseAppointment = async (req, res) => {
       return res.status(404).json({ message: "Passport application not found" });
     }
 
+    // Ensure the requester owns this application
+    if (application.userId && application.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
     application.preferredDate = date;
     application.preferredTime = time;
-    
+    application.suggestedAppointmentScheduleChosen = { date, time };
+
     await application.save();
 
-    return res.status(200).json({ 
-        message: "Preferred schedule updated successfully", 
-        application 
+    if (typeof logAction === 'function') {
+      logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
+    }
+
+    return res.status(200).json({
+      message: "Preferred schedule updated successfully",
+      application
     });
   } catch (error) {
     return res.status(500).json({ message: "Error updating schedule", error: error.message });

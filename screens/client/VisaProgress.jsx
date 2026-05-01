@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -30,6 +31,9 @@ export default function VisaProgress() {
     const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('paymongo');
+    const [creatingPayment, setCreatingPayment] = useState(false);
+    const [proofImage, setProofImage] = useState(null);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -138,6 +142,105 @@ export default function VisaProgress() {
 
     const openDocument = (url) => {
         if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
+    };
+
+    const pickProofImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            base64: true,
+            quality: 0.7,
+        });
+
+        if (!result.canceled) {
+            setProofImage(result.assets[0]);
+        }
+    };
+
+    const uploadFilesToBackend = async (endpoint, formData) => {
+        const response = await api.post(endpoint, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...withUserHeader(user?._id).headers,
+            },
+        });
+
+        return response.data;
+    };
+
+    const handleStartPayment = async () => {
+        if (!servicePrice || Number.isNaN(Number(servicePrice)) || Number(servicePrice) <= 0) {
+            Alert.alert('Error', 'Payment amount is not available yet.');
+            return;
+        }
+
+        if (paymentMethod === 'manual' && !proofImage) {
+            Alert.alert('Missing Proof', 'Please upload a photo of your deposit slip.');
+            return;
+        }
+
+        try {
+            setCreatingPayment(true);
+
+            if (paymentMethod === 'manual') {
+                const receiptFormData = new FormData();
+                const filename = proofImage?.fileName || proofImage?.uri?.split('/').pop() || 'deposit_slip.jpg';
+                const match = /\.(\w+)$/.exec(filename);
+                const type = proofImage?.mimeType || (match ? `image/${match[1]}` : 'image/jpeg');
+
+                receiptFormData.append('file', {
+                    uri: proofImage.uri,
+                    name: filename,
+                    type,
+                });
+
+                const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
+
+                if (!proofUrl) {
+                    throw new Error('Failed to upload proof of payment');
+                }
+
+                const manualPayload = {
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
+                    amount: Number(servicePrice),
+                    proofImage: proofUrl,
+                };
+
+                await api.post('/payment/manual-visa', manualPayload, withUserHeader(user._id));
+                Alert.alert('Success', 'Manual payment submitted successfully.');
+                return;
+            }
+
+            const sessionRes = await api.post('/payment/create-checkout-session-visa', {
+                totalPrice: Number(servicePrice),
+                applicationId: application._id,
+                applicationNumber: application.applicationNumber
+            }, withUserHeader(user._id));
+
+            const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
+
+            console.log('CHECKOUT URL:', hostedUrl);
+
+            if (!hostedUrl) {
+                Alert.alert('Error', 'No checkout URL received');
+                return;
+            }
+
+            const canOpen = await Linking.canOpenURL(hostedUrl);
+
+            if (canOpen) {
+                await Linking.openURL(hostedUrl);
+            } else {
+                Alert.alert('Error', 'Cannot open checkout page');
+            }
+        } catch (error) {
+            console.error('Payment start error:', error?.response?.data || error.message || error);
+            Alert.alert('Error', 'Failed to initiate payment.');
+        } finally {
+            setCreatingPayment(false);
+        }
     };
 
     const steps = useMemo(() => {
@@ -268,6 +371,100 @@ export default function VisaProgress() {
                         </Text>
                     </View>
                 </View>
+
+                {appStatus.toLowerCase() === 'application approved' && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your visa application to proceed.</Text>
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('paymongo')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'paymongo' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Paymongo</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'paymongo' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'paymongo' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('manual')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'manual' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'manual' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {paymentMethod === 'manual' && (
+                            <View style={{ marginBottom: 14 }}>
+                                <TouchableOpacity
+                                    onPress={pickProofImage}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: '#d1d5db',
+                                        borderRadius: 10,
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 14,
+                                        backgroundColor: '#fff',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 8,
+                                    }}
+                                >
+                                    <Ionicons name="cloud-upload-outline" size={20} color="#305797" />
+                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold' }}>
+                                        {proofImage ? 'Change Proof Image' : 'Upload Proof of Payment'}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {proofImage && (
+                                    <View style={{ marginTop: 12, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 10, backgroundColor: '#fff' }}>
+                                        <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Preview</Text>
+                                        <View style={{ borderRadius: 10, overflow: 'hidden', backgroundColor: '#f8fafc' }}>
+                                            <Image source={{ uri: proofImage.uri }} style={{ width: '100%', height: 180 }} resizeMode="contain" />
+                                        </View>
+                                        <TouchableOpacity onPress={() => setProofImage(null)} style={{ marginTop: 10, alignSelf: 'flex-end' }}>
+                                            <Text style={{ color: '#ef4444', fontFamily: 'Montserrat_600SemiBold', fontSize: 12 }}>Remove Image</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
+                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={handleStartPayment}
+                        >
+                            {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
+                        </TouchableOpacity>
+                    </View>
+                )}
 
 
                 {appStatus.toLowerCase() === 'application submitted' && (

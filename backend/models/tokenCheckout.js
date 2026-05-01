@@ -11,5 +11,4 @@ const tokenCheckoutSchema = new mongoose.Schema({
 
 // We use "tokencheckouts" here so it perfectly syncs with the exact same collection your web backend uses!
 const TokenCheckout = mongoose.models.tokencheckouts || mongoose.model("tokencheckouts", tokenCheckoutSchema);
-
 export default TokenCheckout;

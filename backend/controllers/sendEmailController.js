@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
-    
+
     // Use SMTP_USER (verified Brevo sender) for best deliverability
     const senderEmail = process.env.SENDER_EMAIL;
     const companyEmail = process.env.COMPANY_EMAIL;
@@ -48,7 +48,6 @@ export const sendContactEmail = async (req, res) => {
             to: companyEmail,
             replyTo: normalizedEmail,
             subject: `New Inquiry from ${name} - ${subject}`,
-            attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family: Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; color:#333; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
@@ -81,7 +80,6 @@ export const sendContactEmail = async (req, res) => {
             from: `"M&RC Travel and Tours" <${senderEmail}>`, // 🔥 STRICT FORMATTING
             to: normalizedEmail,
             subject: 'We received your inquiry: ' + subject,
-            attachments: logoAttachment ? [logoAttachment] : [],
             html: `
                 <div style="font-family:Arial, sans-serif; background:#305797; padding:40px 16px;">
                     <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:8px; padding:30px 32px; text-align:left; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
