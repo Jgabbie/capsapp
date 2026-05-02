@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -42,6 +42,9 @@ export default function VisaProgress() {
     const [selectedFiles, setSelectedFiles] = useState({});
     const [uploadingAll, setUploadingAll] = useState(false);
     const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
+    const [passportReleaseOption, setPassportReleaseOption] = useState('pickup');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [savingReleaseOption, setSavingReleaseOption] = useState(false);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -77,6 +80,8 @@ export default function VisaProgress() {
             if (!appData) throw new Error("Application not found in your list.");
 
             setApplication(appData);
+            setPassportReleaseOption(String(appData.passportReleaseOption || 'pickup').toLowerCase());
+            setDeliveryAddress(appData.deliveryAddress || '');
 
             if (appData?.serviceId) {
                 const serviceId = appData.serviceId._id || appData.serviceId;
@@ -166,6 +171,23 @@ export default function VisaProgress() {
         const docs = application?.submittedDocuments || {};
         return Object.entries(docs).filter(([, value]) => Boolean(value));
     };
+
+    const requirementLabelMap = useMemo(() => {
+        const map = {};
+        const add = (item) => {
+            const text = typeof item === 'object' ? item.req : item;
+            const key = String(text || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+            if (key) map[key] = text;
+        };
+
+        (serviceRequirements || []).forEach(add);
+        (serviceAdditionalRequirements || []).forEach(add);
+
+        return map;
+    }, [serviceRequirements, serviceAdditionalRequirements]);
 
     const pickProofImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -349,6 +371,37 @@ export default function VisaProgress() {
         return Math.max(0, index);
     }, [steps, appStatus]);
 
+    const savePassportReleaseOption = async () => {
+        if (!application?._id) return;
+
+        const normalizedOption = String(passportReleaseOption || '').toLowerCase();
+        if (!normalizedOption) {
+            Alert.alert('Error', 'Please choose Pickup or Delivery.');
+            return;
+        }
+
+        if (normalizedOption === 'delivery' && !deliveryAddress.trim()) {
+            Alert.alert('Error', 'Please enter your delivery address.');
+            return;
+        }
+
+        try {
+            setSavingReleaseOption(true);
+            await api.put(`/visa/applications/${application._id}/passport-release-option`, {
+                option: normalizedOption,
+                deliveryAddress: normalizedOption === 'delivery' ? deliveryAddress.trim() : '',
+            }, withUserHeader(user._id));
+
+            Alert.alert('Success', 'Passport claim preference saved.');
+            await fetchApplicationDetails();
+        } catch (error) {
+            console.error('Release option error:', error?.response?.data || error.message || error);
+            Alert.alert('Error', 'Unable to save passport claim preference.');
+        } finally {
+            setSavingReleaseOption(false);
+        }
+    };
+
     const renderRequirementItem = (item, index) => {
         const requirementText = typeof item === 'object' ? item.req : item;
         const requirementDesc = typeof item === 'object' ? item.desc : '';
@@ -517,6 +570,25 @@ export default function VisaProgress() {
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
 
+                    {appStatus.toLowerCase() === 'documents approved' && (
+                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Documents Approved</Text>
+                        </View>
+                    )}
+
+                    {appStatus.toLowerCase() === 'rejected' && (
+                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#96050c', fontFamily: 'Montserrat_600SemiBold' }}>Documents Rejected</Text>
+                        </View>
+                    )}
+
+                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment complete' && appStatus.toLowerCase() !== 'documents uploaded' &&
+                        appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'embassy approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
+                            <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                                <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
+                            </View>
+                        )}
+
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Reference</Text>
                         <Text style={VisaProgressStyle.infoValue}>{application.applicationNumber || application._id}</Text>
@@ -561,6 +633,95 @@ export default function VisaProgress() {
                         </Text>
                     </View>
                 </View>
+
+                {appStatus.toLowerCase() === 'embassy approved' && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Choose how to claim your passport</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            Select Pickup or Delivery. If you choose Delivery, enter your address below.
+                        </Text>
+
+                        <View style={{ gap: 10 }}>
+                            <TouchableOpacity
+                                onPress={() => setPassportReleaseOption('pickup')}
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: passportReleaseOption === 'pickup' ? '#305797' : '#d1d5db',
+                                    backgroundColor: passportReleaseOption === 'pickup' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Pickup</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: passportReleaseOption === 'pickup' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {passportReleaseOption === 'pickup' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Pick up your passport at the designated location.</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setPassportReleaseOption('delivery')}
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: passportReleaseOption === 'delivery' ? '#305797' : '#d1d5db',
+                                    backgroundColor: passportReleaseOption === 'delivery' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Delivery</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: passportReleaseOption === 'delivery' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {passportReleaseOption === 'delivery' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Have your passport delivered to your address.</Text>
+                            </TouchableOpacity>
+
+                            {passportReleaseOption === 'delivery' && (
+                                <View style={{ marginTop: 2 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', marginBottom: 8 }}>Delivery Address</Text>
+                                    <TextInput
+                                        value={deliveryAddress}
+                                        onChangeText={setDeliveryAddress}
+                                        placeholder="Enter your complete delivery address"
+                                        placeholderTextColor="#9ca3af"
+                                        multiline
+                                        numberOfLines={4}
+                                        style={{
+                                            minHeight: 110,
+                                            borderWidth: 1,
+                                            borderColor: '#d1d5db',
+                                            borderRadius: 12,
+                                            paddingHorizontal: 14,
+                                            paddingVertical: 12,
+                                            textAlignVertical: 'top',
+                                            backgroundColor: '#fff',
+                                            color: '#1f2937',
+                                            fontFamily: 'Roboto_400Regular',
+                                        }}
+                                    />
+                                </View>
+                            )}
+
+                            <TouchableOpacity
+                                onPress={savePassportReleaseOption}
+                                disabled={savingReleaseOption}
+                                style={{
+                                    backgroundColor: '#305797',
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    alignItems: 'center',
+                                    opacity: savingReleaseOption ? 0.7 : 1,
+                                }}
+                            >
+                                {savingReleaseOption ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Submit Claim Preference</Text>}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
 
                 {appStatus.toLowerCase() === 'application approved' && (
                     <View style={VisaProgressStyle.card}>
@@ -705,7 +866,7 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {getUploadedDocumentEntries().length > 0 && (
+                {appStatus.toLowerCase() === 'documents uploaded' && getUploadedDocumentEntries().length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -715,22 +876,16 @@ export default function VisaProgress() {
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
                             {getUploadedDocumentEntries().map(([key, value]) => {
                                 const entryIsImage = isImageSource(value);
+                                const requirementLabel = requirementLabelMap[key] || key.replace(/_/g, ' ');
 
                                 return (
                                     <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
-                                            {key.replace(/_/g, ' ')}
+                                            {String(requirementLabel).toUpperCase()
+                                            }
                                         </Text>
 
-                                        {entryIsImage ? (
-                                            <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
-                                                <Image
-                                                    source={{ uri: value }}
-                                                    style={{ width: '100%', height: 180 }}
-                                                    resizeMode="cover"
-                                                />
-                                            </View>
-                                        ) : null}
+                                        {/* Image preview intentionally removed — only provide preview link */}
 
                                         <TouchableOpacity onPress={() => openDocument(value)}>
                                             <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
