@@ -616,7 +616,7 @@ export default function PassportProgress() {
                 )}
 
 
-                {appStatus.toLowerCase() === 'application submitted' && (
+                {appStatus.toLowerCase() === 'application submitted' && appointmentOptions.length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
