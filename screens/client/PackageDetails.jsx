@@ -59,6 +59,7 @@ export default function PackageDetails({ route, navigation }) {
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isEditingReview, setIsEditingReview] = useState(false);
+    const [hasFullyPaidBooking, setHasFullyPaidBooking] = useState(false);
 
     // Modal States
     const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
@@ -78,6 +79,29 @@ export default function PackageDetails({ route, navigation }) {
             setReviews(reviewResponse.data || []);
         } catch (reviewErr) {
             console.log("No reviews yet or unauthorized.");
+        }
+    };
+
+    const fetchBookingStatus = async () => {
+        try {
+            if (!user?._id || !packageId) return;
+
+            const bookingResponse = await api.get('/booking/my-bookings', withUserHeader(user._id));
+            const bookings = bookingResponse.data || [];
+
+            // Check if user has a fully paid booking for this package
+            // Look for bookings with status "Confirmed", "Paid", or similar indicating payment is complete
+            const fullyPaidBooking = bookings.find(booking => {
+                const bookingPkgId = booking.packageId?._id || booking.packageId;
+                const bookingStatus = booking.status?.toLowerCase() || '';
+                const isPaid = bookingStatus === 'confirmed' || bookingStatus === 'paid' || bookingStatus === 'fully paid';
+                return String(bookingPkgId) === String(packageId) && isPaid;
+            });
+
+            setHasFullyPaidBooking(!!fullyPaidBooking);
+        } catch (bookingErr) {
+            console.log("Error fetching booking status:", bookingErr.message);
+            setHasFullyPaidBooking(false);
         }
     };
 
@@ -133,6 +157,9 @@ export default function PackageDetails({ route, navigation }) {
                     } catch (e) {
                         console.log("Wishlist fetch error:", e.message);
                     }
+
+                    // Fetch booking status to check for fully paid bookings
+                    await fetchBookingStatus();
                 }
 
             } catch (err) {
@@ -281,7 +308,7 @@ export default function PackageDetails({ route, navigation }) {
         }
     };
 
-    const disableForm = isSubmittingReview || (!isEditingReview && !!userReview);
+    const disableForm = isSubmittingReview || (!isEditingReview && !!userReview) || !hasFullyPaidBooking;
 
     if (loading || !fullPkg) {
         return (
@@ -542,6 +569,11 @@ export default function PackageDetails({ route, navigation }) {
 
                             <View style={DestinationStyles.reviewContainer}>
                                 <Text style={[DestinationStyles.reviewTitle, { color: '#305797' }]}>Leave a review</Text>
+                                {!hasFullyPaidBooking && (
+                                    <Text style={{ fontSize: 12, color: '#b91c1c', fontStyle: 'italic', marginBottom: 12, fontFamily: 'Montserrat_500Medium' }}>
+                                        You can only leave a review after booking this package.
+                                    </Text>
+                                )}
                                 <View style={DestinationStyles.starsContainer}>
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <TouchableOpacity key={star} disabled={disableForm} onPress={() => setReviewForm({ ...reviewForm, rating: star })}>

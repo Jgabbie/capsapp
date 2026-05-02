@@ -42,6 +42,7 @@ export default function VisaProgress() {
     const [selectedFiles, setSelectedFiles] = useState({});
     const [uploadingAll, setUploadingAll] = useState(false);
     const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
+    const [showClaimPreferenceSuccessModal, setShowClaimPreferenceSuccessModal] = useState(false);
     const [passportReleaseOption, setPassportReleaseOption] = useState('pickup');
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [savingReleaseOption, setSavingReleaseOption] = useState(false);
@@ -393,6 +394,7 @@ export default function VisaProgress() {
             }, withUserHeader(user._id));
 
             Alert.alert('Success', 'Passport claim preference saved.');
+            setShowClaimPreferenceSuccessModal(true);
             await fetchApplicationDetails();
         } catch (error) {
             console.error('Release option error:', error?.response?.data || error.message || error);
@@ -569,6 +571,12 @@ export default function VisaProgress() {
                 {/* Application Info Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
+
+                    {appStatus.toLowerCase() === 'passport released' && application.deliveryFee !== "" && (
+                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>The delivery details are {application.deliveryFee} pesos and the date is {dayjs(application.deliveryDate).format('MMM D, YYYY')}</Text>
+                        </View>
+                    )}
 
                     {appStatus.toLowerCase() === 'documents approved' && (
                         <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
@@ -1060,8 +1068,8 @@ export default function VisaProgress() {
                     </TouchableOpacity>
                 </Modal>
 
-                <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                <Modal visible={showClaimPreferenceSuccessModal} transparent animationType="fade" onRequestClose={() => setShowClaimPreferenceSuccessModal(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowClaimPreferenceSuccessModal(false)}>
                         <TouchableWithoutFeedback>
                             <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
                                 <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
@@ -1075,6 +1083,30 @@ export default function VisaProgress() {
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setShowDocumentsSuccessModal(false)}
+                                    style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                >
+                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
+                                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                    <Ionicons name="checkmark" size={32} color="#059669" />
+                                </View>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                    Claim Preference Submitted!
+                                </Text>
+                                <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                    Your claim preference has been submitted. Our team will review it shortly.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowClaimPreferenceSuccessModal(false)}
                                     style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
                                 >
                                     <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
