@@ -39,7 +39,7 @@ export default function Sidebar({ visible, onClose }) {
     const MenuVectorItem = ({ iconName, title, onPress }) => (
         <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
             <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
-                <Ionicons name={iconName} size={17} color="#fff" />
+                <Ionicons name={iconName} size={15} color="#fff" />
             </View>
             <Text style={SidebarStyle.navText}>{title}</Text>
         </TouchableOpacity>

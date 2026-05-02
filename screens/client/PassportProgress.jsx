@@ -266,13 +266,13 @@ export default function PassportProgress() {
                     },
                 };
 
-                await api.post('/pay/manual-passport', manualPayload, withUserHeader(user._id));
+                await api.post('/payment/manual-passport', manualPayload, withUserHeader(user._id));
                 cs.navigate('successfulmanualpaymentpassport');
                 return;
             }
 
             // 1) create a short-lived checkout token
-            const tokenRes = await api.post('/pay/create-checkout-token', {
+            const tokenRes = await api.post('/payment/create-checkout-token', {
                 totalPrice: Number(paymentAmount),
                 bookingId: application._id
             }, withUserHeader(user._id));
@@ -281,7 +281,7 @@ export default function PassportProgress() {
             if (!token) throw new Error('Failed to create checkout token');
 
             // 2) create checkout session using the token
-            const sessionRes = await api.post('/pay/create-checkout-session-passport', {
+            const sessionRes = await api.post('/payment/create-checkout-session-passport', {
                 checkoutToken: token,
                 totalPrice: Number(paymentAmount),
                 packageName: 'Passport Application',

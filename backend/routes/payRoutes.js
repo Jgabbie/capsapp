@@ -8,6 +8,7 @@ router.post("/create-checkout-token", requireUser, createCheckoutToken);
 router.post("/create-checkout-session", requireUser, createCheckoutSession);
 router.post("/create-checkout-session-passport", requireUser, createCheckoutSessionPassport);
 router.post("/create-checkout-session-visa", requireUser, createCheckoutSessionVisa);
+router.post("/manual-payment", requireUser, createManualPayment);
 router.post("/manual-passport", requireUser, createManualPaymentPassport);
 router.post("/manual-visa", requireUser, createManualPaymentVisa);
 router.post("/webhook/paymongo", express.raw({ type: 'application/json' }), handlePayMongoWebhook);

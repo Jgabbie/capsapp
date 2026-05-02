@@ -165,7 +165,7 @@ export default function UserApplications() {
                                 onPress={() => setShowDateModal(true)}
                             >
                                 <Text style={UserApplicationsStyle.dropdownText}>
-                                    {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'App Date'}
+                                    {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'Application Date'}
                                 </Text>
                                 <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
                             </TouchableOpacity>

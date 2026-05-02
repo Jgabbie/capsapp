@@ -61,7 +61,7 @@ const UserPackageQuotationStyle = StyleSheet.create({
   },
   dropdownText: {
     fontFamily: "Roboto_400Regular",
-    fontSize: 13,
+    fontSize: 10,
     color: "#333",
   },
   clearFilterBtn: {

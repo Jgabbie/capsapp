@@ -101,7 +101,7 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    const response = await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
                     return;
@@ -258,7 +258,7 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    await api.post('/paymanual/manual', manualPayload, withUserHeader(user?._id));
+                    await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
 
@@ -280,7 +280,7 @@ export default function PaymentMethod({ route, navigation }) {
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/paymanual/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
                     setLoading(false);

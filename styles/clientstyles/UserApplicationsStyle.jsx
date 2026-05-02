@@ -38,7 +38,7 @@ const UserApplicationsStyle = StyleSheet.create({
         flex: 1,
         marginLeft: 8,
         fontFamily: "Roboto_400Regular",
-        fontSize: 13,
+        fontSize: 10,
         color: "#333",
     },
     dropdownGroup: {
@@ -60,7 +60,7 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     dropdownText: {
         fontFamily: "Roboto_400Regular",
-        fontSize: 13,
+        fontSize: 10,
         color: "#333",
     },
     clearFilterBtn: {
