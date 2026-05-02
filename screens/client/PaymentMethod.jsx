@@ -93,7 +93,7 @@ export default function PaymentMethod({ route, navigation }) {
                     const manualPayload = {
                         bookingId: route.params.existingBookingId,
                         packageId: targetPackageId,
-                        amount: safeAmount,
+                        amount: finalAmountToPay,
                         paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',
@@ -107,7 +107,7 @@ export default function PaymentMethod({ route, navigation }) {
                     return;
                 } else {
                     const tokenRes = await api.post('/payment/create-checkout-token', {
-                        totalPrice: safeAmount,
+                        totalPrice: finalAmountToPay,
                         bookingId: route.params.existingBookingId
                     }, withUserHeader(user?._id));
                     const realCheckoutToken = tokenRes.data?.token;
@@ -144,7 +144,15 @@ export default function PaymentMethod({ route, navigation }) {
                 const safeInfantCount = parseInt(setupData?.travelerCounts?.infant) || 0;
                 const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
 
-                const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
+                const isDepositPayment = String(paymentType || '').toLowerCase() === 'deposit';
+
+                const depositAmount = isDepositPayment
+                    ? (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount
+                    : safeAmount;
+
+                const finalAmountToPay = isDepositPayment
+                    ? (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount
+                    : safeAmount;
 
                 let parsedStartDate = "TBD";
                 let parsedEndDate = "TBD";
@@ -276,7 +284,7 @@ export default function PaymentMethod({ route, navigation }) {
 
                 const finalBookingPayload = {
                     packageId: targetPackageId,
-                    amount: safeAmount,
+                    amount: finalAmountToPay,
                     travelDate: travelDateObj,
                     travelers: travelersPayload,
                     passportFiles: Object.values(uploadedTravelerFiles).map(fileSet => fileSet.passport).filter(Boolean),
@@ -305,7 +313,7 @@ export default function PaymentMethod({ route, navigation }) {
                     const manualPayload = {
                         bookingId: newBookingId,
                         packageId: targetPackageId,
-                        amount: safeAmount,
+                        amount: finalAmountToPay,
                         paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
                         proofImageType: proofImage.mimeType || 'image/jpeg',

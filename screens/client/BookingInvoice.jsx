@@ -235,12 +235,69 @@ export default function BookingInvoice({ route, navigation }) {
 
     const paymentMode = bookingDetails?.paymentMode || (bookingDetails?.paymentDetails?.paymentType === 'deposit' ? 'Deposit' : 'Full Payment');
     const paymentFrequency = bookingDetails?.paymentDetails?.frequency || 'Every 2 weeks';
-    const travelDateStart = booking?.travelDate?.startDate || bookingDetails?.travelDate?.startDate || null;
+    const travelDateStart = booking?.travelDate?.startDate
 
     const getFrequencyWeeks = (value) => {
         if (value === 'Every week') return 1;
         if (value === 'Every 3 weeks') return 3;
         return 2;
+    };
+
+    //INSTALLMENT AND PAYMENT COMPUTATION LOGIC
+    const runInstallmentLogic = (totalAmount, bookingDetailsParam, paidAmountParam = 0, baseDate = null) => {
+        const finalTotalAmount = Number(totalAmount) || 0;
+        const finalBaseDate = baseDate && dayjs(baseDate).isValid()
+            ? dayjs(baseDate).startOf('day')
+            : dayjs().startOf('day');
+
+        const travelDateValue = bookingDetailsParam?.travelDate?.startDate;
+        const travelDateComputation = travelDateValue ? dayjs(travelDateValue) : finalBaseDate;
+        const maxAllowedDate = finalBaseDate.add(45, 'day');
+        const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
+            ? travelDateComputation.startOf('day')
+            : maxAllowedDate.startOf('day');
+
+        const depositAmount = Number(bookingDetailsParam?.paymentDetails?.depositAmount) || 0;
+        const remainingAmount = Math.max(finalTotalAmount - depositAmount, 0);
+
+        const frequencyWeeks = getFrequencyWeeks(bookingDetailsParam?.paymentDetails?.frequency);
+        const paymentDates = [];
+        let nextDate = finalBaseDate.add(frequencyWeeks, 'week');
+
+        while (nextDate.valueOf() <= dueCutoffDate.valueOf()) {
+            paymentDates.push(nextDate);
+            nextDate = nextDate.add(frequencyWeeks, 'week');
+        }
+
+        if (paymentDates.length === 0) {
+            paymentDates.push(dueCutoffDate.subtract(1, 'day'));
+        }
+
+        const installmentCount = paymentDates.length;
+        const installmentAmount = installmentCount
+            ? remainingAmount / installmentCount
+            : 0;
+
+        const paymentSchedule = [
+            {
+                label: 'Deposit',
+                amount: depositAmount,
+                date: finalBaseDate,
+                status: paidAmountParam >= (depositAmount - 0.01) ? 'PAID' : 'PENDING'
+            },
+            ...paymentDates.map((date, index) => {
+                const cumulativeTarget = depositAmount + (installmentAmount * (index + 1));
+                return {
+                    label: `Installment ${index + 1}`,
+                    amount: installmentAmount,
+                    date: date,
+                    status: paidAmountParam >= (cumulativeTarget - 0.01) ? 'PAID' : 'PENDING'
+                };
+            })
+        ];
+
+        const nextUnpaid = paymentSchedule.find(item => item.status === 'PENDING');
+        return { paymentSchedule, totalAmount: finalTotalAmount, subtotal: finalTotalAmount, nextUnpaid };
     };
 
     const travelerCountByType = travelersWithDocs.reduce(
@@ -295,42 +352,13 @@ export default function BookingInvoice({ route, navigation }) {
         previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
     }
 
-    const depositAmount = Number(bookingDetails?.paymentDetails?.depositAmount) || 0;
-    const remainingAfterDeposit = Math.max(previewTotalAmount - depositAmount, 0);
-    const frequencyWeeks = getFrequencyWeeks(paymentFrequency);
-    const baseDate = issueDate;
-    const dueCutoffDate = travelDateStart && dayjs(travelDateStart).isValid()
-        ? dayjs(travelDateStart).startOf('day')
-        : baseDate.add(45, 'day');
-
-    const paymentDates = [];
-    let nextDate = dayjs(baseDate).add(frequencyWeeks, 'week').startOf('day');
-    while (nextDate.isBefore(dueCutoffDate)) {
-        paymentDates.push(nextDate);
-        nextDate = nextDate.add(frequencyWeeks, 'week');
-    }
-    if (paymentDates.length === 0) {
-        paymentDates.push(dueCutoffDate.subtract(1, 'day'));
-    }
-
-    const installmentAmount = paymentDates.length > 0 ? remainingAfterDeposit / paymentDates.length : 0;
-    const paymentSchedule = [
-        {
-            label: 'Deposit',
-            amount: depositAmount,
-            date: baseDate,
-            status: paidAmount >= (depositAmount - 0.01) ? 'PAID' : 'PENDING',
-        },
-        ...paymentDates.map((date, index) => {
-            const threshold = depositAmount + installmentAmount * (index + 1);
-            return {
-                label: `Installment ${index + 1}`,
-                amount: installmentAmount,
-                date,
-                status: paidAmount >= (threshold - 0.01) ? 'PAID' : 'PENDING',
-            };
-        }),
-    ];
+    // Use runInstallmentLogic for payment schedule calculation
+    const { paymentSchedule } = runInstallmentLogic(
+        previewTotalAmount,
+        bookingDetails,
+        paidAmount,
+        issueDate
+    );
 
     const lastScheduleItem = paymentSchedule.length ? paymentSchedule[paymentSchedule.length - 1] : null;
     const dueDateDisplay = lastScheduleItem?.date || fallbackDueDateDisplay;
