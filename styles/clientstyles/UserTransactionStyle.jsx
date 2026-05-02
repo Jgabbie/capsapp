@@ -5,12 +5,12 @@ const { height } = Dimensions.get("window");
 export default StyleSheet.create({
     container: {
         padding: 15,
-        backgroundColor: "#f5f7fa", 
-        flexGrow: 1, 
+        backgroundColor: "#f5f7fa",
+        flexGrow: 1,
         paddingBottom: 40,
     },
     title: {
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         marginBottom: 5,
@@ -26,52 +26,47 @@ export default StyleSheet.create({
 
     // --- SEARCH & FILTERS ---
     searchRow: {
-        flexDirection: "column", 
+        marginBottom: 24,
         gap: 12,
-        marginBottom: 20,
-        width: '100%',
     },
     searchBar: {
-        width: '100%',
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#f6f8fc", 
-        borderRadius: 20, 
+        backgroundColor: "#fff",
+        borderRadius: 8,
         paddingHorizontal: 12,
-        height: 40, 
         borderWidth: 1,
-        borderColor: "#dbe3ef",
+        borderColor: "#d9d9d9",
+        height: 42,
     },
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontSize: 14,
         fontFamily: "Roboto_400Regular",
+        fontSize: 13,
         color: "#333",
-        paddingVertical: 0,
     },
     dropdownGroup: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8, 
+        gap: 10,
     },
     dropdownButton: {
+        flex: 1,
         flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#eef3fb", 
-        borderRadius: 15, 
-        paddingHorizontal: 10,
-        height: 40, 
+        backgroundColor: "#fff",
+        borderRadius: 8,
         borderWidth: 1,
-        borderColor: "#d6e0f0", 
-        justifyContent: 'space-between',
-        minWidth: 90,
+        borderColor: "#d9d9d9",
+        height: 40,
+        paddingHorizontal: 12,
     },
     dropdownText: {
-        fontSize: 11, 
-        color: "#305797",
-        fontFamily: "Roboto_400Regular", 
-        marginRight: 8,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 10,
+        color: "#333",
     },
 
     // --- CARDS ---
@@ -141,7 +136,7 @@ export default StyleSheet.create({
         color: "#305797",
         fontSize: 14
     },
-    
+
     // --- CARD BUTTONS ---
     actionButtonsRow: {
         flexDirection: 'row',
@@ -214,7 +209,7 @@ export default StyleSheet.create({
         marginTop: 60,
     },
     emptyImage: {
-        width: 150, 
+        width: 150,
         height: 150,
         resizeMode: 'contain',
         opacity: 0.8,
