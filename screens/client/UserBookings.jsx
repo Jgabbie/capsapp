@@ -254,7 +254,7 @@ export default function UserBookings() {
                         <Ionicons name="search" size={16} color="#777" />
                         <TextInput
                             style={UserBookingsStyle.searchInput}
-                            placeholder='Search reference or package...'
+                            placeholder='Search reference, package or status...'
                             value={searchText}
                             onChangeText={setSearchText}
                         />

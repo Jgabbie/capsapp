@@ -886,15 +886,15 @@ export default function BookingInvoice({ route, navigation }) {
                             transactions.map((txn, index) => (
                                 <View key={index} style={BookingInvoiceStyle.txnCard}>
                                     <View style={BookingInvoiceStyle.txnRow}>
-                                        <Text style={BookingInvoiceStyle.txnLabel}>Date</Text>
+                                        <Text style={BookingInvoiceStyle.txnLabel}>Date:</Text>
                                         <Text style={BookingInvoiceStyle.txnValue}>{dayjs(txn.createdAt).format("MMM D, YYYY")}</Text>
                                     </View>
                                     <View style={BookingInvoiceStyle.txnRow}>
-                                        <Text style={BookingInvoiceStyle.txnLabel}>Method</Text>
+                                        <Text style={BookingInvoiceStyle.txnLabel}>Method:</Text>
                                         <Text style={BookingInvoiceStyle.txnValue}>{txn.method || "N/A"}</Text>
                                     </View>
                                     <View style={[BookingInvoiceStyle.txnRow, { marginTop: 8 }]}>
-                                        <Text style={BookingInvoiceStyle.txnLabel}>Amount</Text>
+                                        <Text style={BookingInvoiceStyle.txnLabel}>Amount:</Text>
                                         <View style={{ alignItems: 'flex-end' }}>
                                             <Text style={BookingInvoiceStyle.txnValue}>{formatCurrency(txn.amount)}</Text>
                                             <Text style={[BookingInvoiceStyle.statusTag, { 

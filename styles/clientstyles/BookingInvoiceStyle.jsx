@@ -132,7 +132,7 @@ export default StyleSheet.create({
     cardTitle: {
         fontSize: 18,
         fontFamily: 'Montserrat_700Bold',
-        color: '#305797',
+        color: '#000000',
         marginBottom: 16,
     },
 
@@ -146,7 +146,7 @@ export default StyleSheet.create({
         marginBottom: 16,
     },
     noticeText: {
-        color: '#2f54eb',
+        color: '#000',
         fontSize: 13,
         fontFamily: 'Roboto_400Regular',
     },
@@ -166,13 +166,13 @@ export default StyleSheet.create({
     },
     txnLabel: {
         fontSize: 12,
-        color: '#64748b',
-        fontFamily: 'Roboto_500Medium',
+        color: '#000',
+        fontFamily: 'Montserrat_600SemiBold',
     },
     txnValue: {
         fontSize: 14,
-        color: '#333',
-        fontFamily: 'Montserrat_600SemiBold',
+        color: '#000',
+        fontFamily: 'Roboto_400Regular',
     },
 
     // --- DOCUMENTS ---
