@@ -101,7 +101,7 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    const response = await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    const response = await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
                     return;
@@ -258,7 +258,7 @@ export default function PaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    await api.post('/payment/manual', manualPayload, withUserHeader(user?._id));
+                    await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
 
