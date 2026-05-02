@@ -134,12 +134,23 @@ export default function BookingInvoice({ route, navigation }) {
 
     const transactionStatus = (transactions.length === 0 && paidAmount === 0) 
         ? "Not Paid" : (paidAmount >= totalPrice ? "Fully Paid" : "Partial");
+    const hasPendingTransaction = transactions.some(
+        (txn) => String(txn?.status || "").trim().toLowerCase() === "pending"
+    );
 
     const getPaymentStatus = () => {
-        if (booking?.status === 'Cancelled' || booking?.status === 'Cancellation Requested' || rawBooking?.computedStatus === 'Cancelled') return { label: booking?.status || 'Cancelled', color: "#555", bg: "#eee" };
-        if (transactionStatus === "Fully Paid" || transactionStatus === "Paid") return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
-        if (transactionStatus === "Not Paid") return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" }; 
+        // For Balance section: Always show payment status, not cancellation status
+        // Determine payment status based on amounts (ignore Cancelled/Cancellation Requested)
+        if (transactionStatus === "Fully Paid" || transactionStatus === "Paid" || paidAmount >= totalPrice) return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
+        if (transactionStatus === "Not Paid" || paidAmount === 0) return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" }; 
         return { label: "Balance Due", color: "#d48806", bg: "#fffbe6" };
+    };
+    
+    const getCancellationStatus = () => {
+        // Show cancellation/cancelled status in orange (matching web)
+        const bookingStatus = String(booking?.status || booking?.computedStatus || "").trim();
+        if (bookingStatus === 'Cancelled' || bookingStatus === 'Cancellation Requested') return { label: bookingStatus, color: "#d48806", bg: "#fffbe6" };
+        return null;
     };
     const paymentStatus = getPaymentStatus();
 
@@ -162,7 +173,7 @@ export default function BookingInvoice({ route, navigation }) {
 
     const issueDate = booking?.createdAt ? dayjs(booking.createdAt) : dayjs();
     const travelDateObj = booking?.travelDate?.startDate ? dayjs(booking.travelDate.startDate) : dayjs().add(1, 'month');
-    const dueDateDisplay = travelDateObj.isValid() ? travelDateObj.subtract(25, 'day') : issueDate.add(14, 'day');
+    const fallbackDueDateDisplay = travelDateObj.isValid() ? travelDateObj.subtract(25, 'day') : issueDate.add(14, 'day');
     
     const customerName = bookingDetails?.leadFullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const travelerTotal = Number(booking?.travelers || bookingDetails?.travelers?.length || bookingDetails?.passengers?.length || 1);
@@ -175,6 +186,14 @@ export default function BookingInvoice({ route, navigation }) {
     const travelersWithDocs = baseTravelers.map((t, i) => {
         const rawPassport = t.passportFile || fallbackPassports[i] || null;
         const rawPhoto = t.photoFile || fallbackPhotos[i] || null;
+        const normalizedAge = Number(t?.age);
+        const fallbackPassengerType = Number.isFinite(normalizedAge)
+            ? (normalizedAge <= 2 ? "INFANT" : normalizedAge <= 11 ? "CHILD" : "ADULT")
+            : "ADULT";
+        const passengerType = String(
+            t.passengerType || t.type || t.travelerType || t.category || fallbackPassengerType
+        ).toUpperCase();
+
         return {
             title: t.title || 'MR',
             firstName: t.firstName || 'Unknown',
@@ -182,12 +201,114 @@ export default function BookingInvoice({ route, navigation }) {
             roomType: t.roomType || t.room || 'N/A', 
             age: t.age?.toString() || 'N/A', 
             birthday: t.birthday || t.bday || t.birthdate || null, 
+            passengerType,
             passportNo: t.passportNo || t.passport || 'N/A', 
             passportExpiry: t.passportExpiry || t.expiry || null, 
             passportFile: typeof rawPassport === 'string' ? rawPassport : rawPassport?.uri || null,
             photoFile: typeof rawPhoto === 'string' ? rawPhoto : rawPhoto?.uri || null,
         };
     });
+
+    const paymentMode = bookingDetails?.paymentMode || (bookingDetails?.paymentDetails?.paymentType === 'deposit' ? 'Deposit' : 'Full Payment');
+    const paymentFrequency = bookingDetails?.paymentDetails?.frequency || 'Every 2 weeks';
+    const travelDateStart = booking?.travelDate?.startDate || bookingDetails?.travelDate?.startDate || null;
+
+    const getFrequencyWeeks = (value) => {
+        if (value === 'Every week') return 1;
+        if (value === 'Every 3 weeks') return 3;
+        return 2;
+    };
+
+    const travelerCountByType = travelersWithDocs.reduce(
+        (acc, traveler) => {
+            const type = String(traveler?.passengerType || '').toUpperCase();
+            if (type === 'CHILD') acc.child += 1;
+            else if (type === 'INFANT') acc.infant += 1;
+            else acc.adult += 1;
+            return acc;
+        },
+        { adult: 0, child: 0, infant: 0 }
+    );
+
+    const adultRate = Number(bookingDetails?.paymentDetails?.adultRate) || 0;
+    const childRate = Number(bookingDetails?.paymentDetails?.childRate) || 0;
+    const infantRate = Number(bookingDetails?.paymentDetails?.infantRate) || 0;
+
+    const computedLineTotal =
+        travelerCountByType.adult * adultRate +
+        travelerCountByType.child * childRate +
+        travelerCountByType.infant * infantRate;
+
+    const perPaxRate = travelerTotal > 0 ? Number(totalPrice) / travelerTotal : Number(totalPrice);
+    const fallbackRate = perPaxRate;
+    const previewInvoiceItems = [
+        travelerCountByType.adult > 0
+            ? { date: issueDate, activity: 'Adult', description: packageName || 'Tour Package', qty: travelerCountByType.adult, rate: Number(adultRate) || fallbackRate }
+            : null,
+        travelerCountByType.child > 0
+            ? { date: issueDate, activity: 'Child', description: packageName || 'Tour Package', qty: travelerCountByType.child, rate: Number(childRate) || fallbackRate }
+            : null,
+        travelerCountByType.infant > 0
+            ? { date: issueDate, activity: 'Infant', description: packageName || 'Tour Package', qty: travelerCountByType.infant, rate: Number(infantRate) || fallbackRate }
+            : null,
+    ].filter(Boolean);
+
+    if (previewInvoiceItems.length === 0) {
+        previewInvoiceItems.push({ date: issueDate, activity: 'Package', description: packageName || 'Tour Package', qty: 1, rate: totalPrice });
+    }
+
+    let previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    // Use the authoritative booking total price to mirror web behavior
+    const previewTotalAmount = Number(totalPrice || previewSubtotal || 0);
+
+    // If the computed row sum doesn't match the booking total (web authoritative),
+    // adjust the first invoice row rate so RATE/AMOUNT reflect the booking total.
+    if (previewInvoiceItems.length > 0 && Math.abs(previewSubtotal - previewTotalAmount) > 0.5) {
+        const first = previewInvoiceItems[0];
+        const qty = Number(first.qty || 1);
+        const adjustedRate = previewTotalAmount / qty;
+        previewInvoiceItems[0] = { ...first, rate: adjustedRate };
+        previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    }
+
+    const depositAmount = Number(bookingDetails?.paymentDetails?.depositAmount) || 0;
+    const remainingAfterDeposit = Math.max(previewTotalAmount - depositAmount, 0);
+    const frequencyWeeks = getFrequencyWeeks(paymentFrequency);
+    const baseDate = issueDate;
+    const travelComputationDate = travelDateStart && dayjs(travelDateStart).isValid() ? dayjs(travelDateStart) : baseDate;
+    const dueCutoffDate = travelComputationDate.isBefore(baseDate.add(45, 'day')) ? travelComputationDate : baseDate.add(45, 'day');
+
+    const paymentDates = [];
+    let nextDate = dayjs(baseDate).add(frequencyWeeks, 'week');
+    while (nextDate.isBefore(dueCutoffDate) || nextDate.isSame(dueCutoffDate)) {
+        paymentDates.push(nextDate);
+        nextDate = nextDate.add(frequencyWeeks, 'week');
+    }
+    if (paymentDates.length === 0) {
+        paymentDates.push(dayjs(baseDate).add(2, 'week'));
+    }
+
+    const installmentAmount = paymentDates.length > 0 ? remainingAfterDeposit / paymentDates.length : 0;
+    const paymentSchedule = [
+        {
+            label: 'Deposit',
+            amount: depositAmount,
+            date: baseDate,
+            status: paidAmount >= (depositAmount - 0.01) ? 'PAID' : 'PENDING',
+        },
+        ...paymentDates.map((date, index) => {
+            const threshold = depositAmount + installmentAmount * (index + 1);
+            return {
+                label: `Installment ${index + 1}`,
+                amount: installmentAmount,
+                date,
+                status: paidAmount >= (threshold - 0.01) ? 'PAID' : 'PENDING',
+            };
+        }),
+    ];
+
+    const lastScheduleItem = paymentSchedule.length ? paymentSchedule[paymentSchedule.length - 1] : null;
+    const dueDateDisplay = lastScheduleItem?.date || fallbackDueDateDisplay;
 
     const safeDate = (dateStr) => {
         if (!dateStr || dateStr === 'N/A' || dateStr === '') return 'N/A';
@@ -613,7 +734,7 @@ export default function BookingInvoice({ route, navigation }) {
                             </View>
                             <View style={[BookingInvoiceStyle.statCard, BookingInvoiceStyle.statHighlight]}>
                                 <Text style={BookingInvoiceStyle.statLabel}>Balance</Text>
-                                <Text style={[BookingInvoiceStyle.statAmount, BookingInvoiceStyle.statAmountRed]}>{formatCurrency(remainingBalance)}</Text>
+                                <Text style={[BookingInvoiceStyle.statAmount, remainingBalance > 0 && BookingInvoiceStyle.statAmountRed]}>{formatCurrency(remainingBalance)}</Text>
                                 <Text style={[BookingInvoiceStyle.statusTag, { backgroundColor: paymentStatus.bg, color: paymentStatus.color }]}>
                                     {paymentStatus.label}
                                 </Text>
@@ -629,16 +750,21 @@ export default function BookingInvoice({ route, navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && booking?.status !== 'Cancellation Requested' && rawBooking?.computedStatus !== 'Cancelled' && (
+                    {remainingBalance > 0 && booking?.status !== 'Cancelled' && rawBooking?.computedStatus !== 'Cancelled' && (
                         <View style={BookingInvoiceStyle.card}>
                             <Text style={BookingInvoiceStyle.cardTitle}>Payment Methods</Text>
                             <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16 }]}>Select a payment method to complete your booking.</Text>
 
                             <View style={BookingInvoiceStyle.methodGridContainer}>
                                 <TouchableOpacity 
-                                    style={[BookingInvoiceStyle.methodGridCard, method === 'paymongo' && BookingInvoiceStyle.methodGridCardSelected]}
+                                    style={[
+                                        BookingInvoiceStyle.methodGridCard,
+                                        method === 'paymongo' && BookingInvoiceStyle.methodGridCardSelected,
+                                        hasPendingTransaction && { opacity: 0.45 }
+                                    ]}
                                     onPress={() => setMethod('paymongo')}
                                     activeOpacity={0.9}
+                                    disabled={hasPendingTransaction}
                                 >
                                     <View style={BookingInvoiceStyle.methodRadioHeader}>
                                         <View style={[BookingInvoiceStyle.radioCircle, method === 'paymongo' && BookingInvoiceStyle.radioCircleSelected]}>
@@ -653,9 +779,14 @@ export default function BookingInvoice({ route, navigation }) {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity 
-                                    style={[BookingInvoiceStyle.methodGridCard, method === 'manual' && BookingInvoiceStyle.methodGridCardSelected]}
+                                    style={[
+                                        BookingInvoiceStyle.methodGridCard,
+                                        method === 'manual' && BookingInvoiceStyle.methodGridCardSelected,
+                                        hasPendingTransaction && { opacity: 0.45 }
+                                    ]}
                                     onPress={() => setMethod('manual')}
                                     activeOpacity={0.9}
+                                    disabled={hasPendingTransaction}
                                 >
                                     <View style={BookingInvoiceStyle.methodRadioHeader}>
                                         <View style={[BookingInvoiceStyle.radioCircle, method === 'manual' && BookingInvoiceStyle.radioCircleSelected]}>
@@ -670,7 +801,7 @@ export default function BookingInvoice({ route, navigation }) {
                                 </TouchableOpacity>
                             </View>
 
-                            {method === 'manual' && (
+                            {method === 'manual' && !hasPendingTransaction && (
                                 <View style={BookingInvoiceStyle.manualBankSection}>
                                     <Text style={[BookingInvoiceStyle.cardTitle, {fontSize: 16, marginBottom: 12}]}>Available Bank Accounts</Text>
                                     <View style={BookingInvoiceStyle.bankGrid}>
@@ -718,12 +849,17 @@ export default function BookingInvoice({ route, navigation }) {
 
                             <View style={BookingInvoiceStyle.checkoutSection}>
                                 <Text style={BookingInvoiceStyle.checkoutTitle}>Amount to Pay</Text>
-                                <Text style={BookingInvoiceStyle.checkoutAmount}>{formatCurrency(remainingBalance)}</Text>
+                                <Text style={BookingInvoiceStyle.checkoutAmount}>
+                                    {hasPendingTransaction ? 'Pending Payments...' : formatCurrency(remainingBalance)}
+                                </Text>
                                 
                                 <TouchableOpacity 
-                                    style={BookingInvoiceStyle.checkoutButton} 
+                                    style={[
+                                        BookingInvoiceStyle.checkoutButton,
+                                        hasPendingTransaction && { backgroundColor: '#d1d5db' }
+                                    ]}
                                     onPress={handleProceedClick}
-                                    disabled={paymentLoading}
+                                    disabled={paymentLoading || hasPendingTransaction}
                                 >
                                     {paymentLoading ? (
                                         <ActivityIndicator color="#fff" />
@@ -734,55 +870,6 @@ export default function BookingInvoice({ route, navigation }) {
                             </View>
                         </View>
                     )}
-
-                    <View style={BookingInvoiceStyle.card}>
-                        <Text style={BookingInvoiceStyle.cardTitle}>Traveler Documents</Text>
-                        
-                        {travelersWithDocs.length === 0 ? (
-                            <Text style={{ color: '#888' }}>No documents uploaded yet.</Text>
-                        ) : (
-                            travelersWithDocs.map((traveler, index) => (
-                                <View key={index} style={BookingInvoiceStyle.travelerDocSection}>
-                                    <Text style={BookingInvoiceStyle.travelerName}>
-                                        Traveler {index + 1}: {traveler.firstName} {traveler.lastName}
-                                    </Text>
-                                    
-                                    <View style={BookingInvoiceStyle.travelerDetailsRow}>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Title: {traveler.title}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Room: {traveler.roomType}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Age: {traveler.age}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passport #: {traveler.passportNo}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Birthday: {safeDate(traveler.birthday)}</Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Expiry: {safeDate(traveler.passportExpiry)}</Text>
-                                    </View>
-
-                                    <View style={BookingInvoiceStyle.docGrid}>
-                                        {traveler.passportFile ? (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                            </View>
-                                        ) : (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
-                                            </View>
-                                        )}
-
-                                        {traveler.photoFile ? (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
-                                                <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                            </View>
-                                        ) : (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-                            ))
-                        )}
-                    </View>
 
                     <View style={BookingInvoiceStyle.card}>
                         <Text style={BookingInvoiceStyle.cardTitle}>Transaction History</Text>
@@ -818,6 +905,58 @@ export default function BookingInvoice({ route, navigation }) {
                                                 {txn.status}
                                             </Text>
                                         </View>
+                                    </View>
+                                </View>
+                            ))
+                        )}
+                    </View>
+
+                    <View style={BookingInvoiceStyle.card}>
+                        <Text style={BookingInvoiceStyle.cardTitle}>Travelers Information</Text>
+                        <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16 }]}>Review and update traveler information as needed.</Text>
+                        
+                        {travelersWithDocs.length === 0 ? (
+                            <Text style={{ color: '#888' }}>No traveler information available yet.</Text>
+                        ) : (
+                            travelersWithDocs.map((traveler, index) => (
+                                <View key={index} style={BookingInvoiceStyle.travelerDocSection}>
+                                    <Text style={BookingInvoiceStyle.travelerName}>
+                                        Traveler {index + 1}: {traveler.firstName} {traveler.lastName}
+                                    </Text>
+                                    <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 12 }]}>Please confirm the traveler's details below. Update any incorrect information before finalizing.</Text>
+                                    
+                                    <View style={BookingInvoiceStyle.travelerDetailsRow}>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Title: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.title}</Text></Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Room: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.roomType}</Text></Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Birthday: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.birthday)}</Text></Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Age: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.age}</Text></Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passenger Type: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passengerType}</Text></Text>
+                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passport #: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passportNo}</Text></Text>
+                                        <Text style={[BookingInvoiceStyle.travelerDetailText, { width: '100%' }]}>Expiry: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.passportExpiry)}</Text></Text>
+                                    </View>
+
+                                    <View style={BookingInvoiceStyle.docGrid}>
+                                        {traveler.passportFile ? (
+                                            <View style={BookingInvoiceStyle.docCol}>
+                                                <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
+                                                <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                            </View>
+                                        ) : (
+                                            <View style={BookingInvoiceStyle.docCol}>
+                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
+                                            </View>
+                                        )}
+
+                                        {traveler.photoFile ? (
+                                            <View style={BookingInvoiceStyle.docCol}>
+                                                <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
+                                                <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                            </View>
+                                        ) : (
+                                            <View style={BookingInvoiceStyle.docCol}>
+                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
+                                            </View>
+                                        )}
                                     </View>
                                 </View>
                             ))
@@ -878,7 +1017,7 @@ export default function BookingInvoice({ route, navigation }) {
                             </TouchableOpacity>
 
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                <View style={PaymentStyle.invHeader}>
+                                        <View style={PaymentStyle.invHeader}>
                                     <View style={PaymentStyle.invCompanyBlock}>
                                         <Image source={require('../../assets/images/Logored.png')} style={PaymentStyle.invLogo} resizeMode="contain" />
                                         <View style={PaymentStyle.invCompanyDetails}>
@@ -891,7 +1030,7 @@ export default function BookingInvoice({ route, navigation }) {
                                         </View>
                                     </View>
                                     <View style={PaymentStyle.invTitleBlock}>
-                                        <Text style={PaymentStyle.invTitleText}>Invoice {invoiceNumber}</Text>
+                                        <Text style={PaymentStyle.invTitleText}>Invoice {booking?.invoiceNumber || (booking?.invoice && booking.invoice.number) || invoiceNumber}</Text>
                                     </View>
                                 </View>
 
@@ -912,8 +1051,8 @@ export default function BookingInvoice({ route, navigation }) {
                                         </View>
                                         <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
                                             <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>TOTAL PRICE</Text>
-                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff', fontSize: 11}]}>
-                                                {formatPesoDisplay(totalPrice)}
+                                            <Text style={[PaymentStyle.invSummaryValue, {color: '#fff'}]} numberOfLines={2}>
+                                                PHP {formatPesoNumber(previewTotalAmount)}
                                             </Text>
                                         </View>
                                         <View style={PaymentStyle.invSummaryCol}>
@@ -926,21 +1065,55 @@ export default function BookingInvoice({ route, navigation }) {
                                 <View style={PaymentStyle.invTable}>
                                     <View style={PaymentStyle.invTableHeader}>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>DATE</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>ACTIVITY</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 2 }]}>ACTIVITY</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 3 }]}>DESCRIPTION</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>QTY</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
+                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>AMOUNT</Text>
                                     </View>
-                                    <View style={PaymentStyle.invTableRow}>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Package</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageName}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>1</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(totalPrice)}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalPrice)}</Text>
-                                    </View>
+                                    {previewInvoiceItems.map((item, idx) => (
+                                        <View key={`inv-row-${idx}`} style={PaymentStyle.invTableRow}>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 2 }]}>{item.activity}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{item.description}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{item.qty}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(item.rate)}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(Number(item.qty || 0) * Number(item.rate || 0))}</Text>
+                                        </View>
+                                    ))}
                                 </View>
+
+                                {paymentMode === 'Deposit' && paymentSchedule.length > 0 && (
+                                    <View style={PaymentStyle.invScheduleSection}>
+                                        <Text style={[PaymentStyle.invScheduleLabel, { marginBottom: 8 }]}>PAYMENT SCHEDULE ({String(paymentFrequency).toUpperCase()})</Text>
+                                        <View style={PaymentStyle.invScheduleHeaderRow}>
+                                            <Text style={[PaymentStyle.invScheduleLabel, { flex: 1.7 }]}>DESCRIPTION</Text>
+                                            <Text style={[PaymentStyle.invScheduleLabel, { flex: 1.4 }]}>DUE DATE</Text>
+                                            <Text style={[PaymentStyle.invScheduleLabel, { flex: 1.3, textAlign: 'right' }]}>AMOUNT</Text>
+                                            <Text style={[PaymentStyle.invScheduleLabel, { flex: 1, textAlign: 'right' }]}>STATUS</Text>
+                                        </View>
+                                        {paymentSchedule.map((row, idx) => (
+                                            <View key={`sched-row-${idx}`} style={PaymentStyle.invScheduleRow}>
+                                                <Text style={[PaymentStyle.invCell, { flex: 1.7 }]}>{row.label}</Text>
+                                                <Text style={[PaymentStyle.invCell, { flex: 1.4 }]}>{dayjs(row.date).format('MMM D, YYYY')}</Text>
+                                                <Text style={[PaymentStyle.invCell, { flex: 1.3, textAlign: 'right' }]}>PHP {formatPesoNumber(row.amount)}</Text>
+                                                <Text
+                                                    style={[
+                                                        PaymentStyle.invCell,
+                                                        {
+                                                            flex: 1,
+                                                            textAlign: 'right',
+                                                            fontFamily: 'Montserrat_700Bold',
+                                                            color: row.status === 'PAID' ? '#389e0d' : '#d97706',
+                                                        },
+                                                    ]}
+                                                >
+                                                    {row.status}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
 
                                 <View style={PaymentStyle.invFooter}>
                                     <View style={[PaymentStyle.invBankInfo, { flex: 1 }]}>
@@ -953,15 +1126,15 @@ export default function BookingInvoice({ route, navigation }) {
                                     <View style={[PaymentStyle.invTotalContainer, { flex: 1.5 }]}>
                                         <View style={PaymentStyle.invTotalRow}>
                                             <Text style={PaymentStyle.invTotalLabel}>TOTAL PRICE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>{formatPesoDisplay(totalPrice)}</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(previewTotalAmount)}</Text>
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { borderTopWidth: 0 }]}>
                                             <Text style={PaymentStyle.invTotalLabel}>PAID TO DATE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>{formatPesoDisplay(paidAmount)}</Text>
+                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(paidAmount)}</Text>
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { backgroundColor: '#f4f6f8', paddingHorizontal: 4, paddingVertical: 10 }]}>
                                             <Text style={[PaymentStyle.invTotalLabel, { color: '#b91c1c' }]}>REMAINING BAL.</Text>
-                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>{formatPesoDisplay(remainingBalance)}</Text>
+                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>PHP {formatPesoNumber(Math.max(previewTotalAmount - paidAmount, 0))}</Text>
                                         </View>
                                         <Text style={[PaymentStyle.invThankYou, { marginTop: 5 }]}>THANK YOU.</Text>
                                     </View>

@@ -29,9 +29,9 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [budgetRange, setBudgetRange] = useState([12000, 30000]);
-    const [minBudgetInput, setMinBudgetInput] = useState("12000");
-    const [maxBudgetInput, setMaxBudgetInput] = useState("30000");
+    const [budgetRange, setBudgetRange] = useState([0, 200000]);
+    const [minBudgetInput, setMinBudgetInput] = useState("0");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("200000");
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
     const [daysValue, setDaysValue] = useState([10]);
@@ -73,15 +73,23 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
 
     // 🔥 RESET FILTERS FUNCTION 🔥
     const resetFilters = () => {
-        setBudgetRange([12000, 30000]);
-        setMinBudgetInput('12000');
-        setMaxBudgetInput('30000');
+        setBudgetRange([0, 200000]);
+        setMinBudgetInput('0');
+        setMaxBudgetInput('200000');
         setTourType('All');
         setTravelersValue('');
         setDaysValue([10]);
         setSelectedTags([]);
         setSearchText('');
     };
+
+    // Reset filters when leaving the Packages screen so filters don't persist across navigation
+    useEffect(() => {
+        const unsub = navigation.addListener('blur', () => {
+            resetFilters();
+        });
+        return unsub;
+    }, [navigation]);
 
     useEffect(() => {
         const fetchData = async () => {
