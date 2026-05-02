@@ -248,9 +248,9 @@ const PaymentStyle = StyleSheet.create({
     invPaper: {
         backgroundColor: '#fff',
         width: '100%',
-        height: height * 0.85, // 🔥 UPDATED: Fixed height to match your first screenshot (85% of screen)
-        borderRadius: 8,
-        padding: 20,
+        height: height * 0.88,
+        borderRadius: 16,
+        padding: 16,
         elevation: 10,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 5 },
@@ -338,6 +338,7 @@ const PaymentStyle = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e5e7eb',
         flex: 1.5,
+        minHeight: 76,
     },
     invSummaryCol: {
         flex: 1,
@@ -350,9 +351,10 @@ const PaymentStyle = StyleSheet.create({
     },
     invSummaryValue: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 8,
+        fontSize: 10,
         color: '#333',
-        marginTop: 4
+        marginTop: 4,
+        textAlign: 'center'
     },
     invTable: {
         marginBottom: 20,
@@ -372,7 +374,7 @@ const PaymentStyle = StyleSheet.create({
     },
     invCell: {
         fontFamily: "Roboto_400Regular",
-        fontSize: 7.5,
+        fontSize: 8,
         color: '#333',
     },
     invFooter: {
@@ -414,10 +416,18 @@ const PaymentStyle = StyleSheet.create({
         color: '#555',
     },
     invScheduleSection: {
-        marginTop: 20,
+        marginTop: 10,
         borderTopWidth: 1,
         borderTopColor: '#e5e7eb',
-        paddingTop: 15,
+        paddingTop: 10,
+        marginBottom: 12,
+    },
+    invScheduleHeaderRow: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+        paddingBottom: 5,
+        marginBottom: 4,
     },
     invScheduleRow: {
         flexDirection: 'row',

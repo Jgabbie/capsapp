@@ -56,16 +56,22 @@ export default function UserBookings() {
         const formatted = formatStatusLabel(rawStatus);
         const normalized = formatted.toLowerCase();
 
+        // Check booking status first (most authoritative from backend)
         if (normalized === 'cancelled' || normalized === 'cancellation requested') {
             return formatted || 'Cancelled';
-        }
-        if (Number(booking.paidAmount || 0) <= 0) {
-            if (normalized === 'pending') return 'Pending';
-            return 'Not Paid';
         }
         if (normalized === 'successful' || normalized === 'fully paid') {
             return 'Fully Paid';
         }
+        if (normalized === 'pending') {
+            return 'Pending';
+        }
+        
+        // Fall back to paidAmount logic
+        if (Number(booking.paidAmount || 0) <= 0) {
+            return 'Not Paid';
+        }
+        
         return formatted || 'No Status';
     };
 
@@ -74,7 +80,8 @@ export default function UserBookings() {
         if (normalized === 'not paid') return { bg: '#fff1f0', text: '#cf1322' };
         if (normalized === 'pending') return { bg: '#fffbe6', text: '#d48806' };
         if (normalized === 'fully paid' || normalized === 'successful') return { bg: '#f6ffed', text: '#389e0d' };
-        if (normalized === 'cancelled' || normalized === 'cancellation requested') return { bg: '#f5f5f5', text: '#555555' };
+        if (normalized === 'cancellation requested') return { bg: '#fffbe6', text: '#d48806' };
+        if (normalized === 'cancelled') return { bg: '#fee2e2', text: '#b91c1c' };
         return { bg: '#f0f5ff', text: '#2f54eb' };
     };
 
@@ -316,11 +323,9 @@ export default function UserBookings() {
                                     <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
                                         <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
                                     </TouchableOpacity>
-                                    {(item.computedStatus !== 'Cancelled' && item.computedStatus !== 'Cancellation Requested') && (
-                                        <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelPolicyModalOpen(true); }}>
-                                            <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
-                                        </TouchableOpacity>
-                                    )}
+                                    <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelPolicyModalOpen(true); }}>
+                                        <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         );
@@ -335,7 +340,7 @@ export default function UserBookings() {
                             <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
                                 Select Status
                             </Text>
-                            {['All', 'Not Paid', 'Pending', 'Fully Paid', 'Cancellation Requested', 'Cancelled'].map((status, index) => (
+                            {['All', 'Not Paid', 'Pending', 'Fully Paid', 'Cancelled'].map((status, index) => (
                                 <TouchableOpacity
                                     key={status}
                                     style={[
