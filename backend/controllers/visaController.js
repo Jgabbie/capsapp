@@ -152,3 +152,36 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
     res.status(500).json({ message: "Error updating visa application", error: error.message });
   }
 };
+
+export const passportReleaseOption = async (req, res) => {
+  const { id } = req.params;
+  const { option, deliveryAddress } = req.body;
+
+  try {
+    if (!option) {
+      return res.status(400).json({ message: "Passport release option is required" });
+    }
+
+    const application = await VisaApplicationModel.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Visa application not found" });
+    }
+
+    application.passportReleaseOption = option;
+    application.deliveryAddress = deliveryAddress || application.deliveryAddress;
+    if (String(option || "").toLowerCase() === "delivery") {
+      application.deliveryFee = 0;
+      application.deliveryDate = "";
+    }
+
+    application.status = "Passport Released"
+    await application.save();
+
+    res.status(200).json({
+      message: "Passport release option updated successfully",
+      application
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating passport release option", error: error.message });
+  }
+}

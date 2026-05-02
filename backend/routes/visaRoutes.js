@@ -5,7 +5,8 @@ import {
   getUserVisaApplications,
   getVisaApplicationById,
   chooseAppointment,
-  updateVisaApplicationWithDocs
+  updateVisaApplicationWithDocs,
+  passportReleaseOption
 } from "../controllers/visaController.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/applications", requireUser, getUserVisaApplications);
 router.get("/applications/:id", requireUser, getVisaApplicationById);
 router.put("/applications/:id/documents", requireUser, updateVisaApplicationWithDocs);
 router.put("/applications/:id/choose-appointment", requireUser, chooseAppointment);
+router.put("/applications/:id/passport-release-option", requireUser, passportReleaseOption);
 
 export default router;

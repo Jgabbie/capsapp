@@ -24,7 +24,6 @@ export default function PassportProgress() {
 
     const [application, setApplication] = useState(null)
     const [serviceRequirements, setServiceRequirements] = useState([])
-    const [serviceAdditionalRequirements, setServiceAdditionalRequirements] = useState([])
     const [loading, setLoading] = useState(true)
 
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
@@ -166,7 +165,10 @@ export default function PassportProgress() {
 
     const uploadFilesToBackend = async (endpoint, formData) => {
         const response = await api.post(endpoint, formData, {
-            headers: withUserHeader(user?._id).headers,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...withUserHeader(user?._id).headers,
+            },
             timeout: 60000 // 60s for file uploads
         });
 
@@ -271,7 +273,10 @@ export default function PassportProgress() {
 
         for (const key of keys) {
             const file = selectedFiles[key];
-            const filename = file.name || file.uri.split('/').pop();
+            const filename = file.name || file.uri.split('/').pop() || `${key}-${Date.now()}`;
+            const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
+            const ext = match ? match[1].toLowerCase() : 'pdf';
+            const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
             order.push(key);
 
             if (Platform.OS === 'web' && file.file) {
@@ -280,7 +285,7 @@ export default function PassportProgress() {
                 formData.append('files', {
                     uri: file.uri,
                     name: filename,
-                    type: file.mimeType || 'application/octet-stream',
+                    type: mimeType,
                 });
             }
         }
@@ -502,13 +507,21 @@ export default function PassportProgress() {
         return [];
     }, [application]);
 
-    const passportRequirements = useMemo(() => ([
-        { key: 'passportPhoto', label: 'Passport Photo' },
-        { key: 'birthCertificate', label: 'Birth Certificate' },
-        { key: 'applicationForm', label: 'Application Form' },
-        { key: 'govId', label: 'Government ID' },
-        { key: 'oldPassport', label: 'Old Passport' },
-    ]), []);
+    const passportRequirements = useMemo(() => {
+        const base = [
+            { key: 'passportPhoto', label: 'Passport Photo' },
+            { key: 'birthCertificate', label: 'Birth Certificate' },
+            { key: 'applicationForm', label: 'Application Form' },
+            { key: 'govId', label: 'Government ID' },
+        ];
+
+        const type = String(application?.applicationType || '').toLowerCase();
+        const isRenewal = /renew/i.test(type) || /renewal/i.test(type);
+
+        if (isRenewal) base.push({ key: 'oldPassport', label: 'Old Passport' });
+
+        return base;
+    }, [application?.applicationType]);
 
     const isOthersSelected = selectedScheduleIndex === 'others';
     const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
@@ -570,6 +583,31 @@ export default function PassportProgress() {
                 {/* Application Info Card */}
                 <View style={PassportProgressStyle.card}>
                     <Text style={PassportProgressStyle.cardTitle}>Application Info</Text>
+
+                    {appStatus.toLowerCase() === 'documents approved' && (
+                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Documents Approved</Text>
+                        </View>
+                    )}
+
+                    {appStatus.toLowerCase() === 'dfa approved' && (
+                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Congratulations! Your documents have been approved by the DFA.</Text>
+                        </View>
+                    )}
+
+                    {appStatus.toLowerCase() === 'rejected' && (
+                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#96050c', fontFamily: 'Montserrat_600SemiBold' }}>Documents Rejected</Text>
+                        </View>
+                    )}
+
+                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment complete' && appStatus.toLowerCase() !== 'documents uploaded' &&
+                        appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'dfa approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
+                            <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                                <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
+                            </View>
+                        )}
 
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Reference</Text>
@@ -810,7 +848,7 @@ export default function PassportProgress() {
                     </View>
                 )}
 
-                {getUploadedDocumentEntries().length > 0 && (
+                {appStatus.toLowerCase() === "payment complete" && getUploadedDocumentEntries().length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -820,11 +858,12 @@ export default function PassportProgress() {
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
                             {getUploadedDocumentEntries().map(([key, value]) => {
                                 const entryIsImage = isImageSource(value);
+                                const requirementLabel = passportRequirements.find((doc) => doc.key === key)?.label || key.replace(/_/g, ' ');
 
                                 return (
                                     <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
-                                            {passportRequirements[key] || key.replace(/_/g, ' ')}
+                                            {requirementLabel.toUpperCase()}
                                         </Text>
 
                                         {entryIsImage ? (
@@ -975,50 +1014,30 @@ export default function PassportProgress() {
                 </Modal>
 
                 {/* Submitted Documents Display */}
-                {application.submittedDocuments && Object.keys(application.submittedDocuments).length > 0 && (
+                {appStatus.toLowerCase() === "documents uploaded" && getUploadedDocumentEntries().length > 0 && (
                     <View style={PassportProgressStyle.card}>
-                        <Text style={PassportProgressStyle.cardTitle}>Submitted Documents</Text>
+                        <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            These are the documents currently saved on your passport application.
+                        </Text>
 
-                        {application.submittedDocuments.passportPhoto && (
-                            <View style={PassportProgressStyle.docRow}>
-                                <Text style={PassportProgressStyle.docLabel}>Passport Photo</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.passportPhoto)}>
-                                    <Text style={PassportProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.birthCertificate && (
-                            <View style={PassportProgressStyle.docRow}>
-                                <Text style={PassportProgressStyle.docLabel}>Birth Certificate</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.birthCertificate)}>
-                                    <Text style={PassportProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.applicationForm && (
-                            <View style={PassportProgressStyle.docRow}>
-                                <Text style={PassportProgressStyle.docLabel}>Application Form</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.applicationForm)}>
-                                    <Text style={PassportProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.govId && (
-                            <View style={PassportProgressStyle.docRow}>
-                                <Text style={PassportProgressStyle.docLabel}>Government ID</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.govId)}>
-                                    <Text style={PassportProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.oldPassport && (
-                            <View style={PassportProgressStyle.docRow}>
-                                <Text style={PassportProgressStyle.docLabel}>Old Passport</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.oldPassport)}>
-                                    <Text style={PassportProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
+                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                            {getUploadedDocumentEntries().map(([key, value]) => {
+                                const requirementLabel = passportRequirements.find((doc) => doc.key === key)?.label || key.replace(/_/g, ' ');
+
+                                return (
+                                    <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
+                                            {String(requirementLabel).toUpperCase()}
+                                        </Text>
+
+                                        <TouchableOpacity onPress={() => openDocument(value)}>
+                                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            })}
+                        </View>
                     </View>
                 )}
 
