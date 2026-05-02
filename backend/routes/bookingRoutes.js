@@ -6,15 +6,7 @@ import requireAdmin from "../middleware/requireAdmin.js";
 import {
   createBooking,
   getUserBookings,
-  getBookingByReference,
   getAllBookings,
-  getBookingsTotalBaseOnMonth,
-  updateBooking,
-  deleteBooking,
-  cancelBooking,
-  getcancellations,
-  approveCancellation,
-  disApproveCancellation,
   verifyTokenCheckout
 } from "../controllers/bookingController.js";
 
