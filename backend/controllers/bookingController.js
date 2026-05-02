@@ -42,13 +42,6 @@ export const createBooking = async (req, res) => {
             };
         }
 
-        // 2. Format root travelers as an absolute Number
-        let rootTravelersCount = 1;
-        if (typeof travelers === 'number') {
-            rootTravelersCount = travelers;
-        } else if (bookingDetails?.travelers && Array.isArray(bookingDetails.travelers)) {
-            rootTravelersCount = bookingDetails.travelers.length;
-        }
 
         // 3. Create the Database Record matching Web Schema
         const booking = await Booking.create({
@@ -56,7 +49,7 @@ export const createBooking = async (req, res) => {
             userId,
             bookingDate: bookingDetails.bookingDate || new Date().toISOString(),
             travelDate: rootTravelDate,
-            travelers: rootTravelersCount,
+            travelers,
             bookingDetails: bookingDetails, // Contains the full nested objects/arrays 
             reference: generateBookingReference(),
             status: "Not Paid",
