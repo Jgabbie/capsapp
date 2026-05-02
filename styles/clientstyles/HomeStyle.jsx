@@ -121,6 +121,101 @@ const HomeStyle = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
+    // 🔥 NEW FILTER BUTTON & MODAL STYLES 🔥
+    heroFilterBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#305797', 
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 50,
+        justifyContent: 'center',
+        gap: 6
+    },
+    heroFilterBtnText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13
+    },
+    filterModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    filterModalContainer: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: 45,
+        maxHeight: '90%'
+    },
+    filterModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    filterModalTitle: {
+        fontSize: 18,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#1f2a44'
+    },
+    filterSectionLabel: {
+        fontSize: 14,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#333',
+        marginBottom: 10,
+        marginTop: 15
+    },
+    filterPillContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8
+    },
+    filterPill: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
+    },
+    filterPillSelected: {
+        backgroundColor: '#e0e7ff',
+        borderColor: '#305797'
+    },
+    filterPillText: {
+        fontSize: 13,
+        color: '#64748b',
+        fontFamily: 'Roboto_500Medium'
+    },
+    filterPillTextSelected: {
+        color: '#305797'
+    },
+    filterModalTextInput: {
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        height: 48,
+        backgroundColor: '#f8fafc',
+        fontSize: 14,
+        color: '#333',
+        fontFamily: 'Roboto_400Regular'
+    },
+    filterModalApplyBtn: {
+        backgroundColor: '#305797',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 25
+    },
+    filterModalApplyText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 15
+    },
     heroGridRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

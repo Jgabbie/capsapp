@@ -15,7 +15,7 @@ const { width } = Dimensions.get('window');
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
-export default function Packages({ navigation }) {
+export default function Packages({ navigation, route }) { // 🔥 Add route here!
     const { user, updateUser } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [packages, setPackages] = useState([]);
@@ -43,6 +43,36 @@ export default function Packages({ navigation }) {
         if (slots <= 0) return "Sold out";
         if (slots <= 5) return "Few slots";
         return "Available";
+    };
+
+    // 🔥 CATCH FILTERS FROM HOME SCREEN 🔥
+    useEffect(() => {
+        if (route?.params) {
+            const p = route.params;
+            if (p.searchQuery) setSearchText(p.searchQuery);
+            if (p.budgetRange) setBudgetRange(p.budgetRange);
+            if (p.tourType && p.tourType !== 'Tour Type' && p.tourType !== 'All Types') {
+                setTourType(p.tourType);
+            }
+            if (p.travelers) setTravelersValue(p.travelers);
+            if (p.selectedTag && p.selectedTag !== 'Select tags' && p.selectedTag !== 'All Tags') {
+                setSelectedTags([p.selectedTag]);
+            }
+            if (p.selectedDuration && p.selectedDuration !== 'Length of Stay' && p.selectedDuration !== 'All Durations') {
+                const dayNum = parseInt(p.selectedDuration); // Extracts "3" from "3 Days"
+                if (!isNaN(dayNum)) setDaysValue([dayNum]);
+            }
+        }
+    }, [route?.params]);
+
+    // 🔥 RESET FILTERS FUNCTION 🔥
+    const resetFilters = () => {
+        setBudgetRange([0, 200000]);
+        setTourType('All');
+        setTravelersValue('');
+        setDaysValue([10]);
+        setSelectedTags([]);
+        setSearchText('');
     };
 
     useEffect(() => {
@@ -479,6 +509,11 @@ export default function Packages({ navigation }) {
                         </ScrollView>
                         <TouchableOpacity style={[DestinationStyles.primaryButton, { marginTop: 15 }]} onPress={() => setFilterModalVisible(false)}>
                             <Text style={DestinationStyles.primaryText}>Apply Filters</Text>
+                        </TouchableOpacity>
+
+                        {/* 🔥 NEW RESET BUTTON 🔥 */}
+                        <TouchableOpacity style={DestinationStyles.resetButton} onPress={resetFilters}>
+                            <Text style={DestinationStyles.resetText}>Reset Filters</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

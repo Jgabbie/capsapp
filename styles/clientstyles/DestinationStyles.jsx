@@ -267,6 +267,20 @@ const DestinationStyles = StyleSheet.create({
   breakdownBarBg: { flex: 1, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, marginHorizontal: 8, overflow: 'hidden' },
   breakdownBarFill: { height: '100%', backgroundColor: '#facc15', borderRadius: 4 },
   breakdownCountLabel: { width: 20, fontSize: 12, color: '#777', textAlign: 'right', fontFamily: 'Roboto_400Regular' },
+  resetButton: {
+      backgroundColor: '#f1f5f9',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 10,
+      borderWidth: 1,
+      borderColor: '#cbd5e1'
+  },
+  resetText: {
+      color: '#475569',
+      fontSize: 15,
+      fontFamily: 'Montserrat_700Bold'
+  },
 });
 
 export default DestinationStyles;
