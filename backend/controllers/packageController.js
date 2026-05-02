@@ -3,12 +3,10 @@ import PackageModel from "../models/package.js";
 // Fetch all packages for the mobile Home screen
 export const getPackages = async (req, res) => {
     try {
-        // 🔥 NEW: We use an Aggregation Pipeline to join the 'ratings' collection
-        // and calculate the average rating on the fly! This is 100x faster for mobile.
         const packages = await PackageModel.aggregate([
             {
                 $lookup: {
-                    from: "ratings",       // The name of your ratings collection
+                    from: "ratings",
                     localField: "_id",     // The package ID in the packages collection
                     foreignField: "packageId", // The package ID stored in the rating document
                     as: "reviews"
@@ -26,13 +24,12 @@ export const getPackages = async (req, res) => {
                 }
             },
             {
-                // Optional: remove the huge array of individual reviews so the payload stays small
                 $project: {
-                    reviews: 0 
+                    reviews: 0
                 }
             }
         ]);
-        
+
         res.status(200).json(packages);
     } catch (err) {
         console.error(err);
@@ -44,7 +41,7 @@ export const getPackages = async (req, res) => {
 export const getPackage = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const pkg = await PackageModel.findById(id);
 
         if (!pkg) return res.status(404).json({ message: "Package not found" });

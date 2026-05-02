@@ -1,4 +1,3 @@
-// 🔥 FIX: Import your configured cloudinary, NOT the raw unconfigured package!
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
@@ -38,7 +37,6 @@ export const uploadBookingDocuments = async (req, res) => {
     }
 };
 
-// 🔥 SYNCED: Added Cancellation Proof Uploader from Web
 export const uploadCancellationProof = async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });

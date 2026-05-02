@@ -10,7 +10,6 @@ const serviceSchema = new mongoose.Schema({
     visaReminders: { type: [String], required: true }
 });
 
-// This checks if the model already exists before trying to register it again
 const Service = mongoose.models.services || mongoose.model('services', serviceSchema);
 
 export default Service;
