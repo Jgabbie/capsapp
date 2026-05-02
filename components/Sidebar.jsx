@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import { Ionicons } from '@expo/vector-icons' 
+import { Ionicons } from '@expo/vector-icons'
 
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
@@ -39,7 +39,7 @@ export default function Sidebar({ visible, onClose }) {
     const MenuVectorItem = ({ iconName, title, onPress }) => (
         <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
             <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
-                <Ionicons name={iconName} size={24} color="#fff" />
+                <Ionicons name={iconName} size={17} color="#fff" />
             </View>
             <Text style={SidebarStyle.navText}>{title}</Text>
         </TouchableOpacity>
@@ -52,7 +52,7 @@ export default function Sidebar({ visible, onClose }) {
             <View style={{ flex: 1 }}>
                 <Pressable style={SidebarStyle.overlay} onPress={onClose} />
                 <View style={SidebarStyle.sidebarContainer}>
-                    
+
                     {/* --- STICKY TOP SECTION --- */}
                     <View style={SidebarStyle.profileSection}>
                         <Image
@@ -68,8 +68,8 @@ export default function Sidebar({ visible, onClose }) {
                     <View style={SidebarStyle.divider} />
 
                     {/* --- SCROLLABLE MIDDLE SECTION --- */}
-                    <ScrollView 
-                        style={{ flex: 1 }} 
+                    <ScrollView
+                        style={{ flex: 1 }}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: 5 }}
                     >
@@ -105,7 +105,7 @@ export default function Sidebar({ visible, onClose }) {
 
                         <MenuItem
                             title="Quotations"
-                            icon={require('../assets/images/transactions_icon.png')} 
+                            icon={require('../assets/images/transactions_icon.png')}
                             onPress={() => { onClose(); cs.navigate("userquotations"); }}
                         />
 
@@ -117,7 +117,7 @@ export default function Sidebar({ visible, onClose }) {
 
                         <MenuVectorItem
                             title="Applications"
-                            iconName="documents-outline" 
+                            iconName="documents-outline"
                             onPress={() => { onClose(); cs.navigate("userapplications") }}
                         />
 

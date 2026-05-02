@@ -15,7 +15,7 @@ const SidebarStyle = StyleSheet.create({
         height: '100%',
         backgroundColor: '#4076A0',
         paddingTop: 40,
-        paddingBottom: 40, // 🔥 FIXED: Pushes the content up from the phone's bottom nav buttons
+        paddingBottom: 40,
         paddingHorizontal: 30,
         elevation: 5,
         boxShadow: "2px 0px 8px rgba(0,0,0,0.3)"
@@ -57,14 +57,15 @@ const SidebarStyle = StyleSheet.create({
         paddingVertical: 10,
     },
     navIcon: {
-        width: 30,
-        height: 30,
+        width: 15,
+        height: 15,
+        marginBottom: 3,
     },
     navText: {
         color: "#fff",
         fontFamily: 'Montserrat_500Medium',
         fontWeight: '500',
-        fontSize: 18,
+        fontSize: 14,
         marginLeft: 12,
         width: '100%',
     },
