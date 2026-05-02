@@ -36,6 +36,13 @@ import UserPackageQuotation from './screens/client/UserPackageQuotation';
 import UserQuotationRequest from './screens/client/UserQuotationRequest';
 import QuotationCheckout from './screens/client/QuotationCheckout';
 import QuotationForm from './screens/client/QuotationForm';
+import QuotationBookingProcess from './screens/client/QuotationBookingProcess';
+import QuotationIncluExclu from './screens/client/QuotationIncluExclu';
+import QuotationUploads from './screens/client/QuotationUploads';
+import QuotationForm1 from './screens/client/QuotationForm1';
+import QuotationForm2 from './screens/client/QuotationForm2';
+import QuotationForm3 from './screens/client/QuotationForm3';
+import QuotationForm4 from './screens/client/QuotationForm4';
 
 import PassportGuidance from './screens/client/PassportGuidance';
 import PassportGuidanceNew from './screens/client/PassportGuidanceNew';
@@ -49,6 +56,8 @@ import VisaProgress from './screens/client/VisaProgress';
 import PaymentMethod from './screens/client/PaymentMethod';
 import PaymentMode from './screens/client/PaymentMode';
 import PaymentSuccess from './screens/client/PaymentSuccess';
+import QuotationPaymentMethod from './screens/client/QuotationPaymentMethod';
+import QuotationPaymentMode from './screens/client/QuotationPaymentMode';
 
 import SuccessfulPaymentPassport from './screens/client/SuccessfulPaymentPassport';
 import SuccessfulPaymentVisa from './screens/client/SuccessfulPaymentVisa';
@@ -130,11 +139,20 @@ function AppNavigator() {
             <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
+            <MyScreen.Screen name="quotationbookingprocess" component={QuotationBookingProcess} />
+            <MyScreen.Screen name="quotationincluexclu" component={QuotationIncluExclu} />
+            <MyScreen.Screen name="quotationuploads" component={QuotationUploads} />
+            <MyScreen.Screen name="quotationform1" component={QuotationForm1} />
+            <MyScreen.Screen name="quotationform2" component={QuotationForm2} />
+            <MyScreen.Screen name="quotationform3" component={QuotationForm3} />
+            <MyScreen.Screen name="quotationform4" component={QuotationForm4} />
             <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
             <MyScreen.Screen name="quotationform" component={QuotationForm} />
 
             <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
             <MyScreen.Screen name="paymentmode" component={PaymentMode} />
+            <MyScreen.Screen name="quotationpaymentmethod" component={QuotationPaymentMethod} />
+            <MyScreen.Screen name="quotationpaymentmode" component={QuotationPaymentMode} />
             <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
             <MyScreen.Screen name="successfulpaymentpassport" component={SuccessfulPaymentPassport} />
             <MyScreen.Screen name="successfulpaymentvisa" component={SuccessfulPaymentVisa} />

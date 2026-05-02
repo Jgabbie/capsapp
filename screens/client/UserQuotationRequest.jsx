@@ -77,11 +77,15 @@ export default function UserQuotationRequest({ route, navigation }) {
 
     setActionLoading(true);
     try {
-      await api.post(`/quotation/${quotationId}/request-revision`, { notes }, withUserHeader(user._id));
-      setNotes("");
-      setIsRevisionModalOpen(true);
+      const resp = await api.post(`/quotation/${quotationId}/request-revision`, { notes }, withUserHeader(user._id));
+      if (resp?.status === 200 || resp?.data) {
+        setNotes("");
+        setIsRevisionModalOpen(true);
+      } else {
+        Alert.alert("Error", resp?.data?.message || "Failed to request revision.");
+      }
     } catch (error) {
-      Alert.alert("Error", "Failed to request revision.");
+      Alert.alert("Error", error.response?.data?.message || "Failed to request revision.");
     } finally {
         setActionLoading(false);
     }
@@ -96,10 +100,9 @@ export default function UserQuotationRequest({ route, navigation }) {
 
   const handleFinalProceed = () => {
       setIsAcceptModalOpen(false);
-      // Navigation logic to your booking process goes here
-      navigation.navigate("quotationcheckout", { 
-          id: quotationId,
-          quotationData: quotation 
+      // Navigate to the booking process screen for quotations
+      navigation.navigate("quotationbookingprocess", {
+        quotation,
       });
   };
 

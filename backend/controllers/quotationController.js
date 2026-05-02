@@ -83,20 +83,33 @@ export const requestRevision = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    const user = await User.findById(req.userId).select("username role");
+    const user = await User.findById(req.userId).select("username firstname lastname email role");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const normalizedRole = (() => {
+      const role = String(user.role || "").trim().toLowerCase();
+      if (role === "admin") return "Admin";
+      if (role === "agent") return "Agent";
+      return "User";
+    })();
+
+    const authorName = user.username || `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || "User";
+
+    if (!Array.isArray(quotation.revisionComments)) {
+      quotation.revisionComments = [];
+    }
 
     quotation.status = "Revision Requested";
     quotation.revisionComments.push({
       authorId: req.userId,
-      authorName: user.username,
-      role: user.role,
+      authorName,
+      role: normalizedRole,
       comments: notes || "User requested a revision.",
       createdAt: new Date(),
     });
 
     await quotation.save();
     logAction('QUOTATION_REVISION_REQUESTED', req.userId, { quotationId: quotation._id });
-    return res.status(200).json({ message: "Revision requested", quotation });
     return res.status(200).json({ message: "Revision requested", quotation });
   } catch (error) {
     return res.status(500).json({ message: "Error requesting revision", error: error.message });
