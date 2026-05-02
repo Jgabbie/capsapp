@@ -161,11 +161,13 @@ export default function PaymentMethod({ route, navigation }) {
 
                 const travelDateObj = { startDate: parsedStartDate, endDate: parsedEndDate };
 
+                const travelerUploads = route.params?.travelerUploads || {};
+
                 const safePassengers = Array.isArray(passengers) && passengers.length > 0 ? passengers : [
                     { title: leadGuestInfo?.title || 'MR', firstName: leadGuestInfo?.fullName?.split(' ')[0] || 'Guest', lastName: leadGuestInfo?.fullName?.split(' ').slice(1).join(' ') || 'User' }
                 ];
 
-                const mappedTravelers = safePassengers.map((p) => ({
+                const mappedTravelers = safePassengers.map((p, idx) => ({
                     title: p.title || 'MR',
                     firstName: p.firstName || 'Guest',
                     lastName: p.lastName || 'User',
@@ -174,8 +176,8 @@ export default function PaymentMethod({ route, navigation }) {
                     birthday: p.bday || p.birthday || p.birthdate || null,
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
-                    passportFile: null,
-                    photoFile: null
+                    passportFile: travelerUploads[idx]?.passport || p.passportFile || null,
+                    photoFile: travelerUploads[idx]?.photo || p.photoFile || null
                 }));
 
                 const mappedBookingDetails = {
@@ -211,13 +213,12 @@ export default function PaymentMethod({ route, navigation }) {
                 };
 
                 // Array of Objects format for the Mongoose schema compatibility
-                const travelersPayload = [
-                    {
-                        adult: safeAdultCount,
-                        child: safeChildCount,
-                        infant: safeInfantCount
-                    }
-                ];
+                const travelersPayload =
+                {
+                    adult: safeAdultCount,
+                    child: safeChildCount,
+                    infant: safeInfantCount
+                };
 
                 const finalBookingPayload = {
                     packageId: targetPackageId,

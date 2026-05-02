@@ -59,7 +59,8 @@ export const createBooking = async (req, res) => {
             travelers: rootTravelersCount,
             bookingDetails: bookingDetails, // Contains the full nested objects/arrays 
             reference: generateBookingReference(),
-            status: "Not Paid", // New bookings start as Not Paid until payment is confirmed
+            status: "Not Paid",
+            expiresAt: dayjs().add(2, 'minutes').toDate()
         });
 
         logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageId });
@@ -140,10 +141,6 @@ export const cancelBooking = async (req, res) => {
     }
 };
 
-// ==========================================
-// HYBRID / SYNCED ENDPOINTS
-// ==========================================
-
 export const getBookingByReference = async (req, res) => {
     const userId = req.userId;
     const { reference } = req.params;
@@ -166,116 +163,6 @@ export const getBookingByReference = async (req, res) => {
         return res.status(200).json({ booking, transactions });
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching booking details', error: error.message });
-    }
-};
-
-export const getBookingsTotalBaseOnMonth = async (req, res) => {
-    const userId = req.userId;
-    try {
-        const startOfMonth = dayjs().startOf('month').toDate();
-        const endOfMonth = dayjs().endOf('month').toDate();
-
-        const totalBookings = await Booking.countDocuments({
-            userId,
-            createdAt: { $gte: startOfMonth, $lte: endOfMonth }
-        });
-
-        return res.status(200).json({ totalBookings });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error fetching bookings total', error: error.message });
-    }
-};
-
-export const updateBooking = async (req, res) => {
-    const { id } = req.params;
-    const { status, bookingDetails } = req.body;
-
-    try {
-        const updatedBooking = await Booking.findByIdAndUpdate(
-            id,
-            { ...(status ? { status } : {}), ...(bookingDetails ? { bookingDetails } : {}) },
-            { new: true }
-        );
-
-        if (!updatedBooking) return res.status(404).json({ message: 'Booking not found' });
-        return res.status(200).json(updatedBooking);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error updating booking', error: error.message });
-    }
-};
-
-export const deleteBooking = async (req, res) => {
-    try {
-        const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
-        if (!deletedBooking) return res.status(404).json({ message: 'Booking not found' });
-        return res.status(200).json({ message: 'Booking deleted' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error deleting booking', error: error.message });
-    }
-};
-
-export const getcancellations = async (req, res) => {
-    try {
-        const cancellations = await Cancellation.find({})
-            .populate('userId', 'username email')
-            .populate({
-                path: 'bookingId',
-                select: 'bookingDetails createdAt reference status packageId',
-                populate: { path: 'packageId', select: 'packageName' }
-            })
-            .populate('packageId', 'packageName')
-            .sort({ cancellationDate: -1 });
-        return res.status(200).json(cancellations);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error fetching cancellations', error: error.message });
-    }
-};
-
-export const approveCancellation = async (req, res) => {
-    try {
-        const cancellation = await Cancellation.findById(req.params.id);
-        if (!cancellation) return res.status(404).json({ message: 'Cancellation request not found' });
-
-        cancellation.status = 'Approved';
-        await cancellation.save();
-
-        const booking = await Booking.findById(cancellation.bookingId);
-        if (booking) {
-            booking.status = 'Cancelled';
-            await booking.save();
-
-            const packageDoc = await Package.findById(booking.packageId);
-            if (packageDoc) {
-                const normalizedStart = dayjs(booking.travelDate?.startDate).format('YYYY-MM-DD');
-                const normalizedEnd = dayjs(booking.travelDate?.endDate).format('YYYY-MM-DD');
-                await Package.updateOne(
-                    { _id: packageDoc._id, packageSpecificDate: { $elemMatch: { startdaterange: normalizedStart, enddaterange: normalizedEnd } } },
-                    { $inc: { 'packageSpecificDate.$.slots': 1 } }
-                );
-            }
-        }
-        return res.status(200).json({ message: 'Cancellation approved' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error approving cancellation', error: error.message });
-    }
-};
-
-export const disApproveCancellation = async (req, res) => {
-    try {
-        const cancellation = await Cancellation.findById(req.params.id);
-        if (!cancellation) return res.status(404).json({ message: 'Cancellation request not found' });
-
-        cancellation.status = 'Disapproved';
-        await cancellation.save();
-
-        const booking = await Booking.findById(cancellation.bookingId);
-        if (booking) {
-            booking.status = 'Pending'; // Revert back
-            await booking.save();
-        }
-        return res.status(200).json({ message: 'Cancellation disapproved' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error disapproving cancellation', error: error.message });
     }
 };
 

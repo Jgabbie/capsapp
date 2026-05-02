@@ -78,9 +78,8 @@ export const createManualPaymentPassport = async (req, res) => {
             userId,
             reference: generateTransactionReference(),
             amount: Number(amount),
+            method: 'Manual',
             paymentType: paymentType || 'Full Payment',
-            paymentMethod: 'Manual',
-            proofOfPayment: proofImage, // Accommodating both naming conventions
             proofImage: proofImage,
             proofImageType,
             proofFileName,
@@ -270,9 +269,8 @@ export const createManualPayment = async (req, res) => {
             userId,
             reference: generateTransactionReference(),
             amount: Number(amount),
+            method: 'Manual',
             paymentType: paymentType || 'Full Payment',
-            paymentMethod: 'Manual',
-            proofOfPayment: proofImage, // Accommodating both naming conventions
             proofImage: proofImage,
             proofImageType,
             proofFileName,

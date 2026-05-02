@@ -19,9 +19,9 @@ const DestinationStyles = StyleSheet.create({
   heroSubtitle: { fontSize: 12, color: "#777", textAlign: "center", marginTop: 4, marginBottom: 16 },
   searchRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
   searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#dbe3ef" },
-  searchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333" },
-  filterButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#305797", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, elevation: 2 },
-  filterButtonText: { color: "#fff", fontWeight: "600", fontSize: 14, marginLeft: 6 },
+  searchInput: { flex: 1, marginLeft: 8, fontSize: 10, color: "#333", height: 20 },
+  filterButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#305797", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, elevation: 2, height: 40 },
+  filterButtonText: { color: "#fff", fontWeight: "600", fontSize: 12, marginLeft: 6 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 15, marginTop: 5 },
   resultsTitle: { fontSize: 18, fontWeight: "700", color: "#1e293b" },
   resultsCount: { fontSize: 12, color: "#94a3b8" },
@@ -55,26 +55,26 @@ const DestinationStyles = StyleSheet.create({
   budgetPaxText: { fontSize: 11, color: "#94a3b8" },
   viewDetailsButton: { backgroundColor: "#305797", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   viewDetailsText: { color: "#fff", fontWeight: "600", fontSize: 13 },
-  
+
   detailsContainer: { flex: 1, backgroundColor: "#f5f7fa" },
   detailsHeader: { paddingHorizontal: 16, paddingTop: 10 },
   titleRowHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 5 },
   detailsTitle: { fontSize: 24, fontWeight: "700", color: "#305797", flex: 1 },
   subtitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingLeft: 34, marginBottom: 12 },
-  
+
   carouselContainer: { width: "100%", height: 200, position: 'relative', marginTop: 5 },
   heroImage: { height: 200, borderRadius: 12 },
   carouselDots: { flexDirection: 'row', position: 'absolute', bottom: 10, alignSelf: 'center', gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
   activeDot: { backgroundColor: '#fff', width: 10, height: 10, borderRadius: 5 },
-  
+
   heroCard: { backgroundColor: "#fff", borderRadius: 14, elevation: 2, marginHorizontal: 16, marginTop: 16, padding: 16, borderWidth: 1, borderColor: "#e5e7eb" },
   packageDetailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   packageDetailItem: { flex: 1, minWidth: '45%', backgroundColor: '#f7f9fc', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#e6e8ee' },
   packageDetailLabel: { fontSize: 11, color: '#6b7280', marginBottom: 4 },
   packageDetailValue: { fontSize: 13, color: '#1f2a44', fontWeight: '700' },
   heroDescription: { fontSize: 13, color: "#374151", lineHeight: 20 },
-  
+
   priceCard: { backgroundColor: "#fff", borderRadius: 14, elevation: 2, marginHorizontal: 16, marginTop: 16, padding: 20, borderWidth: 1, borderColor: "#e5e7eb" },
   priceLabel: { fontSize: 12, fontWeight: "700", color: "#6b7280", marginBottom: 8, letterSpacing: 0.5 },
   priceValue: { fontSize: 28, fontWeight: "700", color: "#305797" },
@@ -88,20 +88,20 @@ const DestinationStyles = StyleSheet.create({
   cancellationPolicyBox: { backgroundColor: '#fff' },
   cancellationPolicyTitle: { fontSize: 14, fontWeight: '700', color: '#6b7280', marginBottom: 8, letterSpacing: 0.5 },
   cancellationPolicyText: { fontSize: 13, color: '#6b7280', lineHeight: 20 },
-  
+
   tabRow: { flexDirection: "row", backgroundColor: "#305797", marginTop: 20, marginHorizontal: 16, borderRadius: 12, overflow: 'hidden' },
   tabButton: { flex: 1, paddingVertical: 12, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
   tabButtonActive: { backgroundColor: "#fff" },
   tabText: { color: "#fff", fontSize: 10, fontFamily: "Montserrat_600SemiBold", textAlign: 'center' },
   tabTextActive: { color: "#305797", fontFamily: "Montserrat_700Bold", fontSize: 10 },
-  
+
   sectionBody: { padding: 16, paddingBottom: 120, marginHorizontal: 16, backgroundColor: '#fff', borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', borderTopWidth: 0 },
   sectionTitle: { fontSize: 15, fontWeight: "700", color: "#305797", marginBottom: 10 },
-  
+
   tabItemRow: { flexDirection: 'row', marginBottom: 8, alignItems: 'flex-start', width: '100%', paddingRight: 15 },
   tabItemDot: { marginRight: 8, color: '#333', fontSize: 14, lineHeight: 20 },
   sectionText: { flex: 1, fontSize: 13, color: "#374151", lineHeight: 20 },
-  
+
   packageDetailsHeading: { fontSize: 18, fontWeight: "700", color: "#305797", marginBottom: 15 },
   discountTextOnly: { color: "#cf1322", fontWeight: "800", fontSize: 14, marginLeft: 8 },
 
