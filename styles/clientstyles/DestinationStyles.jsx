@@ -19,7 +19,7 @@ const DestinationStyles = StyleSheet.create({
   heroSubtitle: { fontSize: 12, color: "#777", textAlign: "center", marginTop: 4, marginBottom: 16 },
   searchRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
   searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#dbe3ef" },
-  searchInput: { flex: 1, marginLeft: 8, fontSize: 10, color: "#333", height: 20 },
+  searchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333", height: 36, fontFamily: 'Roboto_400Regular' },
   filterButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#305797", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, elevation: 2, height: 40 },
   filterButtonText: { color: "#fff", fontWeight: "600", fontSize: 12, marginLeft: 6 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 15, marginTop: 5 },

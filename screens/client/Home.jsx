@@ -31,7 +31,7 @@ export default function Home() {
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [selectedTag, setSelectedTag] = useState('Select tags')
+    const [selectedTags, setSelectedTags] = useState([])
     const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
 
     // 🔥 NEW FILTER STATES
@@ -122,21 +122,12 @@ export default function Home() {
         fetchData()
     }, [user?._id])
 
-    const filteredPackages = packages.filter(pkg => {
-        const matchesSearch = pkg.packageName.toLowerCase().includes(searchQuery.toLowerCase())
-
-        const matchesActivity = selectedTag === 'Tags' || selectedTag === 'All Tags' ||
-            (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) ||
-            pkg.packageDescription.toLowerCase().includes(selectedTag.toLowerCase())
-
-        const matchesDuration = selectedDuration === 'Duration' || selectedDuration === 'All Durations' ||
-            pkg.packageDuration === parseInt(selectedDuration.split(' ')[0])
-
-        return matchesSearch && matchesActivity && matchesDuration
-    })
-
-    const internationalPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'international')
-    const domesticPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'domestic')
+    const domesticPackages = packages.filter(
+        (pkg) => String(pkg.packageType).toLowerCase() === 'domestic'
+    )
+    const internationalPackages = packages.filter(
+        (pkg) => String(pkg.packageType).toLowerCase() === 'international'
+    )
 
     const handleEmailChange = (text) => {
         const cleanedText = text.replace(/\s/g, '');
@@ -183,6 +174,18 @@ export default function Home() {
         }
     }
 
+    // 🔥 Define the function to reset all filters to default
+    const resetFilters = () => {
+        setTourType('Tour Type');
+        setTravelers('');
+        setBudgetRange([12000, 30000]);
+        setSelectedTags([]);
+        setSelectedDuration('Length of Stay');
+        setSearchQuery('');
+    };
+
+    // Done button will simply close the modal; search button triggers navigation
+
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     const BannerCard = ({ item, subText }) => {
@@ -226,76 +229,6 @@ export default function Home() {
         )
     }
 
-    const DropdownModal = () => (
-        <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
-            <TouchableOpacity style={HomeStyle.dropdownOverlay} activeOpacity={1} onPress={() => setActiveDropdown(null)}>
-                <View style={HomeStyle.dropdownCenteredContent}>
-                    {activeDropdown === 'tag' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {tagOptions.map((option, index) => {
-                                        const isActive = selectedTag === option || (selectedTag === 'Select tags' && option === 'All Tags');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === tagOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                                    setSelectedTag(option === 'All Tags' ? 'Select tags' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : activeDropdown === 'duration' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {durationOptions.map((option, index) => {
-                                const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === durationOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                            setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : activeDropdown === 'tourType' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {tourTypeOptions.map((option, index) => {
-                                const isActive = tourType === option || (tourType === 'Tour Type' && option === 'All Types');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === tourTypeOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                            setTourType(option === 'All Types' ? 'Tour Type' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : null}
-                </View>
-            </TouchableOpacity>
-        </Modal>
-    )
-
     if (!fontsLoaded) return null;
 
     return (
@@ -316,7 +249,7 @@ export default function Home() {
                         <ScrollView showsVerticalScrollIndicator={false}>
                             
                             <Text style={HomeStyle.filterSectionLabel}>Tour Type</Text>
-                            <View style={HomeStyle.filterPillContainer}>
+                                    <View style={HomeStyle.filterPillContainer}>
                                 {tourTypeOptions.map(type => (
                                     <TouchableOpacity 
                                         key={type} 
@@ -344,12 +277,25 @@ export default function Home() {
                             <Text style={HomeStyle.filterSectionLabel}>Tags / Activities</Text>
                             <View style={HomeStyle.filterPillContainer}>
                                 {tagOptions.map(tag => (
-                                    <TouchableOpacity 
-                                        key={tag} 
-                                        style={[HomeStyle.filterPill, (selectedTag === tag || (selectedTag === 'Select tags' && tag === 'All Tags')) && HomeStyle.filterPillSelected]}
-                                        onPress={() => setSelectedTag(tag === 'All Tags' ? 'Select tags' : tag)}
+                                    <TouchableOpacity
+                                        key={tag}
+                                        style={[HomeStyle.filterPill, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillSelected]}
+                                        onPress={() => {
+                                            if (tag === 'All Tags') {
+                                                setSelectedTags([]);
+                                                return;
+                                            }
+                                            setSelectedTags(prev => {
+                                                if (prev.includes(tag)) return prev.filter(t => t !== tag);
+                                                if (prev.length >= 3) {
+                                                    Alert.alert('Limit reached', 'You can select up to 3 tags.');
+                                                    return prev;
+                                                }
+                                                return [...prev, tag];
+                                            })
+                                        }}
                                     >
-                                        <Text style={[HomeStyle.filterPillText, (selectedTag === tag || (selectedTag === 'Select tags' && tag === 'All Tags')) && HomeStyle.filterPillTextSelected]}>{tag}</Text>
+                                        <Text style={[HomeStyle.filterPillText, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillTextSelected]}>{tag}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -366,6 +312,11 @@ export default function Home() {
 
                             <TouchableOpacity style={HomeStyle.filterModalApplyBtn} onPress={() => setFilterModalVisible(false)}>
                                 <Text style={HomeStyle.filterModalApplyText}>Done</Text>
+                            </TouchableOpacity>
+
+                            {/* 🔥 NEW RESET FILTER BUTTON 🔥 */}
+                            <TouchableOpacity style={HomeStyle.filterModalResetBtn} onPress={resetFilters}>
+                                <Text style={HomeStyle.filterModalResetText}>Reset Filter</Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </View>
@@ -457,7 +408,7 @@ export default function Home() {
                                         style={HomeStyle.heroSearchBtn} 
                                         onPress={() => cs.navigate("packages", { 
                                             // Passing data to Packages screen
-                                            searchQuery, selectedTag, selectedDuration, tourType, travelers, budgetRange 
+                                            searchQuery, selectedTags, selectedDuration, tourType, travelers, budgetRange 
                                         })}
                                     >
                                         <Ionicons name="search" size={24} color="#fff" />
@@ -476,8 +427,8 @@ export default function Home() {
                                         sliderLength={width - 110} 
                                         onValuesChange={setBudgetRange} 
                                         min={0} max={100000} step={1000} 
-                                        selectedStyle={{backgroundColor:'#305797'}} 
-                                        markerStyle={{backgroundColor:'#305797', height: 16, width: 16}} 
+                                        selectedStyle={{backgroundColor:'#fff'}} 
+                                        markerStyle={{backgroundColor:'#fff', height: 16, width: 16}} 
                                         unselectedStyle={{backgroundColor: 'rgba(255,255,255,0.4)'}} 
                                     />
                                 </View>
@@ -489,23 +440,19 @@ export default function Home() {
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                     ) : (
                         <>
-                            {internationalPackages.length > 0 && (
-                                <>
-                                    <Text style={HomeStyle.title}>Packages For You</Text>
-                                    {internationalPackages.map((pkg) => (
-                                        <BannerCard key={pkg._id} item={pkg} />
-                                    ))}
-                                </>
-                            )}
-
+                            <Text style={HomeStyle.title}>Local Packages</Text>
                             {domesticPackages.length > 0 && (
                                 <>
-                                    <Text style={HomeStyle.title}>Local Packages</Text>
                                     {domesticPackages.map((pkg) => (
                                         <BannerCard key={pkg._id} item={pkg} />
                                     ))}
                                 </>
                             )}
+
+                            <Text style={[HomeStyle.title, { marginTop: 10 }]}>Packages For You</Text>
+                            {internationalPackages.map((pkg) => (
+                                <BannerCard key={`foryou-${pkg._id}`} item={pkg} />
+                            ))}
                         </>
                     )}
 
@@ -516,8 +463,8 @@ export default function Home() {
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
-                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
-                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
+                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}> 
+                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait-your dream journey starts now!
                         </Text>
                         <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
                             <Text style={HomeStyle.bgButtonText}>BROWSE TOUR PACKAGES</Text>

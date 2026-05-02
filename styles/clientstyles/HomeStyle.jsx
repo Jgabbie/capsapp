@@ -50,7 +50,7 @@ const HomeStyle = StyleSheet.create({
     heroContainer: {
         width: width,
         marginLeft: -15,
-        minHeight: 480,
+        minHeight: 380,
         marginTop: 20,
         marginBottom: 20,
         overflow: 'hidden',
@@ -215,6 +215,17 @@ const HomeStyle = StyleSheet.create({
         color: '#fff',
         fontFamily: 'Montserrat_700Bold',
         fontSize: 15
+    },
+    filterModalResetBtn: {
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    filterModalResetText: {
+        color: '#305797',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 15,
+        textDecorationLine: 'underline',
     },
     heroGridRow: {
         flexDirection: 'row',

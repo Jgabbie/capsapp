@@ -29,9 +29,9 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [budgetRange, setBudgetRange] = useState([0, 200000]);
-    const [minBudgetInput, setMinBudgetInput] = useState("0");
-    const [maxBudgetInput, setMaxBudgetInput] = useState("200000");
+    const [budgetRange, setBudgetRange] = useState([12000, 30000]);
+    const [minBudgetInput, setMinBudgetInput] = useState("12000");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("30000");
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
     const [daysValue, setDaysValue] = useState([10]);
@@ -50,12 +50,18 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
         if (route?.params) {
             const p = route.params;
             if (p.searchQuery) setSearchText(p.searchQuery);
-            if (p.budgetRange) setBudgetRange(p.budgetRange);
+            if (p.budgetRange) {
+                setBudgetRange(p.budgetRange);
+                setMinBudgetInput(String(p.budgetRange[0]));
+                setMaxBudgetInput(String(p.budgetRange[1]));
+            }
             if (p.tourType && p.tourType !== 'Tour Type' && p.tourType !== 'All Types') {
                 setTourType(p.tourType);
             }
             if (p.travelers) setTravelersValue(p.travelers);
-            if (p.selectedTag && p.selectedTag !== 'Select tags' && p.selectedTag !== 'All Tags') {
+            if (Array.isArray(p.selectedTags) && p.selectedTags.length > 0) {
+                setSelectedTags(p.selectedTags);
+            } else if (p.selectedTag && p.selectedTag !== 'Select tags' && p.selectedTag !== 'All Tags') {
                 setSelectedTags([p.selectedTag]);
             }
             if (p.selectedDuration && p.selectedDuration !== 'Length of Stay' && p.selectedDuration !== 'All Durations') {
@@ -67,7 +73,9 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
 
     // 🔥 RESET FILTERS FUNCTION 🔥
     const resetFilters = () => {
-        setBudgetRange([0, 200000]);
+        setBudgetRange([12000, 30000]);
+        setMinBudgetInput('12000');
+        setMaxBudgetInput('30000');
         setTourType('All');
         setTravelersValue('');
         setDaysValue([10]);
@@ -288,7 +296,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                 <View style={DestinationStyles.searchRow}>
                     <View style={DestinationStyles.searchBar}>
                         <Ionicons name="search" size={18} color="#777" />
-                        <TextInput style={DestinationStyles.searchInput} placeholder="Search destination..." value={searchText} onChangeText={setSearchText} />
+                        <TextInput style={DestinationStyles.searchInput} placeholder="Search here" placeholderTextColor="#999" value={searchText} onChangeText={setSearchText} />
                     </View>
                     <TouchableOpacity style={DestinationStyles.filterButton} onPress={() => setFilterModalVisible(true)}>
                         <Ionicons name="options-outline" size={18} color="#fff" />
@@ -446,7 +454,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                     min={0} max={200000} step={1000} 
                                     selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
                                 />
-                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>₱0 - ₱200,000</Text>
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>{formatPeso(budgetRange[0])} - {formatPeso(budgetRange[1])}</Text>
                             </View>
 
                             <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>
