@@ -359,7 +359,7 @@ export default function PaymentMethod({ route, navigation }) {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={[PaymentStyle.container, { paddingBottom: 30 }]} showsVerticalScrollIndicator={false}>
 
                 <TouchableOpacity
                     style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }}
@@ -469,6 +469,8 @@ export default function PaymentMethod({ route, navigation }) {
                 >
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={QuotationAllInStyle.proceedButtonText}>Confirm & Proceed</Text>}
                 </TouchableOpacity>
+
+                <View style={{ height: 70 }} />
             </ScrollView>
 
             <Modal visible={isProceedModalOpen} transparent animationType="fade">

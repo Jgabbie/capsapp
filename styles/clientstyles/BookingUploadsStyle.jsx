@@ -205,7 +205,7 @@ const BookingUploadsStyle = StyleSheet.create({
     // --- FOOTER BUTTONS ---
     footerContainer: {
         marginTop: 10,
-        paddingBottom: 50, 
+        paddingBottom: 50,
         paddingHorizontal: 10,
     },
     smallProceedButton: {

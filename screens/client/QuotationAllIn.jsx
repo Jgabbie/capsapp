@@ -218,7 +218,7 @@ export default function QuotationAllIn() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={QuotationAllInStyle.container} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={[QuotationAllInStyle.container, { paddingBottom: 30 }]} showsVerticalScrollIndicator={false}>
                 
                 {/* --- BOOKING SUMMARY SECTION --- */}
                 <View style={QuotationAllInStyle.headerRow}>
@@ -454,6 +454,8 @@ export default function QuotationAllIn() {
                 >
                     <Text style={QuotationAllInStyle.proceedButtonText}>Proceed to Details</Text>
                 </TouchableOpacity>
+
+                <View style={{ height: 60 }} />
             </ScrollView>
         </SafeAreaView>
     );

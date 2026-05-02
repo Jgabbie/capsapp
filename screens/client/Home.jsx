@@ -392,7 +392,7 @@ export default function Home() {
                                     <View style={HomeStyle.heroSearchInputContainer}>
                                         <TextInput
                                             style={HomeStyle.heroSearchInput}
-                                            placeholder='Search destination...'
+                                            placeholder='Search here...'
                                             placeholderTextColor="#999"
                                             value={searchQuery}
                                             onChangeText={setSearchQuery}
