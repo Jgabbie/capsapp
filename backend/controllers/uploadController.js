@@ -1,5 +1,5 @@
 // 🔥 FIX: Import your configured cloudinary, NOT the raw unconfigured package!
-import cloudinary from "../config/cloudinary.js"; 
+import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
 const uploadBufferToCloudinary = (file, folder) => new Promise((resolve, reject) => {
