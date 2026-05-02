@@ -167,6 +167,60 @@ export default function PaymentMethod({ route, navigation }) {
                     { title: leadGuestInfo?.title || 'MR', firstName: leadGuestInfo?.fullName?.split(' ')[0] || 'Guest', lastName: leadGuestInfo?.fullName?.split(' ').slice(1).join(' ') || 'User' }
                 ];
 
+                const travelerFileEntries = [];
+                safePassengers.forEach((_, travelerIndex) => {
+                    const travelerUpload = travelerUploads[travelerIndex] || {};
+
+                    if (travelerUpload.passport) {
+                        travelerFileEntries.push({
+                            travelerIndex,
+                            field: 'passport',
+                            uri: travelerUpload.passport,
+                            name: `traveler-${travelerIndex + 1}-passport.jpg`
+                        });
+                    }
+
+                    if (travelerUpload.photo) {
+                        travelerFileEntries.push({
+                            travelerIndex,
+                            field: 'photo',
+                            uri: travelerUpload.photo,
+                            name: `traveler-${travelerIndex + 1}-photo.jpg`
+                        });
+                    }
+                });
+
+                const uploadedTravelerFiles = {};
+                if (travelerFileEntries.length > 0) {
+                    const travelerFormData = new FormData();
+
+                    travelerFileEntries.forEach((fileEntry) => {
+                        const filename = fileEntry.name || fileEntry.uri.split('/').pop() || `${fileEntry.field}.jpg`;
+                        const match = /(\w+)$/.exec(filename);
+                        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+                        travelerFormData.append('files', {
+                            uri: fileEntry.uri,
+                            name: filename,
+                            type
+                        });
+                    });
+
+                    const travelerUploadResponse = await uploadFilesToBackend('/upload/upload-booking-documents', travelerFormData);
+                    const uploadedUrls = Array.isArray(travelerUploadResponse?.urls) ? travelerUploadResponse.urls : [];
+
+                    if (uploadedUrls.length !== travelerFileEntries.length) {
+                        throw new Error('Failed to upload all traveler images.');
+                    }
+
+                    travelerFileEntries.forEach((fileEntry, index) => {
+                        if (!uploadedTravelerFiles[fileEntry.travelerIndex]) {
+                            uploadedTravelerFiles[fileEntry.travelerIndex] = {};
+                        }
+                        uploadedTravelerFiles[fileEntry.travelerIndex][fileEntry.field] = uploadedUrls[index];
+                    });
+                }
+
                 const mappedTravelers = safePassengers.map((p, idx) => ({
                     title: p.title || 'MR',
                     firstName: p.firstName || 'Guest',
@@ -176,8 +230,8 @@ export default function PaymentMethod({ route, navigation }) {
                     birthday: p.bday || p.birthday || p.birthdate || null,
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
-                    passportFile: travelerUploads[idx]?.passport || p.passportFile || null,
-                    photoFile: travelerUploads[idx]?.photo || p.photoFile || null
+                    passportFile: uploadedTravelerFiles[idx]?.passport || null,
+                    photoFile: uploadedTravelerFiles[idx]?.photo || null
                 }));
 
                 const mappedBookingDetails = {
@@ -191,8 +245,8 @@ export default function PaymentMethod({ route, navigation }) {
                     leadContact: leadGuestInfo?.contact || user?.phonenum || "00000000000",
                     leadAddress: leadGuestInfo?.address || "N/A",
                     travelers: mappedTravelers,
-                    passportFiles: [],
-                    photoFiles: [],
+                    passportFiles: Object.values(uploadedTravelerFiles).map(fileSet => fileSet.passport).filter(Boolean),
+                    photoFiles: Object.values(uploadedTravelerFiles).map(fileSet => fileSet.photo).filter(Boolean),
                     dietaryDetails: medicalData?.dietaryDetails || "",
                     dietaryRequest: medicalData?.dietary === 'Yes' ? "Y" : "N",
                     medicalDetails: medicalData?.medicalDetails || "",
@@ -225,8 +279,8 @@ export default function PaymentMethod({ route, navigation }) {
                     amount: safeAmount,
                     travelDate: travelDateObj,
                     travelers: travelersPayload,
-                    passportFiles: [],
-                    photoFiles: [],
+                    passportFiles: Object.values(uploadedTravelerFiles).map(fileSet => fileSet.passport).filter(Boolean),
+                    photoFiles: Object.values(uploadedTravelerFiles).map(fileSet => fileSet.photo).filter(Boolean),
                     bookingDetails: mappedBookingDetails,
                     status: 'Not Paid'
                 };

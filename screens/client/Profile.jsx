@@ -6,22 +6,22 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from "@expo-googl
 import { Ionicons } from "@expo/vector-icons"
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import dayjs from 'dayjs' 
+import dayjs from 'dayjs'
 
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import ProfileStyle from '../../styles/clientstyles/ProfileStyle'
 
-import { api, withUserHeader } from '../../utils/api' 
+import { api, withUserHeader } from '../../utils/api'
 import { extractPackageTags } from '../../utils/packageTags'
 import { useUser } from '../../context/UserContext'
 
 export default function Profile() {
-    const { user, updateUser } = useUser() 
+    const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [editing, setEditing] = useState(false)
-    
+
     // Modals & Pickers
     const [confirmModalVisible, setConfirmModalVisible] = useState(false)
     const [successModalVisible, setSuccessModalVisible] = useState(false)
@@ -64,7 +64,6 @@ export default function Profile() {
     const [recentReviews, setRecentReviews] = useState([])
     const [loadingExtra, setLoadingExtra] = useState(false)
 
-    // 🔥 PREFERENCES STATES 🔥
     const [moodOptions, setMoodOptions] = useState([])
     const tourOptions = ['Domestic', 'International']
     const [preferences, setPreferences] = useState({ moods: [], tours: [] })
@@ -81,24 +80,24 @@ export default function Profile() {
 
                 if (currentUser) {
                     let phone = currentUser.phonenum || currentUser.phone || ""
-                    phone = phone.replace("+63", "").trim() 
+                    phone = phone.replace("+63", "").trim()
 
                     const mappedData = {
                         username: currentUser.username || "",
                         firstname: currentUser.firstname || "",
                         lastname: currentUser.lastname || "",
                         email: currentUser.email || "",
-                        phonenum: phone, 
+                        phonenum: phone,
                         address: currentUser.homeAddress || currentUser.address || "",
                         gender: currentUser.gender || "",
                         birthdate: currentUser.birthdate || "",
                         nationality: currentUser.nationality || "",
-                        role: currentUser.role || "Customer", 
+                        role: currentUser.role || "Customer",
                         isAccountVerified: currentUser.isAccountVerified || false
                     }
                     setUserData(mappedData)
                     setOriginalData(mappedData)
-                    
+
                     const img = currentUser.profileImage || currentUser.profileImageUrl || ""
                     setProfileImage(img)
 
@@ -198,7 +197,7 @@ export default function Profile() {
     const formatPhone = (val) => {
         let cleanVal = val.replace("+63", "")
         let value = cleanVal.replace(/\D/g, "");
-        
+
         let formatted = "";
         if (value.length > 0) formatted += value.slice(0, 3);
         if (value.length >= 4) formatted += " " + value.slice(3, 6);
@@ -223,16 +222,52 @@ export default function Profile() {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
-            base64: true 
+            base64: true
         });
 
         if (!result.canceled && result.assets[0].base64) {
-            const sizeInBytes = result.assets[0].base64.length * (3/4)
+            const sizeInBytes = result.assets[0].base64.length * (3 / 4)
             if (sizeInBytes > 2 * 1024 * 1024) {
                 showMessage('Image must be 2MB or less.');
                 return;
             }
-            setProfileImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+            // store the picked asset object so we can upload the uri/file when saving
+            setProfileImage(result.assets[0]);
+        }
+    }
+
+    const uploadProfileImageToBackend = async (asset) => {
+        if (!asset || !asset.uri) return null;
+
+        try {
+            const formData = new FormData();
+            const filename = asset.fileName || asset.uri.split('/').pop() || `profile_${Date.now()}.jpg`;
+            const match = /\.([0-9a-zA-Z]+)$/.exec(filename);
+            const type = asset.type || (match ? `image/${match[1]}` : 'image/jpeg');
+
+            if (Platform.OS === 'web' && asset.file) {
+                formData.append('file', asset.file, filename);
+            } else {
+                formData.append('file', {
+                    uri: asset.uri,
+                    name: filename,
+                    type,
+                });
+            }
+
+            // Let axios set the Content-Type (including multipart boundary) to avoid issues on React Native
+            const res = await api.post('/upload/upload-profile-image', formData, {
+                headers: {
+                    ...withUserHeader(user._id).headers,
+                }
+            });
+
+            // backend returns { url }
+            const uploadedUrl = res?.data?.url || res?.data?.urls?.[0] || null;
+            return uploadedUrl;
+        } catch (error) {
+            console.error('Profile image upload failed:', error?.response?.data || error.message || error);
+            throw error;
         }
     }
 
@@ -263,11 +298,18 @@ export default function Profile() {
 
     const confirmSave = async () => {
         try {
+            let profileImageUrl = typeof profileImage === 'string' ? profileImage : null;
+
+            // if profileImage is an asset object (picked but not yet uploaded), upload it first
+            if (profileImage && typeof profileImage === 'object' && profileImage.uri) {
+                profileImageUrl = await uploadProfileImageToBackend(profileImage);
+            }
+
             const response = await api.put(`/users/users/${user._id}`, {
                 ...userData,
-                phone: userData.phonenum, 
+                phone: userData.phonenum,
                 homeAddress: userData.address,
-                profileImage: profileImage 
+                profileImage: profileImageUrl
             })
 
             if (response.data.success || response.status === 200) {
@@ -280,7 +322,7 @@ export default function Profile() {
                     firstname: userData.firstname,
                     lastname: userData.lastname,
                     email: userData.email,
-                    profileImage: profileImage
+                    profileImage: profileImageUrl
                 })
             }
         } catch (error) {
@@ -336,7 +378,7 @@ export default function Profile() {
         const s = String(status).toLowerCase();
         if (s.includes('success') || s.includes('approve')) return { bg: '#f0f4ff', text: '#305797' };
         if (s.includes('reject') || s.includes('cancel')) return { bg: '#fee2e2', text: '#b91c1c' };
-        return { bg: '#fef9c3', text: '#b45309' }; 
+        return { bg: '#fef9c3', text: '#b45309' };
     };
 
     if (!fontsLoaded) return null;
@@ -347,7 +389,7 @@ export default function Profile() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <View style={ProfileStyle.container}>
-                
+
                 {/* --- MY PROFILE CARD --- */}
                 <View style={ProfileStyle.card}>
                     <Text style={ProfileStyle.profileHeading}>My Profile</Text>
@@ -355,7 +397,7 @@ export default function Profile() {
                     <View style={ProfileStyle.profileImageContainer}>
                         <View style={ProfileStyle.profileAvatarWrapper}>
                             {profileImage ? (
-                                <Image source={{ uri: profileImage }} style={ProfileStyle.profileImage} />
+                                <Image source={{ uri: profileImage?.uri || profileImage }} style={ProfileStyle.profileImage} />
                             ) : (
                                 <Text style={ProfileStyle.profileAvatarPlaceholder}>{getInitials()}</Text>
                             )}
@@ -379,55 +421,55 @@ export default function Profile() {
                     <View style={ProfileStyle.fullNameContainer}>
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>First Name</Text>
-                            <TextInput 
-                                value={userData.firstname} editable={editing} 
+                            <TextInput
+                                value={userData.firstname} editable={editing}
                                 onChangeText={(text) => valueHandler('firstname', toProperCase(text))}
-                                style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.firstname && ProfileStyle.profileInputsError]} 
+                                style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.firstname && ProfileStyle.profileInputsError]}
                             />
                             {errors.firstname ? <Text style={ProfileStyle.errorMessage}>{errors.firstname}</Text> : null}
                         </View>
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>Last Name</Text>
-                            <TextInput 
-                                value={userData.lastname} editable={editing} 
+                            <TextInput
+                                value={userData.lastname} editable={editing}
                                 onChangeText={(text) => valueHandler('lastname', toProperCase(text))}
-                                style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.lastname && ProfileStyle.profileInputsError]} 
+                                style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.lastname && ProfileStyle.profileInputsError]}
                             />
                             {errors.lastname ? <Text style={ProfileStyle.errorMessage}>{errors.lastname}</Text> : null}
                         </View>
                     </View>
 
                     <Text style={ProfileStyle.profileLabel}>Email Address</Text>
-                    <TextInput 
-                        value={userData.email} 
-                        editable={editing} 
+                    <TextInput
+                        value={userData.email}
+                        editable={editing}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         onChangeText={(text) => valueHandler('email', text.trim())}
-                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.email && ProfileStyle.profileInputsError]} 
+                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.email && ProfileStyle.profileInputsError]}
                     />
                     {errors.email ? <Text style={ProfileStyle.errorMessage}>{errors.email}</Text> : null}
 
                     <Text style={ProfileStyle.profileLabel}>Phone Number</Text>
                     <View style={[ProfileStyle.phoneInputContainer, !editing && ProfileStyle.profileInputsDisabled, errors.phonenum && ProfileStyle.profileInputsError]}>
                         <Text style={ProfileStyle.phonePrefix}>+63</Text>
-                        <TextInput 
-                            value={userData.phonenum} editable={editing} keyboardType="numeric" maxLength={12} 
-                            onChangeText={formatPhone} style={[ProfileStyle.phoneInput, !editing && ProfileStyle.profileInputsDisabled]} 
+                        <TextInput
+                            value={userData.phonenum} editable={editing} keyboardType="numeric" maxLength={12}
+                            onChangeText={formatPhone} style={[ProfileStyle.phoneInput, !editing && ProfileStyle.profileInputsDisabled]}
                         />
                     </View>
                     {errors.phonenum ? <Text style={ProfileStyle.errorMessage}>{errors.phonenum}</Text> : null}
 
                     <Text style={ProfileStyle.profileLabel}>Home Address</Text>
-                    <TextInput 
-                        value={userData.address} editable={editing} 
+                    <TextInput
+                        value={userData.address} editable={editing}
                         onChangeText={(text) => valueHandler('address', text)}
-                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]} 
+                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]}
                     />
 
                     <Text style={ProfileStyle.profileLabel}>Gender</Text>
-                    <TouchableOpacity 
-                        style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]} 
+                    <TouchableOpacity
+                        style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]}
                         disabled={!editing} onPress={() => setGenderModalVisible(true)}
                     >
                         <Text style={{ color: userData.gender ? '#333' : '#a0a0a0', fontFamily: 'Roboto_400Regular' }}>
@@ -437,8 +479,8 @@ export default function Profile() {
                     </TouchableOpacity>
 
                     <Text style={ProfileStyle.profileLabel}>Date of Birth</Text>
-                    <TouchableOpacity 
-                        style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]} 
+                    <TouchableOpacity
+                        style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]}
                         disabled={!editing} onPress={() => setShowDatePicker(true)}
                     >
                         <Text style={[ProfileStyle.datePickerText, { color: userData.birthdate ? '#333' : '#a0a0a0' }]}>
@@ -455,10 +497,10 @@ export default function Profile() {
                     )}
 
                     <Text style={ProfileStyle.profileLabel}>Nationality</Text>
-                    <TextInput 
-                        value={userData.nationality} editable={editing} 
+                    <TextInput
+                        value={userData.nationality} editable={editing}
                         onChangeText={(text) => valueHandler('nationality', text)}
-                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]} 
+                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]}
                     />
 
                     {userData.isAccountVerified && (
@@ -470,15 +512,15 @@ export default function Profile() {
 
                     {!editing ? (
                         <TouchableOpacity style={[ProfileStyle.editButton, { marginTop: 25 }]} onPress={() => setEditing(true)}>
-                            <Text style={ProfileStyle.buttonText}><Ionicons name="pencil" size={14} color="#fff"/> Edit Profile</Text>
+                            <Text style={ProfileStyle.buttonText}><Ionicons name="pencil" size={14} color="#fff" /> Edit Profile</Text>
                         </TouchableOpacity>
                     ) : (
                         <View style={ProfileStyle.actionContainer}>
                             <TouchableOpacity style={ProfileStyle.saveButton} onPress={handleSavePress}>
-                                <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff"/> Save</Text>
+                                <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff" /> Save</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={ProfileStyle.cancelButton} onPress={cancelEdit}>
-                                <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff"/> Cancel</Text>
+                                <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff" /> Cancel</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -503,7 +545,7 @@ export default function Profile() {
                         {moodOptions.map(option => {
                             const isSelected = preferences.moods.includes(option);
                             return (
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     key={option}
                                     style={[ProfileStyle.chip, isSelected && ProfileStyle.chipSelected]}
                                     onPress={() => togglePreference('moods', option, 3)}
@@ -523,7 +565,7 @@ export default function Profile() {
                         {tourOptions.map(option => {
                             const isSelected = preferences.tours.includes(option);
                             return (
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     key={option}
                                     style={[ProfileStyle.chip, isSelected && ProfileStyle.chipSelected]}
                                     onPress={() => togglePreference('tours', option)}
@@ -540,10 +582,10 @@ export default function Profile() {
                     {editingPreferences && (
                         <View style={ProfileStyle.actionContainer}>
                             <TouchableOpacity style={ProfileStyle.saveButton} onPress={savePreferences} disabled={savingPreferences}>
-                                {savingPreferences ? <ActivityIndicator color="#fff" size="small"/> : <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff"/> Save</Text>}
+                                {savingPreferences ? <ActivityIndicator color="#fff" size="small" /> : <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff" /> Save</Text>}
                             </TouchableOpacity>
                             <TouchableOpacity style={ProfileStyle.cancelButton} onPress={cancelPreferencesEdit}>
-                                <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff"/> Cancel</Text>
+                                <Text style={ProfileStyle.buttonText}><Ionicons name="close" size={16} color="#fff" /> Cancel</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -593,7 +635,7 @@ export default function Profile() {
                                     <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, flex: 1, textTransform: 'uppercase' }}>
                                         {booking.packageId?.packageName || booking.package?.packageName || booking.bookingDetails?.tourPackageTitle || booking.bookingDetails?.pkg?.packageName || booking.packageName || "Custom Package"}
                                     </Text>
-                                    
+
                                     <View style={{ backgroundColor: statusColor.bg, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8, alignSelf: 'flex-start' }}>
                                         <Text style={{ fontFamily: 'Montserrat_700Bold', color: statusColor.text, fontSize: 10, textTransform: 'uppercase' }}>
                                             {booking.status || "Pending"}
@@ -619,8 +661,8 @@ export default function Profile() {
                     <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setGenderModalVisible(false)}>
                         <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
                             {['Male', 'Female', 'Other', 'Prefer not to say'].map((option, index) => (
-                                <TouchableOpacity 
-                                    key={index} 
+                                <TouchableOpacity
+                                    key={index}
                                     style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
                                     onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
                                 >

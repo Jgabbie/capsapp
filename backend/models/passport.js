@@ -20,7 +20,22 @@ const passportSchema = new mongoose.Schema(
     preferredDate: { type: String, required: true },
     preferredTime: { type: String, required: true },
     applicationType: { type: String, required: true },
-
+    suggestedAppointmentSchedules: [{
+      date: { type: String },
+      time: { type: String }
+    }],
+    suggestedAppointmentScheduleChosen: {
+      date: { type: String, default: "" },
+      time: { type: String, default: "" }
+    },
+    submittedDocuments: {
+      birthCertificate: { type: String },
+      applicationForm: { type: String },
+      govId: { type: String },
+      additionalDocs: [{ type: String }]
+    },
+    passportReleaseOption: { type: String },
+    deliveryAddress: { type: String },
     status: {
       type: String,
       enum: [
@@ -38,33 +53,9 @@ const passportSchema = new mongoose.Schema(
       ],
       default: 'Application Submitted',
     },
-
-    suggestedAppointmentSchedules: [{
-      date: { type: String },
-      time: { type: String }
-    }],
-    ChosenAppointmentSchedule: {
-      date: { type: String, default: "" },
-      time: { type: String, default: "" }
-    },
-    submittedDocuments: {
-      birthCertificate: { type: String },
-      applicationForm: { type: String },
-      govId: { type: String },
-      additionalDocs: [{ type: String }]
-    },
-
-    documents: {
-      passportPhoto: { type: uploadedFileSchema, default: () => ({}) },
-      applicationForm: { type: uploadedFileSchema, default: () => ({}) },
-      psaBirthCertificate: { type: uploadedFileSchema, default: () => ({}) },
-      validGovernmentId: { type: uploadedFileSchema, default: () => ({}) },
-      oldPassport: { type: uploadedFileSchema, default: () => ({}) },
-    },
+    createdAt: { type: Date, default: Date.now }
   },
-  // 🔥 THE MAGIC FIX: Pointed collection to "passports" to match the Web App 🔥
-  { timestamps: true, collection: "passports", strict: false }
-);
+  { timestamps: true, collection: "passports", strict: false });
 
 const PassportModel =
   mongoose.models.passports || mongoose.model("passports", passportSchema);

@@ -1,5 +1,5 @@
 // 🔥 FIX: Import your configured cloudinary, NOT the raw unconfigured package!
-import cloudinary from "../config/cloudinary.js"; 
+import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
 const uploadBufferToCloudinary = (file, folder) => new Promise((resolve, reject) => {
@@ -55,5 +55,16 @@ export const uploadCancellationProof = async (req, res) => {
     catch (err) {
         console.error("Cloudinary Cancel Proof Error:", err);
         res.status(500).json({ message: "Upload failed", error: err.message });
+    }
+};
+
+export const uploadProfileImage = async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+    try {
+        const uploadResult = await uploadBufferToCloudinary(req.file, 'profile-images');
+        return res.status(200).json({ message: 'Profile image uploaded successfully.', url: uploadResult.secure_url });
+    } catch (err) {
+        console.error('Cloudinary Profile Upload Error:', err);
+        res.status(500).json({ message: 'Upload failed', error: err.message });
     }
 };

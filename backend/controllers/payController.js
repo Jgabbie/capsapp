@@ -31,75 +31,109 @@ const generateTransactionReference = () => {
 export const createManualPaymentPassport = async (req, res) => {
     const userId = req.userId;
     try {
-        const { packageId, travelDate, travelerTotal, amount, paymentType, proofImage, proofImageType, proofFileName, bookingDetails, bookingId } = req.body;
+        const { applicationId, applicationNumber, amount, proofImage } = req.body;
 
-        let finalBookingId = bookingId;
-        let bookingRef = "";
-
-        // Handles creating the booking on the fly (Web compatibility) OR updating an existing one (Mobile)
-        if (!bookingId && bookingDetails) {
-            const booking = await BookingModel.create({
-                packageId, userId, travelDate,
-                bookingDate: new Date().toISOString(),
-                travelers: travelerTotal ? Number(travelerTotal) : 1,
-                reference: generateBookingReference(),
-                status: 'Not Paid',
-                bookingDetails
-            });
-            finalBookingId = booking._id;
-            bookingRef = booking.reference;
-        } else if (bookingId) {
-            const booking = await BookingModel.findById(bookingId);
-            if (booking) {
-                booking.status = 'Not Paid';
-                if (!booking.statusHistory) booking.statusHistory = [];
-                booking.statusHistory.push({ status: 'Not Paid', changedAt: new Date() });
-                await booking.save();
-                bookingRef = booking.reference;
-            }
+        if (!proofImage) {
+            return res.status(400).json({ error: "Proof of payment image is required." });
         }
 
-        if (!finalBookingId) {
-            return res.status(400).json({ error: "Booking ID is required to process payment." });
+        if (!applicationId) {
+            return res.status(400).json({ error: "applicationId is required for passport manual payment." });
         }
 
         const token = crypto.randomUUID();
+
         await TokenCheckoutPassportModel.create({
             token,
             userId,
-            bookingId: finalBookingId,
+            applicationId,
             amount: Number(amount),
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
+        const reference = generateTransactionReference();
         const transaction = await TransactionModel.create({
-            bookingId: finalBookingId,
-            packageId,
+            applicationId,
+            applicationType: "Passport Application",
             userId,
-            reference: generateTransactionReference(),
+            reference,
             amount: Number(amount),
             method: 'Manual',
-            paymentType: paymentType || 'Full Payment',
-            proofImage: proofImage,
-            proofImageType,
-            proofFileName,
             status: 'Pending',
+            proofImage,
         });
 
-        if (typeof logAction === 'function') {
-            logAction('CREATE_MANUAL_PAYMENT', userId, { "Payment Uploaded": `Amount: ₱${amount} for Booking: ${bookingRef}` });
+        const passportApp = await PassportModel.findById(applicationId);
+        const userDoc = await User.findById(userId).select('email username');
+
+        await Notification.create({
+            userId,
+            title: "Manual Payment Submitted",
+            message: `Your manual payment for passport application ${passportApp?.applicationNumber || applicationNumber || applicationId} has been submitted and is pending review.`,
+            link: `/user-transactions`,
+        });
+
+        try {
+            await transporter.sendMail({
+                from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+                to: userDoc?.email,
+                subject: `Passport Payment Submitted`,
+                html: `
+                        <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
+                        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+
+                            <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
+
+                            <h2 style="color:#305797; margin-bottom:10px;">
+                                Passport Payment Submitted!
+                            </h2>
+
+                            <p style="color:#555; font-size:16px;">
+                                Hello <b>${userDoc?.username}</b>,
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+                                Your passport payment has been successfully submitted and is currently pending verification by our team. We will notify you once the verification is complete. This will take 1-2 business days. Thank you for your patience!
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+
+                                <b>Transaction Reference:</b> ${reference} <br/>
+                                <b>Application Number:</b> ${passportApp?.applicationNumber || applicationNumber || applicationId} <br/>
+                                <b>Total Paid:</b> ₱${Number(amount).toFixed(2)}
+
+                                <p> Thank you for choosing M&RC Travel and Tours! </p>
+                            </p>
+
+                            <p style="color:#777; font-size:13px; margin-top:30px;">
+                                If you did not make this payment, please ignore this email.
+                            </p>
+
+                            <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
+
+                            <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
+                                <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
+                                <p>M&RC Travel and Tours</p>
+                                <p>info1@mrctravels.com</p>
+                                <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                    `
+            });
+        } catch (emailError) {
+            console.error('Failed to send passport email:', emailError);
         }
 
-        return res.status(201).json({
-            message: 'Manual payment submitted successfully',
-            transaction,
-            bookingId: bookingRef,
-            reference: bookingRef,
-            redirectUrl: `/booking-payment/success?token=${token}`
+        logAction('MANUAL_PAYMENT', userId, { "Manual Payment Submitted": `Transaction Reference: ${transaction.reference} | Amount: ₱${Number(amount).toFixed(2)} | Payment Purpose: Passport Application` });
+
+        return res.status(200).json({
+            redirectUrl: `/user-applications/success/passport?token=${token}`
         });
     } catch (error) {
-        console.error('Manual payment error:', error.message);
-        return res.status(500).json({ error: error.message, message: "Error processing manual payment" });
+        console.error('Manual payment for passport application error:', error.message);
+        return res.status(500).json({ error: 'Failed to submit manual payment for passport application.' });
     }
 };
 
@@ -296,12 +330,17 @@ export const createManualPayment = async (req, res) => {
 
 
 export const createCheckoutSession = async (req, res) => {
-    const { checkoutToken, totalPrice, packageName, successUrl, cancelUrl, paymentPayload } = req.body;
+    const userId = req.userId;
+    const { paymentPayload } = req.body;
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
 
     try {
+        if (!process.env.PAYMONGO_SECRET_KEY) {
+            return res.status(500).json({ error: "PayMongo secret key is not configured." });
+        }
+
         const tokenToUse = actualPayload.checkoutToken || checkoutToken;
         const priceToUse = actualPayload.totalPrice || totalPrice;
 
@@ -376,25 +415,31 @@ export const createCheckoutSession = async (req, res) => {
 
 
 export const createCheckoutSessionPassport = async (req, res) => {
-    const { checkoutToken, totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
+    const userId = req.userId;
+    const { totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
 
     try {
-        const tokenToUse = actualPayload.checkoutToken || checkoutToken;
+        const token = crypto.randomUUID();
+
         const priceToUse = actualPayload.totalPrice || totalPrice;
         const applicationIdToUse = actualPayload.applicationId || applicationId;
         const applicationNumberToUse = actualPayload.applicationNumber || applicationNumber;
 
-        if (!tokenToUse || !priceToUse || !applicationIdToUse) {
-            return res.status(400).json({ message: "checkoutToken, totalPrice, and applicationId are required" });
+        if (!priceToUse || !applicationIdToUse) {
+            return res.status(400).json({ message: "totalPrice and applicationId are required" });
         }
 
-        const tokenRecord = await TokenCheckoutPassportModel.findOne({ token: tokenToUse });
-        if (!tokenRecord) {
-            return res.status(404).json({ message: "Invalid or expired checkout token" });
-        }
+        // create a short-lived token record for this passport checkout
+        await TokenCheckoutPassportModel.create({
+            token,
+            userId,
+            applicationId: applicationIdToUse,
+            amount: Number(priceToUse),
+            expiresAt: dayjs().add(5, 'minutes').toDate()
+        });
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
         if (!payMongoSecret) {
@@ -428,7 +473,7 @@ export const createCheckoutSessionPassport = async (req, res) => {
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
                     metadata: {
                         userId: req.userId,
-                        token: tokenToUse,
+                        token,
                         applicationId: applicationIdToUse,
                         applicationNumber: applicationNumberToUse,
                         applicationType: "Passport Application",
