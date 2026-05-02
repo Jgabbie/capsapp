@@ -32,7 +32,7 @@ export default function PassportProgress() {
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('paymongo');
-    const [paymentAmount, setPaymentAmount] = useState('');
+    const [paymentAmount, setPaymentAmount] = useState('2000');
     const [proofImage, setProofImage] = useState(null);
     const [creatingPayment, setCreatingPayment] = useState(false);
     const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
@@ -336,10 +336,6 @@ export default function PassportProgress() {
             return application.suggestedAppointmentSchedules;
         }
 
-        if (application?.preferredDate && application?.preferredTime) {
-            return [{ date: application.preferredDate, time: application.preferredTime }];
-        }
-
         return [];
     }, [application]);
 
@@ -505,13 +501,10 @@ export default function PassportProgress() {
                             </TouchableOpacity>
                         </View>
 
-                        <TextInput
-                            value={paymentAmount}
-                            onChangeText={setPaymentAmount}
-                            placeholder="Amount (e.g. 500)"
-                            keyboardType="numeric"
-                            style={{ borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, backgroundColor: '#fff' }}
-                        />
+                        <View style={{ borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, backgroundColor: '#fff' }}>
+                            <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 16 }}>₱ 2,000.00</Text>
+                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>Passport Application Fee</Text>
+                        </View>
 
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
@@ -616,7 +609,7 @@ export default function PassportProgress() {
                 )}
 
 
-                {appStatus.toLowerCase() === 'application submitted' && appointmentOptions.length > 0 && (
+                {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 // 🔥 SYNCED: Imported uploadCancellationProof
-import { uploadReceiptProof, uploadBookingDocuments, uploadCancellationProof } from '../controllers/uploadController.js';
+import { uploadReceiptProof, uploadBookingDocuments, uploadCancellationProof, uploadProfileImage } from '../controllers/uploadController.js';
 
 const router = express.Router();
 
@@ -17,5 +17,8 @@ router.post('/upload-booking-documents', upload.array('files', 20), uploadBookin
 
 // 🔥 SYNCED: Added the route for uploading cancellation proofs (Matches Web)
 router.post('/upload-cancel-proof', upload.single('file'), uploadCancellationProof);
+
+// Dedicated profile image upload
+router.post('/upload-profile-image', upload.single('file'), uploadProfileImage);
 
 export default router;

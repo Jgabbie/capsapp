@@ -80,6 +80,10 @@ export const chooseAppointment = async (req, res) => {
 
     application.preferredDate = date;
     application.preferredTime = time;
+    application.suggestedAppointmentScheduleChosen = {
+      date,
+      time
+    };
 
     await application.save();
 
