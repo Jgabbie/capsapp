@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Modal, TouchableWithoutFeedback } from "react-native";
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback } from "react-native";
+import { Image } from 'expo-image';
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { Calendar } from 'react-native-calendars';
@@ -237,17 +238,26 @@ export default function QuotationForm({ route, navigation }) {
                     <Text style={{ color: "#305797", fontFamily: "Montserrat_600SemiBold", marginLeft: 8 }}>Back</Text>
                 </TouchableOpacity>
 
-                <View style={[QuotationFormStyle.section, QuotationFormStyle.sectionGradient]}>
-                    <Text style={QuotationFormStyle.sectionTitle}>Package Quotation</Text>
-                    <Text style={QuotationFormStyle.sectionSubtitle}>Kindly input your preferences and requests so that we can tailor your customized package.</Text>
+                {/* 🔥 REMOVED CARD BORDERS HERE */}
+                <View style={QuotationFormStyle.headerGroup}>
+                    <Text style={QuotationFormStyle.mainTitle}>Package Quotation</Text>
+                    <Text style={QuotationFormStyle.subtitle}>Kindly input your preferences and requests so that we can tailor your customized package.</Text>
                 </View>
 
                 {/* --- PACKAGE INFO DISPLAY --- */}
                 <View style={QuotationFormStyle.infoCard}>
+                    
+                    {/* 🔥 LIVE SCROLLING EXPO-IMAGES HERE */}
                     {images.length > 0 && (
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
                             {images.map((img, idx) => (
-                                <Image key={idx} source={{ uri: toImageUrl(img) }} style={[QuotationFormStyle.coverImage, { width: 280, marginRight: 10 }]} />
+                                <Image 
+                                    key={idx} 
+                                    source={toImageUrl(img)} 
+                                    style={[QuotationFormStyle.coverImage, { width: 280, marginRight: 12 }]} 
+                                    contentFit="cover" 
+                                    transition={300}
+                                />
                             ))}
                         </ScrollView>
                     )}
