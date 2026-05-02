@@ -135,6 +135,7 @@ export default function UserQuotationRequest({ route, navigation }) {
 
   const sStyle = getStatusColor(quotation.status);
   const latestRevision = quotation?.pdfRevisions?.filter(rev => rev?.url).slice(-1)[0];
+  const displayPackageName = quotation?.packageName || quotation?.packageId?.packageName || "Tour Package";
 
   return (
     <View style={styles.mainContainer}>
@@ -142,10 +143,22 @@ export default function UserQuotationRequest({ route, navigation }) {
       <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        
+
+        <View style={styles.topIntroSection}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={18} color="#fff" />
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageTitle}>Booking Quotation Request</Text>
+          <Text style={styles.pageSubtitle}>
+            Review your the details of your booking quotation request here. You can view the latest quotation PDF, check the revision history, and provide feedback for any necessary revisions.
+          </Text>
+        </View>
+
         {/* --- HEADER CARD (Web Sync) --- */}
         <View style={styles.headerCard}>
-            <Text style={styles.packageTitle}>{quotation.packageName}</Text>
+            <Text style={styles.packageTitle}>{displayPackageName}</Text>
             <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Reference: </Text>
                 <Text style={styles.metaValue}>{quotation.reference}</Text>
@@ -206,6 +219,9 @@ export default function UserQuotationRequest({ route, navigation }) {
         {/* --- LATEST REVISION (PDF Link for Mobile) --- */}
         <View style={styles.latestRevisionSection}>
             <Text style={styles.sectionHeading}>Latest Revision</Text>
+            <Text style={styles.latestRevisionDescription}>
+              The file below shows the latest revision of your quotation. If you have requested a revision, please wait for the provider to upload the updated quotation.
+            </Text>
             <View style={styles.latestRevisionBox}>
                 {latestRevision ? (
                      <TouchableOpacity style={styles.pdfLinkBox} onPress={() => handleOpenPDF(latestRevision.url)}>
@@ -220,6 +236,16 @@ export default function UserQuotationRequest({ route, navigation }) {
                 )}
             </View>
         </View>
+
+        {/* --- REVISION NOTES SECTION HEADER --- */}
+        {quotation?.status && ['booked', 'complete', 'completed', 'approved', 'rejected'].includes(quotation.status.toLowerCase()) ? null : (
+            <View style={styles.revisionNotesSection}>
+                <Text style={styles.revisionNotesTitle}>Revision Notes</Text>
+                <Text style={styles.revisionNotesSubtitle}>
+                  Provide feedback for revision if you want to request changes to the quotation. If you are satisfied with the quotation, you can proceed to accept it.
+                </Text>
+            </View>
+        )}
 
         {/* --- ACTION SECTION --- */}
         {quotation?.status && ['booked', 'complete', 'completed', 'approved', 'rejected'].includes(quotation.status.toLowerCase()) ? null : (

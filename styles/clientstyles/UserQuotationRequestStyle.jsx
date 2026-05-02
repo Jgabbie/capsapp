@@ -19,6 +19,38 @@ const UserQuotationRequestStyle = StyleSheet.create({
     backgroundColor: "#eef2f6",
   },
 
+  topIntroSection: {
+    marginBottom: 14,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#305797",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 14,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontFamily: "Montserrat_700Bold",
+    fontSize: 20,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontFamily: "Montserrat_700Bold",
+    color: "#1f2f4a",
+    marginBottom: 6,
+  },
+  pageSubtitle: {
+    fontFamily: "Roboto_400Regular",
+    color: "#4b5563",
+    fontSize: 15,
+    lineHeight: 22,
+  },
+
   // --- HEADER CARD ---
   headerCard: {
     backgroundColor: "#fff",
@@ -155,6 +187,13 @@ const UserQuotationRequestStyle = StyleSheet.create({
     color: "#333",
     marginBottom: 10,
   },
+  latestRevisionDescription: {
+    fontFamily: "Roboto_400Regular",
+    color: "#666",
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 12,
+  },
   latestRevisionBox: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -178,6 +217,23 @@ const UserQuotationRequestStyle = StyleSheet.create({
     color: "#305797",
     fontSize: 13,
     marginBottom: 2,
+  },
+
+  // --- REVISION NOTES SECTION HEADER ---
+  revisionNotesSection: {
+    marginBottom: 15,
+  },
+  revisionNotesTitle: {
+    fontSize: 18,
+    fontFamily: "Montserrat_700Bold",
+    color: "#333",
+    marginBottom: 6,
+  },
+  revisionNotesSubtitle: {
+    fontFamily: "Roboto_400Regular",
+    color: "#666",
+    fontSize: 13,
+    lineHeight: 19,
   },
 
   // --- INPUT & BUTTONS ---
