@@ -1,4 +1,6 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
 
 const HomeStyle = StyleSheet.create({
     container: {
@@ -46,9 +48,9 @@ const HomeStyle = StyleSheet.create({
     },
     // --- HERO BANNER ---
     heroContainer: {
-        width: '100%',
+        width: width,          // 🔥 CHANGED: Force it to take the full device screen width
+        marginLeft: -15,       // 🔥 CHANGED: Pull it left to cover the padding
         height: 300,
-        marginHorizontal: -15, // 🔥 Makes it full width (sagad sa gilid)
         marginTop: 20,
         marginBottom: 20,
         overflow: 'hidden',
