@@ -30,8 +30,8 @@ export default function Home() {
 
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
-    const [activeDropdown, setActiveDropdown] = useState(null)
-    const [selectedTag, setSelectedTag] = useState('Select tags')
+    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+    const [selectedTags, setSelectedTags] = useState([])
     const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
 
     // 🔥 NEW FILTER STATES
@@ -122,21 +122,12 @@ export default function Home() {
         fetchData()
     }, [user?._id])
 
-    const filteredPackages = packages.filter(pkg => {
-        const matchesSearch = pkg.packageName.toLowerCase().includes(searchQuery.toLowerCase())
-
-        const matchesActivity = selectedTag === 'Tags' || selectedTag === 'All Tags' ||
-            (pkg.packageTags && pkg.packageTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) ||
-            pkg.packageDescription.toLowerCase().includes(selectedTag.toLowerCase())
-
-        const matchesDuration = selectedDuration === 'Duration' || selectedDuration === 'All Durations' ||
-            pkg.packageDuration === parseInt(selectedDuration.split(' ')[0])
-
-        return matchesSearch && matchesActivity && matchesDuration
-    })
-
-    const internationalPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'international')
-    const domesticPackages = filteredPackages.filter(pkg => pkg.packageType.toLowerCase() === 'domestic')
+    const domesticPackages = packages.filter(
+        (pkg) => String(pkg.packageType).toLowerCase() === 'domestic'
+    )
+    const internationalPackages = packages.filter(
+        (pkg) => String(pkg.packageType).toLowerCase() === 'international'
+    )
 
     const handleEmailChange = (text) => {
         const cleanedText = text.replace(/\s/g, '');
@@ -183,6 +174,18 @@ export default function Home() {
         }
     }
 
+    // 🔥 Define the function to reset all filters to default
+    const resetFilters = () => {
+        setTourType('Tour Type');
+        setTravelers('');
+        setBudgetRange([12000, 30000]);
+        setSelectedTags([]);
+        setSelectedDuration('Length of Stay');
+        setSearchQuery('');
+    };
+
+    // Done button will simply close the modal; search button triggers navigation
+
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     const BannerCard = ({ item, subText }) => {
@@ -226,76 +229,6 @@ export default function Home() {
         )
     }
 
-    const DropdownModal = () => (
-        <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
-            <TouchableOpacity style={HomeStyle.dropdownOverlay} activeOpacity={1} onPress={() => setActiveDropdown(null)}>
-                <View style={HomeStyle.dropdownCenteredContent}>
-                    {activeDropdown === 'tag' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {tagOptions.map((option, index) => {
-                                        const isActive = selectedTag === option || (selectedTag === 'Select tags' && option === 'All Tags');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === tagOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                                    setSelectedTag(option === 'All Tags' ? 'Select tags' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : activeDropdown === 'duration' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {durationOptions.map((option, index) => {
-                                const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === durationOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                            setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : activeDropdown === 'tourType' ? (
-                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-                            {tourTypeOptions.map((option, index) => {
-                                const isActive = tourType === option || (tourType === 'Tour Type' && option === 'All Types');
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[HomeStyle.modalOption, index === tourTypeOptions.length - 1 && { borderBottomWidth: 0 }]}
-                                        onPress={() => {
-                                            setTourType(option === 'All Types' ? 'Tour Type' : option)
-                                            setActiveDropdown(null)
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            })}
-                        </ScrollView>
-                    ) : null}
-                </View>
-            </TouchableOpacity>
-        </Modal>
-    )
-
     if (!fontsLoaded) return null;
 
     return (
@@ -303,7 +236,92 @@ export default function Home() {
             <Header openSidebar={() => { setSidebarVisible(true) }} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <DropdownModal />
+            {/* 🔥 NEW FILTERS MODAL 🔥 */}
+            <Modal visible={isFilterModalVisible} animationType="slide" transparent={true} onRequestClose={() => setFilterModalVisible(false)}>
+                <View style={HomeStyle.filterModalOverlay}>
+                    <View style={HomeStyle.filterModalContainer}>
+                        <View style={HomeStyle.filterModalHeader}>
+                            <Text style={HomeStyle.filterModalTitle}>Advanced Filters</Text>
+                            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#1f2a44" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            
+                            <Text style={HomeStyle.filterSectionLabel}>Tour Type</Text>
+                                    <View style={HomeStyle.filterPillContainer}>
+                                {tourTypeOptions.map(type => (
+                                    <TouchableOpacity 
+                                        key={type} 
+                                        style={[HomeStyle.filterPill, (tourType === type || (tourType === 'Tour Type' && type === 'All Types')) && HomeStyle.filterPillSelected]}
+                                        onPress={() => setTourType(type === 'All Types' ? 'Tour Type' : type)}
+                                    >
+                                        <Text style={[HomeStyle.filterPillText, (tourType === type || (tourType === 'Tour Type' && type === 'All Types')) && HomeStyle.filterPillTextSelected]}>{type}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            <Text style={HomeStyle.filterSectionLabel}>Duration</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row' }}>
+                                {durationOptions.map(dur => (
+                                    <TouchableOpacity 
+                                        key={dur} 
+                                        style={[HomeStyle.filterPill, {marginRight: 8}, (selectedDuration === dur || (selectedDuration === 'Length of Stay' && dur === 'All Durations')) && HomeStyle.filterPillSelected]}
+                                        onPress={() => setSelectedDuration(dur === 'All Durations' ? 'Length of Stay' : dur)}
+                                    >
+                                        <Text style={[HomeStyle.filterPillText, (selectedDuration === dur || (selectedDuration === 'Length of Stay' && dur === 'All Durations')) && HomeStyle.filterPillTextSelected]}>{dur}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+
+                            <Text style={HomeStyle.filterSectionLabel}>Tags / Activities</Text>
+                            <View style={HomeStyle.filterPillContainer}>
+                                {tagOptions.map(tag => (
+                                    <TouchableOpacity
+                                        key={tag}
+                                        style={[HomeStyle.filterPill, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillSelected]}
+                                        onPress={() => {
+                                            if (tag === 'All Tags') {
+                                                setSelectedTags([]);
+                                                return;
+                                            }
+                                            setSelectedTags(prev => {
+                                                if (prev.includes(tag)) return prev.filter(t => t !== tag);
+                                                if (prev.length >= 3) {
+                                                    Alert.alert('Limit reached', 'You can select up to 3 tags.');
+                                                    return prev;
+                                                }
+                                                return [...prev, tag];
+                                            })
+                                        }}
+                                    >
+                                        <Text style={[HomeStyle.filterPillText, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillTextSelected]}>{tag}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            <Text style={HomeStyle.filterSectionLabel}>Travelers</Text>
+                            <TextInput 
+                                style={HomeStyle.filterModalTextInput}
+                                placeholder="How many travelers?"
+                                placeholderTextColor="#999"
+                                keyboardType="numeric"
+                                value={travelers}
+                                onChangeText={(t) => setTravelers(t.replace(/[^0-9]/g, ''))}
+                            />
+
+                            <TouchableOpacity style={HomeStyle.filterModalApplyBtn} onPress={() => setFilterModalVisible(false)}>
+                                <Text style={HomeStyle.filterModalApplyText}>Done</Text>
+                            </TouchableOpacity>
+
+                            {/* 🔥 NEW RESET FILTER BUTTON 🔥 */}
+                            <TouchableOpacity style={HomeStyle.filterModalResetBtn} onPress={resetFilters}>
+                                <Text style={HomeStyle.filterModalResetText}>Reset Filter</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Subject Selection Modal */}
             <Modal visible={isSubjectModalVisible} transparent={true} animationType="fade">
@@ -366,7 +384,10 @@ export default function Home() {
                             <Text style={HomeStyle.heroTitle}>Your Link to the World</Text>
                             <Text style={HomeStyle.heroSubtitleWhite}>Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!</Text>
 
+                            {/* 🔥 NEW COMPACT FILTER CARD 🔥 */}
                             <View style={HomeStyle.heroFilterCard}>
+                                
+                                {/* Row 1: Search, Filter Button, Search Button */}
                                 <View style={HomeStyle.heroSearchRow}>
                                     <View style={HomeStyle.heroSearchInputContainer}>
                                         <TextInput
@@ -377,54 +398,24 @@ export default function Home() {
                                             onChangeText={setSearchQuery}
                                         />
                                     </View>
+                                    
+                                    <TouchableOpacity style={HomeStyle.heroFilterBtn} onPress={() => setFilterModalVisible(true)}>
+                                        <Ionicons name="options-outline" size={20} color="#fff" />
+                                        <Text style={HomeStyle.heroFilterBtnText}>Filters</Text>
+                                    </TouchableOpacity>
+
                                     <TouchableOpacity 
                                         style={HomeStyle.heroSearchBtn} 
                                         onPress={() => cs.navigate("packages", { 
-                                            searchQuery, selectedTag, selectedDuration, tourType, travelers, budgetRange 
+                                            // Passing data to Packages screen
+                                            searchQuery, selectedTags, selectedDuration, tourType, travelers, budgetRange 
                                         })}
                                     >
                                         <Ionicons name="search" size={24} color="#fff" />
                                     </TouchableOpacity>
                                 </View>
 
-                                <View style={HomeStyle.heroGridRow}>
-                                    <View style={HomeStyle.heroGridItem}>
-                                        <Text style={HomeStyle.heroInputLabel}>TAGS</Text>
-                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('tag')}>
-                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{selectedTag}</Text>
-                                            <Ionicons name="chevron-down" size={12} color="#999" />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={HomeStyle.heroGridItem}>
-                                        <Text style={HomeStyle.heroInputLabel}>DURATION</Text>
-                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('duration')}>
-                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{selectedDuration}</Text>
-                                            <Ionicons name="chevron-down" size={12} color="#999" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                <View style={HomeStyle.heroGridRow}>
-                                    <View style={HomeStyle.heroGridItem}>
-                                        <Text style={HomeStyle.heroInputLabel}>TOUR TYPE</Text>
-                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('tourType')}>
-                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{tourType}</Text>
-                                            <Ionicons name="chevron-down" size={12} color="#999" />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={HomeStyle.heroGridItem}>
-                                        <Text style={HomeStyle.heroInputLabel}>TRAVELERS</Text>
-                                        <TextInput 
-                                            style={HomeStyle.heroTextInput}
-                                            placeholder="How many?"
-                                            placeholderTextColor="#999"
-                                            keyboardType="numeric"
-                                            value={travelers}
-                                            onChangeText={(t) => setTravelers(t.replace(/[^0-9]/g, ''))}
-                                        />
-                                    </View>
-                                </View>
-
+                                {/* Row 2: Budget Slider */}
                                 <View style={HomeStyle.heroBudgetRow}>
                                     <View style={HomeStyle.heroBudgetLabels}>
                                         <Text style={[HomeStyle.heroBudgetText, { flex: 1, textAlign: 'left' }]}>₱{budgetRange[0].toLocaleString()}</Text>
@@ -436,9 +427,9 @@ export default function Home() {
                                         sliderLength={width - 110} 
                                         onValuesChange={setBudgetRange} 
                                         min={0} max={100000} step={1000} 
-                                        selectedStyle={{backgroundColor:'#ffffff'}} 
-                                        markerStyle={{backgroundColor:'#ffffff', height: 16, width: 16}} 
-                                        unselectedStyle={{backgroundColor: 'rgba(255,255,255,0.4)'}}
+                                        selectedStyle={{backgroundColor:'#fff'}} 
+                                        markerStyle={{backgroundColor:'#fff', height: 16, width: 16}} 
+                                        unselectedStyle={{backgroundColor: 'rgba(255,255,255,0.4)'}} 
                                     />
                                 </View>
                             </View>
@@ -449,23 +440,19 @@ export default function Home() {
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                     ) : (
                         <>
-                            {internationalPackages.length > 0 && (
-                                <>
-                                    <Text style={HomeStyle.title}>Packages For You</Text>
-                                    {internationalPackages.map((pkg) => (
-                                        <BannerCard key={pkg._id} item={pkg} />
-                                    ))}
-                                </>
-                            )}
-
+                            <Text style={HomeStyle.title}>Local Packages</Text>
                             {domesticPackages.length > 0 && (
                                 <>
-                                    <Text style={HomeStyle.title}>Local Packages</Text>
                                     {domesticPackages.map((pkg) => (
                                         <BannerCard key={pkg._id} item={pkg} />
                                     ))}
                                 </>
                             )}
+
+                            <Text style={[HomeStyle.title, { marginTop: 10 }]}>Packages For You</Text>
+                            {internationalPackages.map((pkg) => (
+                                <BannerCard key={`foryou-${pkg._id}`} item={pkg} />
+                            ))}
                         </>
                     )}
 
@@ -476,8 +463,8 @@ export default function Home() {
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
-                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
-                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
+                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}> 
+                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait-your dream journey starts now!
                         </Text>
                         <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
                             <Text style={HomeStyle.bgButtonText}>BROWSE TOUR PACKAGES</Text>

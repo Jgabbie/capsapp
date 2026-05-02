@@ -19,7 +19,7 @@ const DestinationStyles = StyleSheet.create({
   heroSubtitle: { fontSize: 12, color: "#777", textAlign: "center", marginTop: 4, marginBottom: 16 },
   searchRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
   searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "#dbe3ef" },
-  searchInput: { flex: 1, marginLeft: 8, fontSize: 10, color: "#333", height: 20 },
+  searchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333", height: 36, fontFamily: 'Roboto_400Regular' },
   filterButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#305797", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, elevation: 2, height: 40 },
   filterButtonText: { color: "#fff", fontWeight: "600", fontSize: 12, marginLeft: 6 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 15, marginTop: 5 },
@@ -267,6 +267,20 @@ const DestinationStyles = StyleSheet.create({
   breakdownBarBg: { flex: 1, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, marginHorizontal: 8, overflow: 'hidden' },
   breakdownBarFill: { height: '100%', backgroundColor: '#facc15', borderRadius: 4 },
   breakdownCountLabel: { width: 20, fontSize: 12, color: '#777', textAlign: 'right', fontFamily: 'Roboto_400Regular' },
+  resetButton: {
+      backgroundColor: '#f1f5f9',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 10,
+      borderWidth: 1,
+      borderColor: '#cbd5e1'
+  },
+  resetText: {
+      color: '#475569',
+      fontSize: 15,
+      fontFamily: 'Montserrat_700Bold'
+  },
 });
 
 export default DestinationStyles;
