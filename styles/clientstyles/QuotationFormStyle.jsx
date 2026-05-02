@@ -9,6 +9,23 @@ const QuotationFormStyle = StyleSheet.create({
         backgroundColor: "#f5f7fa",
         flexGrow: 1
     },
+    // --- TOP HEADER (NO BORDERS) ---
+    headerGroup: {
+        marginBottom: 15,
+        paddingHorizontal: 5
+    },
+    mainTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 22,
+        color: "#1f2a44",
+    },
+    subtitle: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#4e5b72",
+        marginTop: 4,
+        lineHeight: 18
+    },
 
     // --- SECTIONS & CARDS ---
     section: {
