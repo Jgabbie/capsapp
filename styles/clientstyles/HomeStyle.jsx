@@ -48,9 +48,9 @@ const HomeStyle = StyleSheet.create({
     },
     // --- HERO BANNER ---
     heroContainer: {
-        width: width,          // 🔥 CHANGED: Force it to take the full device screen width
-        marginLeft: -15,       // 🔥 CHANGED: Pull it left to cover the padding
-        height: 300,
+        width: width,
+        marginLeft: -15,
+        minHeight: 480,
         marginTop: 20,
         marginBottom: 20,
         overflow: 'hidden',
@@ -60,14 +60,15 @@ const HomeStyle = StyleSheet.create({
     },
     heroOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.35)'
+        backgroundColor: 'rgba(0,0,0,0.45)'
     },
     heroContentWrapper: {
         zIndex: 1,
         width: '100%',
         alignItems: 'center',
         paddingHorizontal: 20,
-        justifyContent: 'center'
+        paddingTop: 30,
+        paddingBottom: 30,
     },
     heroTitle: {
         fontFamily: 'Montserrat_700Bold',
@@ -84,18 +85,26 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 16,
         lineHeight: 18
     },
-    heroFiltersWrapper: {
+    heroFilterCard: {
         width: '100%',
-        marginTop: 12
+        paddingTop: 10,
+        marginTop: 5,
     },
-    heroSearchBar: {
+    heroSearchRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 15
+    },
+    heroSearchInputContainer: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 24,
-        paddingHorizontal: 14,
-        marginBottom: 10,
-        height: 48
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 50,
+        backgroundColor: '#f8fafc'
     },
     heroSearchInput: {
         flex: 1,
@@ -104,79 +113,75 @@ const HomeStyle = StyleSheet.create({
         color: '#333',
         paddingVertical: 0
     },
-    heroButtonsRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 12
-    },
-    heroFilterButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
+    heroSearchBtn: {
+        width: 50,
+        height: 50,
+        backgroundColor: '#305797',
         borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderWidth: 1,
-        borderColor: '#dbe3ef',
-        flex: 0.48,
         justifyContent: 'center',
-        height: 42
+        alignItems: 'center'
     },
-    heroFilterText: {
+    heroGridRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginBottom: 15
+    },
+    heroGridItem: {
+        flex: 1,
+    },
+    heroInputLabel: {
+        fontSize: 10,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#fff',
+        marginBottom: 6,
+        textAlign: 'center',
+        textTransform: 'uppercase'
+    },
+    heroSelectBox: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#dbe3ef",
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        height: 42,
+        backgroundColor: '#fff'
+    },
+    heroSelectText: {
         fontSize: 12,
-        color: '#305797',
+        color: '#333',
         fontFamily: 'Roboto_400Regular',
         flex: 1
     },
-    searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: 15,
-        width: '100%',
-    },
-    searchBar: {
-        flex: 2, 
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 20,
-        paddingHorizontal: 12,
-        paddingVertical: 6, 
+    heroTextInput: {
         borderWidth: 1,
-        borderColor: "#dbe3ef",
-        height: 40, 
-    },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 13,
-        color: "#333",
-        paddingVertical: 0, 
-    },
-    dropdownGroup: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 5
-    },
-    dropdownButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fff", 
-        borderRadius: 15,
+        borderColor: '#dbe3ef',
+        borderRadius: 8,
         paddingHorizontal: 10,
-        paddingVertical: 6, 
-        borderWidth: 1,
-        borderColor: "#dbe3ef",
-        height: 40, 
+        height: 42,
+        backgroundColor: '#fff',
+        fontSize: 12,
+        color: '#333',
+        fontFamily: 'Roboto_400Regular',
+        textAlign: 'center'
     },
-    dropdownText: {
-        fontSize: 11, 
-        color: "#305797",
-        fontFamily: "Roboto_400Regular",
+    heroBudgetRow: {
+        alignItems: 'center',
+        marginTop: 5,
     },
-    dropdownIcon: {
-        marginLeft: 4
+    heroBudgetLabels: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: -5,
+        paddingHorizontal: 5
+    },
+    heroBudgetText: {
+        fontSize: 12,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#fff'
     },
     dropdownOverlay: {
         flex: 1,
@@ -266,20 +271,19 @@ const HomeStyle = StyleSheet.create({
 
     // --- BACKGROUND IMAGES ---
     bgSectionContainer: {
-        marginHorizontal: -15, // 🔥 Makes it full width (sagad sa gilid)
-        paddingVertical: 40,   // 🔥 Increased padding to show more of the image
+        marginHorizontal: -15,
+        paddingVertical: 40,
         paddingHorizontal: 30,
         marginTop: 10,
         marginBottom: 25,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
-        minHeight: 230, // 🔥 Increased height so it isn't cut off
+        minHeight: 230,
     },
     bgOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.5)',
-        // 🔥 Removed borderRadius so it flushes with the screen edges perfectly
     },
     bgTitle: {
         fontFamily: "Montserrat_700Bold",

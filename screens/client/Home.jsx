@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from "@expo/vector-icons"
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
@@ -16,6 +17,8 @@ import Header from '../../components/Header'
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
+const { width } = Dimensions.get("window");
+
 export default function Home() {
     const cs = useNavigation()
     const { user, updateUser } = useUser()
@@ -28,8 +31,20 @@ export default function Home() {
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
     const [activeDropdown, setActiveDropdown] = useState(null)
-    const [selectedTag, setSelectedTag] = useState('Tags')
-    const [selectedDuration, setSelectedDuration] = useState('Duration')
+    const [selectedTag, setSelectedTag] = useState('Select tags')
+    const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
+
+    // 🔥 NEW FILTER STATES
+    const [tourType, setTourType] = useState('Tour Type');
+    const [travelers, setTravelers] = useState('');
+    const [budgetRange, setBudgetRange] = useState([12000, 30000]); // Default 12k to 30k
+
+    // 🔥 DYNAMIC TAGS (Pulls only available tags from packages)
+    const tagOptions = React.useMemo(() => {
+        const unique = new Set(['All Tags']);
+        packages.forEach(p => p.packageTags?.forEach(t => unique.add(t)));
+        return Array.from(unique);
+    }, [packages]);
 
     // Contact Form States
     const [contactName, setContactName] = useState('')
@@ -41,8 +56,8 @@ export default function Home() {
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
     const [isSubjectModalVisible, setSubjectModalVisible] = useState(false)
 
-    const tagOptions = ['All Tags', 'Beach', 'Island', 'Scenery', 'Spring', 'Culture', 'Sightseeing', 'Temples']
     const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
+    const tourTypeOptions = ['All Types', 'Domestic', 'International']
 
     const subjectOptions = [
         'Passport Assistance Inquiry',
@@ -147,7 +162,7 @@ export default function Home() {
             const payload = {
                 name: contactName,
                 email: contactEmail,
-                subject: contactSubject, // 🔥 FIXED: Sent subject to backend
+                subject: contactSubject,
                 message: contactMessage
             };
 
@@ -218,13 +233,13 @@ export default function Home() {
                     {activeDropdown === 'tag' ? (
                         <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
                             {tagOptions.map((option, index) => {
-                                const isActive = selectedTag === option || (selectedTag === 'Tags' && option === 'All Tags');
+                                        const isActive = selectedTag === option || (selectedTag === 'Select tags' && option === 'All Tags');
                                 return (
                                     <TouchableOpacity
                                         key={index}
                                         style={[HomeStyle.modalOption, index === tagOptions.length - 1 && { borderBottomWidth: 0 }]}
                                         onPress={() => {
-                                            setSelectedTag(option === 'All Tags' ? 'Tags' : option)
+                                                    setSelectedTag(option === 'All Tags' ? 'Select tags' : option)
                                             setActiveDropdown(null)
                                         }}
                                     >
@@ -238,13 +253,33 @@ export default function Home() {
                     ) : activeDropdown === 'duration' ? (
                         <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
                             {durationOptions.map((option, index) => {
-                                const isActive = selectedDuration === option || (selectedDuration === 'Duration' && option === 'All Durations');
+                                const isActive = selectedDuration === option || (selectedDuration === 'Length of Stay' && option === 'All Durations');
                                 return (
                                     <TouchableOpacity
                                         key={index}
                                         style={[HomeStyle.modalOption, index === durationOptions.length - 1 && { borderBottomWidth: 0 }]}
                                         onPress={() => {
-                                            setSelectedDuration(option === 'All Durations' ? 'Duration' : option)
+                                            setSelectedDuration(option === 'All Durations' ? 'Length of Stay' : option)
+                                            setActiveDropdown(null)
+                                        }}
+                                    >
+                                        <Text style={[HomeStyle.modalOptionText, { color: isActive ? '#305797' : '#555', fontFamily: isActive ? 'Montserrat_700Bold' : 'Roboto_400Regular' }]}>
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            })}
+                        </ScrollView>
+                    ) : activeDropdown === 'tourType' ? (
+                        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
+                            {tourTypeOptions.map((option, index) => {
+                                const isActive = tourType === option || (tourType === 'Tour Type' && option === 'All Types');
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[HomeStyle.modalOption, index === tourTypeOptions.length - 1 && { borderBottomWidth: 0 }]}
+                                        onPress={() => {
+                                            setTourType(option === 'All Types' ? 'Tour Type' : option)
                                             setActiveDropdown(null)
                                         }}
                                     >
@@ -330,31 +365,81 @@ export default function Home() {
                         <View style={HomeStyle.heroContentWrapper}>
                             <Text style={HomeStyle.heroTitle}>Your Link to the World</Text>
                             <Text style={HomeStyle.heroSubtitleWhite}>Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!</Text>
-                            
-                            <View style={HomeStyle.heroFiltersWrapper}>
-                                <View style={HomeStyle.heroSearchBar}>
-                                    <Ionicons name="search" size={16} color="#777" />
-                                    <TextInput
-                                        style={HomeStyle.heroSearchInput}
-                                        placeholder='Search here...'
-                                        placeholderTextColor="#999"
-                                        value={searchQuery}
-                                        onChangeText={(text) => setSearchQuery(text)}
-                                    />
+
+                            <View style={HomeStyle.heroFilterCard}>
+                                <View style={HomeStyle.heroSearchRow}>
+                                    <View style={HomeStyle.heroSearchInputContainer}>
+                                        <TextInput
+                                            style={HomeStyle.heroSearchInput}
+                                            placeholder='Search destination...'
+                                            placeholderTextColor="#999"
+                                            value={searchQuery}
+                                            onChangeText={setSearchQuery}
+                                        />
+                                    </View>
+                                    <TouchableOpacity 
+                                        style={HomeStyle.heroSearchBtn} 
+                                        onPress={() => cs.navigate("packages", { 
+                                            searchQuery, selectedTag, selectedDuration, tourType, travelers, budgetRange 
+                                        })}
+                                    >
+                                        <Ionicons name="search" size={24} color="#fff" />
+                                    </TouchableOpacity>
                                 </View>
-                                <View style={HomeStyle.heroButtonsRow}>
-                                    <TouchableOpacity style={HomeStyle.heroFilterButton} onPress={() => setActiveDropdown('tag')}>
-                                        <Text style={HomeStyle.heroFilterText} numberOfLines={1}>
-                                            {selectedTag.length > 12 ? selectedTag.substring(0, 12) + '...' : selectedTag}
-                                        </Text>
-                                        <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={HomeStyle.heroFilterButton} onPress={() => setActiveDropdown('duration')}>
-                                        <Text style={HomeStyle.heroFilterText} numberOfLines={1}>
-                                            {selectedDuration.length > 12 ? selectedDuration.substring(0, 12) + '...' : selectedDuration}
-                                        </Text>
-                                        <Ionicons name="chevron-down" size={12} color="#305797" style={HomeStyle.dropdownIcon} />
-                                    </TouchableOpacity>
+
+                                <View style={HomeStyle.heroGridRow}>
+                                    <View style={HomeStyle.heroGridItem}>
+                                        <Text style={HomeStyle.heroInputLabel}>TAGS</Text>
+                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('tag')}>
+                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{selectedTag}</Text>
+                                            <Ionicons name="chevron-down" size={12} color="#999" />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={HomeStyle.heroGridItem}>
+                                        <Text style={HomeStyle.heroInputLabel}>DURATION</Text>
+                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('duration')}>
+                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{selectedDuration}</Text>
+                                            <Ionicons name="chevron-down" size={12} color="#999" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                <View style={HomeStyle.heroGridRow}>
+                                    <View style={HomeStyle.heroGridItem}>
+                                        <Text style={HomeStyle.heroInputLabel}>TOUR TYPE</Text>
+                                        <TouchableOpacity style={HomeStyle.heroSelectBox} onPress={() => setActiveDropdown('tourType')}>
+                                            <Text style={HomeStyle.heroSelectText} numberOfLines={1}>{tourType}</Text>
+                                            <Ionicons name="chevron-down" size={12} color="#999" />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={HomeStyle.heroGridItem}>
+                                        <Text style={HomeStyle.heroInputLabel}>TRAVELERS</Text>
+                                        <TextInput 
+                                            style={HomeStyle.heroTextInput}
+                                            placeholder="How many?"
+                                            placeholderTextColor="#999"
+                                            keyboardType="numeric"
+                                            value={travelers}
+                                            onChangeText={(t) => setTravelers(t.replace(/[^0-9]/g, ''))}
+                                        />
+                                    </View>
+                                </View>
+
+                                <View style={HomeStyle.heroBudgetRow}>
+                                    <View style={HomeStyle.heroBudgetLabels}>
+                                        <Text style={[HomeStyle.heroBudgetText, { flex: 1, textAlign: 'left' }]}>₱{budgetRange[0].toLocaleString()}</Text>
+                                        <Text style={[HomeStyle.heroInputLabel, { flex: 1, textAlign: 'center' }]}>BUDGET</Text>
+                                        <Text style={[HomeStyle.heroBudgetText, { flex: 1, textAlign: 'right' }]}>₱{budgetRange[1].toLocaleString()}</Text>
+                                    </View>
+                                    <MultiSlider 
+                                        values={budgetRange} 
+                                        sliderLength={width - 110} 
+                                        onValuesChange={setBudgetRange} 
+                                        min={0} max={100000} step={1000} 
+                                        selectedStyle={{backgroundColor:'#ffffff'}} 
+                                        markerStyle={{backgroundColor:'#ffffff', height: 16, width: 16}} 
+                                        unselectedStyle={{backgroundColor: 'rgba(255,255,255,0.4)'}}
+                                    />
                                 </View>
                             </View>
                         </View>
