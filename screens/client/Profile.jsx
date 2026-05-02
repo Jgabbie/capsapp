@@ -218,7 +218,7 @@ export default function Profile() {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
@@ -236,40 +236,36 @@ export default function Profile() {
         }
     }
 
+    const uploadFilesToBackend = async (endpoint, formData) => {
+        const response = await api.post(endpoint, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...withUserHeader(user?._id).headers,
+            },
+        });
+
+        return response.data;
+    };
+
     const uploadProfileImageToBackend = async (asset) => {
-        if (!asset || !asset.uri) return null;
+        if (!asset?.uri) return null;
 
-        try {
-            const formData = new FormData();
-            const filename = asset.fileName || asset.uri.split('/').pop() || `profile_${Date.now()}.jpg`;
-            const match = /\.([0-9a-zA-Z]+)$/.exec(filename);
-            const type = asset.type || (match ? `image/${match[1]}` : 'image/jpeg');
+        const formData = new FormData();
 
-            if (Platform.OS === 'web' && asset.file) {
-                formData.append('file', asset.file, filename);
-            } else {
-                formData.append('file', {
-                    uri: asset.uri,
-                    name: filename,
-                    type,
-                });
-            }
+        const filename = asset.uri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
 
-            // Let axios set the Content-Type (including multipart boundary) to avoid issues on React Native
-            const res = await api.post('/upload/upload-profile-image', formData, {
-                headers: {
-                    ...withUserHeader(user._id).headers,
-                }
-            });
+        formData.append('file', {
+            uri: asset.uri,
+            name: filename,
+            type,
+        });
 
-            // backend returns { url }
-            const uploadedUrl = res?.data?.url || res?.data?.urls?.[0] || null;
-            return uploadedUrl;
-        } catch (error) {
-            console.error('Profile image upload failed:', error?.response?.data || error.message || error);
-            throw error;
-        }
-    }
+        const res = await uploadFilesToBackend('/upload/upload-profile-image', formData);
+
+        return res?.url || res?.data?.url;
+    };
 
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);

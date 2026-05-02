@@ -29,7 +29,7 @@ const formatFullDate = (dateString) => {
 const getImageUrl = (img) => {
     if (!img) return "https://via.placeholder.com/800x500?text=No+Image";
     if (img.startsWith("http") || img.startsWith("data:")) return img;
-    
+
     let host = "localhost";
     if (Platform.OS !== "web") {
         const hostUri = Constants.expoConfig?.hostUri || "";
@@ -40,21 +40,21 @@ const getImageUrl = (img) => {
 
 export default function PackageDetails({ route, navigation }) {
     const { user } = useUser();
-    const scrollViewRef = useRef(null); 
+    const scrollViewRef = useRef(null);
     const carouselRef = useRef(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    
+
     const [loading, setLoading] = useState(true);
     const [fullPkg, setFullPkg] = useState(null);
     const [reviews, setReviews] = useState([]);
-    
+
     // State to track wishlisted items for the heart icon
     const [wishlistedIds, setWishlistedIds] = useState(new Set());
 
     const [activeTab, setActiveTab] = useState("itinerary");
     const [showReviews, setShowReviews] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    
+
     // Review Form States
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -95,7 +95,7 @@ export default function PackageDetails({ route, navigation }) {
                 if (!currentPkg || Object.keys(currentPkg).length === 0) {
                     const response = await api.get("/package/get-packages");
                     currentPkg = response.data.find(p => p._id === packageId || p.id === packageId);
-                    
+
                     if (!currentPkg) {
                         Alert.alert("Error", "Package not found in database.");
                         navigation.goBack();
@@ -113,7 +113,7 @@ export default function PackageDetails({ route, navigation }) {
                     isInternational: (currentPkg.packageType || "").toLowerCase().includes("international"),
                     image: currentPkg.image || getImageUrl(currentPkg.images?.[0]),
                     images: currentPkg.images || [currentPkg.image],
-                    packageSpecificDate: currentPkg.packageSpecificDate || [], 
+                    packageSpecificDate: currentPkg.packageSpecificDate || [],
                     packageDiscountPercent: currentPkg.packageDiscountPercent || 0,
                     packageDeposit: currentPkg.packageDeposit || 0,
                     visaRequired: currentPkg.visaRequired || false,
@@ -130,7 +130,7 @@ export default function PackageDetails({ route, navigation }) {
                             if (pId) ids.add(String(pId));
                         });
                         setWishlistedIds(ids);
-                    } catch(e) {
+                    } catch (e) {
                         console.log("Wishlist fetch error:", e.message);
                     }
                 }
@@ -140,11 +140,11 @@ export default function PackageDetails({ route, navigation }) {
             }
 
             await fetchReviewsData();
-            setLoading(false); 
+            setLoading(false);
         };
 
         loadData();
-    }, [packageId, user?._id]); 
+    }, [packageId, user?._id]);
 
     // Auto-Scrolling Image Carousel Logic
     useEffect(() => {
@@ -201,7 +201,7 @@ export default function PackageDetails({ route, navigation }) {
         }
         try {
             await api.post('/wishlist/add', { packageId: fullPkg.id }, withUserHeader(user?._id));
-            
+
             setWishlistedIds(prev => {
                 const next = new Set(prev);
                 next.add(String(fullPkg.id));
@@ -253,7 +253,7 @@ export default function PackageDetails({ route, navigation }) {
                 }, withUserHeader(user._id));
                 Alert.alert("Success", "Review submitted!");
             }
-            
+
             setReviewForm({ rating: 0, comment: "" });
             setIsEditingReview(false);
             await fetchReviewsData();
@@ -292,10 +292,10 @@ export default function PackageDetails({ route, navigation }) {
         );
     }
 
-    const totalSlots = fullPkg.packageAvailableSlots ?? fullPkg.slots ?? 
+    const totalSlots = fullPkg.packageAvailableSlots ?? fullPkg.slots ??
         (fullPkg.packageSpecificDate || []).reduce((sum, dateObj) => sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0), 0);
     const isPackageSoldOut = totalSlots <= 0 || fullPkg.availability === 'Sold out';
-    
+
     const discountPercent = Number(fullPkg.packageDiscountPercent || 0);
     const basePrice = Number(fullPkg.price || 0);
     const baseDeposit = Number(fullPkg.packageDeposit || 0);
@@ -315,7 +315,7 @@ export default function PackageDetails({ route, navigation }) {
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
                 <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
-                    
+
                     <View style={DestinationStyles.detailsHeader}>
                         <View style={DestinationStyles.titleRowHeader}>
                             <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: 10, paddingTop: 4 }}>
@@ -323,7 +323,7 @@ export default function PackageDetails({ route, navigation }) {
                             </TouchableOpacity>
                             <Text style={DestinationStyles.detailsTitle} numberOfLines={2}>{fullPkg.title}</Text>
                         </View>
-                        
+
                         <View style={DestinationStyles.subtitleRow}>
                             <Text style={DestinationStyles.durationText}>{fullPkg.duration} DAYS</Text>
                             <View style={DestinationStyles.ratingContainer}>
@@ -331,12 +331,12 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.ratingText}>{averageRating} ({reviews.length} reviews)</Text>
                             </View>
                         </View>
-                        
+
                         <View style={DestinationStyles.carouselContainer}>
-                            <ScrollView 
+                            <ScrollView
                                 ref={carouselRef}
-                                horizontal 
-                                pagingEnabled 
+                                horizontal
+                                pagingEnabled
                                 showsHorizontalScrollIndicator={false}
                                 onMomentumScrollEnd={(e) => {
                                     const newIndex = Math.round(e.nativeEvent.contentOffset.x / (width - 32));
@@ -359,7 +359,7 @@ export default function PackageDetails({ route, navigation }) {
 
                     <View style={DestinationStyles.heroCard}>
                         <Text style={DestinationStyles.packageDetailsHeading}>Package Details</Text>
-                        
+
                         <View style={DestinationStyles.packageDetailGrid}>
                             <View style={DestinationStyles.packageDetailItem}>
                                 <Text style={DestinationStyles.packageDetailLabel}>Duration</Text>
@@ -389,7 +389,7 @@ export default function PackageDetails({ route, navigation }) {
 
                     <View style={DestinationStyles.priceCard}>
                         <Text style={DestinationStyles.priceLabel}>PRICE PER PAX</Text>
-                        
+
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 12 }}>
                             {discountPercent > 0 && (
                                 <Text style={DestinationStyles.packagePriceOld}>{formatPeso(basePrice)}</Text>
@@ -415,9 +415,9 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.slotsValue}>{formatPeso(discountedDeposit)}</Text>
                             </View>
                         </View>
-                        
-                        <TouchableOpacity 
-                            style={[DestinationStyles.availabilityButton, isPackageSoldOut && { backgroundColor: '#cbd5e1' }]} 
+
+                        <TouchableOpacity
+                            style={[DestinationStyles.availabilityButton, isPackageSoldOut && { backgroundColor: '#cbd5e1' }]}
                             onPress={handlePrimaryAction}
                             disabled={isPackageSoldOut}
                         >
@@ -436,20 +436,20 @@ export default function PackageDetails({ route, navigation }) {
                     <View style={{ paddingHorizontal: 16 }}>
                         <View style={[DestinationStyles.wishlistContainer, { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 5 }]}>
                             <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1 }]} onPress={handleWishlistAdd}>
-                                <Ionicons 
-                                    name={isWishlisted ? "heart" : "heart-outline"} 
-                                    size={18} 
-                                    color={isWishlisted ? "#ff4d4f" : "#fff"} 
-                                    style={{ marginRight: 6 }} 
+                                <Ionicons
+                                    name={isWishlisted ? "heart" : "heart-outline"}
+                                    size={18}
+                                    color={isWishlisted ? "#ff4d4f" : "#fff"}
+                                    style={{ marginRight: 6 }}
                                 />
                                 <Text style={DestinationStyles.wishlistButtonText}>
                                     {isWishlisted ? "Wishlisted" : "Wishlist"}
                                 </Text>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1, backgroundColor: "#f0f2f5" }]} onPress={() => setShowReviews(!showReviews)}>
-                                <Ionicons name="star-outline" size={18} color="#305797" style={{ marginRight: 6 }} />
-                                <Text style={[DestinationStyles.wishlistButtonText, { color: "#305797" }]}>
+
+                            <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1, backgroundColor: "#305797" }]} onPress={() => setShowReviews(!showReviews)}>
+                                <Ionicons name={userReview ? "star" : "star-outline"} size={18} color={userReview ? "#facc15" : "#f0f2f5"} style={{ marginRight: 6 }} />
+                                <Text style={[DestinationStyles.wishlistButtonText, { color: "#f0f2f5" }]}>
                                     {showReviews ? "View Details" : "Reviews"}
                                 </Text>
                             </TouchableOpacity>
@@ -464,7 +464,7 @@ export default function PackageDetails({ route, navigation }) {
                                         <Text style={DestinationStyles.breakdownLabel}>AVERAGE RATING</Text>
                                         <View style={DestinationStyles.breakdownAvgRow}>
                                             <View style={DestinationStyles.starsContainerLarge}>
-                                                {[1,2,3,4,5].map(star => (
+                                                {[1, 2, 3, 4, 5].map(star => (
                                                     <Ionicons key={star} name={star <= averageRating ? "star" : "star-outline"} size={21} color="#facc15" />
                                                 ))}
                                             </View>
@@ -475,8 +475,8 @@ export default function PackageDetails({ route, navigation }) {
                                 </View>
                                 <View style={DestinationStyles.breakdownBody}>
                                     <Text style={DestinationStyles.breakdownBodyTitle}>Review Breakdown for {fullPkg.title}</Text>
-                                    {[5,4,3,2,1].map(star => {
-                                        const count = ratingBreakdown[star-1];
+                                    {[5, 4, 3, 2, 1].map(star => {
+                                        const count = ratingBreakdown[star - 1];
                                         const pct = reviews.length ? (count / reviews.length) * 100 : 0;
                                         return (
                                             <View key={star} style={DestinationStyles.breakdownBarRow}>
@@ -497,13 +497,13 @@ export default function PackageDetails({ route, navigation }) {
                                 reviews.map((r, i) => {
                                     const rUserId = r.userId?._id || r.userId;
                                     const isMe = user && String(rUserId) === String(user._id);
-                                    
+
                                     return (
                                         <View key={i} style={DestinationStyles.recentReviewContainer}>
                                             <View style={DestinationStyles.reviewHeaderRow}>
-                                                <Image 
-                                                    source={ r.userId?.profileImage ? getImageUrl(r.userId.profileImage) : require('../../assets/images/profile_icon60.png') } 
-                                                    style={DestinationStyles.reviewProfileImg} 
+                                                <Image
+                                                    source={r.userId?.profileImage ? getImageUrl(r.userId.profileImage) : require('../../assets/images/profile_icon60.png')}
+                                                    style={DestinationStyles.reviewProfileImg}
                                                     contentFit="cover"
                                                 />
                                                 <View style={DestinationStyles.reviewHeaderInfo}>
@@ -544,7 +544,7 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={[DestinationStyles.reviewTitle, { color: '#305797' }]}>Leave a review</Text>
                                 <View style={DestinationStyles.starsContainer}>
                                     {[1, 2, 3, 4, 5].map((star) => (
-                                        <TouchableOpacity key={star} disabled={disableForm} onPress={() => setReviewForm({...reviewForm, rating: star})}>
+                                        <TouchableOpacity key={star} disabled={disableForm} onPress={() => setReviewForm({ ...reviewForm, rating: star })}>
                                             <Ionicons name={star <= reviewForm.rating ? "star" : "star-outline"} size={26} color={disableForm ? "#d1d5db" : "#facc15"} style={{ marginRight: 4 }} />
                                         </TouchableOpacity>
                                     ))}
@@ -556,9 +556,9 @@ export default function PackageDetails({ route, navigation }) {
                                     multiline
                                     editable={!disableForm}
                                     value={reviewForm.comment}
-                                    onChangeText={(val) => setReviewForm({...reviewForm, comment: val})}
+                                    onChangeText={(val) => setReviewForm({ ...reviewForm, comment: val })}
                                 />
-                                
+
                                 <TouchableOpacity style={DestinationStyles.reviewButton} onPress={handleSubmitReview} disabled={disableForm}>
                                     <Text style={DestinationStyles.reviewButtonText}>
                                         {isSubmittingReview ? "Submitting..." : (isEditingReview ? "Update Review" : "Submit Review")}
@@ -566,9 +566,9 @@ export default function PackageDetails({ route, navigation }) {
                                 </TouchableOpacity>
 
                                 {isEditingReview && (
-                                    <TouchableOpacity 
-                                        style={[DestinationStyles.reviewButton, { backgroundColor: '#991b1b', marginTop: 10 }]} 
-                                        onPress={() => setIsDeleteReviewModalOpen(true)} 
+                                    <TouchableOpacity
+                                        style={[DestinationStyles.reviewButton, { backgroundColor: '#991b1b', marginTop: 10 }]}
+                                        onPress={() => setIsDeleteReviewModalOpen(true)}
                                         disabled={isSubmittingReview}
                                     >
                                         <Text style={DestinationStyles.reviewButtonText}>Delete Review</Text>
@@ -582,9 +582,9 @@ export default function PackageDetails({ route, navigation }) {
                                 {["itinerary", "inclusions", "terms"].map((tab) => {
                                     const isActive = activeTab === tab;
                                     return (
-                                        <TouchableOpacity 
-                                            key={tab} 
-                                            style={[DestinationStyles.tabButton, isActive && DestinationStyles.tabButtonActive]} 
+                                        <TouchableOpacity
+                                            key={tab}
+                                            style={[DestinationStyles.tabButton, isActive && DestinationStyles.tabButtonActive]}
                                             onPress={() => setActiveTab(tab)}
                                         >
                                             <Text style={[DestinationStyles.tabText, isActive && DestinationStyles.tabTextActive]}>
@@ -617,7 +617,7 @@ export default function PackageDetails({ route, navigation }) {
                                         )}
                                     </View>
                                 ))}
-                                
+
                                 {activeTab === "inclusions" && (
                                     <>
                                         <Text style={DestinationStyles.sectionTitle}>INCLUSIONS</Text>
@@ -629,7 +629,7 @@ export default function PackageDetails({ route, navigation }) {
                                                 </Text>
                                             </View>
                                         )) : <Text style={DestinationStyles.sectionText}>None specified.</Text>}
-                                        
+
                                         <Text style={[DestinationStyles.sectionTitle, { marginTop: 20 }]}>EXCLUSIONS</Text>
                                         {fullPkg.packageExclusions?.length > 0 ? fullPkg.packageExclusions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
@@ -682,7 +682,7 @@ export default function PackageDetails({ route, navigation }) {
                             <TouchableOpacity style={ModalStyle.modalButton} onPress={() => setIsDeleteReviewModalOpen(false)}>
                                 <Text style={ModalStyle.modalButtonText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[ModalStyle.modalButton, {backgroundColor: '#991b1b'}]} onPress={handleDeleteReview}>
+                            <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#991b1b' }]} onPress={handleDeleteReview}>
                                 {isSubmittingReview ? <ActivityIndicator size="small" color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Delete</Text>}
                             </TouchableOpacity>
                         </View>
@@ -718,13 +718,13 @@ export default function PackageDetails({ route, navigation }) {
                             </TouchableOpacity>
                         </ScrollView>
                         <TouchableOpacity style={DestinationStyles.proceedButton} onPress={() => {
-                                setIsArrangementModalOpen(false);
-                                if (selectedArrangement === 'All in Package') {
-                                    setIsDateModalOpen(true);
-                                } else {
-                                    navigation.navigate("quotationform", { pkg: fullPkg.rawPackage, arrangement: 'Land Arrangement' }); 
-                                }
-                            }}>
+                            setIsArrangementModalOpen(false);
+                            if (selectedArrangement === 'All in Package') {
+                                setIsDateModalOpen(true);
+                            } else {
+                                navigation.navigate("quotationform", { pkg: fullPkg.rawPackage, arrangement: 'Land Arrangement' });
+                            }
+                        }}>
                             <Text style={DestinationStyles.proceedButtonText}>Proceed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={DestinationStyles.cancelArrangementButton} onPress={() => setIsArrangementModalOpen(false)}>
@@ -749,24 +749,24 @@ export default function PackageDetails({ route, navigation }) {
                                 (fullPkg.packageSpecificDate).map((range, index) => {
                                     const isSelected = selectedSchedule === range;
                                     const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
-                                    
+
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
                                     const startDate = new Date(range.startdaterange);
                                     startDate.setHours(0, 0, 0, 0);
-                                    
+
                                     const isPastOrToday = startDate.getTime() <= today.getTime();
                                     const isSoldOut = range.slots <= 0;
                                     const isDisabled = isSoldOut || isPastOrToday;
-                                    
+
                                     return (
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             key={index}
                                             disabled={isDisabled}
                                             style={[
-                                                DestinationStyles.dateCard, 
+                                                DestinationStyles.dateCard,
                                                 isSelected && DestinationStyles.dateCardSelected,
-                                                isDisabled && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' } 
+                                                isDisabled && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
                                             ]}
                                             onPress={() => {
                                                 if (!isDisabled) {
@@ -788,7 +788,7 @@ export default function PackageDetails({ route, navigation }) {
                                             </View>
                                             <View style={DestinationStyles.priceRowDate}>
                                                 <Text style={[
-                                                    DestinationStyles.priceTextDate, 
+                                                    DestinationStyles.priceTextDate,
                                                     isDisabled && { color: '#9ca3af' }
                                                 ]}>
                                                     {formatPeso(fullPkg.price || 0)} / pax
@@ -800,9 +800,9 @@ export default function PackageDetails({ route, navigation }) {
                                                 </Text>
                                                 <View style={DestinationStyles.slotsBadge}>
                                                     <Text style={[
-                                                        DestinationStyles.slotsBadgeText, 
+                                                        DestinationStyles.slotsBadgeText,
                                                         (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
-                                                        isDisabled && { color: '#9ca3af', fontWeight: 'bold' } 
+                                                        isDisabled && { color: '#9ca3af', fontWeight: 'bold' }
                                                     ]}>
                                                         {isPastOrToday ? "Date Passed" : isSoldOut ? "Sold Out" : `${range.slots} slots left`}
                                                     </Text>
@@ -821,14 +821,14 @@ export default function PackageDetails({ route, navigation }) {
                         <View style={DestinationStyles.selectionFooter}>
                             <Text style={DestinationStyles.selectionFooterText}>
                                 You have selected: <Text style={{ fontWeight: 'bold' }}>
-                                    {selectedSchedule 
-                                        ? `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}` 
+                                    {selectedSchedule
+                                        ? `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}`
                                         : "None"}
                                 </Text>
                             </Text>
                             <View style={DestinationStyles.selectionFooterButtons}>
-                                <TouchableOpacity 
-                                    style={DestinationStyles.dateCancelButton} 
+                                <TouchableOpacity
+                                    style={DestinationStyles.dateCancelButton}
                                     onPress={() => {
                                         setIsDateModalOpen(false);
                                         setSelectedSchedule(null);
@@ -836,22 +836,22 @@ export default function PackageDetails({ route, navigation }) {
                                 >
                                     <Text style={DestinationStyles.dateCancelText}>Cancel</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={[DestinationStyles.dateProceedButton, !selectedSchedule && DestinationStyles.dateProceedButtonDisabled]} 
+                                <TouchableOpacity
+                                    style={[DestinationStyles.dateProceedButton, !selectedSchedule && DestinationStyles.dateProceedButtonDisabled]}
                                     disabled={!selectedSchedule}
                                     onPress={() => {
                                         setIsDateModalOpen(false);
                                         const dateString = `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}`;
                                         const finalPrice = (fullPkg.price || 0) + (selectedSchedule.extrarate || 0);
 
-                                        navigation.navigate("quotationallin", { 
-                                            pkg: fullPkg.rawPackage, 
-                                            arrangement: 'All in Package', 
+                                        navigation.navigate("quotationallin", {
+                                            pkg: fullPkg.rawPackage,
+                                            arrangement: 'All in Package',
                                             selectedDate: dateString,
                                             selectedDateSlots: Number(selectedSchedule.slots || selectedSchedule.availableSlots || 0),
                                             selectedDatePrice: finalPrice,
                                             selectedDateRate: selectedSchedule.extrarate || 0
-                                        }); 
+                                        });
                                     }}
                                 >
                                     <Text style={DestinationStyles.dateProceedText}>Proceed</Text>

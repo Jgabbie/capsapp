@@ -54,7 +54,7 @@ export const getUserVisaApplications = async (req, res) => {
   try {
     const userId = req.userId;
     const applications = await VisaApplicationModel.find({ userId })
-      .populate("serviceId", "visaName")
+      .populate("serviceId")
       .sort({ createdAt: -1 });
     res.status(200).json(applications);
   } catch (error) {
@@ -67,7 +67,7 @@ export const getVisaApplicationById = async (req, res) => {
     const { id } = req.params;
     const application = await VisaApplicationModel.findById(id)
       .populate("userId", "firstname lastname username")
-      .populate("serviceId", "visaName");
+      .populate("serviceId");
     if (!application) {
       return res.status(404).json({ message: "Visa application not found" });
     }
@@ -131,7 +131,12 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
     application.preferredDate = preferredDate || application.preferredDate;
     application.preferredTime = preferredTime || application.preferredTime;
     application.purposeOfTravel = purposeOfTravel || application.purposeOfTravel;
-    application.submittedDocuments = submittedDocuments || application.submittedDocuments;
+    application.submittedDocuments = {
+      ...(application.submittedDocuments || {}),
+      ...(submittedDocuments || {})
+    };
+    application.status = ["Documents Uploaded"];
+    application.currentStepIndex = Math.max(application.currentStepIndex || 0, 3);
 
     await application.save();
 
@@ -139,7 +144,10 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
       logAction('UPDATE_VISA_APPLICATION', userId, { "Application Number": application.applicationNumber });
     }
 
-    res.status(200).json({ message: "Visa application updated successfully" });
+    res.status(200).json({
+      message: "Visa application updated successfully",
+      application
+    });
   } catch (error) {
     res.status(500).json({ message: "Error updating visa application", error: error.message });
   }

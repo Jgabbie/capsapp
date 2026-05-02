@@ -4,7 +4,6 @@ import { applyPassport, getPassportApplications, chooseAppointment, updatePasspo
 
 const router = express.Router();
 
-// 🔥 REMOVED applicationUpload.fields() so it accepts clean JSON
 router.post("/apply", requireUser, applyPassport);
 router.get("/applications", requireUser, getPassportApplications);
 router.put("/applications/:id/choose-appointment", requireUser, chooseAppointment);

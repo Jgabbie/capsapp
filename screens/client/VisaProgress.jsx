@@ -38,8 +38,10 @@ export default function VisaProgress() {
     const [paymentMethod, setPaymentMethod] = useState('paymongo');
     const [creatingPayment, setCreatingPayment] = useState(false);
     const [proofImage, setProofImage] = useState(null);
-    const [uploadingRequirementKey, setUploadingRequirementKey] = useState(null);
     const [uploadedRequirements, setUploadedRequirements] = useState({});
+    const [selectedFiles, setSelectedFiles] = useState({});
+    const [uploadingAll, setUploadingAll] = useState(false);
+    const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -152,6 +154,19 @@ export default function VisaProgress() {
         if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
     };
 
+    const isImageSource = (fileOrUrl) => {
+        const value = typeof fileOrUrl === 'string'
+            ? fileOrUrl
+            : fileOrUrl?.uri || fileOrUrl?.name || fileOrUrl?.mimeType || '';
+
+        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value) || String(fileOrUrl?.mimeType || '').startsWith('image/') || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
+    };
+
+    const getUploadedDocumentEntries = () => {
+        const docs = application?.submittedDocuments || {};
+        return Object.entries(docs).filter(([, value]) => Boolean(value));
+    };
+
     const pickProofImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -174,6 +189,66 @@ export default function VisaProgress() {
         });
 
         return response.data;
+    };
+
+    const submitAllSelectedFiles = async () => {
+        if (Object.keys(selectedFiles).length === 0) {
+            Alert.alert('Notice', 'Please select at least one document to upload.');
+            return;
+        }
+
+        try {
+            setUploadingAll(true);
+
+            // Build FormData with all selected files
+            const formData = new FormData();
+            Object.entries(selectedFiles).forEach(([key, file]) => {
+                const filename = file.name || file.uri.split('/').pop();
+                const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
+                const ext = match ? match[1].toLowerCase() : 'pdf';
+                const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
+
+                formData.append('files', {
+                    uri: file.uri,
+                    name: filename,
+                    type: mimeType,
+                });
+            });
+
+            // Upload all files
+            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+            const uploadedUrls = uploadRes?.uploadedUrls || uploadRes?.urls || [];
+
+            if (!uploadedUrls.length) {
+                throw new Error('Upload failed - no URLs returned');
+            }
+
+            // Map URLs to document keys
+            const documentsPayload = {};
+            const keys = Object.keys(selectedFiles);
+            uploadedUrls.forEach((url, index) => {
+                if (keys[index]) {
+                    documentsPayload[keys[index]] = url;
+                }
+            });
+
+            // Persist to backend
+            await api.put(`/visa/applications/${application._id}/documents`, {
+                submittedDocuments: documentsPayload
+            }, withUserHeader(user?._id));
+
+            // Update local state
+            setUploadedRequirements(prev => ({ ...prev, ...documentsPayload }));
+            setSelectedFiles({});
+            setShowDocumentsSuccessModal(true);
+
+            await fetchApplicationDetails();
+        } catch (error) {
+            console.error('❌ Batch upload error:', error?.response?.data || error.message || error);
+            Alert.alert('Error', 'Failed to upload documents. Please try again.');
+        } finally {
+            setUploadingAll(false);
+        }
     };
 
     const handleStartPayment = async () => {
@@ -286,7 +361,35 @@ export default function VisaProgress() {
         };
 
         const reqKey = sanitizeKey(requirementText);
+        const selectedFile = selectedFiles[reqKey];
         const uploadedUrl = uploadedRequirements[reqKey] || application?.submittedDocuments?.[reqKey];
+
+        const pickDocumentForKey = async () => {
+            try {
+                const picked = await DocumentPicker.getDocumentAsync({
+                    type: ['image/*', 'application/pdf'],
+                    copyToCacheDirectory: true,
+                    multiple: false,
+                });
+
+                if (!picked.canceled && picked.assets?.[0]) {
+                    setSelectedFiles(prev => ({ ...prev, [reqKey]: picked.assets[0] }));
+                }
+            } catch (error) {
+                console.error('Document picker error:', error);
+                Alert.alert('Error', 'Failed to pick document');
+            }
+        };
+
+        const removeSelectedFile = () => {
+            setSelectedFiles(prev => {
+                const updated = { ...prev };
+                delete updated[reqKey];
+                return updated;
+            });
+        };
+
+        const selectedFileIsImage = isImageSource(selectedFile);
 
         return (
             <View key={index} style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: '#eef2f7' }}>
@@ -302,25 +405,44 @@ export default function VisaProgress() {
                 {typeof item === 'object' && (item.isReq === 'Required' || String(item.isReq).toLowerCase() === 'required') ? (
                     <View style={{ marginTop: 10 }}>
                         <TouchableOpacity
-                            onPress={() => pickAndUploadVisaDocument(reqKey, requirementText)}
+                            onPress={pickDocumentForKey}
                             style={{
                                 backgroundColor: '#305797',
                                 borderRadius: 10,
                                 paddingVertical: 10,
                                 alignItems: 'center',
-                                opacity: uploadingRequirementKey === reqKey ? 0.7 : 1,
                                 marginTop: 6,
                             }}
-                            disabled={uploadingRequirementKey === reqKey}
                         >
-                            {uploadingRequirementKey === reqKey ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>{uploadedUrl ? 'Replace File' : 'Upload File'}</Text>
-                            )}
+                            <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
+                                {selectedFile ? 'Change File' : 'Select File'}
+                            </Text>
                         </TouchableOpacity>
 
-                        {uploadedUrl ? (
+                        {selectedFile ? (
+                            <View style={{ marginTop: 8, backgroundColor: '#f0f9ff', borderRadius: 8, padding: 10 }}>
+                                {selectedFileIsImage ? (
+                                    <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
+                                        <Image
+                                            source={{ uri: selectedFile.uri }}
+                                            style={{ width: '100%', height: 160 }}
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+                                ) : null}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>
+                                            {selectedFile.name || 'File selected'}
+                                        </Text>
+                                        <Text style={{ color: '#16a34a', fontSize: 11, marginTop: 2 }}>Ready to upload</Text>
+                                    </View>
+                                    <TouchableOpacity onPress={removeSelectedFile}>
+                                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ) : uploadedUrl ? (
                             <View style={{ marginTop: 8 }}>
                                 <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
                                 <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
@@ -332,55 +454,6 @@ export default function VisaProgress() {
                 ) : null}
             </View>
         );
-    };
-
-    const pickAndUploadVisaDocument = async (reqKey, label) => {
-        if (!application?._id) return;
-
-        try {
-            setUploadingRequirementKey(reqKey);
-
-            const picked = await DocumentPicker.getDocumentAsync({
-                type: ['image/*', 'application/pdf'],
-                copyToCacheDirectory: true,
-                multiple: false,
-            });
-
-            if (picked.canceled) return;
-
-            const file = picked.assets?.[0] || picked;
-            if (!file?.uri) return;
-
-            const formData = new FormData();
-            const filename = file.name || file.uri.split('/').pop();
-            const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
-            const ext = match ? match[1].toLowerCase() : 'pdf';
-            const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
-
-            formData.append('files', {
-                uri: file.uri,
-                name: filename,
-                type: mimeType,
-            });
-
-            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
-            const uploadedUrl = uploadRes?.uploadedUrls?.[0] || uploadRes?.urls?.[0] || uploadRes?.url || uploadRes?.data?.secure_url;
-
-            if (!uploadedUrl) throw new Error('Upload failed');
-
-            // Persist to backend
-            await api.put(`/visa/applications/${application._id}/documents`, {
-                submittedDocuments: { [reqKey]: uploadedUrl }
-            }, withUserHeader(user._id));
-
-            setUploadedRequirements(prev => ({ ...prev, [reqKey]: uploadedUrl }));
-            await fetchApplicationDetails();
-        } catch (error) {
-            console.error('Upload error:', error?.response?.data || error.message || error);
-            Alert.alert('Error', 'Failed to upload document.');
-        } finally {
-            setUploadingRequirementKey(null);
-        }
     };
 
     const isOthersSelected = selectedScheduleIndex === 'others';
@@ -537,23 +610,6 @@ export default function VisaProgress() {
                         </View>
 
 
-                        {appStatus.toLowerCase() === 'payment complete' && (serviceRequirements.length > 0) && (
-                            <View style={VisaProgressStyle.card}>
-                                <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
-                                <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
-                                    Please prepare and upload the following requirements for your visa application.
-                                </Text>
-
-                                {serviceRequirements.length > 0 && (
-                                    <View style={{ marginBottom: serviceAdditionalRequirements.length > 0 ? 18 : 0 }}>
-                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Required Documents</Text>
-                                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                                            {serviceRequirements.map(renderRequirementItem)}
-                                        </View>
-                                    </View>
-                                )}
-                            </View>
-                        )}
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
                                 <View style={PaymentStyle.manualBankSection}>
@@ -614,6 +670,77 @@ export default function VisaProgress() {
                     </View>
                 )}
 
+                {appStatus.toLowerCase() === 'payment complete' && serviceRequirements.length > 0 && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            Please prepare and upload the following requirements for your visa application.
+                        </Text>
+
+                        {serviceRequirements.length > 0 && (
+                            <View style={{ marginBottom: serviceAdditionalRequirements.length > 0 ? 18 : 0 }}>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Required Documents</Text>
+                                <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                                    {serviceRequirements.map(renderRequirementItem)}
+                                </View>
+                            </View>
+                        )}
+
+                        {serviceAdditionalRequirements.length > 0 && (
+                            <View>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Additional Documents</Text>
+                                <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                                    {serviceAdditionalRequirements.map(renderRequirementItem)}
+                                </View>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[VisaProgressStyle.submitBtn, uploadingAll && { opacity: 0.7 }, { marginTop: 16 }]}
+                            disabled={uploadingAll || Object.keys(selectedFiles).length === 0}
+                            onPress={submitAllSelectedFiles}
+                        >
+                            {uploadingAll ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>Submit All Documents</Text>}
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {getUploadedDocumentEntries().length > 0 && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Uploaded Documents</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            These are the documents currently saved on your visa application.
+                        </Text>
+
+                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                            {getUploadedDocumentEntries().map(([key, value]) => {
+                                const entryIsImage = isImageSource(value);
+
+                                return (
+                                    <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
+                                            {key.replace(/_/g, ' ')}
+                                        </Text>
+
+                                        {entryIsImage ? (
+                                            <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
+                                                <Image
+                                                    source={{ uri: value }}
+                                                    style={{ width: '100%', height: 180 }}
+                                                    resizeMode="cover"
+                                                />
+                                            </View>
+                                        ) : null}
+
+                                        <TouchableOpacity onPress={() => openDocument(value)}>
+                                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
 
                 {appStatus.toLowerCase() === 'application submitted' && (
                     <View style={VisaProgressStyle.card}>
@@ -711,46 +838,6 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {/* Submitted Documents Display */}
-                {application.submittedDocuments && Object.keys(application.submittedDocuments).length > 0 && (
-                    <View style={VisaProgressStyle.card}>
-                        <Text style={VisaProgressStyle.cardTitle}>Submitted Documents</Text>
-
-                        {application.submittedDocuments.validPassport && (
-                            <View style={VisaProgressStyle.docRow}>
-                                <Text style={VisaProgressStyle.docLabel}>Valid Passport</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.validPassport)}>
-                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.completedVisaApplicationForm && (
-                            <View style={VisaProgressStyle.docRow}>
-                                <Text style={VisaProgressStyle.docLabel}>Application Form</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.completedVisaApplicationForm)}>
-                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.passportSizePhoto && (
-                            <View style={VisaProgressStyle.docRow}>
-                                <Text style={VisaProgressStyle.docLabel}>Passport Photo</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.passportSizePhoto)}>
-                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        {application.submittedDocuments.bankCertificateAndStatement && (
-                            <View style={VisaProgressStyle.docRow}>
-                                <Text style={VisaProgressStyle.docLabel}>Bank Cert / Statement</Text>
-                                <TouchableOpacity onPress={() => openDocument(application.submittedDocuments.bankCertificateAndStatement)}>
-                                    <Text style={VisaProgressStyle.docLink}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-                )}
-
                 {/* Progress Tracker Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Progress Tracker</Text>
@@ -813,6 +900,30 @@ export default function VisaProgress() {
                                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                     onChange={handleCustomTimeChange}
                                 />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
+                                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                    <Ionicons name="checkmark" size={32} color="#059669" />
+                                </View>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                    Documents Uploaded Successfully!
+                                </Text>
+                                <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                    Your documents have been submitted. Our team will review them shortly.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowDocumentsSuccessModal(false)}
+                                    style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                >
+                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>
                     </TouchableOpacity>

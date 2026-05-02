@@ -23,6 +23,8 @@ export default function PassportProgress() {
     const applicationId = route.params?.applicationId;
 
     const [application, setApplication] = useState(null)
+    const [serviceRequirements, setServiceRequirements] = useState([])
+    const [serviceAdditionalRequirements, setServiceAdditionalRequirements] = useState([])
     const [loading, setLoading] = useState(true)
 
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
@@ -37,6 +39,10 @@ export default function PassportProgress() {
     const [creatingPayment, setCreatingPayment] = useState(false);
     const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
     const [uploadedDocuments, setUploadedDocuments] = useState({});
+    const [selectedFiles, setSelectedFiles] = useState({});
+    const [uploadingAll, setUploadingAll] = useState(false);
+    const [showAppointmentSuccessModal, setShowAppointmentSuccessModal] = useState(false);
+    const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -110,7 +116,7 @@ export default function PassportProgress() {
                 time: selected.time
             }, withUserHeader(user._id));
 
-            Alert.alert("Success", "Appointment schedule confirmed!");
+            setShowAppointmentSuccessModal(true);
             setSelectedScheduleIndex(null);
             setCustomPreferredDate(null);
             setCustomPreferredTime(null);
@@ -130,6 +136,21 @@ export default function PassportProgress() {
         if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
     };
 
+    const isImageSource = (fileOrUrl) => {
+        const value = typeof fileOrUrl === 'string'
+            ? fileOrUrl
+            : fileOrUrl?.uri || fileOrUrl?.name || fileOrUrl?.mimeType || '';
+
+        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value)
+            || String(fileOrUrl?.mimeType || '').startsWith('image/')
+            || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
+    };
+
+    const getUploadedDocumentEntries = () => {
+        const docs = application?.submittedDocuments || {};
+        return Object.entries(docs).filter(([, value]) => Boolean(value));
+    };
+
     const pickProofImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -145,10 +166,8 @@ export default function PassportProgress() {
 
     const uploadFilesToBackend = async (endpoint, formData) => {
         const response = await api.post(endpoint, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                ...withUserHeader(user?._id).headers,
-            },
+            headers: withUserHeader(user?._id).headers,
+            timeout: 60000 // 60s for file uploads
         });
 
         return response.data;
@@ -171,6 +190,7 @@ export default function PassportProgress() {
             return;
         }
 
+        // keep backward-compat: if invoked directly, upload single file
         const formData = new FormData();
         if (Platform.OS === 'web' && file.file) {
             formData.append('files', file.file, file.name || `${documentKey}-${Date.now()}`);
@@ -211,6 +231,156 @@ export default function PassportProgress() {
         }
     };
 
+    const pickDocumentForKey = async (documentKey) => {
+        if (!application?._id) return;
+
+        const picked = await DocumentPicker.getDocumentAsync({
+            type: ['image/*', 'application/pdf'],
+            copyToCacheDirectory: true,
+            multiple: false,
+        });
+
+        if (picked.canceled) return;
+
+        const file = picked.assets?.[0];
+        if (!file?.uri) {
+            Alert.alert('Error', 'No file selected.');
+            return;
+        }
+
+        setSelectedFiles(prev => ({ ...prev, [documentKey]: file }));
+    };
+
+    const removeSelectedFile = (documentKey) => {
+        setSelectedFiles(prev => {
+            const copy = { ...prev };
+            delete copy[documentKey];
+            return copy;
+        });
+    };
+
+    const submitAllSelectedFiles = async () => {
+        const keys = Object.keys(selectedFiles);
+        if (keys.length === 0) {
+            Alert.alert('No files', 'Please select files to upload first.');
+            return;
+        }
+
+        const formData = new FormData();
+        const order = [];
+
+        for (const key of keys) {
+            const file = selectedFiles[key];
+            const filename = file.name || file.uri.split('/').pop();
+            order.push(key);
+
+            if (Platform.OS === 'web' && file.file) {
+                formData.append('files', file.file, filename);
+            } else {
+                formData.append('files', {
+                    uri: file.uri,
+                    name: filename,
+                    type: file.mimeType || 'application/octet-stream',
+                });
+            }
+        }
+
+        try {
+            setUploadingAll(true);
+            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
+            const urls = uploadRes?.urls || uploadRes?.data?.urls || [];
+
+            if (!Array.isArray(urls) || urls.length === 0) {
+                throw new Error('No upload URLs returned');
+            }
+
+            const nextDocuments = { ...uploadedDocuments };
+            for (let i = 0; i < urls.length; i++) {
+                const key = order[i];
+                if (key) nextDocuments[key] = urls[i];
+            }
+
+            await api.put(`/passport/applications/${application._id}/documents`, {
+                submittedDocuments: nextDocuments,
+            }, withUserHeader(user._id));
+
+            setUploadedDocuments(nextDocuments);
+            setSelectedFiles({});
+            setShowDocumentsSuccessModal(true);
+            await fetchApplicationDetails();
+        } catch (error) {
+            Alert.alert('Error', error?.response?.data?.message || error.message || 'Failed to upload files');
+        } finally {
+            setUploadingAll(false);
+        }
+    };
+
+    const renderRequirementUploadCard = (doc) => {
+        const selectedFile = selectedFiles[doc.key];
+        const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
+        const selectedFileIsImage = isImageSource(selectedFile);
+
+        return (
+            <View key={doc.key} style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14, backgroundColor: '#fff' }}>
+                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 6 }}>{doc.label}</Text>
+                <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>PDF, JPG, or PNG</Text>
+
+                <TouchableOpacity
+                    onPress={() => pickDocumentForKey(doc.key)}
+                    style={{
+                        backgroundColor: '#305797',
+                        borderRadius: 10,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        opacity: uploadingDocumentKey === doc.key ? 0.7 : 1,
+                    }}
+                    disabled={uploadingDocumentKey === doc.key || uploadingAll}
+                >
+                    {uploadingDocumentKey === doc.key ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
+                            {uploadedUrl ? 'Replace File' : (selectedFile ? 'Change Selected' : 'Select File')}
+                        </Text>
+                    )}
+                </TouchableOpacity>
+
+                {selectedFile ? (
+                    <View style={{ marginTop: 8, backgroundColor: '#f0f9ff', borderRadius: 8, padding: 10 }}>
+                        {selectedFileIsImage ? (
+                            <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
+                                <Image
+                                    source={{ uri: selectedFile.uri }}
+                                    style={{ width: '100%', height: 160 }}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                        ) : null}
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>
+                                    {selectedFile.name || 'File selected'}
+                                </Text>
+                                <Text style={{ color: '#16a34a', fontSize: 11, marginTop: 2 }}>Ready to upload</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => removeSelectedFile(doc.key)}>
+                                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ) : uploadedUrl ? (
+                    <View style={{ marginTop: 8 }}>
+                        <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
+                        <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
+                            <Text style={{ color: '#305797', fontSize: 12, marginTop: 6 }}>Preview</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+            </View>
+        );
+    };
+
     const handleStartPayment = async () => {
         if (!paymentAmount || Number.isNaN(Number(paymentAmount)) || Number(paymentAmount) <= 0) {
             Alert.alert('Error', 'Please enter a valid payment amount.');
@@ -245,25 +415,10 @@ export default function PassportProgress() {
                 }
 
                 const manualPayload = {
-                    packageId: application.packageId || null,
-                    travelDate: {
-                        startDate: application.preferredDate,
-                        endDate: application.preferredDate,
-                    },
-                    travelerTotal: 1,
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
                     amount: Number(paymentAmount),
-                    paymentType: 'Full Payment',
                     proofImage: proofUrl,
-                    proofImageType: type,
-                    proofFileName: filename,
-                    bookingDetails: {
-                        applicationId: application._id,
-                        applicationNumber: application.applicationNumber,
-                        applicantName: application.username,
-                        applicationType: application.applicationType,
-                        preferredDate: application.preferredDate,
-                        preferredTime: application.preferredTime,
-                    },
                 };
 
                 await api.post('/payment/manual-passport', manualPayload, withUserHeader(user._id));
@@ -291,13 +446,21 @@ export default function PassportProgress() {
                 cancelUrl: ''
             }, withUserHeader(user._id));
 
-            const hostedUrl = sessionRes.data?.data?.attributes?.hosted_url || sessionRes.data?.data?.attributes?.url || sessionRes.data?.redirectUrl || sessionRes.data?.url;
-            if (hostedUrl) {
-                Linking.openURL(hostedUrl).catch(() => {
-                    Alert.alert('Payment', 'Unable to open payment URL.');
-                });
+            const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
+
+            console.log('CHECKOUT URL:', hostedUrl);
+
+            if (!hostedUrl) {
+                Alert.alert('Error', 'No checkout URL received');
+                return;
+            }
+
+            const canOpen = await Linking.canOpenURL(hostedUrl);
+
+            if (canOpen) {
+                await Linking.openURL(hostedUrl);
             } else {
-                Alert.alert('Payment', 'Checkout session created. Complete payment on the next screen.');
+                Alert.alert('Error', 'Cannot open checkout page');
             }
 
         } catch (error) {
@@ -579,7 +742,7 @@ export default function PassportProgress() {
                                         <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>PDF, JPG, or PNG</Text>
 
                                         <TouchableOpacity
-                                            onPress={() => pickAndUploadPassportDocument(doc.key)}
+                                            onPress={() => pickDocumentForKey(doc.key)}
                                             style={{
                                                 backgroundColor: '#305797',
                                                 borderRadius: 10,
@@ -587,20 +750,96 @@ export default function PassportProgress() {
                                                 alignItems: 'center',
                                                 opacity: uploadingDocumentKey === doc.key ? 0.7 : 1,
                                             }}
-                                            disabled={uploadingDocumentKey === doc.key}
+                                            disabled={uploadingDocumentKey === doc.key || uploadingAll}
                                         >
                                             {uploadingDocumentKey === doc.key ? (
                                                 <ActivityIndicator color="#fff" />
                                             ) : (
                                                 <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
-                                                    {uploadedUrl ? 'Replace File' : 'Upload File'}
+                                                    {uploadedUrl ? 'Replace File' : (selectedFiles[doc.key] ? 'Change Selected' : 'Select File')}
                                                 </Text>
                                             )}
                                         </TouchableOpacity>
 
-                                        {uploadedUrl ? (
-                                            <Text style={{ color: '#16a34a', fontSize: 12, marginTop: 8 }}>File uploaded</Text>
+                                        {selectedFiles[doc.key] ? (
+                                            <View style={{ marginTop: 8, backgroundColor: '#f0f9ff', borderRadius: 8, padding: 10 }}>
+                                                {isImageSource(selectedFiles[doc.key]) ? (
+                                                    <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
+                                                        <Image
+                                                            source={{ uri: selectedFiles[doc.key].uri }}
+                                                            style={{ width: '100%', height: 160 }}
+                                                            resizeMode="cover"
+                                                        />
+                                                    </View>
+                                                ) : null}
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>
+                                                            {selectedFiles[doc.key].name || 'File selected'}
+                                                        </Text>
+                                                        <Text style={{ color: '#16a34a', fontSize: 11, marginTop: 2 }}>Ready to upload</Text>
+                                                    </View>
+                                                    <TouchableOpacity onPress={() => removeSelectedFile(doc.key)}>
+                                                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        ) : uploadedUrl ? (
+                                            <View style={{ marginTop: 8 }}>
+                                                <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
+                                                <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
+                                                    <Text style={{ color: '#305797', fontSize: 12, marginTop: 6 }}>Preview</Text>
+                                                </TouchableOpacity>
+                                            </View>
                                         ) : null}
+                                    </View>
+                                );
+                            })}
+                            {Object.keys(selectedFiles).length > 0 && (
+                                <View style={{ marginTop: 12, alignItems: 'center' }}>
+                                    <TouchableOpacity
+                                        onPress={submitAllSelectedFiles}
+                                        style={{ backgroundColor: '#10b981', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10 }}
+                                        disabled={uploadingAll}
+                                    >
+                                        {uploadingAll ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Submit All Files</Text>}
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                )}
+
+                {getUploadedDocumentEntries().length > 0 && (
+                    <View style={PassportProgressStyle.card}>
+                        <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            These are the documents currently saved on your passport application.
+                        </Text>
+
+                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                            {getUploadedDocumentEntries().map(([key, value]) => {
+                                const entryIsImage = isImageSource(value);
+
+                                return (
+                                    <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
+                                            {passportRequirements[key] || key.replace(/_/g, ' ')}
+                                        </Text>
+
+                                        {entryIsImage ? (
+                                            <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
+                                                <Image
+                                                    source={{ uri: value }}
+                                                    style={{ width: '100%', height: 180 }}
+                                                    resizeMode="cover"
+                                                />
+                                            </View>
+                                        ) : null}
+
+                                        <TouchableOpacity onPress={() => openDocument(value)}>
+                                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 );
                             })}
@@ -821,6 +1060,64 @@ export default function PassportProgress() {
                 </View>
 
             </ScrollView>
+
+            {/* Appointment Success Modal */}
+            <Modal visible={showAppointmentSuccessModal} transparent animationType="fade" onRequestClose={() => setShowAppointmentSuccessModal(false)}>
+                <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+                    activeOpacity={1}
+                    onPress={() => setShowAppointmentSuccessModal(false)}
+                >
+                    <TouchableWithoutFeedback>
+                        <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', maxWidth: 400 }}>
+                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                <Ionicons name="checkmark-circle" size={40} color="#10b981" />
+                            </View>
+                            <Text style={{ fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                Appointment Confirmed!
+                            </Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 20, textAlign: 'center', lineHeight: 20 }}>
+                                Your appointment schedule has been successfully confirmed. You will receive a notification with further details.
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setShowAppointmentSuccessModal(false)}
+                                style={{ backgroundColor: '#305797', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}
+                            >
+                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
+
+            {/* Documents Upload Success Modal */}
+            <Modal visible={showDocumentsSuccessModal} transparent animationType="fade" onRequestClose={() => setShowDocumentsSuccessModal(false)}>
+                <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+                    activeOpacity={1}
+                    onPress={() => setShowDocumentsSuccessModal(false)}
+                >
+                    <TouchableWithoutFeedback>
+                        <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', maxWidth: 400 }}>
+                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                <Ionicons name="checkmark-circle" size={40} color="#10b981" />
+                            </View>
+                            <Text style={{ fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                Files Uploaded Successfully!
+                            </Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 20, textAlign: 'center', lineHeight: 20 }}>
+                                All your passport documents have been uploaded. Our team will review them shortly.
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setShowDocumentsSuccessModal(false)}
+                                style={{ backgroundColor: '#305797', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}
+                            >
+                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
