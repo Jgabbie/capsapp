@@ -111,6 +111,13 @@ export default function FAQs() {
                         <Text style={FAQsStyle.heroSubtitle}>Find quick answers about bookings, payments, and services.</Text>
                     </ImageBackground>
 
+                    <View style={FAQsStyle.introSection}>
+                        <Text style={FAQsStyle.introTitle}>Frequently Asked Questions</Text>
+                        <Text style={FAQsStyle.introSubtitle}>
+                            Browse our FAQs to find quick answers about bookings, payments, and services. Can't find what you're looking for? Contact us for personalized support.
+                        </Text>
+                    </View>
+
                     {/* Horizontal Categories Filter */}
                     <View>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={FAQsStyle.filterScroll}>
