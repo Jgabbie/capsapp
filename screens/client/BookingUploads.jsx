@@ -9,11 +9,11 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
-import { useUser } from '../../context/UserContext'; 
+import { useUser } from '../../context/UserContext';
 
 const formatDate = (date) => {
     if (!date) return "";
-    return date.toISOString().split('T')[0]; 
+    return date.toISOString().split('T')[0];
 };
 
 // 🔥 CALCULATE AGE FROM BIRTHDATE
@@ -21,15 +21,15 @@ const computeAge = (birthDate) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);
     if (isNaN(birth.getTime())) return null;
-    
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age -= 1;
     }
-    
+
     return age < 0 ? null : age;
 };
 
@@ -37,12 +37,12 @@ const computeAge = (birthDate) => {
 const getBirthdayBounds = (travelerType) => {
     const today = new Date();
     const category = String(travelerType || '').toLowerCase();
-    
+
     if (category === 'infant') {
         const maxDate = new Date(today); // Today
         const minDate = new Date(today);
         minDate.setFullYear(minDate.getFullYear() - 2); // 2 years ago
-        
+
         return {
             minDate: minDate,
             maxDate: maxDate,
@@ -50,13 +50,13 @@ const getBirthdayBounds = (travelerType) => {
             maxAge: 2
         };
     }
-    
+
     if (category === 'child') {
         const maxDate = new Date(today);
         maxDate.setFullYear(maxDate.getFullYear() - 3); // 3 years ago
         const minDate = new Date(today);
         minDate.setFullYear(minDate.getFullYear() - 11); // 11 years ago
-        
+
         return {
             minDate: minDate,
             maxDate: maxDate,
@@ -64,7 +64,7 @@ const getBirthdayBounds = (travelerType) => {
             maxAge: 11
         };
     }
-    
+
     // Adult
     const adultMinDate = new Date(1935, 0, 1);
     const adultMaxDate = new Date(today);
@@ -88,11 +88,11 @@ export default function BookingUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData } = route.params || {};
-    
+
     const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
     const totalTravelers = counts.adult + counts.child + counts.infant;
     const bookingType = setupData?.bookingType || 'Solo Booking';
-    
+
     // 🔥 THE FIX: Web-Synced Domestic Logic
     // We check both paths just in case the data structure shifted during navigation
     const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
@@ -101,9 +101,9 @@ export default function BookingUploads({ route, navigation }) {
 
     const travelerTypes = useMemo(() => {
         const types = [];
-        for(let i=0; i<counts.adult; i++) types.push('Adult');
-        for(let i=0; i<counts.child; i++) types.push('Child');
-        for(let i=0; i<counts.infant; i++) types.push('Infant');
+        for (let i = 0; i < counts.adult; i++) types.push('Adult');
+        for (let i = 0; i < counts.child; i++) types.push('Child');
+        for (let i = 0; i < counts.infant; i++) types.push('Infant');
         return types;
     }, [counts]);
 
@@ -117,9 +117,9 @@ export default function BookingUploads({ route, navigation }) {
     const [travelersData, setTravelersData] = useState(() => {
         return Array.from({ length: totalTravelers }).map((_, index) => {
             const travelerType = index < counts.adult ? 'Adult' : index < counts.adult + counts.child ? 'Child' : 'Infant';
-            
+
             let initialRoomType = '';
-            
+
             if (bookingType === 'Solo Booking') {
                 initialRoomType = 'SINGLE';
             } else if (bookingType === 'Group Booking') {
@@ -130,10 +130,10 @@ export default function BookingUploads({ route, navigation }) {
                     initialRoomType = 'TWIN'; // TWIN is the base/default for group
                 }
             }
-            
+
             if (index === 0 && user) {
                 return {
-                    title: user.title || '', 
+                    title: user.title || '',
                     firstName: user.firstname || '',
                     lastName: user.lastname || '',
                     roomType: initialRoomType,
@@ -141,24 +141,24 @@ export default function BookingUploads({ route, navigation }) {
                 };
             }
             return {
-                title: '', firstName: '', lastName: '', 
-                roomType: initialRoomType, 
+                title: '', firstName: '', lastName: '',
+                roomType: initialRoomType,
                 birthdate: '', passportNo: '', passportExpiry: ''
             };
         });
     });
 
     const [uploads, setUploads] = useState({});
-    const [activeDropdown, setActiveDropdown] = useState(null); 
+    const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
 
     // 🔥 ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
     useEffect(() => {
-        setTravelersData(prevData => 
+        setTravelersData(prevData =>
             prevData.map((traveler, index) => {
                 const travelerType = travelerTypes[index];
-                
+
                 if (isMinorTravelerType(travelerType)) {
                     // Child/Infant must have N/A room type
                     if (traveler.roomType !== 'N/A') {
@@ -200,7 +200,7 @@ export default function BookingUploads({ route, navigation }) {
     };
 
     const currentYear = new Date().getFullYear();
-    const maxBirthDate = new Date(); 
+    const maxBirthDate = new Date();
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
 
@@ -219,7 +219,7 @@ export default function BookingUploads({ route, navigation }) {
     };
 
     const onDateSelected = (event, selectedDate) => {
-        setShowDatePicker(Platform.OS === 'ios'); 
+        setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
             setDatePickerConfig(prev => ({ ...prev, currentDate: selectedDate }));
             if (Platform.OS !== 'ios') {
@@ -250,7 +250,7 @@ export default function BookingUploads({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={BookingUploadsStyle.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                {/* 🔥 DYNAMIC MAIN TITLE 🔥 */}
+
                 <Text style={QuotationAllInStyle.mainTitle}>Upload {travelDocumentLabel}</Text>
                 <Text style={[QuotationAllInStyle.subtitle, { marginBottom: 20 }]}>
                     Please upload a clear image of your {travelDocumentLabel.toLowerCase()} for each traveler.
@@ -260,11 +260,11 @@ export default function BookingUploads({ route, navigation }) {
                     <View key={index} style={BookingUploadsStyle.uploadCard}>
                         <Text style={BookingUploadsStyle.travelerHeader}>Traveler {index + 1} - {travelerTypes[index]}</Text>
                         <Text style={BookingUploadsStyle.cardSubtitle}>Upload {travelDocumentLabel.toLowerCase()} and 2x2 ID photo</Text>
-                        
+
                         <View style={BookingUploadsStyle.formSection}>
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]} 
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]}
                                     onPress={() => setActiveDropdown({ index, type: 'title' })}
                                 >
                                     <Text style={[BookingUploadsStyle.inputText, !t.title && BookingUploadsStyle.placeholderText]}>
@@ -278,8 +278,8 @@ export default function BookingUploads({ route, navigation }) {
                             </View>
 
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]} 
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]}
                                     onPress={() => {
                                         // Only allow room selection for adults and solo bookings
                                         if (bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index])) {
@@ -302,11 +302,10 @@ export default function BookingUploads({ route, navigation }) {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* 🔥 CONDITIONAL PASSPORT FIELDS 🔥 */}
                             {!isDomestic && (
                                 <View style={BookingUploadsStyle.formRow}>
                                     <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Passport number" keyboardType="numeric" maxLength={7} value={t.passportNo} onChangeText={(v) => updateTraveler(index, 'passportNo', v.replace(/[^0-9]/g, ''))} />
-                                    
+
                                     <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'passportExpiry')}>
                                         <Text style={[BookingUploadsStyle.inputText, !t.passportExpiry && BookingUploadsStyle.placeholderText]}>
                                             {t.passportExpiry || 'Passport expiry'}
@@ -319,7 +318,6 @@ export default function BookingUploads({ route, navigation }) {
 
                         <View style={BookingUploadsStyle.uploadRow}>
                             <View style={BookingUploadsStyle.uploadSlot}>
-                                {/* 🔥 DYNAMIC LABEL AND ICON 🔥 */}
                                 <Text style={BookingUploadsStyle.slotLabel}>{travelDocumentLabel.toUpperCase()} PREVIEW</Text>
                                 <TouchableOpacity style={[BookingUploadsStyle.dragger, uploads[index]?.passport && BookingUploadsStyle.draggerActive]} onPress={() => pickImage(index, 'passport')}>
                                     {uploads[index]?.passport ? <Image source={{ uri: uploads[index].passport }} style={BookingUploadsStyle.previewImage} /> : <Ionicons name={isDomestic ? "id-card-outline" : "book-outline"} size={24} color="#305797" />}
@@ -336,7 +334,6 @@ export default function BookingUploads({ route, navigation }) {
                     </View>
                 ))}
 
-                {/* 🔥 DYNAMIC NOTES BOX (MOVED BELOW TRAVELERS) 🔥 */}
                 <View style={BookingUploadsStyle.notesBox}>
                     <Text style={BookingUploadsStyle.notesTitle}>Note for Room Type:</Text>
                     <View style={BookingUploadsStyle.bulletRow}><Text style={BookingUploadsStyle.bullet}>•</Text><Text style={BookingUploadsStyle.notesText}>TWIN and DOUBLE rooms require two travelers to be listed</Text></View>

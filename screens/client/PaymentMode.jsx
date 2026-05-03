@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
@@ -8,6 +8,7 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -57,15 +58,38 @@ export default function PaymentMode({ route, navigation }) {
     const [frequency, setFrequency] = useState('Every 2 weeks');
     const [showFreqDropdown, setShowFreqDropdown] = useState(false);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [invoiceNumber, setInvoiceNumber] = useState('');
 
     const travelerTotal = useMemo(() => {
         const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
         return counts.adult + counts.child + counts.infant;
     }, [setupData]);
 
-    const travelers = setupData?.travelerCounts
+    const travelers = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+
+    console.log("Number of travelers:", travelers);
 
     const totalAmount = setupData?.totalPrice || 0;
+
+    useEffect(() => {
+        const fetchInvoiceNumber = async () => {
+            try {
+                const response = await api.get('/booking/bookings-total-month', withUserHeader(user?._id));
+                const number = response.data?.invoiceNumber;
+                if (number) {
+                    setInvoiceNumber(number);
+                    return;
+                }
+            } catch (error) {
+                console.log('Error fetching monthly invoice number:', error.message);
+            }
+
+            const fallbackMonth = dayjs().format('MM');
+            setInvoiceNumber(`${fallbackMonth}01`);
+        };
+
+        fetchInvoiceNumber();
+    }, [user?._id]);
 
     // 🔥 BULLETPROOF SCHEDULE LOGIC
     const scheduleData = useMemo(() => {
@@ -152,7 +176,49 @@ export default function PaymentMode({ route, navigation }) {
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
 
+    const travelerCountByType = {
+        adult: Number(travelers?.adult || 0),
+        child: Number(travelers?.child || 0),
+        infant: Number(travelers?.infant || 0)
+    };
+
+    const adultRate = Number(setupData?.paymentDetails?.adultRate) || Number(setupData?.pkg?.packagePricePerPax) || ratePerPax;
+    const childRate = Number(setupData?.paymentDetails?.childRate) || Number(setupData?.pkg?.packageChildRate) || ratePerPax;
+    const infantRate = Number(setupData?.paymentDetails?.infantRate) || Number(setupData?.pkg?.packageInfantRate) || ratePerPax;
+
     const packageTitleDisplay = setupData?.pkg?.title || setupData?.pkg?.packageName || 'TOUR PACKAGE';
+
+    const fallbackRate = ratePerPax;
+    const previewInvoiceItems = [
+        travelerCountByType.adult > 0
+            ? { date: issueDate, activity: 'Adult', description: packageTitleDisplay, qty: travelerCountByType.adult, rate: Number(adultRate) || fallbackRate }
+            : null,
+        travelerCountByType.child > 0
+            ? { date: issueDate, activity: 'Child', description: packageTitleDisplay, qty: travelerCountByType.child, rate: Number(childRate) || fallbackRate }
+            : null,
+        travelerCountByType.infant > 0
+            ? { date: issueDate, activity: 'Infant', description: packageTitleDisplay, qty: travelerCountByType.infant, rate: Number(infantRate) || fallbackRate }
+            : null,
+    ].filter(Boolean);
+
+    if (previewInvoiceItems.length === 0) {
+        previewInvoiceItems.push({
+            date: issueDate,
+            activity: 'Adult',
+            description: packageTitleDisplay,
+            qty: travelerTotal || 1,
+            rate: fallbackRate
+        });
+    }
+
+    let previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    const previewTotalAmount = Number(totalAmount || previewSubtotal || 0);
+
+    if (previewInvoiceItems.length > 0 && Math.abs(previewSubtotal - previewTotalAmount) > 0.5) {
+        const firstItemQty = Number(previewInvoiceItems[0].qty || 1);
+        previewInvoiceItems[0].rate = firstItemQty > 0 ? previewTotalAmount / firstItemQty : previewTotalAmount;
+        previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    }
 
     const displayTravelDate = setupData?.selectedDate
         ? setupData.selectedDate
@@ -304,7 +370,7 @@ export default function PaymentMode({ route, navigation }) {
                                         </View>
                                     </View>
                                     <View style={PaymentStyle.invTitleBlock}>
-                                        <Text style={PaymentStyle.invTitleText}>Invoice {issueDate.format('MM')}01</Text>
+                                        <Text style={PaymentStyle.invTitleText}>Invoice {invoiceNumber || `${issueDate.format('MM')}01`}</Text>
                                     </View>
                                 </View>
 
@@ -344,14 +410,16 @@ export default function PaymentMode({ route, navigation }) {
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
                                     </View>
-                                    <View style={PaymentStyle.invTableRow}>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageTitleDisplay}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(ratePerPax)}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalAmount)}</Text>
-                                    </View>
+                                    {previewInvoiceItems.map((item, idx) => (
+                                        <View key={`inv-row-${idx}`} style={PaymentStyle.invTableRow}>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{item.activity}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{item.description}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{item.qty}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(item.rate)}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(Number(item.qty || 0) * Number(item.rate || 0))}</Text>
+                                        </View>
+                                    ))}
                                 </View>
 
                                 <View style={PaymentStyle.invFooter}>

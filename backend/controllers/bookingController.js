@@ -75,18 +75,19 @@ export const getUserBookings = async (req, res) => {
 };
 
 export const getBookingsTotalBaseOnMonth = async (req, res) => {
-    const userId = req.userId;
-
     try {
-        const startOfMonth = dayjs().startOf('month').toDate();
-        const endOfMonth = dayjs().endOf('month').toDate();
+        const currentMonth = dayjs();
+        const startOfMonth = currentMonth.startOf('month').toDate();
+        const endOfMonth = currentMonth.endOf('month').toDate();
 
         const totalBookings = await Booking.countDocuments({
-            userId,
             createdAt: { $gte: startOfMonth, $lte: endOfMonth }
         });
 
-        res.status(200).json({ totalBookings });
+        const monthKey = currentMonth.format('MM');
+        const invoiceNumber = `${monthKey}${String(totalBookings + 1).padStart(2, '0')}`;
+
+        res.status(200).json({ totalBookings, invoiceNumber, monthKey });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching bookings total', error });
     }

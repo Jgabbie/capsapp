@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Linking from 'expo-linking';
 import dayjs from "dayjs";
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
@@ -11,6 +12,8 @@ import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
+
+dayjs.extend(customParseFormat);
 
 export default function PaymentMethod({ route, navigation }) {
     const { user } = useUser();
@@ -167,7 +170,13 @@ export default function PaymentMethod({ route, navigation }) {
                     parsedEndDate = rawDate.endDate || rawDate.startDate;
                 }
 
-                const travelDateObj = { startDate: dayjs(parsedStartDate).format('YYYY-MM-DD'), endDate: dayjs(parsedEndDate).format('YYYY-MM-DD') };
+                const start = dayjs(parsedStartDate, "MMMM D, YYYY");
+                const end = dayjs(parsedEndDate, "MMMM D, YYYY");
+
+                const travelDateObj = {
+                    startDate: start.isValid() ? start.format('YYYY-MM-DD') : null,
+                    endDate: end.isValid() ? end.format('YYYY-MM-DD') : null
+                };
 
                 const travelerUploads = route.params?.travelerUploads || {};
 
@@ -235,6 +244,7 @@ export default function PaymentMethod({ route, navigation }) {
                     lastName: p.lastName || 'User',
                     roomType: p.room || p.roomType || 'N/A',
                     age: p.age?.toString() || '0',
+                    ageCategory: p.ageCategory,
                     birthday: p.bday || p.birthday || p.birthdate || null,
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
@@ -242,7 +252,10 @@ export default function PaymentMethod({ route, navigation }) {
                     photoFile: uploadedTravelerFiles[idx]?.photo || null
                 }));
 
+                console.log("Mapped Travelers for Booking Payload:", mappedTravelers);
+
                 const mappedBookingDetails = {
+                    bookingType: mappedTravelers.length > 1 ? "Group Booking" : "Solo Booking",
                     dateOfRegistration: dayjs().toISOString(),
                     travelDate: travelDateObj,
                     tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
@@ -268,11 +281,16 @@ export default function PaymentMethod({ route, navigation }) {
                     emergencyRelation: emergency?.relation || "N/A",
                     emergencyTitle: emergency?.title || "MR",
                     paymentDetails: {
+                        adultRate: setupData?.pkg?.adultPrice || setupData?.packagePricePerPax || 0,
+                        childRate: setupData?.pkg?.childPrice || setupData?.childRate || 0,
+                        infantRate: setupData?.pkg?.infantPrice || setupData?.infantRate || 0,
                         paymentType: paymentType || 'deposit',
                         frequency: frequency || 'Every 2 weeks',
                         depositAmount: depositAmount
                     }
                 };
+
+                console.log("Final Booking Payload Payment Details:", mappedBookingDetails.paymentDetails);
 
                 // Array of Objects format for the Mongoose schema compatibility
                 const travelersPayload =
