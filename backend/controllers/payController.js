@@ -796,7 +796,6 @@ export const createCheckoutSessionVisa = async (req, res) => {
 
 export const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
-    console.log('Received createCheckoutSessionDeposit request with body:', req.body); // Debug log for incoming request body
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -837,8 +836,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents; //total amount with convenience fee
 
-        const username = await UserModel.findById(userId).select('username');
-        const email = await UserModel.findById(userId).select('email');
+        const username = await User.findById(userId).select('username');
+        const email = await User.findById(userId).select('email');
 
 
         //currently not being used
