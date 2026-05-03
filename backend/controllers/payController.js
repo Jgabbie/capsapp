@@ -524,6 +524,144 @@ export const createManualPaymentDeposit = async (req, res) => {
 
 
 
+//MANUAL PAYMENT FOR QUOTATION BOOKINGS
+const createManualPaymentQuotation = async (req, res) => {
+    const userId = req.userId;
+    try {
+        const {
+            bookingId,
+            quotationId,
+            packageId,
+            amount,
+            proofImage,
+            proofImageType,
+            proofFileName,
+        } = req.body;
+
+        const token = crypto.randomUUID();
+
+        const tokenCheckout = await TokenCheckout.create({
+            token,
+            userId,
+            bookingId,
+            amount,
+            expiresAt: dayjs().add(5, 'minutes').toDate()
+        });
+
+        const reference = generateTransactionReference();
+
+        if (!proofImage || !proofImageType) {
+            return res.status(400).json({ error: "Proof of payment image is required." });
+        }
+
+        const transaction = await TransactionModel.create({
+            bookingId,
+            packageId,
+            userId,
+            reference,
+            amount,
+            method: 'Manual',
+            status: 'Pending',
+            proofImage,
+            proofImageType,
+            proofFileName,
+        });
+
+        const booking = await BookingModel.findById(bookingId);
+        const bookingStart = dayjs(booking.travelDate.startDate).format('YYYY-MM-DD');
+        const bookingEnd = dayjs(booking.travelDate.endDate).format('YYYY-MM-DD');
+        booking.status = 'Pending'
+        booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
+
+        const quotation = await QuotationModel.findById(quotationId);
+
+        quotation.status = 'Booked';
+        await quotation.save();
+
+
+        const packageDoc = await PackageModel.findById(packageId);
+
+        const user = await UserModel.findById(userId).select('email username');
+
+
+        await Notification.create({
+            userId: user._id,
+            title: 'Booking Quotation Confirmed',
+            message: `Your manual payment for booking ${booking.reference} has been received and is currently pending verification by our team. We will notify you once the verification is complete. This will take 1-2 business days. Thank you for your patience!`,
+            type: 'booking',
+            link: '/user-bookings',
+        });
+
+
+        try {
+            await transporter.sendMail({
+                from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+                to: user.email,
+                subject: `Booking Quotation ${booking.reference} Confirmed`,
+                html: `
+                        <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
+                        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+
+                            <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
+
+                            <h2 style="color:#305797; margin-bottom:10px;">
+                                Booking Quotation Confirmed!
+                            </h2>
+
+                            <p style="color:#555; font-size:16px;">
+                                Hello <b>${user.username}</b>,
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+                                Your manual payment has been received and is currently pending verification by our team. We will notify you once the verification is complete. This will take 1-2 business days. Thank you for your patience!
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+                                <b>Booking Reference:</b> ${booking.reference} <br/>
+                                <b>Package:</b> ${packageDoc.packageName} <br/>
+                                <b>Travel Dates:</b> ${bookingStart} to ${bookingEnd} <br/>
+                                <b>Total Paid:</b> ₱${amount.toFixed(2)}
+
+                                <p> Enjoy your trip and thank you for choosing M&RC Travel and Tours! </p>
+                            </p>
+
+                            <p style="color:#777; font-size:13px; margin-top:30px;">
+                                If you did not book this trip, please ignore this email.
+                            </p>
+
+                            <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
+
+                            <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
+                                <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
+                                <p>M&RC Travel and Tours</p>
+                                <p>info1@mrctravels.com</p>
+                                <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                    `
+            });
+        } catch (emailError) {
+            console.error('Failed to send booking email:', emailError);
+        }
+
+        logAction('MANUAL_PAYMENT', userId, { "Manual Payment Submitted": `Transaction Reference: ${transaction.reference} | Amount: ₱${amount.toFixed(2)} | Payment Purpose: Quotation Booking` });
+
+        return res.status(200).json({
+            redirectUrl: `/booking-payment/success?token=${token}`
+        });
+
+    } catch (error) {
+        console.error('Manual payment error:', error.message);
+        return res.status(500).json({ error: 'Failed to submit manual payment.' });
+    }
+};
+
+
+
+
+
 
 
 
@@ -907,6 +1045,108 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
 
 
+
+//CHECKOUT FOR QUOTATION BOOKINGS
+const createCheckoutSessionQuotation = async (req, res) => {
+    const userId = req.userId;
+    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+    const paymentType = "qr_ph"
+
+    try {
+        if (!process.env.PAYMONGO_SECRET_KEY) {
+            return res.status(500).json({ error: "PayMongo secret key is not configured." });
+        }
+
+        const { quotationId, paymentToken } = req.body;
+
+
+        if (!paymentToken) {
+            return res.status(400).json({ error: "Missing payment token" });
+        }
+
+        const tokenDoc = await TokenCheckout.findOne({ token: paymentToken });
+        if (!tokenDoc) return res.status(404).json({ error: "Invalid payment token" });
+
+
+        if (dayjs().isAfter(dayjs(tokenDoc.expiresAt))) {
+            return res.status(400).json({ error: "Payment token expired" });
+        }
+
+        const booking = await BookingModel.findById(tokenDoc.bookingId).populate('packageId');
+        if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+        if (dayjs().isAfter(dayjs(booking.expiresAt))) {
+            return res.status(400).json({ error: "Booking expired" });
+        }
+
+        const packageName = booking.packageId.packageName;
+        const totalPrice = tokenDoc.amount;
+
+
+        const baseAmountCents = Math.round(totalPrice * 100);
+        const convenienceFeeCents = Math.round(baseAmountCents * 0.035 + 1500);
+        const finalTotalCents = baseAmountCents + convenienceFeeCents;
+
+        const metadata = {
+            userId: tokenDoc.userId,
+            bookingId: booking._id,
+            quotationId,
+            bookingReference: booking.reference,
+            transactionType: "Quotation Payment",
+            baseAmountCents,
+            convenienceFeeCents,
+            totalAmountCents: finalTotalCents,
+        };
+
+
+        const response = await apiFetch.post(
+            "https://api.paymongo.com/v1/checkout_sessions",
+            {
+                data: {
+                    attributes: {
+                        billing: {
+                            name: "Test User",
+                            email: "test@example.com",
+                        },
+                        line_items: [
+                            {
+                                name: packageName || 'Tour Package',
+                                quantity: 1,
+                                amount: baseAmountCents,
+                                currency: "PHP",
+                            },
+                            {
+                                name: "Convenience Fee",
+                                description: "Payment processing and service fee",
+                                quantity: 1,
+                                amount: convenienceFeeCents,
+                                currency: "PHP",
+                            }
+                        ],
+                        payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                        success_url: successUrl,
+                        cancel_url: cancelUrl,
+                        metadata,
+                        show_description: true,
+                        show_line_items: true,
+                    },
+                },
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ":").toString("base64")}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        res.json(response);
+    } catch (error) {
+        console.error("PayMongo error:", error.response?.data || error.message);
+        res.status(500).json({ error: error.response?.data || error.message });
+    }
+};
 
 
 

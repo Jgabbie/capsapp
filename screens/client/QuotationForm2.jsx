@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import { useUser } from '../../context/UserContext'; 
+import { useUser } from '../../context/UserContext';
 
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
@@ -12,14 +12,21 @@ const formatLongDate = (dateVal) => {
 
 export default function QuotationForm2({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, passengers, leadGuestInfo } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo } = route.params || {};
+
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+
+    const packageName = quotation?.packageId?.packageName || 'N/A'
+    const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
+
 
     const currentDateLong = formatLongDate(new Date());
 
     const [medicalData, setMedicalData] = useState({
-        dietary: '', 
+        dietary: '',
         dietaryDetails: '',
-        medical: '', 
+        medical: '',
         medicalDetails: '',
         insurance1: '',
         insurance2: '',
@@ -32,12 +39,12 @@ export default function QuotationForm2({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
 
     const isValidEmail = (email) => {
-        if (!email) return true; 
+        if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
     };
 
     const isValidContact = (contact) => {
-        if (!contact) return true; 
+        if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
         if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
         if (digits.length === 11 && digits.startsWith("09")) return true;
@@ -68,28 +75,28 @@ export default function QuotationForm2({ route, navigation }) {
             return Alert.alert("Invalid Input", "Please enter a valid 10 or 11 digit contact number.");
         }
 
-        navigation.navigate("quotationform3", { ...route.params, medicalData, emergency });
+        navigation.navigate("quotationform3", { ...route.params, medicalData, emergency, quotation });
     };
 
     const handleDropdownSelect = (value) => {
         if (activeDropdown === 'dietary') {
             setMedicalData({
-                ...medicalData, 
-                dietary: value, 
+                ...medicalData,
+                dietary: value,
                 dietaryDetails: value === 'N' ? 'N/A' : (medicalData.dietaryDetails === 'N/A' ? '' : medicalData.dietaryDetails)
             });
         } else if (activeDropdown === 'medical') {
             setMedicalData({
-                ...medicalData, 
-                medical: value, 
+                ...medicalData,
+                medical: value,
                 medicalDetails: value === 'N' ? 'N/A' : (medicalData.medicalDetails === 'N/A' ? '' : medicalData.medicalDetails)
             });
         } else if (activeDropdown === 'insurance1') {
-            setMedicalData({...medicalData, insurance1: value});
+            setMedicalData({ ...medicalData, insurance1: value });
         } else if (activeDropdown === 'insurance2') {
-            setMedicalData({...medicalData, insurance2: value});
+            setMedicalData({ ...medicalData, insurance2: value });
         } else if (activeDropdown === 'emergencyTitle') {
-            setEmergency({...emergency, title: value});
+            setEmergency({ ...emergency, title: value });
         }
         setActiveDropdown(null);
     };
@@ -123,10 +130,10 @@ export default function QuotationForm2({ route, navigation }) {
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={QuotationFormStepStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={QuotationFormStepStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={QuotationFormStepStyle.logo} />
-                    
+
                     <View style={QuotationFormStepStyle.headerGold}>
                         <Text style={QuotationFormStepStyle.headerGoldText}>TRAVEL REGISTRATION DETAILS</Text>
                     </View>
@@ -134,8 +141,8 @@ export default function QuotationForm2({ route, navigation }) {
                         Instructions: Please fill-up and write your answers inside each box.
                     </Text>
 
-                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 4 }]}>TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.pkg?.packageName || setupData?.pkg?.title || ''}</Text></Text>
-                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 15 }]}>PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.selectedDate}</Text></Text>
+                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 4 }]}>TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{packageName}</Text></Text>
+                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 15 }]}>PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{packageTravelDate}</Text></Text>
 
                     <View style={QuotationFormStepStyle.row}>
                         <View style={{ flex: 1 }}>
@@ -149,11 +156,11 @@ export default function QuotationForm2({ route, navigation }) {
 
                     <View style={[QuotationFormStepStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
                             multiline
                             value={medicalData.dietaryDetails}
-                            onChangeText={(v) => setMedicalData({...medicalData, dietaryDetails: v})}
+                            onChangeText={(v) => setMedicalData({ ...medicalData, dietaryDetails: v })}
                             editable={medicalData.dietary === 'Y'}
                             backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'}
                         />
@@ -171,11 +178,11 @@ export default function QuotationForm2({ route, navigation }) {
 
                     <View style={[QuotationFormStepStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
                             multiline
                             value={medicalData.medicalDetails}
-                            onChangeText={(v) => setMedicalData({...medicalData, medicalDetails: v})}
+                            onChangeText={(v) => setMedicalData({ ...medicalData, medicalDetails: v })}
                             editable={medicalData.medical === 'Y'}
                         />
                     </View>
@@ -219,7 +226,7 @@ export default function QuotationForm2({ route, navigation }) {
                     <View style={{ backgroundColor: '#ADD8E6', borderWidth: 1, borderColor: '#000', paddingVertical: 4, paddingHorizontal: 5 }}>
                         <Text style={QuotationFormStepStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
                     </View>
-                    
+
                     <View style={{ borderWidth: 1, borderTopWidth: 0, borderColor: '#000' }}>
                         <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#000' }}>
                             <View style={{ flex: 0.8, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
@@ -230,33 +237,33 @@ export default function QuotationForm2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 2, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Full name: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({...emergency, fullName: v})} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({ ...emergency, fullName: v })} />
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Email: </Text>
-                                <TextInput 
-                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }} 
+                                <TextInput
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
-                                    value={emergency.email} 
-                                    onChangeText={(v) => setEmergency({...emergency, email: v.replace(/\s/g, '')})} 
+                                    value={emergency.email}
+                                    onChangeText={(v) => setEmergency({ ...emergency, email: v.replace(/\s/g, '') })}
                                 />
                             </View>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Contact Number: </Text>
-                                <TextInput 
-                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: contactHasError ? '#b54747' : '#000' }} 
-                                    keyboardType="phone-pad" 
+                                <TextInput
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: contactHasError ? '#b54747' : '#000' }}
+                                    keyboardType="phone-pad"
                                     maxLength={11}
-                                    value={emergency.contact} 
-                                    onChangeText={(v) => setEmergency({...emergency, contact: v.replace(/[^0-9]/g, '')})} 
+                                    value={emergency.contact}
+                                    onChangeText={(v) => setEmergency({ ...emergency, contact: v.replace(/[^0-9]/g, '') })}
                                 />
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Relation: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({...emergency, relation: v})} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v })} />
                             </View>
                         </View>
                     </View>
@@ -277,7 +284,7 @@ export default function QuotationForm2({ route, navigation }) {
                     <TouchableOpacity style={QuotationAllInStyle.proceedButton} onPress={handleNext}>
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity style={QuotationFormStepStyle.backTextButton} onPress={() => navigation.goBack()}>
                         <Text style={QuotationFormStepStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
@@ -285,9 +292,9 @@ export default function QuotationForm2({ route, navigation }) {
             </ScrollView>
 
             <Modal visible={!!activeDropdown} transparent animationType="fade">
-                <TouchableOpacity 
-                    style={QuotationFormStepStyle.modalOverlay} 
-                    activeOpacity={1} 
+                <TouchableOpacity
+                    style={QuotationFormStepStyle.modalOverlay}
+                    activeOpacity={1}
                     onPress={() => setActiveDropdown(null)}
                 >
                     <View style={QuotationFormStepStyle.dropdownBox}>

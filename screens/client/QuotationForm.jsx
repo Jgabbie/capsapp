@@ -33,18 +33,18 @@ const toImageUrl = (source) => {
 };
 
 // Time Picker Lists
-const hoursList = Array.from({length: 12}, (_, i) => (i + 1).toString().padStart(2, '0'));
-const minutesList = Array.from({length: 60}, (_, i) => i.toString().padStart(2, '0'));
+const hoursList = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+const minutesList = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 const periodsList = ['AM', 'PM'];
 
 export default function QuotationForm({ route, navigation }) {
     const { user } = useUser();
     const today = dayjs();
-    
+
     // Data Extraction
     const { pkg, packageId: routePackageId, id: routeId } = route.params || {};
     const finalPackageId = pkg?._id || pkg?.id || routePackageId || routeId;
-    
+
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,12 +83,11 @@ export default function QuotationForm({ route, navigation }) {
     const [packageCategory, setPackageCategory] = useState("All in Package");
     const [preferredAirlines, setPreferredAirlines] = useState("");
     const [preferredHotels, setPreferredHotels] = useState("");
-    const [preferredDate, setPreferredDate] = useState(""); 
+    const [preferredDate, setPreferredDate] = useState("");
     const [budgetRange, setBudgetRange] = useState([minBudget, maxBudget]);
     const [itineraryNotes, setItineraryNotes] = useState(itineraryLabels.map(() => ""));
     const [additionalComments, setAdditionalComments] = useState("");
-    
-    // 🔥 NEW: TRAVELER STATES MATCHING WEB 🔥
+
     const [travelerType, setTravelerType] = useState('solo');
     const [adultCount, setAdultCount] = useState(2);
     const [childCount, setChildCount] = useState(0);
@@ -98,7 +97,7 @@ export default function QuotationForm({ route, navigation }) {
     const [flightAirline, setFlightAirline] = useState("");
     const [flightDate, setFlightDate] = useState("");
     const [flightTime, setFlightTime] = useState("");
-    
+
     const [tempHour, setTempHour] = useState("12");
     const [tempMinute, setTempMinute] = useState("00");
     const [tempPeriod, setTempPeriod] = useState("PM");
@@ -169,19 +168,19 @@ export default function QuotationForm({ route, navigation }) {
     // --- VALIDATION LOGIC ---
     const validate = () => {
         let newErrors = {};
-        
+
         const totalTravelers = travelerType === 'solo' ? 1 : Math.max(0, adultCount) + Math.max(0, childCount) + Math.max(0, infantCount);
 
         if (!totalTravelers || totalTravelers < 1) newErrors.travelers = "Please enter the number of travelers";
         if (totalTravelers > maxAllowed) newErrors.travelers = `Total travelers exceed allowed maximum (${maxAllowed}).`;
-        
+
         if (packageCategory !== 'Land Arrangement') {
             if (!preferredAirlines.trim() && airlines.length > 0) newErrors.preferredAirlines = "Please provide your preferred airlines";
         }
-        
+
         if (!preferredHotels.trim()) newErrors.preferredHotels = "Please provide your preferred hotels";
         if (!preferredDate) newErrors.preferredDate = "Please select your preferred date";
-        
+
         if (packageCategory === 'Land Arrangement') {
             if (!flightAirline.trim()) newErrors.flightAirline = "Please provide your airline";
             if (!flightDate) newErrors.flightDate = "Please select flight date";
@@ -216,8 +215,8 @@ export default function QuotationForm({ route, navigation }) {
             }
 
             // Structured traveler count exactly like the web
-            const travelersPayload = travelerType === 'solo' 
-                ? { adult: 1, child: 0, infant: 0 } 
+            const travelersPayload = travelerType === 'solo'
+                ? { adult: 1, child: 0, infant: 0 }
                 : { adult: adultCount, child: childCount, infant: infantCount };
 
             const totalTravelers =
@@ -226,7 +225,7 @@ export default function QuotationForm({ route, navigation }) {
                 (Number(travelersPayload.infant) || 0);
 
             // The core data object - synced with the backend quotation form fields
-            const detailsObject = { 
+            const detailsObject = {
                 travelers: travelersPayload,
                 travelersCount: totalTravelers,
                 preferredAirlines,
@@ -253,7 +252,7 @@ export default function QuotationForm({ route, navigation }) {
             console.log("📤 Sending Quotation Payload:", JSON.stringify(payload, null, 2));
 
             await api.post("/quotation/create-quotation", payload, withUserHeader(user?._id));
-            
+
             setSuccessModalVisible(true);
         } catch (error) {
             const backendError = error.response?.data?.message || error.response?.data?.error || JSON.stringify(error.response?.data) || "Failed to submit request.";
@@ -275,7 +274,7 @@ export default function QuotationForm({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView style={QuotationFormStyle.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-                
+
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
                     <Ionicons name="arrow-back" size={20} color="#305797" />
                     <Text style={{ color: "#305797", fontFamily: "Montserrat_600SemiBold", marginLeft: 8 }}>Back</Text>
@@ -289,22 +288,22 @@ export default function QuotationForm({ route, navigation }) {
 
                 {/* --- PACKAGE INFO DISPLAY --- */}
                 <View style={QuotationFormStyle.infoCard}>
-                    
+
                     {/* 🔥 LIVE SCROLLING EXPO-IMAGES HERE */}
                     {images.length > 0 && (
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
                             {images.map((img, idx) => (
-                                <Image 
-                                    key={idx} 
-                                    source={toImageUrl(img)} 
-                                    style={[QuotationFormStyle.coverImage, { width: 280, marginRight: 12 }]} 
-                                    contentFit="cover" 
+                                <Image
+                                    key={idx}
+                                    source={toImageUrl(img)}
+                                    style={[QuotationFormStyle.coverImage, { width: 280, marginRight: 12 }]}
+                                    contentFit="cover"
                                     transition={300}
                                 />
                             ))}
                         </ScrollView>
                     )}
-                    
+
                     <View style={QuotationFormStyle.infoRow}>
                         <View style={QuotationFormStyle.infoTag}>
                             <Text style={QuotationFormStyle.infoTagText}>{packageType.toUpperCase()}</Text>
@@ -337,8 +336,8 @@ export default function QuotationForm({ route, navigation }) {
                 {/* --- ARRANGEMENT SELECTOR --- */}
                 <View style={QuotationFormStyle.section}>
                     <SectionHeader number={1} title="Select Arrangement Type" />
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                         style={[QuotationFormStyle.selectionCard, packageCategory === 'All in Package' && QuotationFormStyle.selectionCardActive]}
                         onPress={() => setPackageCategory('All in Package')}
                     >
@@ -346,7 +345,7 @@ export default function QuotationForm({ route, navigation }) {
                         <Text style={QuotationFormStyle.selectionDesc}>This selection includes flights, hotel, and tours.</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[QuotationFormStyle.selectionCard, packageCategory === 'Land Arrangement' && QuotationFormStyle.selectionCardActive]}
                         onPress={() => setPackageCategory('Land Arrangement')}
                     >
@@ -359,8 +358,8 @@ export default function QuotationForm({ route, navigation }) {
                 <View style={QuotationFormStyle.section}>
                     <SectionHeader number={2} title={'Select If "Solo Booking" or "Group Booking"'} />
                     <Text style={{ color: '#444', marginTop: 2, marginBottom: 8 }}>Maximum allowed: {maxAllowed} passenger{maxAllowed > 1 ? 's' : ''}</Text>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                         style={[QuotationFormStyle.selectionCard, travelerType === 'solo' && QuotationFormStyle.selectionCardActive]}
                         onPress={() => setTravelerType('solo')}
                     >
@@ -368,8 +367,8 @@ export default function QuotationForm({ route, navigation }) {
                         <Text style={QuotationFormStyle.selectionDesc}>If you are a solo traveler, an additional single supplement rate may apply.</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
-                        style={[QuotationFormStyle.selectionCard, travelerType === 'group' && QuotationFormStyle.selectionCardActive, {marginBottom: 10}]}
+                    <TouchableOpacity
+                        style={[QuotationFormStyle.selectionCard, travelerType === 'group' && QuotationFormStyle.selectionCardActive, { marginBottom: 10 }]}
                         onPress={() => setTravelerType('group')}
                     >
                         <Text style={QuotationFormStyle.selectionTitle}>Group</Text>
@@ -401,7 +400,7 @@ export default function QuotationForm({ route, navigation }) {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-                            
+
                             <View style={QuotationFormStyle.travelerCounterRow}>
                                 <Text style={QuotationFormStyle.travelerCounterLabel}>Child</Text>
                                 <View style={QuotationFormStyle.travelerCounterControls}>
@@ -459,8 +458,8 @@ export default function QuotationForm({ route, navigation }) {
 
                     {packageCategory === 'All in Package' && (
                         <View style={QuotationFormStyle.inputGroup}>
-                            <Text style={QuotationFormStyle.inputLabel}>Preferred Airlines <Text style={{color: 'red'}}>*</Text></Text>
-                            <TouchableOpacity 
+                            <Text style={QuotationFormStyle.inputLabel}>Preferred Airlines <Text style={{ color: 'red' }}>*</Text></Text>
+                            <TouchableOpacity
                                 style={[QuotationFormStyle.dropdownButton, errors.preferredAirlines && QuotationFormStyle.inputErrorBorder]}
                                 onPress={() => setAirlineModalOpen(true)}
                             >
@@ -475,8 +474,8 @@ export default function QuotationForm({ route, navigation }) {
                     )}
 
                     <View style={QuotationFormStyle.inputGroup}>
-                        <Text style={QuotationFormStyle.inputLabel}>Preferred Hotels <Text style={{color: 'red'}}>*</Text></Text>
-                        <TouchableOpacity 
+                        <Text style={QuotationFormStyle.inputLabel}>Preferred Hotels <Text style={{ color: 'red' }}>*</Text></Text>
+                        <TouchableOpacity
                             style={[QuotationFormStyle.dropdownButton, errors.preferredHotels && QuotationFormStyle.inputErrorBorder]}
                             onPress={() => setHotelModalOpen(true)}
                         >
@@ -491,8 +490,8 @@ export default function QuotationForm({ route, navigation }) {
 
                     {/* 🔥 UPDATED DATES TO MATCH WEB SELECTOR 🔥 */}
                     <View style={QuotationFormStyle.inputGroup}>
-                        <Text style={QuotationFormStyle.inputLabel}>Preferred Travel Dates <Text style={{color: 'red'}}>*</Text></Text>
-                        <TouchableOpacity 
+                        <Text style={QuotationFormStyle.inputLabel}>Preferred Travel Dates <Text style={{ color: 'red' }}>*</Text></Text>
+                        <TouchableOpacity
                             style={[QuotationFormStyle.dropdownButton, errors.preferredDate && QuotationFormStyle.inputErrorBorder]}
                             onPress={() => setDateModalOpen(true)}
                         >
@@ -505,7 +504,7 @@ export default function QuotationForm({ route, navigation }) {
                     </View>
 
                     <View style={QuotationFormStyle.inputGroup}>
-                        <Text style={QuotationFormStyle.inputLabel}>Budget Range (Per Pax) <Text style={{color: 'red'}}>*</Text></Text>
+                        <Text style={QuotationFormStyle.inputLabel}>Budget Range (Per Pax) <Text style={{ color: 'red' }}>*</Text></Text>
                         <View style={QuotationFormStyle.budgetRow}>
                             <Text style={QuotationFormStyle.budgetValue}>₱ {budgetRange[0].toLocaleString()}</Text>
                             <Text style={QuotationFormStyle.budgetValue}>₱ {budgetRange[1].toLocaleString()}</Text>
@@ -537,8 +536,8 @@ export default function QuotationForm({ route, navigation }) {
                         <Text style={QuotationFormStyle.sectionTitle}>Flight Details</Text>
 
                         <View style={[QuotationFormStyle.inputGroup, { marginTop: 15 }]}>
-                            <Text style={QuotationFormStyle.inputLabel}>Airline <Text style={{color: 'red'}}>*</Text></Text>
-                            <TextInput 
+                            <Text style={QuotationFormStyle.inputLabel}>Airline <Text style={{ color: 'red' }}>*</Text></Text>
+                            <TextInput
                                 style={[QuotationFormStyle.textInput, errors.flightAirline && QuotationFormStyle.inputErrorBorder]}
                                 placeholder="Enter airline name"
                                 value={flightAirline}
@@ -548,8 +547,8 @@ export default function QuotationForm({ route, navigation }) {
                         </View>
 
                         <View style={QuotationFormStyle.inputGroup}>
-                            <Text style={QuotationFormStyle.inputLabel}>Flight Date <Text style={{color: 'red'}}>*</Text></Text>
-                            <TouchableOpacity 
+                            <Text style={QuotationFormStyle.inputLabel}>Flight Date <Text style={{ color: 'red' }}>*</Text></Text>
+                            <TouchableOpacity
                                 style={[QuotationFormStyle.dropdownButton, errors.flightDate && QuotationFormStyle.inputErrorBorder]}
                                 onPress={() => setFlightDateModalOpen(true)}
                             >
@@ -562,8 +561,8 @@ export default function QuotationForm({ route, navigation }) {
                         </View>
 
                         <View style={QuotationFormStyle.inputGroup}>
-                            <Text style={QuotationFormStyle.inputLabel}>Flight Time <Text style={{color: 'red'}}>*</Text></Text>
-                            <TouchableOpacity 
+                            <Text style={QuotationFormStyle.inputLabel}>Flight Time <Text style={{ color: 'red' }}>*</Text></Text>
+                            <TouchableOpacity
                                 style={[QuotationFormStyle.dropdownButton, errors.flightTime && QuotationFormStyle.inputErrorBorder]}
                                 onPress={() => setFlightTimeModalOpen(true)}
                             >
@@ -615,11 +614,11 @@ export default function QuotationForm({ route, navigation }) {
                     <SectionHeader number={notesSectionNumber} title="Provide comments or details about the itinerary for possible changes" />
                     <Text style={[QuotationFormStyle.sectionTitle, { marginTop: 6 }]}>Itinerary Notes</Text>
                     <Text style={[QuotationFormStyle.helperNote, { marginBottom: 18, marginTop: 2 }]}>Provide any additional information or modifications you would like to make to the itinerary.</Text>
-                    
+
                     {itineraryLabels.map((label, index) => (
                         <View key={index} style={QuotationFormStyle.inputGroup}>
                             <Text style={QuotationFormStyle.inputLabel}>{label}</Text>
-                            <TextInput 
+                            <TextInput
                                 style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea, errors.itineraryNotes && !itineraryNotes[index].trim() && QuotationFormStyle.inputErrorBorder]}
                                 placeholder={`Notes for ${label.toLowerCase()}. Type "NONE" if no changes`}
                                 multiline
@@ -632,11 +631,11 @@ export default function QuotationForm({ route, navigation }) {
                             />
                         </View>
                     ))}
-                    {errors.itineraryNotes && <Text style={[QuotationFormStyle.errorText, {marginTop: -10, marginBottom: 15}]}>{errors.itineraryNotes}</Text>}
+                    {errors.itineraryNotes && <Text style={[QuotationFormStyle.errorText, { marginTop: -10, marginBottom: 15 }]}>{errors.itineraryNotes}</Text>}
 
                     <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444', marginTop: 4, marginBottom: 14 }]}>Note: If you wish to not have any changes in the following Itinerary, kindly type "NONE" in the fields of the Itinerary notes.</Text>
                     <Text style={[QuotationFormStyle.inputLabel, { marginTop: 4, marginBottom: 8 }]}>Additional Comments</Text>
-                    <TextInput 
+                    <TextInput
                         style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea]}
                         placeholder="Anything else we should know?"
                         multiline
@@ -644,8 +643,8 @@ export default function QuotationForm({ route, navigation }) {
                         onChangeText={setAdditionalComments}
                     />
 
-                    <TouchableOpacity 
-                        style={QuotationFormStyle.submitButton} 
+                    <TouchableOpacity
+                        style={QuotationFormStyle.submitButton}
                         onPress={handleSubmit}
                         disabled={isSubmitting}
                     >
@@ -659,7 +658,7 @@ export default function QuotationForm({ route, navigation }) {
             </ScrollView>
 
             {/* ================= MODALS FOR SELECTORS ================= */}
-            
+
             {/* AIRLINE MODAL */}
             <Modal visible={isAirlineModalOpen} transparent animationType="fade">
                 <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setAirlineModalOpen(false)}>
@@ -694,7 +693,6 @@ export default function QuotationForm({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/* 🔥 NEW DATE MODAL: MATCHES WEB SELECTOR WITH SLOTS 🔥 */}
             <Modal visible={isDateModalOpen} transparent animationType="fade">
                 <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setDateModalOpen(false)}>
                     <TouchableWithoutFeedback>
@@ -709,20 +707,20 @@ export default function QuotationForm({ route, navigation }) {
                                         .map((range, i) => {
                                             const rangeString = `${formatDate(range.startdaterange)} - ${formatDate(range.enddaterange)}`;
                                             const hasSlots = Number(range.slots) > 0;
-                                            
+
                                             return (
-                                                <TouchableOpacity 
-                                                    key={i} 
-                                                    style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0', backgroundColor: hasSlots ? '#fff' : '#f9f9f9', opacity: hasSlots ? 1 : 0.5 }} 
+                                                <TouchableOpacity
+                                                    key={i}
+                                                    style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0', backgroundColor: hasSlots ? '#fff' : '#f9f9f9', opacity: hasSlots ? 1 : 0.5 }}
                                                     disabled={!hasSlots}
-                                                            onPress={() => { 
-                                                                        const nextSlotCapacity = Number(range.slots) || 0;
-                                                                setPreferredDate(`${rangeString} (Slots: ${range.slots})`);
-                                                                        // Save the numeric slot capacity for enforcement and trim traveler counts if needed.
-                                                                        setSelectedSlotCapacity(nextSlotCapacity);
-                                                                        clampTravelerCountsToSlot(nextSlotCapacity);
-                                                                setDateModalOpen(false); 
-                                                            }}
+                                                    onPress={() => {
+                                                        const nextSlotCapacity = Number(range.slots) || 0;
+                                                        setPreferredDate(`${rangeString}`);
+                                                        // Save the numeric slot capacity for enforcement and trim traveler counts if needed.
+                                                        setSelectedSlotCapacity(nextSlotCapacity);
+                                                        clampTravelerCountsToSlot(nextSlotCapacity);
+                                                        setDateModalOpen(false);
+                                                    }}
                                                 >
                                                     <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
                                                     <Text style={{ fontFamily: 'Roboto_400Regular', color: hasSlots ? '#305797' : '#e74c3c', textAlign: 'center', fontSize: 12, marginTop: 4 }}>
@@ -744,10 +742,10 @@ export default function QuotationForm({ route, navigation }) {
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
                             <Text style={{ textAlign: 'center', fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>Select Flight Date</Text>
-                            <Calendar 
-                                onDayPress={(day) => { setFlightDate(day.dateString); setFlightDateModalOpen(false); }} 
+                            <Calendar
+                                onDayPress={(day) => { setFlightDate(day.dateString); setFlightDateModalOpen(false); }}
                                 theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
-                                minDate={new Date().toISOString().split('T')[0]} 
+                                minDate={new Date().toISOString().split('T')[0]}
                             />
                         </View>
                     </TouchableWithoutFeedback>
@@ -760,19 +758,19 @@ export default function QuotationForm({ route, navigation }) {
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '85%', padding: 20 }]}>
                             <Text style={{ textAlign: 'center', fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#305797', marginBottom: 15 }}>Select Flight Time</Text>
-                            
+
                             <View style={{ flexDirection: 'row', height: 180, justifyContent: 'space-between' }}>
                                 {/* Hours Column */}
-                                <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false}>
+                                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {hoursList.map(h => (
                                         <TouchableOpacity key={`h-${h}`} onPress={() => setTempHour(h)} style={{ paddingVertical: 10, backgroundColor: tempHour === h ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
                                             <Text style={{ textAlign: 'center', fontFamily: tempHour === h ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempHour === h ? '#305797' : '#333' }}>{h}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
-                                
+
                                 {/* Minutes Column */}
-                                <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false}>
+                                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {minutesList.map(m => (
                                         <TouchableOpacity key={`m-${m}`} onPress={() => setTempMinute(m)} style={{ paddingVertical: 10, backgroundColor: tempMinute === m ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
                                             <Text style={{ textAlign: 'center', fontFamily: tempMinute === m ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempMinute === m ? '#305797' : '#333' }}>{m}</Text>
@@ -781,7 +779,7 @@ export default function QuotationForm({ route, navigation }) {
                                 </ScrollView>
 
                                 {/* AM/PM Column */}
-                                <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false}>
+                                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {periodsList.map(p => (
                                         <TouchableOpacity key={`p-${p}`} onPress={() => setTempPeriod(p)} style={{ paddingVertical: 10, backgroundColor: tempPeriod === p ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
                                             <Text style={{ textAlign: 'center', fontFamily: tempPeriod === p ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempPeriod === p ? '#305797' : '#333' }}>{p}</Text>
@@ -790,7 +788,7 @@ export default function QuotationForm({ route, navigation }) {
                                 </ScrollView>
                             </View>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[QuotationFormStyle.submitButton, { height: 42, marginTop: 15 }]}
                                 onPress={() => {
                                     setFlightTime(`${tempHour}:${tempMinute} ${tempPeriod}`);

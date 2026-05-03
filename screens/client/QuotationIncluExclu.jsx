@@ -9,6 +9,25 @@ export default function QuotationIncluExclu({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation } = route.params || {};
     const pkg = quotation?.packageId || quotation?.pkg || {};
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+
+    const inclusions = Array.isArray(latestPdfRevision?.travelDetails.inclusions)
+        ? latestPdfRevision.travelDetails.inclusions
+        : (Array.isArray(pkg?.packageInclusions) ? pkg.packageInclusions : []);
+
+    const exclusions = Array.isArray(latestPdfRevision?.travelDetails.exclusions)
+        ? latestPdfRevision.travelDetails.exclusions
+        : (Array.isArray(pkg?.packageExclusions) ? pkg.packageExclusions : []);
+
+    const itinerarySource = latestPdfRevision?.travelDetails.itinerary || pkg?.packageItineraries || {};
+    const itineraryEntries = Array.isArray(itinerarySource)
+        ? itinerarySource.map((items, index) => [`Day ${index + 1}`, items])
+        : Object.entries(itinerarySource);
+
+    console.log(inclusions)
+    console.log(exclusions)
+    console.log(itineraryEntries)
 
     return (
         <SafeAreaView style={QuotationIncluExcluStyle.safeArea}>
@@ -35,15 +54,15 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         </View>
                     </View>
 
-                    {Object.entries(pkg.packageItineraries || {}).map(([day, items], i) => (
+                    {itineraryEntries.map(([day, items], i) => (
                         <View key={i} style={QuotationIncluExcluStyle.itineraryDayBox}>
                             <Text style={QuotationIncluExcluStyle.dayLabel}>{day.toUpperCase()}</Text>
                             {(Array.isArray(items) ? items : [items]).map((item, j) => (
                                 <View key={j} style={QuotationIncluExcluStyle.activityRow}>
                                     <View style={QuotationIncluExcluStyle.activityBullet} />
                                     <Text style={QuotationIncluExcluStyle.activityText}>
-                                        {typeof item === 'object' ? (item.activity || item.optionalActivity) : item}
-                                        {item.isOptional ? " (Optional)" : ""}
+                                        {typeof item === 'object' ? (item?.activity || item?.optionalActivity || item?.title || '') : item}
+                                        {typeof item === 'object' && item?.isOptional ? " (Optional)" : ""}
                                     </Text>
                                 </View>
                             ))}
@@ -66,14 +85,14 @@ export default function QuotationIncluExclu({ route, navigation }) {
                     <View style={QuotationIncluExcluStyle.gridRow}>
                         <View style={QuotationIncluExcluStyle.gridCol}>
                             <Text style={[QuotationIncluExcluStyle.gridTitle, { color: '#305797' }]}>Inclusions</Text>
-                            {pkg.packageInclusions?.map((item, i) => (
+                            {inclusions.map((item, i) => (
                                 <Text key={i} style={QuotationIncluExcluStyle.itemText}>✓ {item}</Text>
                             ))}
                         </View>
 
                         <View style={QuotationIncluExcluStyle.gridCol}>
                             <Text style={[QuotationIncluExcluStyle.gridTitle, { color: '#b54747' }]}>Exclusions</Text>
-                            {pkg.packageExclusions?.map((item, i) => (
+                            {exclusions.map((item, i) => (
                                 <Text key={i} style={QuotationIncluExcluStyle.itemText}>✕ {item}</Text>
                             ))}
                         </View>
@@ -90,9 +109,9 @@ export default function QuotationIncluExclu({ route, navigation }) {
 
                     {/* 🔥 NEW BOTTOM NAVIGATION BUTTONS 🔥 */}
                     <View style={QuotationIncluExcluStyle.actionContainer}>
-                        
+
                         {/* Upload ID Button (Goes Forward) */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={QuotationIncluExcluStyle.primaryButton}
                             onPress={() => navigation.navigate('quotationuploads', { quotation })}
                         >
@@ -100,14 +119,14 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         </TouchableOpacity>
 
                         {/* Back Button (Goes Backward) */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={QuotationIncluExcluStyle.secondaryButton}
                             // Using goBack() prevents app from stacking infinite screens!
-                            onPress={() => navigation.goBack()} 
+                            onPress={() => navigation.goBack()}
                         >
                             <Text style={QuotationIncluExcluStyle.secondaryButtonText}>Back</Text>
                         </TouchableOpacity>
-                        
+
                     </View>
                 </View>
 

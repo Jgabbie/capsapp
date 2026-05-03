@@ -96,7 +96,11 @@ export default function QuotationBookingProcess() {
         fetchData();
     }, [quotationId, user?._id]);
 
-    const details = quotation?.latestPdfRevision?.travelDetails || quotation?.travelDetails || quotation?.quotationDetails || {};
+
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+
+    const details = latestPdfRevision?.travelDetails
     const pkg = packageData || quotation?.packageId || { packageName: quotation?.packageName };
 
     const packageImages = useMemo(() => {
@@ -110,16 +114,11 @@ export default function QuotationBookingProcess() {
             : (Number(travelers.adult) || 0) + (Number(travelers.child) || 0) + (Number(travelers.infant) || 0);
     const bookingType = travelerCount <= 1 ? 'Solo Booking' : 'Group Booking';
     const packageType = (packageData?.packageType || pkg?.packageType || details.packageType || 'domestic').toString();
-    const airline = details.preferredAirlines || details.flightDetails?.flightAirline || 'N/A';
-    const hotel = details.preferredHotels || 'N/A';
+    const airline = details.airline || 'N/A';
+    const hotel = details.hotel || 'N/A';
     const travelDates = formatTravelDates(details);
     const totalAmount = Number(
-        quotation?.latestPdfRevision?.travelDetails?.totalPrice ||
-        details.totalPrice ||
-        details.travelDatePrice ||
-        details.budgetRange?.[0] ||
-        details.budgetRange?.[1] ||
-        0
+        details.totalPrice
     );
 
     return (

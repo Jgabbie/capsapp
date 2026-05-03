@@ -129,14 +129,14 @@ export default function UserPackageQuotation() {
 
     const statusOptions = ["All", "Successful", "Pending", "Cancelled", "Approved", "Rejected", "Under Review", "Revision Requested"];
 
-    
+
 
     const handleDateChange = (day) => {
         setBookingDateFilter(day.dateString);
         setShowDateModal(false);
     };
 
-    
+
 
     const clearFilters = () => {
         setStatusFilter("Status");
@@ -172,9 +172,8 @@ export default function UserPackageQuotation() {
                         )}
                     </View>
 
-                    {/* 🔥 UPDATED: 50/50 Split Status & Requested Date Filters */}
                     <View style={styles.filterRow}>
-                        
+
                         {/* Status Filter */}
                         <View style={styles.dropdownGroup}>
                             <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowStatusModal(true)}>
