@@ -63,13 +63,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         }
     };
 
+    console.log("Travel Details: ", travelDetails);
+
     const executePaymentFlow = async () => {
         setIsProceedModalOpen(false);
         setLoading(true);
 
         try {
             const isExistingBooking = !!route.params.existingBookingId;
-            const targetPackageId = quotation?.packageId || quotation?.pkg?._id || quotation?.pkg?.packageId;
+            const targetPackageId = quotation?.packageId._id || 'N/A'
+
             if (!targetPackageId) {
                 Alert.alert("Error", "Package ID is missing. Cannot proceed.");
                 setLoading(false);
@@ -233,8 +236,6 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     photoFile: uploadedTravelerFiles[idx]?.photo || null
                 }));
 
-                console.log("Mapped Travelers: ", mappedTravelers);
-
                 const mappedBookingDetails = {
                     dateOfRegistration: dayjs().toISOString(),
                     travelDate: travelDateObj,
@@ -261,16 +262,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     emergencyRelation: emergency?.relation || "N/A",
                     emergencyTitle: emergency?.title || "MR",
                     paymentDetails: {
-                        adultRate: travelDetails?.totalRate || 0,
-                        childRate: travelDetails?.totalChildRate || 0,
-                        infantRate: travelDetails?.totalInfantRate || 0,
+                        adultRate: Number(travelDetails?.totalRate) || 0,
+                        childRate: Number(travelDetails?.totalChildRate) || 0,
+                        infantRate: Number(travelDetails?.totalInfantRate) || 0,
                         paymentType: paymentType || 'deposit',
                         frequency: frequency || 'Every 2 weeks',
                         depositAmount: depositAmount
                     }
                 };
 
-                console.log("Final Booking Payload: ", { ...finalBookingPayload, bookingDetails: mappedBookingDetails });
+
 
                 const travelersPayload =
                 {
@@ -291,10 +292,18 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                 };
 
                 const bookingSaved = await api.post('/booking/create-booking', { bookingPayload: finalBookingPayload }, withUserHeader(user?._id));
-
                 const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id;
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
-                const paymentToken = bookingSaved.data?.paymentToken;
+
+                // Create checkout token for online payment
+                let paymentToken = null;
+                if (method === 'paymongo') {
+                    const tokenRes = await api.post('/payment/create-checkout-token', {
+                        totalPrice: safeAmount,
+                        bookingId: newBookingId
+                    }, withUserHeader(user?._id));
+                    paymentToken = tokenRes.data?.token;
+                }
 
                 if (method === 'manual') {
                     const receiptFormData = new FormData();

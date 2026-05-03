@@ -9,6 +9,7 @@ import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
 import Notification from "../models/notification.js";
+import Quotation from "../models/quotation.js";
 import PackageModel from "../models/package.js";
 import User from "../models/users.js";
 import transporter from "../config/nodemailer.js";
@@ -573,7 +574,7 @@ const createManualPaymentQuotation = async (req, res) => {
         booking.status = 'Pending'
         booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
 
-        const quotation = await QuotationModel.findById(quotationId);
+        const quotation = await Quotation.findById(quotationId);
 
         quotation.status = 'Booked';
         await quotation.save();
@@ -1804,7 +1805,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             console.log('Created transaction for Quotation:', metadata.quotationId);
 
-            const quotation = await QuotationModel.findById(metadata.quotationId);
+            const quotation = await Quotation.findById(metadata.quotationId);
             console.log("Quotation found:", quotation);
             quotation.status = 'Booked';
             await quotation.save();
