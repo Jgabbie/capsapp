@@ -420,6 +420,61 @@ const HomeStyle = StyleSheet.create({
         fontSize: 12,
     },
 
+    // --- 🔥 NEW CAROUSEL & DOTS STYLES 🔥 ---
+    carouselContainer: {
+        height: 240, // 🔥 Less height (from 280) for a card-like aspect ratio
+        marginBottom: 20,
+    },
+    carouselSlide: {
+        width: width, 
+        height: '100%',
+        paddingHorizontal: 15, // 🔥 FIX: Equal padding on both sides to center the card perfectly!
+    },
+    carouselInner: {
+        flex: 1, // 🔥 FIX: Flex 1 lets it fill the space safely without math errors
+        justifyContent: 'flex-end', 
+        alignItems: 'flex-start',   
+        padding: 25, 
+    },
+    carouselOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        borderRadius: 20, // 🔥 Ensures the dim effect respects the corners
+    },
+    carouselTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 24,
+        color: "#ffffff",
+        textAlign: "left", 
+        marginBottom: 8,
+        zIndex: 1,
+    },
+    carouselSubtitle: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#ffffff",
+        textAlign: "left", 
+        lineHeight: 20,
+        zIndex: 1,
+    },
+    // 🔥 NEW DOTS STYLES 🔥
+    dotsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10, // Space below the images
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#cbd5e1', // Default dot (light gray)
+        marginHorizontal: 4, // Spacing between dots
+    },
+    dotActive: {
+        backgroundColor: '#305797', // Active dot (your primary blue)
+    },
+
     // --- SERVICES GRID ---
     servicesContainer: {
         paddingHorizontal: 5,
