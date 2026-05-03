@@ -167,7 +167,7 @@ export default function PaymentMethod({ route, navigation }) {
                     parsedEndDate = rawDate.endDate || rawDate.startDate;
                 }
 
-                const travelDateObj = { startDate: parsedStartDate, endDate: parsedEndDate };
+                const travelDateObj = { startDate: dayjs(parsedStartDate).format('YYYY-MM-DD'), endDate: dayjs(parsedEndDate).format('YYYY-MM-DD') };
 
                 const travelerUploads = route.params?.travelerUploads || {};
 
