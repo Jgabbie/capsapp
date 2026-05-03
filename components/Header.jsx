@@ -15,11 +15,11 @@ export default function Header({ openSidebar }) {
         try {
             // 🔥 Match Web: Request 25 items
             const response = await api.get('/notifications/my?limit=25', withUserHeader(user._id));
-            
+
             // 🔥 Count unread within those 25 items (Should result in 22)
             const list = response.data || [];
             const count = list.filter(n => !n.isRead).length;
-            
+
             setUnreadCount(count);
         } catch (error) {
             console.log("Header Sync Error:", error.message);
@@ -28,7 +28,7 @@ export default function Header({ openSidebar }) {
 
     useEffect(() => {
         fetchUnread();
-        
+
         // Keep the badge updated whenever the user navigates back to the current screen
         const unsubscribe = cs.addListener('focus', () => {
             fetchUnread();
@@ -52,7 +52,7 @@ export default function Header({ openSidebar }) {
             </TouchableOpacity>
 
             <Image
-                source={require('../assets/images/mrc_logo2.png')}
+                source={require('../assets/images/Logo.png')}
                 style={HeaderStyle.logo}
                 resizeMode='contain'
             />
@@ -80,7 +80,7 @@ export default function Header({ openSidebar }) {
 
                 <Image
                     source={profileImageSource}
-                    style={[HeaderStyle.profileIcon, { borderRadius: 50 }]} 
+                    style={[HeaderStyle.profileIcon, { borderRadius: 50 }]}
                 />
             </View>
         </View>

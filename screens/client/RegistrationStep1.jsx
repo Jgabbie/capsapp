@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import { useUser } from '../../context/UserContext'; 
-import { api } from '../../utils/api'; 
+import { useUser } from '../../context/UserContext';
+import { api } from '../../utils/api';
 
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
@@ -23,6 +23,15 @@ const calculateAge = (birthdateString) => {
     return age.toString();
 };
 
+const determineAgeCategory = (age) => {
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum)) return "";
+    if (ageNum >= 12) return "ADULT";
+    if (ageNum >= 2) return "CHILD";
+    if (ageNum >= 0) return "INFANT";
+    return "";
+}
+
 const assignRooms = (travelers) => {
     if (!travelers || travelers.length === 0) return [];
 
@@ -35,34 +44,37 @@ const assignRooms = (travelers) => {
 
     return travelers.map(t => {
         let rType = String(t.roomType || '').trim().toUpperCase();
-        
+
         let baseType = '';
         if (rType.includes('TWIN')) baseType = 'TWIN';
         else if (rType.includes('DOUBLE')) baseType = 'DOUBLE';
         else if (rType.includes('TRIPLE')) baseType = 'TRIPLE';
         else if (rType.includes('SINGLE')) baseType = 'SINGLE';
 
-        if (!baseType) return rType; 
+        if (!baseType) return rType;
 
         const state = roomState[baseType];
-        
+
         if (state.count >= state.max) {
             state.number += 1;
             state.count = 0;
         }
-        
+
         state.count += 1;
+        if (baseType === 'SINGLE') {
+            return state.number > 1 ? `${baseType} ${state.number}` : baseType;
+        }
         return `${baseType} ${state.number}`;
     });
 };
 
 export default function RegistrationStep1({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, travelersData } = route.params || {}; 
-    
-    const totalCount = (setupData?.travelerCounts?.adult || 0) + 
-                       (setupData?.travelerCounts?.child || 0) + 
-                       (setupData?.travelerCounts?.infant || 0);
+    const { setupData, travelerUploads, travelersData } = route.params || {};
+
+    const totalCount = (setupData?.travelerCounts?.adult || 0) +
+        (setupData?.travelerCounts?.child || 0) +
+        (setupData?.travelerCounts?.infant || 0);
 
     const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
@@ -87,29 +99,30 @@ export default function RegistrationStep1({ route, navigation }) {
     const userAddress = fullUserData?.homeAddress || fullUserData?.address || '';
     const userGender = fullUserData?.gender?.toLowerCase() || '';
     const userTitle = userGender === 'male' ? 'MR' : (userGender === 'female' ? 'MS' : '');
-    
+
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
-            const assignedRooms = assignRooms(travelersData); 
+            const assignedRooms = assignRooms(travelersData);
             return travelersData.map((t, index) => ({
-                title: t.title || '', 
+                title: t.title || '',
                 firstName: t.firstName || '',
                 lastName: t.lastName || '',
-                room: assignedRooms[index], 
+                room: assignedRooms[index],
                 bday: t.birthdate || '',
-                age: calculateAge(t.birthdate) || '', 
+                age: calculateAge(t.birthdate) || '',
+                ageCategory: determineAgeCategory(calculateAge(t.birthdate)) || t.ageCategory || '',
                 // 🔥 AUTO-FILL "N/A" IF DOMESTIC
                 passport: isDomestic ? 'N/A' : (t.passportNo || ''),
                 expiry: isDomestic ? 'N/A' : (t.passportExpiry || '')
             }));
         }
         return Array(totalCount).fill({
-            title: '', firstName: '', lastName: '', room: '', bday: '', age: '', 
-            passport: isDomestic ? 'N/A' : '', 
+            title: '', firstName: '', lastName: '', room: '', bday: '', age: '', ageCategory: '',
+            passport: isDomestic ? 'N/A' : '',
             expiry: isDomestic ? 'N/A' : ''
         });
     });
@@ -131,20 +144,23 @@ export default function RegistrationStep1({ route, navigation }) {
                 contact: userContact || prev.contact,
                 address: userAddress || prev.address
             }));
-            
+
             setPassengers(prev => {
                 const next = [...prev];
                 if (!next[0].title && userTitle) {
                     next[0].title = userTitle;
                 }
                 if (travelersData && travelersData.length > 0) {
-                    const assignedRooms = assignRooms(travelersData); 
+                    const assignedRooms = assignRooms(travelersData);
                     return next.map((passenger, index) => {
                         const sourceTraveler = travelersData[index];
                         if (!sourceTraveler) return passenger;
+                        const computedAge = calculateAge(sourceTraveler.birthdate);
                         return {
                             ...passenger,
                             room: assignedRooms[index],
+                            age: computedAge || passenger.age,
+                            ageCategory: determineAgeCategory(computedAge) || passenger.ageCategory,
                             // 🔥 ENSURE "N/A" STAYS IF IT RE-RENDERS
                             passport: isDomestic ? 'N/A' : (sourceTraveler.passportNo || passenger.passport),
                             expiry: isDomestic ? 'N/A' : (sourceTraveler.passportExpiry || passenger.expiry)
@@ -159,9 +175,9 @@ export default function RegistrationStep1({ route, navigation }) {
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
         if (isDomestic) {
-            return missingBasicInfo; 
+            return missingBasicInfo;
         } else {
-            return missingBasicInfo || !p.passport || !p.expiry; 
+            return missingBasicInfo || !p.passport || !p.expiry;
         }
     });
 
@@ -173,12 +189,12 @@ export default function RegistrationStep1({ route, navigation }) {
 
         for (let i = 0; i < passengers.length; i++) {
             const p = passengers[i];
-            
+
             if (!p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age) {
                 Alert.alert("Missing Information", `Please go back to Uploads and complete the basic details for Passenger ${i + 1}.`);
                 return;
             }
-            
+
             if (!isDomestic) {
                 if (!p.passport) {
                     Alert.alert("Missing Information", `Please go back to Uploads and enter the passport number for Passenger ${i + 1}.`);
@@ -198,10 +214,10 @@ export default function RegistrationStep1({ route, navigation }) {
         <SafeAreaView style={RegistrationFormStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={RegistrationFormStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={RegistrationFormStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
-                    
+
                     <View style={RegistrationFormStyle.headerGold}>
                         <Text style={RegistrationFormStyle.headerGoldText}>BOOKING REGISTRATION FORM</Text>
                     </View>
@@ -220,10 +236,10 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TOUR PACKAGE TITLE</Text>
-                            <TextInput 
-                                style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} 
-                                value={setupData?.pkg?.packageName || setupData?.pkg?.title || ''} 
-                                editable={false} 
+                            <TextInput
+                                style={[RegistrationFormStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]}
+                                value={setupData?.pkg?.packageName || setupData?.pkg?.title || ''}
+                                editable={false}
                             />
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
@@ -239,8 +255,8 @@ export default function RegistrationStep1({ route, navigation }) {
                     <View style={RegistrationFormStyle.row}>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 0.5 }]}>
                             <Text style={RegistrationFormStyle.label}>TITLE:</Text>
-                            <TouchableOpacity 
-                                style={[RegistrationFormStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]} 
+                            <TouchableOpacity
+                                style={[RegistrationFormStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]}
                                 onPress={() => setShowTitleDropdown(true)}
                                 disabled={isTitleLocked}
                             >
@@ -262,23 +278,23 @@ export default function RegistrationStep1({ route, navigation }) {
                         </View>
                         <View style={[RegistrationFormStyle.inputContainer, { flex: 1 }]}>
                             <Text style={RegistrationFormStyle.label}>CONTACT DETAILS:</Text>
-                            <TextInput 
-                                style={[RegistrationFormStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]} 
-                                value={leadGuestInfo.contact} 
-                                keyboardType="phone-pad" 
+                            <TextInput
+                                style={[RegistrationFormStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]}
+                                value={leadGuestInfo.contact}
+                                keyboardType="phone-pad"
                                 editable={!isContactLocked}
-                                onChangeText={(v) => setLeadGuestInfo({...leadGuestInfo, contact: v})} 
+                                onChangeText={(v) => setLeadGuestInfo({ ...leadGuestInfo, contact: v })}
                             />
                         </View>
                     </View>
 
                     <View style={RegistrationFormStyle.inputContainer}>
                         <Text style={RegistrationFormStyle.label}>ADDRESS:</Text>
-                        <TextInput 
-                            style={[RegistrationFormStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]} 
-                            value={leadGuestInfo.address} 
+                        <TextInput
+                            style={[RegistrationFormStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]}
+                            value={leadGuestInfo.address}
                             editable={!isAddressLocked}
-                            onChangeText={(v) => setLeadGuestInfo({...leadGuestInfo, address: v})} 
+                            onChangeText={(v) => setLeadGuestInfo({ ...leadGuestInfo, address: v })}
                         />
                     </View>
 
@@ -328,7 +344,7 @@ export default function RegistrationStep1({ route, navigation }) {
                             <Text style={RegistrationFormStyle.guideTitle}>GUIDE IN ROOM ASSIGNMENTS:</Text>
                             <Text style={RegistrationFormStyle.guideNote}>*Important note: All room type requests are subject for availability.</Text>
                             <Text style={RegistrationFormStyle.guideNote}>Use of SINGLE ROOM has a single supplement charge.</Text>
-                            
+
                             <View style={RegistrationFormStyle.guideRow}>
                                 <Text style={RegistrationFormStyle.guideLabel}>TWIN BED ROOM</Text>
                                 <Text style={RegistrationFormStyle.guideDesc}>- 1 Room with 2 single beds; 2 pax occupancy</Text>
@@ -380,10 +396,10 @@ export default function RegistrationStep1({ route, navigation }) {
             <Modal visible={showTitleDropdown} transparent animationType="fade">
                 <TouchableOpacity style={RegistrationFormStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>
                     <View style={RegistrationFormStyle.dropdownBox}>
-                        <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => { setLeadGuestInfo({...leadGuestInfo, title: 'MR'}); setShowTitleDropdown(false); }}>
+                        <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => { setLeadGuestInfo({ ...leadGuestInfo, title: 'MR' }); setShowTitleDropdown(false); }}>
                             <Text style={RegistrationFormStyle.dropdownText}>MR</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setLeadGuestInfo({...leadGuestInfo, title: 'MS'}); setShowTitleDropdown(false); }}>
+                        <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setLeadGuestInfo({ ...leadGuestInfo, title: 'MS' }); setShowTitleDropdown(false); }}>
                             <Text style={RegistrationFormStyle.dropdownText}>MS</Text>
                         </TouchableOpacity>
                     </View>

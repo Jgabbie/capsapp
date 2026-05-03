@@ -7,7 +7,7 @@ import Sidebar from '../../components/Sidebar';
 
 export default function BookingReview({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    
+
     // Get the data passed from QuotationAllIn
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
@@ -32,7 +32,7 @@ export default function BookingReview({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={BookingReviewStyle.container} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={BookingReviewStyle.headerGroup}>
                     <Text style={QuotationAllInStyle.mainTitle}>Review Package</Text>
                     <Text style={QuotationAllInStyle.subtitle}>Review the day-by-day schedule and what your package covers.</Text>
@@ -117,15 +117,14 @@ export default function BookingReview({ route, navigation }) {
 
                 {/* --- COMPACT FOOTER NAVIGATION --- */}
                 <View style={BookingReviewStyle.footerContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={BookingReviewStyle.smallProceedButton}
                         onPress={handleNext}
                     >
-                        {/* 🔥 UPDATED: Dynamic document label */}
                         <Text style={BookingReviewStyle.smallProceedButtonText}>Next: Upload {documentLabel}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={BookingReviewStyle.backTextButton}
                         onPress={() => navigation.goBack()}
                     >

@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
 
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle'; 
+import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -17,28 +18,28 @@ const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
 // 🔥 NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
 const parseDateStringSafe = (dateStr) => {
     if (!dateStr) return null;
-    
-    const months = { 
-        "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5, 
+
+    const months = {
+        "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5,
         "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11,
         "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
     };
-    
+
     try {
         const cleanStr = dateStr.replace(/,/g, '').trim();
         const parts = cleanStr.split(/\s+/);
-        
+
         // Look for [Month, Day, Year] format
         if (parts.length === 3) {
             const month = months[parts[0]];
             const day = parseInt(parts[1], 10);
             const year = parseInt(parts[2], 10);
-            
+
             if (month !== undefined && !isNaN(day) && !isNaN(year)) {
                 return new Date(year, month, day);
             }
         }
-        
+
         // Fallback
         const parsed = new Date(dateStr);
         if (!isNaN(parsed.getTime())) return parsed;
@@ -53,19 +54,87 @@ export default function PaymentMode({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [paymentType, setPaymentType] = useState('deposit'); 
+    const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
     const [showFreqDropdown, setShowFreqDropdown] = useState(false);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [invoiceNumber, setInvoiceNumber] = useState('');
 
     const travelerTotal = useMemo(() => {
         const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
         return counts.adult + counts.child + counts.infant;
     }, [setupData]);
 
-    const travelers = setupData?.travelerCounts
+    const travelers = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+
+    //console.log("Number of travelers:", travelers);
 
     const totalAmount = setupData?.totalPrice || 0;
+
+    useEffect(() => {
+        const fetchInvoiceNumber = async () => {
+            try {
+                const response = await api.get('/booking/bookings-total-month', withUserHeader(user?._id));
+                const number = response.data?.invoiceNumber;
+
+                console.log("Fetched monthly invoice number:", number);
+
+                if (number) {
+                    setInvoiceNumber(number);
+                    return;
+                }
+            } catch (error) {
+                console.log('Error fetching monthly invoice number:', error.message);
+            }
+
+            const fallbackMonth = dayjs().format('MM');
+            setInvoiceNumber(`${fallbackMonth}01`);
+        };
+
+        fetchInvoiceNumber();
+    }, [user?._id]);
+
+    const buildInvoiceNumber = (allBookings, currentBooking) => {
+        if (!currentBooking) return "";
+        const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
+        const createdAt = createdAtValue ? dayjs(createdAtValue) : null;
+        if (!createdAt || !createdAt.isValid()) return "";
+
+        const getIdentity = (item) =>
+            String(item?._id || item?.id || item?.reference || item?.ref || "");
+
+        const currentIdentity = getIdentity(currentBooking);
+        const monthKey = createdAt.format("MM");
+
+        const monthBookings = (allBookings || [])
+            .map((item) => ({
+                ...item,
+                _createdAt: item.bookingDate || item.createdAt,
+                _identity: getIdentity(item)
+            }))
+            .filter((item) => item._createdAt && dayjs(item._createdAt).isValid())
+            .filter((item) => dayjs(item._createdAt).isSame(createdAt, "month"));
+
+        monthBookings.sort((a, b) => {
+            const timeDiff = dayjs(a._createdAt).valueOf() - dayjs(b._createdAt).valueOf();
+            if (timeDiff !== 0) return timeDiff;
+            return a._identity.localeCompare(b._identity);
+        });
+
+        let index = monthBookings.findIndex((item) => item._identity === currentIdentity);
+
+        if (index < 0) {
+            const currentRef = String(currentBooking.reference || currentBooking.ref || "");
+            if (currentRef) {
+                index = monthBookings.findIndex(
+                    (item) => String(item.reference || item.ref || "") === currentRef
+                );
+            }
+        }
+
+        const sequence = index >= 0 ? index + 1 : monthBookings.length + 1;
+        return `${monthKey}${String(sequence).padStart(2, "0")}`;
+    };
 
     // 🔥 BULLETPROOF SCHEDULE LOGIC
     const scheduleData = useMemo(() => {
@@ -77,12 +146,12 @@ export default function PaymentMode({ route, navigation }) {
 
         const freqWeeks = getFrequencyWeeks(frequency);
         const today = dayjs().startOf('day');
-        
+
         let travelDateComputation = today;
 
         // Extract the string (e.g., "May 13, 2026")
         const rawTravelDate = setupData?.travelDate?.startDate || (setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null);
-        
+
         // Use our safe parser to convert it
         if (rawTravelDate) {
             const parsedJsDate = parseDateStringSafe(rawTravelDate);
@@ -92,14 +161,14 @@ export default function PaymentMode({ route, navigation }) {
         }
 
         const maxAllowedDate = today.add(45, 'day');
-        
+
         const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
             ? travelDateComputation
             : maxAllowedDate;
 
         const depositAmount = (setupData?.pkg?.packageDeposit || 0) * travelerTotal;
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
-        
+
         const paymentDates = [];
         let nextDate = today.add(freqWeeks, 'week');
 
@@ -130,32 +199,74 @@ export default function PaymentMode({ route, navigation }) {
 
     const handleProceed = () => {
         const amountToPay = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
-        
-        navigation.navigate("paymentmethod", { 
-            ...route.params, 
-            paymentType, 
-            frequency, 
+
+        navigation.navigate("paymentmethod", {
+            ...route.params,
+            paymentType,
+            frequency,
             amountToPay,
-            fullSchedule: scheduleData.schedule 
+            fullSchedule: scheduleData.schedule
         });
     };
 
     const issueDate = dayjs();
-    
-    const lastInstallmentDate = scheduleData.schedule.length > 0 
+
+    const lastInstallmentDate = scheduleData.schedule.length > 0
         ? dayjs(scheduleData.schedule[scheduleData.schedule.length - 1].date)
         : dayjs();
-    
+
     const amountToCharge = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
     const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
-    
+
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
 
+    const travelerCountByType = {
+        adult: Number(travelers?.adult || 0),
+        child: Number(travelers?.child || 0),
+        infant: Number(travelers?.infant || 0)
+    };
+
+    const adultRate = Number(setupData?.packagePricePerPax)
+    const childRate = Number(setupData?.childRate)
+    const infantRate = Number(setupData?.infantRate)
+
     const packageTitleDisplay = setupData?.pkg?.title || setupData?.pkg?.packageName || 'TOUR PACKAGE';
-    
-    const displayTravelDate = setupData?.selectedDate 
-        ? setupData.selectedDate 
+
+    const fallbackRate = ratePerPax;
+    const previewInvoiceItems = [
+        travelerCountByType.adult > 0
+            ? { date: issueDate, activity: 'Adult', description: packageTitleDisplay, qty: travelerCountByType.adult, rate: Number(adultRate) || fallbackRate }
+            : null,
+        travelerCountByType.child > 0
+            ? { date: issueDate, activity: 'Child', description: packageTitleDisplay, qty: travelerCountByType.child, rate: Number(childRate) || fallbackRate }
+            : null,
+        travelerCountByType.infant > 0
+            ? { date: issueDate, activity: 'Infant', description: packageTitleDisplay, qty: travelerCountByType.infant, rate: Number(infantRate) || fallbackRate }
+            : null,
+    ].filter(Boolean);
+
+    if (previewInvoiceItems.length === 0) {
+        previewInvoiceItems.push({
+            date: issueDate,
+            activity: 'Adult',
+            description: packageTitleDisplay,
+            qty: travelerTotal || 1,
+            rate: fallbackRate
+        });
+    }
+
+    let previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    const previewTotalAmount = Number(totalAmount || previewSubtotal || 0);
+
+    if (previewInvoiceItems.length > 0 && Math.abs(previewSubtotal - previewTotalAmount) > 0.5) {
+        const firstItemQty = Number(previewInvoiceItems[0].qty || 1);
+        previewInvoiceItems[0].rate = firstItemQty > 0 ? previewTotalAmount / firstItemQty : previewTotalAmount;
+        previewSubtotal = previewInvoiceItems.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    }
+
+    const displayTravelDate = setupData?.selectedDate
+        ? setupData.selectedDate
         : (setupData?.travelDate?.startDate ? `${dayjs(setupData.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(setupData.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
 
     return (
@@ -165,9 +276,9 @@ export default function PaymentMode({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PaymentStyle.container} showsVerticalScrollIndicator={false}>
-                
-                <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
+
+                <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }}
                     onPress={() => navigation.goBack()}
                 >
                     <Ionicons name="arrow-back" size={16} color="#fff" />
@@ -180,7 +291,7 @@ export default function PaymentMode({ route, navigation }) {
                 <View style={PaymentStyle.progressContainer}>
                     <View style={[PaymentStyle.progressStep, PaymentStyle.progressStepActive]}><Text style={PaymentStyle.progressText}>1</Text></View>
                     <View style={PaymentStyle.progressLine} />
-                    <View style={PaymentStyle.progressStep}><Text style={[PaymentStyle.progressText, {color: '#64748b'}]}>2</Text></View>
+                    <View style={PaymentStyle.progressStep}><Text style={[PaymentStyle.progressText, { color: '#64748b' }]}>2</Text></View>
                 </View>
 
                 <View style={{ marginBottom: 10 }}>
@@ -209,7 +320,7 @@ export default function PaymentMode({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'deposit' && PaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('deposit')}
@@ -220,12 +331,12 @@ export default function PaymentMode({ route, navigation }) {
                     <View style={PaymentStyle.modeContent}>
                         <Text style={PaymentStyle.modeTitle}>Deposit</Text>
                         <Text style={PaymentStyle.modeDesc}>Make a partial payment to secure your booking. Choose this option to pay a portion of the total amount.</Text>
-                        
+
                         {paymentType === 'deposit' && (
                             <View style={{ marginTop: 12 }}>
                                 <Text style={{ fontFamily: "Montserrat_600SemiBold", fontSize: 12, color: "#1f2a44", marginBottom: 6 }}>Payment Schedule:</Text>
                                 <TouchableOpacity style={PaymentStyle.pickerContainer} onPress={() => setShowFreqDropdown(true)}>
-                                    <Text style={{fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44'}}>{frequency}</Text>
+                                    <Text style={{ fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44' }}>{frequency}</Text>
                                     <Ionicons name="chevron-down" size={18} color="#64748b" />
                                 </TouchableOpacity>
                             </View>
@@ -233,7 +344,7 @@ export default function PaymentMode({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[PaymentStyle.modeCard, paymentType === 'full' && PaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('full')}
@@ -267,7 +378,7 @@ export default function PaymentMode({ route, navigation }) {
                     <Text style={QuotationAllInStyle.proceedButtonText}>Continue to Payment Method</Text>
                 </TouchableOpacity>
 
-                <View style={{height: 50}} />
+                <View style={{ height: 50 }} />
             </ScrollView>
 
             <Modal visible={showFreqDropdown} transparent animationType="fade">
@@ -304,7 +415,7 @@ export default function PaymentMode({ route, navigation }) {
                                         </View>
                                     </View>
                                     <View style={PaymentStyle.invTitleBlock}>
-                                        <Text style={PaymentStyle.invTitleText}>Invoice {issueDate.format('MM')}01</Text>
+                                        <Text style={PaymentStyle.invTitleText}>Invoice {invoiceNumber || `${issueDate.format('MM')}01`}</Text>
                                     </View>
                                 </View>
 
@@ -323,7 +434,7 @@ export default function PaymentMode({ route, navigation }) {
                                             <Text style={PaymentStyle.invSummaryValue}>{issueDate.format('MM/DD/YYYY')}</Text>
                                         </View>
                                         <View style={[PaymentStyle.invSummaryCol, PaymentStyle.invDarkBg]}>
-                                            <Text style={[PaymentStyle.invTinyLabel, {color: '#fff'}]}>PLEASE PAY</Text>
+                                            <Text style={[PaymentStyle.invTinyLabel, { color: '#fff' }]}>PLEASE PAY</Text>
                                             <Text style={[PaymentStyle.invSummaryValue, { color: '#fff', fontSize: 11 }]}>
                                                 {formatPesoDisplay(totalAmount)}
                                             </Text>
@@ -344,19 +455,21 @@ export default function PaymentMode({ route, navigation }) {
                                         <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
                                         <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
                                     </View>
-                                    <View style={PaymentStyle.invTableRow}>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageTitleDisplay}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(ratePerPax)}</Text>
-                                        <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalAmount)}</Text>
-                                    </View>
+                                    {previewInvoiceItems.map((item, idx) => (
+                                        <View key={`inv-row-${idx}`} style={PaymentStyle.invTableRow}>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5 }]}>{item.activity}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{item.description}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{item.qty}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(item.rate)}</Text>
+                                            <Text style={[PaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(Number(item.qty || 0) * Number(item.rate || 0))}</Text>
+                                        </View>
+                                    ))}
                                 </View>
 
                                 <View style={PaymentStyle.invFooter}>
                                     <View style={PaymentStyle.invBankInfo}>
-                                        <Text style={[PaymentStyle.invMutedText, {marginBottom: 10}]}>Payment to be deposited in below bank details:</Text>
+                                        <Text style={[PaymentStyle.invMutedText, { marginBottom: 10 }]}>Payment to be deposited in below bank details:</Text>
                                         <Text style={PaymentStyle.invTinyLabel}>PESO ACCOUNT:</Text>
                                         <Text style={PaymentStyle.invMutedText}>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</Text>
                                         <Text style={PaymentStyle.invMutedText}>ACCOUNT NAME: M&RC TRAVEL AND TOURS</Text>
@@ -373,13 +486,13 @@ export default function PaymentMode({ route, navigation }) {
 
                                 {paymentType === 'deposit' && (
                                     <View style={PaymentStyle.invScheduleSection}>
-                                        <Text style={[PaymentStyle.invCustomerName, {marginBottom: 8, fontSize: 10}]}>Payment Schedule</Text>
+                                        <Text style={[PaymentStyle.invCustomerName, { marginBottom: 8, fontSize: 10 }]}>Payment Schedule</Text>
                                         {scheduleData.schedule.map((item, idx) => (
                                             <View key={idx} style={PaymentStyle.invScheduleRow}>
                                                 <Text style={PaymentStyle.invScheduleLabel}>
                                                     {item.label}
                                                     {'\n'}
-                                                    <Text style={{fontSize: 7, color: '#777', fontWeight: 'normal'}}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
+                                                    <Text style={{ fontSize: 7, color: '#777', fontWeight: 'normal' }}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
                                                 </Text>
                                                 <Text style={PaymentStyle.invScheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
                                             </View>

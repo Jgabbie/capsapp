@@ -27,9 +27,6 @@ export const createBooking = async (req, res) => {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        // 🔥 WEB SYNC: Format the exact shapes the Web Backend expects
-
-        // 1. Format root travelDate as an object { startDate, endDate }
         let rootTravelDate = { startDate: "TBD", endDate: "TBD" };
         if (travelDate && travelDate.startDate) {
             rootTravelDate = travelDate; // Use provided object
@@ -42,15 +39,13 @@ export const createBooking = async (req, res) => {
             };
         }
 
-
-        // 3. Create the Database Record matching Web Schema
         const booking = await Booking.create({
             packageId,
             userId,
             bookingDate: bookingDetails.bookingDate || new Date().toISOString(),
             travelDate: rootTravelDate,
             travelers,
-            bookingDetails: bookingDetails, // Contains the full nested objects/arrays 
+            bookingDetails: bookingDetails,
             reference: generateBookingReference(),
             status: "Not Paid",
             expiresAt: dayjs().add(2, 'minutes').toDate()
@@ -64,10 +59,10 @@ export const createBooking = async (req, res) => {
     }
 };
 
+
 export const getUserBookings = async (req, res) => {
     try {
         const userObjectId = new mongoose.Types.ObjectId(req.userId);
-
         const bookings = await Booking.find({ userId: userObjectId })
             .populate("packageId")
             .sort({ createdAt: -1 });
@@ -78,6 +73,136 @@ export const getUserBookings = async (req, res) => {
         return res.status(500).json({ message: "Error fetching bookings", error: error.message });
     }
 };
+
+export const getBookingsTotalBaseOnMonth = async (req, res) => {
+    try {
+        const { reference } = req.query || {};
+
+        // If a reference is provided, compute the invoice number for that booking
+        if (reference) {
+            const orClause = [{ reference }];
+            if (mongoose.Types.ObjectId.isValid(reference)) {
+                orClause.push({ _id: reference });
+            }
+
+            const booking = await Booking.findOne({ $or: orClause }).lean();
+            if (!booking) return res.status(404).json({ message: 'Booking not found for provided reference' });
+
+            const createdAtValue = booking.bookingDate || booking.createdAt || new Date();
+            const createdAt = dayjs(createdAtValue);
+            const startOfMonth = createdAt.startOf('month').toDate();
+            const endOfMonth = createdAt.endOf('month').toDate();
+
+            // Fetch bookings in the same month (by bookingDate OR createdAt) and compute sequence.
+            const monthBookings = await Booking.find({
+                $or: [
+                    { bookingDate: { $gte: startOfMonth, $lte: endOfMonth } },
+                    { createdAt: { $gte: startOfMonth, $lte: endOfMonth } }
+                ]
+            })
+                .select('reference bookingDate createdAt')
+                .lean();
+
+            const getIdentity = (item) => String(item?._id || item?.id || item?.reference || item?.ref || '');
+
+            const monthBookingsSorted = monthBookings
+                .map(item => ({ ...item, _createdAt: item.bookingDate || item.createdAt, _identity: getIdentity(item) }))
+                .filter(item => item._createdAt)
+                .sort((a, b) => {
+                    const t = dayjs(a._createdAt).valueOf() - dayjs(b._createdAt).valueOf();
+                    if (t !== 0) return t;
+                    return a._identity.localeCompare(b._identity);
+                });
+
+            let index = monthBookingsSorted.findIndex(b => String(b._id) === String(booking._id) || String(b.reference) === String(booking.reference));
+            if (index < 0) {
+                const curRef = String(booking.reference || booking.ref || '');
+                if (curRef) index = monthBookingsSorted.findIndex(item => String(item.reference || item.ref || '') === curRef);
+            }
+
+            const sequence = index >= 0 ? index + 1 : monthBookingsSorted.length + 1;
+            const monthKey = createdAt.format('MM');
+            const invoiceNumber = `${monthKey}${String(sequence).padStart(2, '0')}`;
+
+            return res.status(200).json({ invoiceNumber, sequence, month: monthKey });
+        }
+
+        // Legacy: return total bookings for current month
+        const startOfMonth = dayjs().startOf('month').toDate();
+        const endOfMonth = dayjs().endOf('month').toDate();
+        const totalBookings = await Booking.countDocuments({ createdAt: { $gte: startOfMonth, $lte: endOfMonth } });
+        return res.status(200).json({ totalBookings });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching bookings total', error });
+    }
+};
+
+export const getInvoiceNumber = async (req, res) => {
+    const { reference } = req.params;
+
+    try {
+        if (!reference) return res.status(400).json({ message: 'Reference is required' });
+
+        // Get the booking by reference
+        const booking = await Booking.findOne({ reference }).lean();
+        if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+        // Get booking creation date (prioritize bookingDate)
+        const bookingDate = booking.bookingDate || booking.createdAt;
+        const createdAt = dayjs(bookingDate);
+        if (!createdAt.isValid()) return res.status(400).json({ message: 'Invalid booking date' });
+
+        // Get month key
+        const monthKey = createdAt.format('MM');
+
+        // Get all bookings in the same month and year
+        const monthStart = createdAt.clone().startOf('month').toDate();
+        const monthEnd = createdAt.clone().endOf('month').toDate();
+
+        const monthBookings = await Booking.find({
+            $expr: {
+                $and: [
+                    { $eq: [{ $month: { $ifNull: ['$bookingDate', '$createdAt'] } }, createdAt.month() + 1] },
+                    { $eq: [{ $year: { $ifNull: ['$bookingDate', '$createdAt'] } }, createdAt.year()] }
+                ]
+            }
+        }).lean();
+
+        // Helper to get booking identity
+        const getIdentity = (item) => String(item?._id || item?.id || item?.reference || item?.ref || '');
+
+        // Sort by creation date then by identity
+        const sortedBookings = monthBookings
+            .map(item => ({
+                ...item,
+                _createdAt: item.bookingDate || item.createdAt,
+                _identity: getIdentity(item)
+            }))
+            .sort((a, b) => {
+                const timeDiff = dayjs(a._createdAt).valueOf() - dayjs(b._createdAt).valueOf();
+                if (timeDiff !== 0) return timeDiff;
+                return a._identity.localeCompare(b._identity);
+            });
+
+        // Find position of current booking
+        let index = sortedBookings.findIndex(item => item._identity === getIdentity(booking));
+        if (index < 0) {
+            const currentRef = String(booking.reference || booking.ref || '');
+            if (currentRef) {
+                index = sortedBookings.findIndex(item => String(item.reference || item.ref || '') === currentRef);
+            }
+        }
+
+        const sequence = index >= 0 ? index + 1 : sortedBookings.length + 1;
+        const invoiceNumber = `${monthKey}${String(sequence).padStart(2, '0')}`;
+
+        res.status(200).json({ invoiceNumber, reference, sequence, monthKey });
+    } catch (error) {
+        console.error('Error generating invoice number:', error);
+        res.status(500).json({ message: 'Error generating invoice number', error: error.message });
+    }
+};
+
 
 export const getAllBookings = async (_req, res) => {
     try {
@@ -91,6 +216,7 @@ export const getAllBookings = async (_req, res) => {
         return res.status(500).json({ message: "Error fetching all bookings", error: error.message });
     }
 };
+
 
 export const cancelBooking = async (req, res) => {
     const { reason, comments, imageProof } = req.body;

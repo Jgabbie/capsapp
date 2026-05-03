@@ -6,7 +6,7 @@ const bookingSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
     bookingDate: { type: String, required: true },
     travelDate: { type: Object, required: true },
-    travelers: { type: Object, required: true },
+    travelers: { type: [Object], required: true },
     reference: { type: String, required: true, unique: true },
     status: { type: String, default: "Pending" },
     bookingDetails: { type: Object },

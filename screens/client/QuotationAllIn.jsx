@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Constants from "expo-constants";
 
 // --- OPTIMIZED IMAGE IMPORT ---
-import { Image } from 'expo-image'; 
+import { Image } from 'expo-image';
 
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
@@ -16,7 +16,7 @@ const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH",
 const getImageUrl = (img) => {
     if (!img) return "https://via.placeholder.com/800x500?text=No+Image";
     if (img.startsWith("http") || img.startsWith("data:")) return img;
-    
+
     let host = "localhost";
     if (Platform.OS !== "web") {
         const hostUri = Constants.expoConfig?.hostUri || "";
@@ -39,17 +39,17 @@ export default function QuotationAllIn() {
         if (Number.isFinite(directSlotCount) && directSlotCount > 0) return directSlotCount;
 
         if (!selectedDate || !pkg?.packageSpecificDate) return 999;
-        
+
         const dateSpecific = pkg.packageSpecificDate.find(d => {
             // Format 1: "May 8 - May 12"
             const format1 = `${new Date(d.startdaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(d.enddaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-            
+
             // Format 2: "May 8, 2026 - May 12, 2026"
             const format2 = `${new Date(d.startdaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(d.enddaterange).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-            
+
             return selectedDate === format1 || selectedDate === format2;
         });
-        
+
         if (dateSpecific) {
             const slotCount = Number(dateSpecific.slots || dateSpecific.availableSlots || 0);
             return Number.isFinite(slotCount) && slotCount > 0 ? slotCount : 999;
@@ -80,6 +80,16 @@ export default function QuotationAllIn() {
     const childRate = baseChildRate * discountMultiplier;
     const infantRate = baseInfantRate * discountMultiplier;
 
+    // console.log("Base package price per pax:", basePackagePricePerPax);
+    // console.log("Solo rate:", baseSoloRate);
+    // console.log("Child rate:", baseChildRate);
+    // console.log("Infant rate:", baseInfantRate);
+
+    // console.log("Discounted Package price per pax:", packagePricePerPax);
+    // console.log("Discounted Solo rate:", soloRate);
+    // console.log("Discounted Child rate:", childRate);
+    // console.log("Discounted Infant rate:", infantRate);
+
     const soloExtraRate = Math.max(0, soloRate - packagePricePerPax);
     const dateSurcharge = selectedDateRate || 0;
 
@@ -96,8 +106,8 @@ export default function QuotationAllIn() {
     const effectiveMaxInfants = Math.min(maxInfants, Math.max(0, maxTravelersFromSlots - 2));
 
     const travelersCount = useMemo(() => {
-        return selectedSoloGrouped === 'solo' 
-            ? { adult: 1, child: 0, infant: 0 } 
+        return selectedSoloGrouped === 'solo'
+            ? { adult: 1, child: 0, infant: 0 }
             : counts;
     }, [selectedSoloGrouped, counts]);
 
@@ -148,16 +158,16 @@ export default function QuotationAllIn() {
     // 🔥 NEW: Calculate Original Total (Before Discount)
     const originalTotalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return baseSoloRate;
-        return (travelersCount.adult * basePackagePricePerPax) + 
-               (travelersCount.child * baseChildRate) + 
-               (travelersCount.infant * baseInfantRate);
+        return (travelersCount.adult * basePackagePricePerPax) +
+            (travelersCount.child * baseChildRate) +
+            (travelersCount.infant * baseInfantRate);
     }, [selectedSoloGrouped, travelersCount, basePackagePricePerPax, baseSoloRate, baseChildRate, baseInfantRate]);
 
     const totalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return soloRate;
-        return (travelersCount.adult * packagePricePerPax) + 
-               (travelersCount.child * childRate) + 
-               (travelersCount.infant * infantRate);
+        return (travelersCount.adult * packagePricePerPax) +
+            (travelersCount.child * childRate) +
+            (travelersCount.infant * infantRate);
     }, [selectedSoloGrouped, travelersCount, packagePricePerPax, soloRate, childRate, infantRate]);
 
     const totalTravelers = travelersCount.adult + travelersCount.child + travelersCount.infant;
@@ -170,7 +180,7 @@ export default function QuotationAllIn() {
     const updateCount = (type, action) => {
         setCounts(prev => {
             let newVal = action === 'inc' ? prev[type] + 1 : prev[type] - 1;
-            
+
             if (type === 'adult') {
                 newVal = Math.max(2, Math.min(newVal, effectiveMaxAdults));
                 // If this would exceed total slots, cap it
@@ -190,7 +200,7 @@ export default function QuotationAllIn() {
                     newVal = Math.max(0, Math.min(newVal, maxTravelersFromSlots - prev.adult - prev.child));
                 }
             }
-            
+
             return { ...prev, [type]: newVal };
         });
     };
@@ -206,9 +216,13 @@ export default function QuotationAllIn() {
             travelerCounts: travelersCount,
             totalPrice: totalAmount,
             airline: airlineDisplay,
-            hotel: hotelDisplay
+            hotel: hotelDisplay,
+            packagePricePerPax,
+            soloRate,
+            childRate,
+            infantRate,
         };
-        
+
         navigation.navigate("bookingreview", { setupData: bookingSetupData });
     };
 
@@ -219,7 +233,7 @@ export default function QuotationAllIn() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={[QuotationAllInStyle.container, { paddingBottom: 30 }]} showsVerticalScrollIndicator={false}>
-                
+
                 {/* --- BOOKING SUMMARY SECTION --- */}
                 <View style={QuotationAllInStyle.headerRow}>
                     <View style={QuotationAllInStyle.titleGroup}>
@@ -235,11 +249,11 @@ export default function QuotationAllIn() {
                 {(pkg?.images && pkg.images.length > 0) && (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={QuotationAllInStyle.imageScrollContainer}>
                         {pkg.images.map((img, index) => (
-                            <Image 
-                                key={index} 
-                                source={getImageUrl(img)} 
-                                style={QuotationAllInStyle.summaryScrollImage} 
-                                contentFit="cover" 
+                            <Image
+                                key={index}
+                                source={getImageUrl(img)}
+                                style={QuotationAllInStyle.summaryScrollImage}
+                                contentFit="cover"
                                 transition={300}
                             />
                         ))}
@@ -249,7 +263,7 @@ export default function QuotationAllIn() {
                 {/* Booking Details Card */}
                 <View style={QuotationAllInStyle.bookingDetailsCard}>
                     <Text style={QuotationAllInStyle.bookingDetailsTitle}>Booking Details</Text>
-                    
+
                     <View style={QuotationAllInStyle.detailRowBreakdown}>
                         <Text style={QuotationAllInStyle.breakdownLabel}>Tour Package</Text>
                         <Text style={[QuotationAllInStyle.breakdownValue, { fontFamily: 'Montserrat_700Bold', color: '#1f2a44', textTransform: 'uppercase' }]} numberOfLines={2}>
@@ -273,7 +287,7 @@ export default function QuotationAllIn() {
                     <View style={[QuotationAllInStyle.detailRowBreakdown, { borderBottomWidth: 0 }]}>
                         <Text style={QuotationAllInStyle.breakdownLabel}>Travelers</Text>
                         <Text style={QuotationAllInStyle.breakdownValue}>
-                            {totalTravelers} Person(s) 
+                            {totalTravelers} Person(s)
                             {selectedSoloGrouped === 'group' && ` (${counts.adult} Adults${counts.child ? `, ${counts.child} Children` : ''})`}
                         </Text>
                     </View>
@@ -283,7 +297,7 @@ export default function QuotationAllIn() {
                 <View style={QuotationAllInStyle.totalAmountCard}>
                     <Text style={QuotationAllInStyle.totalLabel}>TOTAL AMOUNT</Text>
                     <Text style={QuotationAllInStyle.totalValue}>{formatPeso(totalAmount)}</Text>
-                    
+
                     {/* 🔥 UPDATED: Dynamic Pricing Breakdown perfectly matching Web */}
                     {discountPercent > 0 && (
                         <View style={QuotationAllInStyle.pricingRow}>
@@ -360,7 +374,7 @@ export default function QuotationAllIn() {
                 </View>
 
                 {/* 🔥 UPDATED: Solo Selection Card Image */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'solo' && QuotationAllInStyle.cardSelected]}
                     onPress={() => setSelectedSoloGrouped('solo')}
@@ -374,7 +388,7 @@ export default function QuotationAllIn() {
                 </TouchableOpacity>
 
                 {/* 🔥 UPDATED: Group Selection Card Image */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'group' && QuotationAllInStyle.cardSelected, isGroupBookingDisabled && { opacity: 0.5 }]}
                     onPress={() => !isGroupBookingDisabled && setSelectedSoloGrouped('group')}
@@ -393,16 +407,16 @@ export default function QuotationAllIn() {
                     <View style={QuotationAllInStyle.counterSection}>
                         <Text style={QuotationAllInStyle.counterSectionTitle}>Number of Travelers</Text>
                         <Text style={[QuotationAllInStyle.subtitle, { marginBottom: 15 }]}>Kindly indicate the number of travelers in each category.</Text>
-                        
+
                         {/* ADULT CARD */}
                         <View style={QuotationAllInStyle.travelerCard}>
                             <Text style={QuotationAllInStyle.counterLabel}>Adult</Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(packagePricePerPax)} per adult</Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>
-                                <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxAdults}
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#475569' }}>Maximum: </Text>{effectiveMaxAdults}
                             </Text>
                             <Text style={QuotationAllInStyle.travelerDetailText}>Ages 12 and above</Text>
-                            
+
                             <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
                                 <TouchableOpacity onPress={() => updateCount('adult', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult <= 2}><Ionicons name="remove" size={18} color={counts.adult <= 2 ? "#ccc" : "#305797"} /></TouchableOpacity>
                                 <Text style={QuotationAllInStyle.counterValue}>{counts.adult}</Text>
@@ -416,10 +430,10 @@ export default function QuotationAllIn() {
                                 <Text style={QuotationAllInStyle.counterLabel}>Child</Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(childRate)} per child</Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>
-                                    <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxChildren}
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#475569' }}>Maximum: </Text>{effectiveMaxChildren}
                                 </Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>Ages 3-11</Text>
-                                
+
                                 <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
                                     <TouchableOpacity onPress={() => updateCount('child', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.child <= 0}><Ionicons name="remove" size={18} color={counts.child <= 0 ? "#ccc" : "#305797"} /></TouchableOpacity>
                                     <Text style={QuotationAllInStyle.counterValue}>{counts.child}</Text>
@@ -434,10 +448,10 @@ export default function QuotationAllIn() {
                                 <Text style={QuotationAllInStyle.counterLabel}>Infant</Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>Rates: {formatPeso(infantRate)} per infant</Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>
-                                    <Text style={{fontFamily: 'Montserrat_700Bold', color: '#475569'}}>Maximum: </Text>{effectiveMaxInfants}
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#475569' }}>Maximum: </Text>{effectiveMaxInfants}
                                 </Text>
                                 <Text style={QuotationAllInStyle.travelerDetailText}>Ages 0-2</Text>
-                                
+
                                 <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
                                     <TouchableOpacity onPress={() => updateCount('infant', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.infant <= 0}><Ionicons name="remove" size={18} color={counts.infant <= 0 ? "#ccc" : "#305797"} /></TouchableOpacity>
                                     <Text style={QuotationAllInStyle.counterValue}>{counts.infant}</Text>
@@ -448,7 +462,7 @@ export default function QuotationAllIn() {
                     </View>
                 )}
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={QuotationAllInStyle.proceedButton}
                     onPress={handleProceed}
                 >

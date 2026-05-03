@@ -17,9 +17,9 @@ export default function SplashScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <View style={SplashScreenStyle.container}>
-                <Image 
-                    source={require('../../assets/images/splashlogo.png')} 
-                    style={SplashScreenStyle.logo} 
+                <Image
+                    source={require('../../assets/images/Logo.png')}
+                    style={SplashScreenStyle.logo}
                 />
                 <Text style={SplashScreenStyle.footerText}>
                     By TRAVEX
