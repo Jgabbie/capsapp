@@ -149,7 +149,7 @@ export default function UserQuotationRequest({ route, navigation }) {
 
         <View style={styles.topIntroSection}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={18} color="#fff" />
+            <Ionicons name="arrow-back" size={14} color="#fff" />
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
 
@@ -161,16 +161,19 @@ export default function UserQuotationRequest({ route, navigation }) {
 
         {/* --- HEADER CARD (Web Sync) --- */}
         <View style={styles.headerCard}>
-            <Text style={styles.packageTitle}>{displayPackageName}</Text>
-            <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>Reference: </Text>
-                <Text style={styles.metaValue}>{quotation.reference}</Text>
-                <Text style={styles.metaDivider}> | </Text>
-                <Text style={styles.metaLabel}>Status: </Text>
-                <View style={[styles.statusTag, { backgroundColor: sStyle.bg }]}>
-                    <Text style={[styles.statusText, { color: sStyle.text }]}>{quotation.status}</Text>
-                </View>
+          <Text style={styles.packageTitle}>{displayPackageName}</Text>
+            
+          <View style={[styles.metaRow, { marginBottom: 6 }]}>
+            <Text style={styles.metaLabel}>Reference: </Text>
+            <Text style={styles.metaValue}>{quotation.reference}</Text>
+          </View>
+            
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Status: </Text>
+            <View style={[styles.statusTag, { backgroundColor: sStyle.bg, marginLeft: 4 }]}>
+              <Text style={[styles.statusText, { color: sStyle.text }]}>{quotation.status}</Text>
             </View>
+          </View>
         </View>
 
         {/* --- HISTORY CARDS --- */}
@@ -186,7 +189,7 @@ export default function UserQuotationRequest({ route, navigation }) {
                             <View key={index} style={styles.historyItem}>
                                 <View style={styles.historyItemHeader}>
                                     <Text style={styles.historyItemVersion}>Version {rev.version}</Text>
-                                    <Text style={styles.historyItemDate}>{dayjs(rev.uploadedAt).format('MMM DD, YYYY HH:mm')}</Text>
+                                    <Text style={styles.historyItemDate}>{dayjs(rev.uploadedAt).format('M/D/YYYY, h:mm:ss A')}</Text>
                                 </View>
                                 <Text style={styles.historyItemSub}>Uploaded by {rev.uploaderName}</Text>
                                 <TouchableOpacity onPress={() => handleOpenPDF(rev.url)}>
@@ -211,7 +214,7 @@ export default function UserQuotationRequest({ route, navigation }) {
                                     <Text style={styles.historyItemVersion}>{c.authorName} <Text style={{color: '#999', fontSize: 11}}>({c.role})</Text></Text>
                                 </View>
                                 <Text style={styles.historyItemComment}>"{c.comments}"</Text>
-                                <Text style={styles.historyItemDate}>{dayjs(c.createdAt).format('MMM DD, YYYY HH:mm')}</Text>
+                                <Text style={styles.historyItemDate}>{dayjs(c.createdAt).format('M/D/YYYY, h:mm:ss A')}</Text>
                             </View>
                         ))}
                     </View>
@@ -306,18 +309,36 @@ export default function UserQuotationRequest({ route, navigation }) {
       {/* --- MODAL: ACCEPT CONFIRMATION --- */}
       <Modal transparent visible={isAcceptModalOpen} animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContentCentered}>
-            <Text style={styles.modalTitleCentered}>Accepting Quotation</Text>
+          <View style={[styles.modalContentCentered, { paddingTop: 35 }]}>
+            
+            {/* 🔥 NEW: Close 'X' Button */}
+            <TouchableOpacity 
+                style={{ position: 'absolute', top: 15, right: 15, padding: 5, zIndex: 10 }}
+                onPress={() => setIsAcceptModalOpen(false)}
+            >
+                <Ionicons name="close" size={24} color="#888" />
+            </TouchableOpacity>
+
+            {/* 🔥 NEW: Blue Title */}
+            <Text style={[styles.modalTitleCentered, { color: "#305797", fontSize: 20 }]}>Accepting Quotation</Text>
+            
             <Text style={styles.modalTextCentered}>Are you sure you want to proceed with this quotation?</Text>
             
             <View style={styles.modalButtonRow}>
+                {/* Proceed Button */}
                 <TouchableOpacity style={styles.modalPrimaryBtnHalf} onPress={handleFinalProceed}>
                     <Text style={styles.modalPrimaryBtnTextHalf}>Proceed</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalSecondaryBtnHalf} onPress={() => setIsAcceptModalOpen(false)}>
-                    <Text style={styles.modalSecondaryBtnTextHalf}>Cancel</Text>
+                
+                {/* 🔥 NEW: Red Cancel Button */}
+                <TouchableOpacity 
+                    style={[styles.modalSecondaryBtnHalf, { backgroundColor: '#b82222', borderWidth: 0 }]} 
+                    onPress={() => setIsAcceptModalOpen(false)}
+                >
+                    <Text style={[styles.modalSecondaryBtnTextHalf, { color: '#fff' }]}>Cancel</Text>
                 </TouchableOpacity>
             </View>
+            
           </View>
         </View>
       </Modal>

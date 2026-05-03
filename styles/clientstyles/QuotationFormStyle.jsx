@@ -41,6 +41,38 @@ const QuotationFormStyle = StyleSheet.create({
         shadowRadius: 18,
         elevation: 2,
     },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 14,
+        gap: 10,
+    },
+    sectionBadge: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#305797',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexShrink: 0,
+    },
+    sectionBadgeText: {
+        color: '#ffffff',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 13,
+        lineHeight: 16,
+    },
+    sectionHeaderText: {
+        flex: 1,
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 14,
+        color: '#305797',
+        lineHeight: 20,
+    },
+    flightSectionHeaderText: {
+        fontSize: 12,
+        lineHeight: 16,
+    },
     sectionGradient: {
         backgroundColor: "#f7faff", 
     },
@@ -299,18 +331,18 @@ const QuotationFormStyle = StyleSheet.create({
 
     // --- FLIGHT NOTE ---
     flightNoteBox: {
-        backgroundColor: "#e6f0ff",
+        backgroundColor: "#fff7d6",
         borderLeftWidth: 4,
-        borderLeftColor: "#305797",
+        borderLeftColor: "#f0b429",
         padding: 12,
         borderRadius: 6,
-        marginTop: 10
+        marginTop: 12
     },
     flightNoteText: {
         fontFamily: "Roboto_400Regular",
-        fontSize: 12,
+        fontSize: 11,
         color: "#333",
-        lineHeight: 18
+        lineHeight: 17
     },
 
     // --- FIXED ITINERARY ---

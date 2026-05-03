@@ -11,23 +11,21 @@ const generateQuotationReference = () => {
 
 // --- CLIENT: Create New Request ---
 export const createQuotation = async (req, res) => {
-  const { packageId, packageName, travelDetails } = req.body;
+  const { packageId, quotationDetails, travelDetails } = req.body;
   const userId = req.userId;
 
   try {
-    if (!packageId || !packageName || !travelDetails) {
+    const normalizedDetails = quotationDetails || travelDetails;
+
+    if (!packageId || !normalizedDetails) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-
-    const user = await User.findById(userId).select("username");
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     const quotation = await Quotation.create({
       packageId,
       userId,
-      userName: user.username,
-      packageName,
-      travelDetails,
+      travelDetails: normalizedDetails,
+      quotationDetails: normalizedDetails,
       reference: generateQuotationReference(),
       status: "Pending",
     });
@@ -89,11 +87,11 @@ export const requestRevision = async (req, res) => {
     const normalizedRole = (() => {
       const role = String(user.role || "").trim().toLowerCase();
       if (role === "admin") return "Admin";
-      if (role === "agent") return "Agent";
-      return "User";
+      if (role === "employee") return "Employee";
+      return "Customer";
     })();
 
-    const authorName = user.username || `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || "User";
+    const authorName = user.username || `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || "Customer";
 
     if (!Array.isArray(quotation.revisionComments)) {
       quotation.revisionComments = [];
@@ -116,84 +114,10 @@ export const requestRevision = async (req, res) => {
   }
 };
 
-// --- ADMIN: Fetch All Global Quotations ---
-export const getAllQuotations = async (_req, res) => {
-  try {
-    const quotations = await Quotation.find({})
-      .populate('packageId', 'packageName packageType')
-      .sort({ createdAt: -1 });
-    return res.status(200).json(quotations);
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching quotations", error: error.message });
-  }
-};
 
-// --- ADMIN: Fetch Specific Quotation (No User Check) ---
-export const adminGetQuotation = async (req, res) => {
-  try {
-    const quotation = await Quotation.findById(req.params.id)
-      .populate('packageId', 'packageName packageType');
-
-    if (!quotation) {
-      return res.status(404).json({ message: "Quotation not found" });
-    }
-
-    return res.status(200).json(quotation);
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching quotation", error: error.message });
-  }
-};
-
-// --- ADMIN: Update Status (Approve/Reject) ---
-export const adminUpdateQuotationStatus = async (req, res) => {
-  const { status } = req.body;
-  try {
-    const quotation = await Quotation.findById(req.params.id);
-    if (!quotation) return res.status(404).json({ message: "Quotation not found" });
-
-    quotation.status = status;
-    await quotation.save();
-
-    return res.status(200).json({ message: `Quotation set to ${status}`, quotation });
-  } catch (error) {
-    return res.status(500).json({ message: "Error updating status", error: error.message });
-  }
-};
-
-// --- ADMIN: Upload Revised PDF ---
-export const adminUploadQuotationPdf = async (req, res) => {
-  try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ message: "No PDF file uploaded" });
-
-    const quotation = await Quotation.findById(req.params.id);
-    if (!quotation) return res.status(404).json({ message: "Quotation not found" });
-
-    const admin = await User.findById(req.userId).select("username");
-    
-    // Construct the URL for the mobile app to access
-    const pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-
-    quotation.currentPdfUrl = pdfUrl;
-    quotation.status = "Under Review";
-    quotation.pdfRevisions.push({
-      url: pdfUrl,
-      version: (quotation.pdfRevisions?.length || 0) + 1,
-      uploadedBy: req.userId,
-      uploaderName: admin?.username || "Admin",
-      uploadedAt: new Date(),
-    });
-
-    await quotation.save();
-    return res.status(200).json({ message: "PDF revision uploaded", quotation });
-  } catch (error) {
-    return res.status(500).json({ message: "Error uploading PDF", error: error.message });
-  }
-};
-
-// --- CLIENT: General Update (If needed for travel details) ---
+// --- CLIENT: General Update (If needed for quotation details) ---
 export const updateQuotation = async (req, res) => {
-  const { status, travelDetails } = req.body;
+  const { quotationDetails, travelDetails } = req.body;
 
   try {
     const quotation = await Quotation.findById(req.params.id);
@@ -206,8 +130,11 @@ export const updateQuotation = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    if (status) quotation.status = status;
-    if (travelDetails) quotation.travelDetails = travelDetails;
+    const normalizedDetails = quotationDetails || travelDetails;
+    if (normalizedDetails) {
+      quotation.quotationDetails = normalizedDetails;
+      quotation.travelDetails = normalizedDetails;
+    }
 
     await quotation.save();
     return res.status(200).json(quotation);

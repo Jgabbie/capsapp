@@ -11,8 +11,8 @@ const revisionCommentSchema = new mongoose.Schema({
   authorName: { type: String, required: true },
   role: { 
     type: String, 
-    enum: ["User", "Admin", "Agent"], 
-    default: "User" 
+    enum: ["Customer", "Admin", "Employee"], 
+    required: true 
   },
   createdAt: { type: Date, default: Date.now },
 });
@@ -26,6 +26,7 @@ const pdfRevisionSchema = new mongoose.Schema({
     ref: "users", 
     required: true 
   },
+  travelDetails: { type: Object },
   uploaderName: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now },
 });
@@ -43,25 +44,23 @@ const quotationSchema = new mongoose.Schema(
       ref: "users", 
       required: true 
     },
-    userName: { type: String, required: true },
-    packageName: { type: String, required: true },
-    travelDetails: { type: Object, required: true }, // Stores travelers, travelDate, etc.
-    reference: { type: String, required: true, unique: true }, // Format: QT-XXXXXX
+    travelDetails: { type: Object },
+    quotationDetails: { type: Object, required: true },
+    reference: { type: String, required: true, unique: true },
     status: {
       type: String,
       enum: [
         "Pending",
         "Under Review",
         "Revision Requested",
-        "Revised",
-        "Approved",
-        "Rejected",
+        "Booked",
+        "Rejected"
       ],
-      default: "Pending",
+      default: "Pending"
     },
     currentPdfUrl: { type: String },
     pdfRevisions: [pdfRevisionSchema],
-    revisionComments: [revisionCommentSchema],
+    revisionComments: [revisionCommentSchema]
   },
   { timestamps: true }
 );

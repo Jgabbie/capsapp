@@ -146,22 +146,34 @@ export default function QuotationUploads({ route, navigation }) {
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
 
     useEffect(() => {
-        setTravelersData(prevData => 
-            prevData.map((traveler, index) => {
+        // Only apply adjustments if necessary to avoid unnecessary re-renders or loops
+        setTravelersData(prevData => {
+            if (!Array.isArray(prevData)) return prevData;
+
+            // If lengths differ, we should rebuild/adjust
+            const lengthsDiffer = prevData.length !== travelerTypes.length;
+
+            let changed = lengthsDiffer;
+            const newData = prevData.map((traveler, index) => {
                 const travelerType = travelerTypes[index];
-                
+                let updated = traveler;
+
                 if (isMinorTravelerType(travelerType)) {
                     if (traveler.roomType !== 'N/A') {
-                        return { ...traveler, roomType: 'N/A' };
+                        updated = { ...traveler, roomType: 'N/A' };
                     }
                 } else if (bookingType === 'Group Booking') {
                     if (!traveler.roomType) {
-                        return { ...traveler, roomType: 'TWIN' };
+                        updated = { ...traveler, roomType: 'TWIN' };
                     }
                 }
-                return traveler;
-            })
-        );
+
+                if (updated !== traveler) changed = true;
+                return updated;
+            });
+
+            return changed ? newData : prevData;
+        });
     }, [travelerTypes, bookingType]);
 
     const updateTraveler = (index, field, value) => {

@@ -34,12 +34,10 @@ export default function UserPackageQuotation() {
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status");
     const [bookingDateFilter, setBookingDateFilter] = useState(null);
-    const [bookingTimeFilter, setBookingTimeFilter] = useState(null);
 
     // Modal States
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showDateModal, setShowDateModal] = useState(false);
-    const [showTimeModal, setShowTimeModal] = useState(false);
 
     // --- API LOGIC ---
     const fetchQuotations = async () => {
@@ -102,11 +100,10 @@ export default function UserPackageQuotation() {
 
             const itemCreatedAt = dayjs(item.createdAt);
             const matchesDate = !bookingDateFilter || itemCreatedAt.format('YYYY-MM-DD') === bookingDateFilter;
-            const matchesTime = !bookingTimeFilter || itemCreatedAt.format('HH:mm') === bookingTimeFilter;
 
-            return matchesSearch && matchesStatus && matchesDate && matchesTime;
+            return matchesSearch && matchesStatus && matchesDate;
         });
-    }, [quotations, searchText, statusFilter, bookingDateFilter, bookingTimeFilter]);
+    }, [quotations, searchText, statusFilter, bookingDateFilter]);
 
     // --- EXACT WEB STATUS COLORS (ANT DESIGN) ---
     const getStatusStyle = (status) => {
@@ -132,42 +129,21 @@ export default function UserPackageQuotation() {
 
     const statusOptions = ["All", "Successful", "Pending", "Cancelled", "Approved", "Rejected", "Under Review", "Revision Requested"];
 
-    const timeSlots = [
-        "08:00",
-        "08:30",
-        "09:00",
-        "09:30",
-        "10:00",
-        "10:30",
-        "11:00",
-        "11:30",
-        "01:00",
-        "01:30",
-        "02:00",
-        "02:30",
-        "03:00",
-        "03:30",
-        "04:00",
-        "04:30",
-    ];
+    
 
     const handleDateChange = (day) => {
         setBookingDateFilter(day.dateString);
         setShowDateModal(false);
     };
 
-    const handleTimeSelect = (slot) => {
-        setBookingTimeFilter(slot);
-        setShowTimeModal(false);
-    };
+    
 
     const clearFilters = () => {
         setStatusFilter("Status");
         setBookingDateFilter(null);
-        setBookingTimeFilter(null);
     };
 
-    const hasActiveFilters = (statusFilter !== "Status" && statusFilter !== "All") || bookingDateFilter || bookingTimeFilter;
+    const hasActiveFilters = (statusFilter !== "Status" && statusFilter !== "All") || bookingDateFilter;
 
     return (
         <View style={styles.container}>
@@ -196,34 +172,48 @@ export default function UserPackageQuotation() {
                         )}
                     </View>
 
-                    <View style={styles.dropdownGroup}>
-                        <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowStatusModal(true)}>
-                            <Text style={styles.dropdownText}>{statusFilter === 'All' ? 'Status' : statusFilter}</Text>
-                            <Ionicons name="chevron-down" size={12} color="#bfbfbf" />
-                        </TouchableOpacity>
+                    {/* 🔥 UPDATED: 50/50 Split Status & Requested Date Filters */}
+                    <View style={styles.filterRow}>
+                        
+                        {/* Status Filter */}
+                        <View style={styles.dropdownGroup}>
+                            <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowStatusModal(true)}>
+                                <Text style={[styles.dropdownText, statusFilter !== "Status" && styles.dropdownTextSelected]} numberOfLines={1}>
+                                    {statusFilter}
+                                </Text>
+                                <Ionicons name="chevron-down" size={14} color={statusFilter !== "Status" ? "#305797" : "#999"} style={styles.dropdownIcon} />
+                            </TouchableOpacity>
+                            {statusFilter !== "Status" && (
+                                <TouchableOpacity onPress={() => setStatusFilter("Status")} style={{ marginLeft: 6 }}>
+                                    <Ionicons name="close-circle" size={18} color="#999" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
 
-                        <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowDateModal(true)}>
-                            <Text style={styles.dropdownText}>
-                                {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM DD') : 'Booking Date'}
-                            </Text>
-                            <Ionicons name="calendar-outline" size={14} color="#bfbfbf" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowTimeModal(true)}>
-                            <Text style={styles.dropdownText}>
-                                {bookingTimeFilter ? dayjs(bookingTimeFilter, 'HH:mm').format('hh:mm A') : 'Booking Time'}
-                            </Text>
-                            <Ionicons name="time-outline" size={14} color="#bfbfbf" />
-                        </TouchableOpacity>
+                        {/* Requested Date Filter */}
+                        <View style={styles.dropdownGroup}>
+                            <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowDateModal(true)}>
+                                <Text style={[styles.dropdownText, bookingDateFilter && styles.dropdownTextSelected]} numberOfLines={1}>
+                                    {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM DD, YYYY') : "Requested Date"}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={14} color={bookingDateFilter ? "#305797" : "#999"} style={styles.dropdownIcon} />
+                            </TouchableOpacity>
+                            {bookingDateFilter && (
+                                <TouchableOpacity onPress={() => setBookingDateFilter(null)} style={{ marginLeft: 6 }}>
+                                    <Ionicons name="close-circle" size={18} color="#999" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
 
                         {hasActiveFilters && (
                             <TouchableOpacity
-                                style={styles.clearFilterBtn}
+                                style={[styles.clearFilterBtn, { marginLeft: 8 }]}
                                 onPress={clearFilters}
                             >
                                 <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
                             </TouchableOpacity>
                         )}
+
                     </View>
                 </View>
 
@@ -353,37 +343,7 @@ export default function UserPackageQuotation() {
                 </TouchableOpacity>
             </Modal>
 
-            <Modal visible={showTimeModal} transparent animationType="fade" onRequestClose={() => setShowTimeModal(false)}>
-                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowTimeModal(false)}>
-                    <TouchableWithoutFeedback>
-                        <View style={styles.modalContainer}>
-                            <View style={styles.modalHeaderRow}>
-                                <Text style={styles.modalTitleText}>Booking Time</Text>
-                                <TouchableOpacity onPress={() => setShowTimeModal(false)}>
-                                    <Ionicons name="close" size={22} color="#999" />
-                                </TouchableOpacity>
-                            </View>
 
-                            <View style={styles.timeGrid}>
-                                {timeSlots.map((slot) => {
-                                    const isSelected = bookingTimeFilter === slot;
-                                    return (
-                                        <TouchableOpacity
-                                            key={slot}
-                                            style={[styles.timeSlotButton, isSelected && styles.timeSlotButtonSelected]}
-                                            onPress={() => handleTimeSelect(slot)}
-                                        >
-                                            <Text style={[styles.timeSlotText, isSelected && styles.timeSlotTextSelected]}>
-                                                {dayjs(slot, 'HH:mm').format('hh:mm A')}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </TouchableOpacity>
-            </Modal>
 
         </View>
     );

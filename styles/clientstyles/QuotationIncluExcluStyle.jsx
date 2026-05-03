@@ -133,6 +133,36 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         color: "#3c465a",
         lineHeight: 18,
     },
+    
+    // 🔥 NEW BOTTOM BUTTON STYLES 🔥
+    actionContainer: {
+        marginTop: 30,
+        gap: 12,
+    },
+    primaryButton: {
+        backgroundColor: '#305797',
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    primaryButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 16,
+    },
+    secondaryButton: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    secondaryButtonText: {
+        color: '#64748b',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 16,
+    }
 });
 
 export default QuotationIncluExcluStyle;

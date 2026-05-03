@@ -113,6 +113,7 @@ export default function QuotationForm({ route, navigation }) {
     const [isDateModalOpen, setDateModalOpen] = useState(false);
     const [isFlightDateModalOpen, setFlightDateModalOpen] = useState(false);
     const [isFlightTimeModalOpen, setFlightTimeModalOpen] = useState(false);
+    const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
 
     // Auto-adjust group minimum
     useEffect(() => {
@@ -123,6 +124,46 @@ export default function QuotationForm({ route, navigation }) {
 
     // Maximum allowed passengers: depends on selected slot capacity (default to 20 if none selected)
     const maxAllowed = useMemo(() => Number(selectedSlotCapacity || 20), [selectedSlotCapacity]);
+
+    const clampTravelerCountsToSlot = (nextLimit) => {
+        const limit = Number(nextLimit) || 0;
+
+        if (travelerType === 'solo') {
+            setAdultCount(1);
+            setChildCount(0);
+            setInfantCount(0);
+            return;
+        }
+
+        let nextAdult = adultCount;
+        let nextChild = childCount;
+        let nextInfant = infantCount;
+
+        if (nextAdult + nextChild + nextInfant > limit) {
+            nextAdult = Math.max(2, Math.min(nextAdult, limit));
+            let remaining = Math.max(0, limit - nextAdult);
+
+            nextChild = Math.min(nextChild, remaining);
+            remaining -= nextChild;
+
+            nextInfant = Math.min(nextInfant, remaining);
+        }
+
+        setAdultCount(nextAdult);
+        setChildCount(nextChild);
+        setInfantCount(nextInfant);
+    };
+
+    const SectionHeader = ({ number, title, titleStyle }) => (
+        <View style={QuotationFormStyle.sectionHeaderRow}>
+            <View style={QuotationFormStyle.sectionBadge}>
+                <Text style={QuotationFormStyle.sectionBadgeText}>{number}</Text>
+            </View>
+            <Text style={[QuotationFormStyle.sectionHeaderText, titleStyle]}>{title}</Text>
+        </View>
+    );
+
+    const notesSectionNumber = packageCategory === 'Land Arrangement' ? 5 : 4;
 
 
     // --- VALIDATION LOGIC ---
@@ -179,39 +220,41 @@ export default function QuotationForm({ route, navigation }) {
                 ? { adult: 1, child: 0, infant: 0 } 
                 : { adult: adultCount, child: childCount, infant: infantCount };
 
-            // The core data object
+            const totalTravelers =
+                (Number(travelersPayload.adult) || 0) +
+                (Number(travelersPayload.child) || 0) +
+                (Number(travelersPayload.infant) || 0);
+
+            // The core data object - synced with the backend quotation form fields
             const detailsObject = { 
                 travelers: travelersPayload,
+                travelersCount: totalTravelers,
                 preferredAirlines,
                 preferredHotels,
+                preferredDate,
                 budgetRange,
                 itineraryNotes,
                 additionalComments: additionalComments || "None",
                 flightDetails,
                 packageCategory,
-                // Include both spellings used by your Web (Domestic vs Intl)
+                arrangementType: packageCategory,
+                travelDate: preferredDate,
                 preferredDates: preferredDate
             };
 
-            // 🔥 THE UNIVERSAL PAYLOAD 🔥
-            // We send BOTH 'travelDetails' (for Mobile Backend) AND 'quotationDetails' (for Web Backend).
-            // This mathematically guarantees that neither backend will throw a "Missing required fields" 400 error!
+            // Send both legacy and synced fields so the current backend version accepts the request.
             const payload = {
                 packageId: finalPackageId,
-                packageName: pkg?.packageName || pkg?.title || "Tour Package", // Required by Mobile Backend
-                travelDetails: detailsObject,      // Required by Mobile Backend
-                quotationDetails: detailsObject    // Required by Web Backend
+                packageName: pkg?.packageName || pkg?.title || "Tour Package",
+                travelDetails: detailsObject,
+                quotationDetails: detailsObject
             };
 
-            console.log("📤 Sending Universal Payload:", JSON.stringify(payload, null, 2));
+            console.log("📤 Sending Quotation Payload:", JSON.stringify(payload, null, 2));
 
             await api.post("/quotation/create-quotation", payload, withUserHeader(user?._id));
             
-            Alert.alert(
-                "Quotation Request Submitted", 
-                "Your package quotation request has been submitted successfully. Please wait for your quotation to be generated.", 
-                [{ text: "OK", onPress: () => navigation.navigate("home") }]
-            );
+            setSuccessModalVisible(true);
         } catch (error) {
             const backendError = error.response?.data?.message || error.response?.data?.error || JSON.stringify(error.response?.data) || "Failed to submit request.";
             console.error("❌ Quotation Error Detail:", error.response?.data || error.message);
@@ -293,7 +336,7 @@ export default function QuotationForm({ route, navigation }) {
 
                 {/* --- ARRANGEMENT SELECTOR --- */}
                 <View style={QuotationFormStyle.section}>
-                    <Text style={QuotationFormStyle.selectionLabel}>Select Arrangement Type</Text>
+                    <SectionHeader number={1} title="Select Arrangement Type" />
                     
                     <TouchableOpacity 
                         style={[QuotationFormStyle.selectionCard, packageCategory === 'All in Package' && QuotationFormStyle.selectionCardActive]}
@@ -312,12 +355,10 @@ export default function QuotationForm({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                {/* --- FORM FIELDS --- */}
+                {/* --- TRAVELERS CARD --- */}
                 <View style={QuotationFormStyle.section}>
-                    
-                    {/* 🔥 NEW TRAVELERS SELECTOR TO MATCH WEB 🔥 */}
-                    <Text style={QuotationFormStyle.inputLabel}>Travelers <Text style={{color: 'red'}}>*</Text></Text>
-                    <Text style={{ color: '#444', marginTop: 6, marginBottom: 8 }}>Maximum allowed: {maxAllowed} passenger{maxAllowed > 1 ? 's' : ''}</Text>
+                    <SectionHeader number={2} title={'Select If "Solo Booking" or "Group Booking"'} />
+                    <Text style={{ color: '#444', marginTop: 2, marginBottom: 8 }}>Maximum allowed: {maxAllowed} passenger{maxAllowed > 1 ? 's' : ''}</Text>
                     
                     <TouchableOpacity 
                         style={[QuotationFormStyle.selectionCard, travelerType === 'solo' && QuotationFormStyle.selectionCardActive]}
@@ -410,6 +451,11 @@ export default function QuotationForm({ route, navigation }) {
                             </View>
                         </View>
                     )}
+                </View>
+
+                {/* --- PREFERRED DETAILS CARD --- */}
+                <View style={QuotationFormStyle.section}>
+                    <SectionHeader number={3} title="Fill up the required details below" />
 
                     {packageCategory === 'All in Package' && (
                         <View style={QuotationFormStyle.inputGroup}>
@@ -483,13 +529,12 @@ export default function QuotationForm({ route, navigation }) {
                 {/* --- LAND ARRANGEMENT FLIGHT DETAILS --- */}
                 {packageCategory === 'Land Arrangement' && (
                     <View style={QuotationFormStyle.section}>
+                        <SectionHeader
+                            number={4}
+                            title="If you are booking for Land Arrangement, Fill up the required details below"
+                            titleStyle={QuotationFormStyle.flightSectionHeaderText}
+                        />
                         <Text style={QuotationFormStyle.sectionTitle}>Flight Details</Text>
-                        
-                        <View style={QuotationFormStyle.flightNoteBox}>
-                            <Text style={QuotationFormStyle.flightNoteText}>
-                                Note: Please provide your flight details. This will help us coordinate your airport transfers and ensure a seamless experience. Make sure your chosen travel date is aligned to your flight schedule.
-                            </Text>
-                        </View>
 
                         <View style={[QuotationFormStyle.inputGroup, { marginTop: 15 }]}>
                             <Text style={QuotationFormStyle.inputLabel}>Airline <Text style={{color: 'red'}}>*</Text></Text>
@@ -529,14 +574,22 @@ export default function QuotationForm({ route, navigation }) {
                             </TouchableOpacity>
                             {errors.flightTime && <Text style={QuotationFormStyle.errorText}>{errors.flightTime}</Text>}
                         </View>
+
+                        <View style={QuotationFormStyle.flightNoteBox}>
+                            <Text style={QuotationFormStyle.flightNoteText}>
+                                Note: Please provide your flight details. This will help us coordinate your airport transfers and ensure a seamless experience. If you haven't booked your flights yet, please provide your estimated flight schedule. Lastly, make sure that your chosen travel date is aligned to your flight schedule.
+                            </Text>
+                        </View>
                     </View>
                 )}
 
                 {/* --- FIXED ITINERARY & NOTES --- */}
                 <View style={QuotationFormStyle.section}>
+                    <Text style={QuotationFormStyle.sectionTitle}>Fixed Itinerary</Text>
+                    <Text style={QuotationFormStyle.sectionSubtitle}>The following is a list of fixed activities for your trip.</Text>
+
                     {fixedItineraryEntries.length > 0 && (
                         <View style={{ marginBottom: 25 }}>
-                            <Text style={QuotationFormStyle.sectionTitle}>Fixed Itinerary</Text>
                             <View style={{ marginTop: 10 }}>
                                 {fixedItineraryEntries.map((entry) => (
                                     <View key={entry.label} style={QuotationFormStyle.itineraryDayBox}>
@@ -555,9 +608,13 @@ export default function QuotationForm({ route, navigation }) {
                             </View>
                         </View>
                     )}
+                </View>
 
-                    <Text style={QuotationFormStyle.sectionTitle}>Itinerary Notes</Text>
-                    <Text style={[QuotationFormStyle.helperNote, { marginBottom: 15, marginTop: 0 }]}>Provide any additional information or modifications you would like to make to the itinerary.</Text>
+                {/* --- ITINERARY NOTES + ADDITIONAL COMMENTS --- */}
+                <View style={QuotationFormStyle.section}>
+                    <SectionHeader number={notesSectionNumber} title="Provide comments or details about the itinerary for possible changes" />
+                    <Text style={[QuotationFormStyle.sectionTitle, { marginTop: 6 }]}>Itinerary Notes</Text>
+                    <Text style={[QuotationFormStyle.helperNote, { marginBottom: 18, marginTop: 2 }]}>Provide any additional information or modifications you would like to make to the itinerary.</Text>
                     
                     {itineraryLabels.map((label, index) => (
                         <View key={index} style={QuotationFormStyle.inputGroup}>
@@ -577,12 +634,8 @@ export default function QuotationForm({ route, navigation }) {
                     ))}
                     {errors.itineraryNotes && <Text style={[QuotationFormStyle.errorText, {marginTop: -10, marginBottom: 15}]}>{errors.itineraryNotes}</Text>}
 
-                    <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444', marginTop: 4 }]}>Note: If you wish to not have any changes in the following Itinerary, kindly type "NONE" in the fields of the Itinerary notes.</Text>
-                </View>
-
-                {/* --- ADDITIONAL COMMENTS --- */}
-                <View style={QuotationFormStyle.section}>
-                    <Text style={QuotationFormStyle.inputLabel}>Additional Comments</Text>
+                    <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444', marginTop: 4, marginBottom: 14 }]}>Note: If you wish to not have any changes in the following Itinerary, kindly type "NONE" in the fields of the Itinerary notes.</Text>
+                    <Text style={[QuotationFormStyle.inputLabel, { marginTop: 4, marginBottom: 8 }]}>Additional Comments</Text>
                     <TextInput 
                         style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea]}
                         placeholder="Anything else we should know?"
@@ -663,9 +716,11 @@ export default function QuotationForm({ route, navigation }) {
                                                     style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0', backgroundColor: hasSlots ? '#fff' : '#f9f9f9', opacity: hasSlots ? 1 : 0.5 }} 
                                                     disabled={!hasSlots}
                                                             onPress={() => { 
+                                                                        const nextSlotCapacity = Number(range.slots) || 0;
                                                                 setPreferredDate(`${rangeString} (Slots: ${range.slots})`);
-                                                                // Save the numeric slot capacity for enforcement (cap to 20)
-                                                                setSelectedSlotCapacity(Number(range.slots) || 0);
+                                                                        // Save the numeric slot capacity for enforcement and trim traveler counts if needed.
+                                                                        setSelectedSlotCapacity(nextSlotCapacity);
+                                                                        clampTravelerCountsToSlot(nextSlotCapacity);
                                                                 setDateModalOpen(false); 
                                                             }}
                                                 >
@@ -747,6 +802,42 @@ export default function QuotationForm({ route, navigation }) {
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
+            </Modal>
+
+            {/* 🔥 NEW SUCCESS MODAL (WEB DESIGN MATCH) 🔥 */}
+            <Modal visible={isSuccessModalVisible} transparent animationType="fade">
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={[ModalStyle.modalBox, { width: '90%', padding: 25, alignItems: 'center', borderRadius: 12 }]}>
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: 15, right: 15, padding: 5 }}
+                            onPress={() => {
+                                setSuccessModalVisible(false);
+                                navigation.navigate("userquotations");
+                            }}
+                        >
+                            <Ionicons name="close" size={24} color="#888" />
+                        </TouchableOpacity>
+
+                        <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 22, color: "#305797", textAlign: "center", marginTop: 20, marginBottom: 12 }}>
+                            Quotation Request Submitted
+                        </Text>
+
+                        <Text style={{ fontFamily: "Roboto_400Regular", fontSize: 14, color: "#555", textAlign: "center", lineHeight: 22, marginBottom: 25, paddingHorizontal: 10 }}>
+                            Your package quotation request has been submitted successfully. Please wait for your quotation to be generated.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[QuotationFormStyle.submitButton, { width: '80%', height: 45, marginTop: 0 }]}
+                            onPress={() => {
+                                setSuccessModalVisible(false);
+                                navigation.navigate("userquotations");
+                            }}
+                        >
+                            <Text style={QuotationFormStyle.submitButtonText}>Continue</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </View>
             </Modal>
 
         </KeyboardAvoidingView>

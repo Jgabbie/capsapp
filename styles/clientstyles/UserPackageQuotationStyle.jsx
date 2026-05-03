@@ -25,6 +25,12 @@ const UserPackageQuotationStyle = StyleSheet.create({
     marginBottom: 24,
     gap: 12,
   },
+  // 🔥 NEW: Wrapper to hold the buttons evenly
+  filterRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%'
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -43,21 +49,22 @@ const UserPackageQuotationStyle = StyleSheet.create({
     fontFamily: "Roboto_400Regular",
   },
   dropdownGroup: {
+    flex: 1, // 🔥 Expands to take half the screen
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
   dropdownButton: {
-    flex: 1,
+    flex: 1, // 🔥 Fills the group container
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between", // 🔥 Pushes the text to the left and icon to the right
     backgroundColor: "#fff",
     borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: "#d9d9d9",
-    height: 40,
-    paddingHorizontal: 12,
+    height: 42,
   },
   dropdownText: {
     fontFamily: "Roboto_400Regular",

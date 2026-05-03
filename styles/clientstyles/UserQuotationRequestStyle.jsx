@@ -26,17 +26,17 @@ const UserQuotationRequestStyle = StyleSheet.create({
     alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     backgroundColor: "#305797",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     marginBottom: 14,
   },
   backButtonText: {
     color: "#fff",
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 20,
+    fontFamily: "Montserrat_600SemiBold",
+    fontSize: 13,
   },
   pageTitle: {
     fontSize: 24,
@@ -46,9 +46,9 @@ const UserQuotationRequestStyle = StyleSheet.create({
   },
   pageSubtitle: {
     fontFamily: "Roboto_400Regular",
-    color: "#4b5563",
-    fontSize: 15,
-    lineHeight: 22,
+    color: "#666",
+    fontSize: 12,
+    lineHeight: 18,
   },
 
   // --- HEADER CARD ---

@@ -46,6 +46,17 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         fontSize: 12,
     },
 
+    imageScrollContainer: {
+        flexDirection: 'row',
+        marginBottom: 20,
+    },
+    summaryScrollImage: {
+        width: 180,
+        height: 120,
+        borderRadius: 12,
+        marginRight: 12,
+    },
+
     bookingDetailsCard: {
         backgroundColor: '#fff',
         borderRadius: 16,
@@ -82,6 +93,70 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         color: '#4e5b72',
         flex: 2,
         textAlign: 'right',
+    },
+
+    sectionNote: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 11,
+        color: '#64748b',
+        lineHeight: 16,
+        marginTop: 10,
+        fontStyle: 'italic',
+    },
+
+    totalAmountCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#e0e7ff',
+        marginBottom: 25,
+        elevation: 2,
+        shadowColor: '#1f2a44',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+    },
+    totalLabel: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 12,
+        color: '#64748b',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    totalValue: {
+        fontFamily: "Roboto_700Bold",
+        fontSize: 30,
+        color: '#305797',
+        marginVertical: 8,
+    },
+    totalFinePrint: {
+        fontFamily: "Roboto_400Regular",
+        fontStyle: 'italic',
+        fontSize: 10,
+        color: '#7c8798',
+        lineHeight: 14,
+        marginBottom: 12,
+    },
+    packageTypeCard: {
+        marginTop: 6,
+        borderWidth: 1,
+        borderColor: '#dbe4f3',
+        backgroundColor: '#f8fbff',
+        borderRadius: 12,
+        padding: 14,
+    },
+    packageTypeLabel: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#64748b',
+    },
+    packageTypeValue: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 15,
+        color: '#305797',
+        marginTop: 2,
+        textTransform: 'uppercase',
     },
 
     proceedButton: {

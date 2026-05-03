@@ -56,7 +56,7 @@ export default function QuotationIncluExclu({ route, navigation }) {
                     <View style={QuotationIncluExcluStyle.cardHeader}>
                         <View>
                             <View style={QuotationIncluExcluStyle.pill}>
-                                <Text style={QuotationIncluExcluStyle.pillText}>Coverage</Text>
+                                <Text style={QuotationIncluExcluStyle.pillText}>Package</Text>
                             </View>
                             <Text style={QuotationIncluExcluStyle.sectionTitle}>Inclusions & Exclusions</Text>
                             <Text style={QuotationIncluExcluStyle.sectionSubtitle}>Know what is covered and what is not.</Text>
@@ -86,6 +86,28 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         <Text style={QuotationIncluExcluStyle.policyText}>
                             Please be informed that cancellation request with medical reasons are only accepted and refundable with valid medical certificate. Cancellation request without medical reasons are non-refundable. For any cancellation request, please reach out to us through the Contact Us section on our Home page.
                         </Text>
+                    </View>
+
+                    {/* 🔥 NEW BOTTOM NAVIGATION BUTTONS 🔥 */}
+                    <View style={QuotationIncluExcluStyle.actionContainer}>
+                        
+                        {/* Upload ID Button (Goes Forward) */}
+                        <TouchableOpacity 
+                            style={QuotationIncluExcluStyle.primaryButton}
+                            onPress={() => navigation.navigate('quotationuploads', { quotation })}
+                        >
+                            <Text style={QuotationIncluExcluStyle.primaryButtonText}>Upload Valid ID</Text>
+                        </TouchableOpacity>
+
+                        {/* Back Button (Goes Backward) */}
+                        <TouchableOpacity 
+                            style={QuotationIncluExcluStyle.secondaryButton}
+                            // Using goBack() prevents app from stacking infinite screens!
+                            onPress={() => navigation.goBack()} 
+                        >
+                            <Text style={QuotationIncluExcluStyle.secondaryButtonText}>Back</Text>
+                        </TouchableOpacity>
+                        
                     </View>
                 </View>
 
