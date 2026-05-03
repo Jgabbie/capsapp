@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import { useUser } from '../../context/UserContext'; 
+import { useUser } from '../../context/UserContext';
 
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
@@ -18,9 +18,9 @@ export default function RegistrationStep2({ route, navigation }) {
 
     // --- State Management ---
     const [medicalData, setMedicalData] = useState({
-        dietary: '', 
+        dietary: '',
         dietaryDetails: '',
-        medical: '', 
+        medical: '',
         medicalDetails: '',
         insurance1: '',
         insurance2: '',
@@ -34,12 +34,12 @@ export default function RegistrationStep2({ route, navigation }) {
 
     // --- Validation Logic ---
     const isValidEmail = (email) => {
-        if (!email) return true; 
+        if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
     };
 
     const isValidContact = (contact) => {
-        if (!contact) return true; 
+        if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
         if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
         if (digits.length === 11 && digits.startsWith("09")) return true;
@@ -78,22 +78,22 @@ export default function RegistrationStep2({ route, navigation }) {
     const handleDropdownSelect = (value) => {
         if (activeDropdown === 'dietary') {
             setMedicalData({
-                ...medicalData, 
-                dietary: value, 
+                ...medicalData,
+                dietary: value,
                 dietaryDetails: value === 'N' ? 'N/A' : (medicalData.dietaryDetails === 'N/A' ? '' : medicalData.dietaryDetails)
             });
         } else if (activeDropdown === 'medical') {
             setMedicalData({
-                ...medicalData, 
-                medical: value, 
+                ...medicalData,
+                medical: value,
                 medicalDetails: value === 'N' ? 'N/A' : (medicalData.medicalDetails === 'N/A' ? '' : medicalData.medicalDetails)
             });
         } else if (activeDropdown === 'insurance1') {
-            setMedicalData({...medicalData, insurance1: value});
+            setMedicalData({ ...medicalData, insurance1: value });
         } else if (activeDropdown === 'insurance2') {
-            setMedicalData({...medicalData, insurance2: value});
+            setMedicalData({ ...medicalData, insurance2: value });
         } else if (activeDropdown === 'emergencyTitle') {
-            setEmergency({...emergency, title: value});
+            setEmergency({ ...emergency, title: value });
         }
         setActiveDropdown(null);
     };
@@ -111,7 +111,7 @@ export default function RegistrationStep2({ route, navigation }) {
                 </>
             );
         }
-        
+
         // Default to Y/N for the others (matching the web format)
         return (
             <>
@@ -129,10 +129,10 @@ export default function RegistrationStep2({ route, navigation }) {
         <SafeAreaView style={RegistrationFormStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={RegistrationFormStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={RegistrationFormStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
-                    
+
                     <View style={RegistrationFormStyle.headerGold}>
                         <Text style={RegistrationFormStyle.headerGoldText}>TRAVEL REGISTRATION DETAILS</Text>
                     </View>
@@ -161,11 +161,11 @@ export default function RegistrationStep2({ route, navigation }) {
                     </View>
                     <View style={[RegistrationFormStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
                             multiline
                             value={medicalData.dietaryDetails}
-                            onChangeText={(v) => setMedicalData({...medicalData, dietaryDetails: v})}
+                            onChangeText={(v) => setMedicalData({ ...medicalData, dietaryDetails: v })}
                             editable={medicalData.dietary === 'Y'}
                             backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
                         />
@@ -183,11 +183,11 @@ export default function RegistrationStep2({ route, navigation }) {
                     </View>
                     <View style={[RegistrationFormStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
                             multiline
                             value={medicalData.medicalDetails}
-                            onChangeText={(v) => setMedicalData({...medicalData, medicalDetails: v})}
+                            onChangeText={(v) => setMedicalData({ ...medicalData, medicalDetails: v })}
                             editable={medicalData.medical === 'Y'}
                             backgroundColor={medicalData.medical === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
                         />
@@ -197,9 +197,9 @@ export default function RegistrationStep2({ route, navigation }) {
                     <View style={{ borderWidth: 1, borderColor: '#000', padding: 10, marginBottom: 15 }}>
                         <Text style={RegistrationFormStyle.label}>TRAVEL INSURANCE</Text>
                         <Text style={{ fontSize: 7, textAlign: 'justify', marginBottom: 10, marginTop: 4 }}>
-                            We highly encourage <Text style={{fontWeight: 'bold'}}>ALL OUR CLIENTS</Text> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.
+                            We highly encourage <Text style={{ fontWeight: 'bold' }}>ALL OUR CLIENTS</Text> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.
                         </Text>
-                        
+
                         <View style={RegistrationFormStyle.row}>
                             <Text style={{ fontSize: 9, flex: 1 }}>Do you agree to purchase a Travel Insurance from us?</Text>
                             <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance1')}>
@@ -243,7 +243,7 @@ export default function RegistrationStep2({ route, navigation }) {
                     <View style={{ backgroundColor: '#ADD8E6', borderWidth: 1, borderColor: '#000', paddingVertical: 4, paddingHorizontal: 5 }}>
                         <Text style={RegistrationFormStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
                     </View>
-                    
+
                     <View style={{ borderWidth: 1, borderTopWidth: 0, borderColor: '#000' }}>
                         {/* Row 1 */}
                         <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#000' }}>
@@ -255,34 +255,34 @@ export default function RegistrationStep2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 2, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Full name: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({...emergency, fullName: v})} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({ ...emergency, fullName: v.replace(/[^A-Za-z\s-]/g, '') })} />
                             </View>
                         </View>
                         {/* Row 2 */}
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Email: </Text>
-                                <TextInput 
-                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }} 
+                                <TextInput
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
-                                    value={emergency.email} 
-                                    onChangeText={(v) => setEmergency({...emergency, email: v.replace(/\s/g, '')})} 
+                                    value={emergency.email}
+                                    onChangeText={(v) => setEmergency({ ...emergency, email: v.replace(/\s/g, '') })}
                                 />
                             </View>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Contact Number: </Text>
-                                <TextInput 
-                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: contactHasError ? '#b54747' : '#000' }} 
-                                    keyboardType="phone-pad" 
+                                <TextInput
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: contactHasError ? '#b54747' : '#000' }}
+                                    keyboardType="phone-pad"
                                     maxLength={11}
-                                    value={emergency.contact} 
-                                    onChangeText={(v) => setEmergency({...emergency, contact: v.replace(/[^0-9]/g, '')})} 
+                                    value={emergency.contact}
+                                    onChangeText={(v) => setEmergency({ ...emergency, contact: v.replace(/[^0-9]/g, '') })}
                                 />
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Relation: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({...emergency, relation: v})} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v.replace(/[^A-Za-z\s-]/g, '') })} />
                             </View>
                         </View>
                     </View>
@@ -306,7 +306,7 @@ export default function RegistrationStep2({ route, navigation }) {
                     <TouchableOpacity style={QuotationAllInStyle.proceedButton} onPress={handleNext}>
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity style={RegistrationFormStyle.backTextButton} onPress={() => navigation.goBack()}>
                         <Text style={RegistrationFormStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
@@ -315,9 +315,9 @@ export default function RegistrationStep2({ route, navigation }) {
 
             {/* --- GLOBAL DROPDOWN MODAL --- */}
             <Modal visible={!!activeDropdown} transparent animationType="fade">
-                <TouchableOpacity 
-                    style={RegistrationFormStyle.modalOverlay} 
-                    activeOpacity={1} 
+                <TouchableOpacity
+                    style={RegistrationFormStyle.modalOverlay}
+                    activeOpacity={1}
                     onPress={() => setActiveDropdown(null)}
                 >
                     <View style={RegistrationFormStyle.dropdownBox}>

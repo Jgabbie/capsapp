@@ -270,8 +270,8 @@ export default function QuotationUploads({ route, navigation }) {
                                     <Ionicons name="chevron-down" size={14} color="#9ca3af" />
                                 </TouchableOpacity>
 
-                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="First name" value={t.firstName} onChangeText={(v) => updateTraveler(index, 'firstName', v)} />
-                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Last name" value={t.lastName} onChangeText={(v) => updateTraveler(index, 'lastName', v)} />
+                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
+                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
                             </View>
 
                             <View style={BookingUploadsStyle.formRow}>
@@ -300,7 +300,7 @@ export default function QuotationUploads({ route, navigation }) {
 
                             {!isDomestic && (
                                 <View style={BookingUploadsStyle.formRow}>
-                                    <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Passport number" keyboardType="numeric" maxLength={7} value={t.passportNo} onChangeText={(v) => updateTraveler(index, 'passportNo', v.replace(/[^0-9]/g, ''))} />
+                                    <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Passport number" placeholderTextColor="#9ca3af" keyboardType="numeric" maxLength={7} value={t.passportNo} onChangeText={(v) => updateTraveler(index, 'passportNo', v.replace(/[^0-9]/g, ''))} />
 
                                     <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'passportExpiry')}>
                                         <Text style={[BookingUploadsStyle.inputText, !t.passportExpiry && BookingUploadsStyle.placeholderText]}>

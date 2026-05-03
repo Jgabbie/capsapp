@@ -69,16 +69,19 @@ export default function Signup() {
             case "username":
                 if (!value) errorMsg = "Username is required.";
                 else if (value.length < 8) errorMsg = "Username must be at least 8 characters";
+                else if (value.length > 30) errorMsg = "Username must be at most 30 characters";
                 break;
             case "firstname":
                 if (!value) errorMsg = "First name is required.";
                 else if (value.length < 2) errorMsg = "First name must be at least 2 characters.";
                 else if (value.endsWith(' ')) errorMsg = "First name must not end with a space.";
+                else if (value.length > 30) errorMsg = "First name must be at most 30 characters.";
                 break;
             case "lastname":
                 if (!value) errorMsg = "Last name is required.";
                 else if (value.length < 2) errorMsg = "Last name must be at least 2 characters.";
                 else if (/[ -]$/.test(value)) errorMsg = "Last name must not end with a space or dash.";
+                else if (value.length > 30) errorMsg = "Last name must be at most 30 characters.";
                 break;
             case "email":
                 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -112,7 +115,8 @@ export default function Signup() {
         let finalValue = value;
 
         if (field === 'firstname' || field === 'lastname') {
-            finalValue = toProperCase(value);
+            const cleaned = value.replace(/[^A-Za-z\s-]/g, '');
+            finalValue = toProperCase(cleaned).slice(0, 30);
         } else if (field === 'phonenum') {
             const cleaned = value.replace(/\D/g, "").slice(0, 11);
             if (cleaned.length <= 4) {
@@ -123,7 +127,7 @@ export default function Signup() {
                 finalValue = `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
             }
         } else if (field === 'username') {
-            finalValue = value.replace(/[^A-Za-z0-9]/g, "");
+            finalValue = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 30);
         }
 
         setUser(prev => ({ ...prev, [field]: finalValue }));
@@ -201,7 +205,7 @@ export default function Signup() {
                         {/* USERNAME */}
                         <Text style={SignupStyle.signupLabel}>Username</Text>
                         <TextInput
-                            maxLength={20}
+                            maxLength={30}
                             style={[SignupStyle.signupInputs, errors.username && SignupStyle.inputErrorBorder]}
                             value={user.username}
                             onChangeText={(e) => changeHandler("username", e)}
@@ -213,7 +217,7 @@ export default function Signup() {
                             <View>
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>First Name</Text>
                                 <TextInput
-                                    maxLength={20}
+                                    maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.firstname && SignupStyle.inputErrorBorder]}
                                     value={user.firstname}
                                     onChangeText={(e) => changeHandler("firstname", e)}
@@ -224,7 +228,7 @@ export default function Signup() {
                             <View>
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>Last Name</Text>
                                 <TextInput
-                                    maxLength={20}
+                                    maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.lastname && SignupStyle.inputErrorBorder]}
                                     value={user.lastname}
                                     onChangeText={(e) => changeHandler("lastname", e)}
@@ -298,7 +302,28 @@ export default function Signup() {
 
                         {/* LINKS & BUTTON */}
                         <View style={SignupStyle.signupLinksContainer}>
-                            <Text onPress={() => cs.navigate("login")} style={SignupStyle.signupLinks}>Already have an account? Login</Text>
+                            <Text onPress={() => {
+                                setUser({
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    email: "",
+                                    phonenum: "",
+                                    password: "",
+                                    confirmpassword: "",
+                                });
+                                setErrors({
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    email: "",
+                                    phonenum: "",
+                                    password: "",
+                                    confirmpassword: "",
+                                });
+                                setBackendError("");
+                                cs.navigate("login");
+                            }} style={SignupStyle.signupLinks}>Already have an account? Login</Text>
                         </View>
 
                         <TouchableOpacity
@@ -329,6 +354,26 @@ export default function Signup() {
                             style={ModalStyle.modalButton}
                             onPress={() => {
                                 setModalVisible(false)
+                                // clear form before navigating
+                                setUser({
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    email: "",
+                                    phonenum: "",
+                                    password: "",
+                                    confirmpassword: "",
+                                });
+                                setErrors({
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    email: "",
+                                    phonenum: "",
+                                    password: "",
+                                    confirmpassword: "",
+                                });
+                                setBackendError("");
                                 cs.navigate("login")
                             }}
                         >

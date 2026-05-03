@@ -237,7 +237,7 @@ export default function QuotationForm2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 2, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Full name: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({ ...emergency, fullName: v })} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({ ...emergency, fullName: v.replace(/[^A-Za-z\s-]/g, '') })} />
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row' }}>
@@ -263,7 +263,7 @@ export default function QuotationForm2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Relation: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v })} />
+                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v.replace(/[^A-Za-z\s-]/g, '') })} />
                             </View>
                         </View>
                     </View>
