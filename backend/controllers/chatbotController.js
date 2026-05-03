@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
-import KnowledgeChunk from '../models/knowledgeChunk.js'; 
+import KnowledgeChunk from '../models/knowledgeChunk.js';
 import PackageModel from '../models/package.js';
 import ServiceModel from '../models/service.js';
 

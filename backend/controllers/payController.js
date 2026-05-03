@@ -453,7 +453,6 @@ export const createManualPaymentDeposit = async (req, res) => {
             type: 'payment',
             link: '/user-transactions',
         });
-        console.log('Notification created for installment payment, user:', user._id, 'booking:', booking.reference);
 
         try {
             const info = await transporter.sendMail({
@@ -504,7 +503,6 @@ export const createManualPaymentDeposit = async (req, res) => {
                     </div>
                     `
             });
-            console.log('Installment payment email sent:', info && (info.response || info.envelope || info.messageId));
         } catch (emailError) {
             console.error('Failed to send booking email:', emailError);
         }
@@ -798,7 +796,6 @@ export const createCheckoutSessionVisa = async (req, res) => {
 
 export const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
-    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -806,12 +803,20 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         }
         const { paymentPayload } = req.body;
 
+        if (!paymentPayload) {
+            return res.status(400).json({ error: "paymentPayload is required." });
+        }
 
         const bookingId = paymentPayload.bookingId;
-        const totalPrice = paymentPayload.totalPrice
+        const totalPrice = Number(paymentPayload.amount ?? paymentPayload.totalPrice ?? 0);
+        const installmentIndex = paymentPayload.installmentIndex ?? null;
         const token = crypto.randomUUID();
 
-        const tokenCheckout = await TokenCheckoutModel.create({
+        if (!bookingId || !Number.isFinite(totalPrice) || totalPrice <= 0) {
+            return res.status(400).json({ error: "bookingId and a valid amount are required." });
+        }
+
+        const tokenCheckout = await TokenCheckout.create({
             token,
             userId,
             bookingId,
@@ -821,19 +826,18 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
         const bookingReference = paymentPayload.bookingReference;
         const packageId = paymentPayload.packageId;
-        const successUrl = `${FRONTEND_URL}/booking-payment/success?token=${token}`;
-        const cancelUrl = `${FRONTEND_URL}/booking-payment?status=cancel`;
-
+        const successUrl = paymentPayload.successUrl;
+        const cancelUrl = paymentPayload.cancelUrl;
 
         const getPackage = await PackageModel.findById(packageId).select('packageName');
-        const packageName = getPackage.packageName;
+        const packageName = getPackage?.packageName || 'Tour Package';
 
         const baseAmountCents = Math.round(totalPrice * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents; //total amount with convenience fee
 
-        const username = await UserModel.findById(userId).select('username');
-        const email = await UserModel.findById(userId).select('email');
+        const username = await User.findById(userId).select('username');
+        const email = await User.findById(userId).select('email');
 
 
         //currently not being used
@@ -843,44 +847,47 @@ export const createCheckoutSessionDeposit = async (req, res) => {
             bookingReference,
             transactionType: "Installment Payment",
             packageId,
+            installmentIndex,
             baseAmountCents,
             convenienceFeeCents,
             totalAmountCents: finalTotalCents
         };
 
-        const response = await apiFetch.post(
-            "https://api.paymongo.com/v1/checkout_sessions",
-            {
-                data: {
-                    attributes: {
-                        billing: {
-                            name: username.username || "Test User",
-                            email: email.email || "test@example.com",
-                        },
-                        line_items: [
-                            {
-                                name: packageName || 'Tour Package',
-                                quantity: 1,
-                                amount: baseAmountCents,
-                                currency: "PHP",
-                            },
-                            {
-                                name: "Convenience Fee",
-                                description: "Payment processing and service fee",
-                                quantity: 1,
-                                amount: convenienceFeeCents,
-                                currency: "PHP",
-                            }
-                        ],
-                        payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
-                        success_url: successUrl,
-                        cancel_url: cancelUrl,
-                        metadata,
-                        show_description: true,
-                        show_line_items: true,
+        const payload = {
+            data: {
+                attributes: {
+                    billing: {
+                        name: username.username || "Test User",
+                        email: email.email || "test@example.com",
                     },
+                    line_items: [
+                        {
+                            name: packageName || 'Tour Package',
+                            quantity: 1,
+                            amount: baseAmountCents,
+                            currency: "PHP",
+                        },
+                        {
+                            name: "Convenience Fee",
+                            description: "Payment processing and service fee",
+                            quantity: 1,
+                            amount: convenienceFeeCents,
+                            currency: "PHP",
+                        }
+                    ],
+                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
+                    metadata,
+                    show_description: true,
+                    show_line_items: true,
                 },
             },
+        };
+
+        const response = await axios.post(
+            "https://api.paymongo.com/v1/checkout_sessions",
+            payload,
             {
                 headers: {
                     Authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ":").toString("base64")}`,
@@ -890,7 +897,7 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         );
 
 
-        res.json(response);
+        return res.status(200).json(response.data);
     } catch (error) {
         console.error("PayMongo error:", error.response?.data || error.message);
         res.status(500).json({ error: error.response?.data || error.message });
