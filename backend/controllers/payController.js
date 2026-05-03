@@ -682,8 +682,8 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(500).json({ error: "PayMongo secret key is not configured." });
         }
 
-        const tokenToUse = actualPayload.checkoutToken || checkoutToken;
-        const priceToUse = actualPayload.totalPrice || totalPrice;
+        const tokenToUse = actualPayload.checkoutToken;
+        const priceToUse = actualPayload.totalPrice;
 
         if (!tokenToUse || !priceToUse) {
             return res.status(400).json({ message: "checkoutToken and totalPrice are required" });
@@ -699,11 +699,14 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(500).json({ message: "PAYMONGO_SECRET_KEY is not configured" });
         }
 
-        let pkgName = packageName || actualPayload.packageName || "Tour Package";
+        let pkgName = actualPayload.packageName || "Tour Package";
         if (actualPayload.packageId && pkgName === "Tour Package") {
             const pkg = await PackageModel.findById(actualPayload.packageId);
             if (pkg) pkgName = pkg.packageName;
         }
+
+        const successUrl = actualPayload.successUrl || 'myapp://payment-success';
+        const cancelUrl = actualPayload.cancelUrl || 'myapp://payment-cancel';
 
         // Web Synced Computation: 3.5% + ₱15 Fee
         const baseAmountCents = Math.round(Number(priceToUse) * 100);
@@ -722,8 +725,8 @@ export const createCheckoutSession = async (req, res) => {
                         { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
-                    success_url: actualPayload.successUrl || successUrl,
-                    cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
                     metadata: {
                         userId: req.userId,
                         token: tokenToUse,

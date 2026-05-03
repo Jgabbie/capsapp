@@ -18,10 +18,14 @@ export default function QuotationPaymentMethod({ route, navigation }) {
     const [loading, setLoading] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
 
-    const { setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { quotation, setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [method, setMethod] = useState('paymongo');
     const [proofImage, setProofImage] = useState(null);
+
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+    const travelDetails = latestPdfRevision?.travelDetails || {};
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -65,15 +69,14 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
         try {
             const isExistingBooking = !!route.params.existingBookingId;
-            const targetPackageId = route.params.existingPackageId || setupData?.pkg?._id || setupData?.pkg?.id || setupData?.packageId || route.params.packageId;
-
+            const targetPackageId = quotation?.packageId || quotation?.pkg?._id || quotation?.pkg?.packageId;
             if (!targetPackageId) {
                 Alert.alert("Error", "Package ID is missing. Cannot proceed.");
                 setLoading(false);
                 return;
             }
 
-            const safeAmount = Number(setupData?.totalPrice || amountToPay || 0);
+            const safeAmount = Number(travelDetails?.totalPrice || amountToPay || 0);
 
             if (isExistingBooking) {
                 if (method === 'manual') {
@@ -134,16 +137,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
             else {
                 // New booking flow (same as PaymentMethod copy)
-                const safeAdultCount = parseInt(setupData?.travelerCounts?.adult) || (passengers ? passengers.length : 1);
-                const safeChildCount = parseInt(setupData?.travelerCounts?.child) || 0;
-                const safeInfantCount = parseInt(setupData?.travelerCounts?.infant) || 0;
+                const safeAdultCount = parseInt(travelDetails?.adult) || (passengers ? passengers.length : 1);
+                const safeChildCount = parseInt(travelDetails?.child) || 0;
+                const safeInfantCount = parseInt(travelDetails?.infant) || 0;
                 const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
 
-                const depositAmount = (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount;
+                const depositAmount = (travelDetails.totalDeposit || 0) * calculatedTravelersCount;
 
                 let parsedStartDate = "TBD";
                 let parsedEndDate = "TBD";
-                const rawDate = setupData?.selectedDate || setupData?.travelDate;
+                const rawDate = travelDetails?.travelDates;
 
                 if (typeof rawDate === 'string') {
                     const dateParts = rawDate.split(" - ");
@@ -222,6 +225,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     lastName: p.lastName || 'User',
                     roomType: p.room || p.roomType || 'N/A',
                     age: p.age?.toString() || '0',
+                    ageCategory: p.ageCategory || 'N/A',
                     birthday: p.bday || p.birthday || p.birthdate || null,
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
@@ -229,11 +233,13 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     photoFile: uploadedTravelerFiles[idx]?.photo || null
                 }));
 
+                console.log("Mapped Travelers: ", mappedTravelers);
+
                 const mappedBookingDetails = {
                     dateOfRegistration: dayjs().toISOString(),
                     travelDate: travelDateObj,
-                    tourPackageTitle: setupData?.pkg?.title || setupData?.pkg?.packageName || "Tour Package",
-                    tourPackageVia: setupData?.pkg?.via || setupData?.airline || "N/A",
+                    tourPackageTitle: quotation?.packageId.packageName,
+                    tourPackageVia: travelDetails.airline || "N/A",
                     leadTitle: leadGuestInfo?.title || "MR",
                     leadFullName: leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || "Guest User",
                     leadEmail: user?.email || leadGuestInfo?.email || "guest@example.com",
@@ -255,11 +261,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     emergencyRelation: emergency?.relation || "N/A",
                     emergencyTitle: emergency?.title || "MR",
                     paymentDetails: {
+                        adultRate: travelDetails?.totalRate || 0,
+                        childRate: travelDetails?.totalChildRate || 0,
+                        infantRate: travelDetails?.totalInfantRate || 0,
                         paymentType: paymentType || 'deposit',
                         frequency: frequency || 'Every 2 weeks',
                         depositAmount: depositAmount
                     }
                 };
+
+                console.log("Final Booking Payload: ", { ...finalBookingPayload, bookingDetails: mappedBookingDetails });
 
                 const travelersPayload =
                 {

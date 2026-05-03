@@ -38,7 +38,7 @@ const parseDateStringSafe = (dateStr) => {
 export default function QuotationPaymentMode({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency, setupData } = route.params || {};
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
@@ -63,25 +63,78 @@ export default function QuotationPaymentMode({ route, navigation }) {
     useEffect(() => {
         const fetchInvoiceNumber = async () => {
             try {
-                const invoiceRes = await api.get('/booking/current-invoice-number', withUserHeader(user._id));
+                // Try to use the same controller logic as BookingInvoice: allow passing a reference
+                const reference = setupData?.reference || setupData?.ref || "--";
+                const config = { ...(withUserHeader(user?._id) || {}), params: reference && reference !== "--" ? { reference } : {} };
+                const invoiceRes = await api.get('/booking/bookings-total-month', config);
                 const number = invoiceRes.data?.invoiceNumber;
 
-                console.log('Fetched invoice number:', number);
+                if (number) {
+                    setInvoiceNumber(number);
+                    return;
+                }
 
-                if (!number) throw new Error('No invoice number returned');
-
-                setInvoiceNumber(number);
+                // If controller didn't return a prebuilt invoiceNumber, construct using sequence/total
+                const total = Number(invoiceRes.data?.totalBookings || 0);
+                const createdAtValue = setupData?.createdAt || setupData?.bookingDate || new Date();
+                const monthKey = dayjs(createdAtValue).format('MM');
+                const sequence = Number(invoiceRes.data?.sequence || total + 1) || total + 1;
+                setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
+                return;
             } catch (error) {
-                console.log('Error fetching invoice number:', error.message);
-
-                // simple fallback only if API fails
-                const fallbackMonth = dayjs().format('MM');
-                setInvoiceNumber(`${fallbackMonth}01`);
+                console.log('Error fetching monthly invoice number:', error.message);
             }
+
+            // Fallback: current month with sequence 01
+            const fallbackMonth = dayjs().format('MM');
+            setInvoiceNumber(`${fallbackMonth}01`);
         };
 
         fetchInvoiceNumber();
-    }, [user?._id]);
+    }, [user?._id, setupData]);
+
+
+    const buildInvoiceNumber = (allBookings, currentBooking) => {
+        if (!currentBooking) return "";
+        const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
+        const createdAt = createdAtValue ? dayjs(createdAtValue) : null;
+        if (!createdAt || !createdAt.isValid()) return "";
+
+        const getIdentity = (item) =>
+            String(item?._id || item?.id || item?.reference || item?.ref || "");
+
+        const currentIdentity = getIdentity(currentBooking);
+        const monthKey = createdAt.format("MM");
+
+        const monthBookings = (allBookings || [])
+            .map((item) => ({
+                ...item,
+                _createdAt: item.bookingDate || item.createdAt,
+                _identity: getIdentity(item)
+            }))
+            .filter((item) => item._createdAt && dayjs(item._createdAt).isValid())
+            .filter((item) => dayjs(item._createdAt).isSame(createdAt, "month"));
+
+        monthBookings.sort((a, b) => {
+            const timeDiff = dayjs(a._createdAt).valueOf() - dayjs(b._createdAt).valueOf();
+            if (timeDiff !== 0) return timeDiff;
+            return a._identity.localeCompare(b._identity);
+        });
+
+        let index = monthBookings.findIndex((item) => item._identity === currentIdentity);
+
+        if (index < 0) {
+            const currentRef = String(currentBooking.reference || currentBooking.ref || "");
+            if (currentRef) {
+                index = monthBookings.findIndex(
+                    (item) => String(item.reference || item.ref || "") === currentRef
+                );
+            }
+        }
+
+        const sequence = index >= 0 ? index + 1 : monthBookings.length + 1;
+        return `${monthKey}${String(sequence).padStart(2, "0")}`;
+    };
 
 
     const scheduleData = useMemo(() => {
