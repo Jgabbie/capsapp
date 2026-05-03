@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator, Modal } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator, Modal, KeyboardAvoidingView } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -44,7 +44,7 @@ export default function Login() {
         return () => clearInterval(interval)
     }, [timer])
 
-    if (!fontsLoaded) return null; 
+    if (!fontsLoaded) return null;
 
     const normalizeRole = (role) => {
         const normalized = String(role || "").trim().toLowerCase()
@@ -81,7 +81,7 @@ export default function Login() {
             if (response.data.success) {
                 const role = response.data.role
                 const normalizedRole = normalizeRole(role)
-                
+
                 // Only allow Customer/Users
                 if (normalizedRole !== "users" && normalizedRole !== "customer") {
                     setError("Unauthorized role. Only Customers can sign in to the mobile app.")
@@ -95,7 +95,7 @@ export default function Login() {
                     _id: response.data.userId,
                     username: response.data.username,
                     role: canonicalRole,
-                    loginOnce: response.data.loginOnce 
+                    loginOnce: response.data.loginOnce
                 })
 
                 showMessage("Login successful!");
@@ -135,8 +135,8 @@ export default function Login() {
 
         setLoading(true);
         try {
-            const response = await api.post('/users/auth/verify-account', { 
-                otp: otp, 
+            const response = await api.post('/users/auth/verify-account', {
+                otp: otp,
                 email: unverifiedEmail
             });
 
@@ -144,7 +144,7 @@ export default function Login() {
                 setIsOTPModalOpen(false);
                 setOtp("");
                 showMessage("Account verified successfully!");
-                handleLogin(); 
+                handleLogin();
             }
         } catch (err) {
             setErrorOtp(err.response?.data?.message || "Verification failed");
@@ -169,120 +169,122 @@ export default function Login() {
             style={LoginStyle.container}
             resizeMode='cover'
         >
-            <Text style={LoginStyle.loginHeading}>Welcome</Text>
-            <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
+            <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+                <Text style={LoginStyle.loginHeading}>Welcome</Text>
+                <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
-            <View style={LoginStyle.inputWrapper}>
-                <Text style={LoginStyle.loginLabel}>Username</Text>
-                <TextInput 
-                    style={LoginStyle.loginInputs} 
-                    onChangeText={(e) => { 
-                        setUsername(e);
-                        setError(""); 
-                    }}
-                    value={getUsername}
-                />
-            </View>
-
-            <View style={LoginStyle.inputWrapper}>
-                <Text style={LoginStyle.loginLabel}>Password</Text>
-                <View style={LoginStyle.passwordContainer}>
-                    <TextInput 
-                        style={LoginStyle.passwordInput} 
-                        onChangeText={(e) => { 
-                            setPassword(e);
-                            setError(""); 
-                        }} 
-                        secureTextEntry={!showPassword}
-                        value={getPassword}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={LoginStyle.eyeIcon}>
-                        <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            {getError ? (
                 <View style={LoginStyle.inputWrapper}>
-                    <Text style={LoginStyle.errorMessage}>{getError}</Text>
+                    <Text style={LoginStyle.loginLabel}>Username</Text>
+                    <TextInput
+                        style={LoginStyle.loginInputs}
+                        onChangeText={(e) => {
+                            setUsername(e);
+                            setError("");
+                        }}
+                        value={getUsername}
+                    />
                 </View>
-            ) : null}
 
-            <View style={LoginStyle.loginLinksContainer}>
-                <TouchableOpacity onPress={() => { cs.navigate("signup") }}>
-                    <Text style={LoginStyle.loginLinks}>Signup here</Text>
-                </TouchableOpacity>
-                
-                <Text style={LoginStyle.loginLinksDivider}>|</Text>
-                
-                <TouchableOpacity onPress={() => { cs.navigate("passwordreset") }}>
-                    <Text style={LoginStyle.loginLinks}>Forgot password</Text>
-                </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity 
-                style={[LoginStyle.loginButton, { opacity: loading ? 0.7 : 1 }]} 
-                onPress={handleLogin}
-                disabled={loading}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={LoginStyle.loginButtonText}>Login</Text>
-                )}
-            </TouchableOpacity>
-
-            {/* OTP Verification Modal */}
-            <Modal transparent animationType='fade' visible={isOTPModalOpen}>
-                <View style={ModalStyle.modalOverlay}>
-                    <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Verify OTP</Text>
-                        <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We've sent a verification code to your Email</Text>
-
+                <View style={LoginStyle.inputWrapper}>
+                    <Text style={LoginStyle.loginLabel}>Password</Text>
+                    <View style={LoginStyle.passwordContainer}>
                         <TextInput
-                            style={LoginStyle.otpInput}
-                            keyboardType="numeric"
-                            maxLength={6}
-                            value={otp}
-                            onChangeText={(val) => {
-                                setOtp(val.replace(/[^0-9]/g, ''))
-                                setErrorOtp("")
+                            style={LoginStyle.passwordInput}
+                            onChangeText={(e) => {
+                                setPassword(e);
+                                setError("");
                             }}
+                            secureTextEntry={!showPassword}
+                            value={getPassword}
                         />
-                        {/* Change this line inside the Modal */}
-{errorOtp ? (
-    <Text style={[
-        LoginStyle.errorMessage, 
-        { 
-            marginLeft: 0,
-            marginBottom: 10, 
-            textAlign: 'center', 
-            width: '100%',     // 🔥 ADD THIS: Forces text to span the whole modal
-            alignSelf: 'center' // 🔥 ADD THIS: Extra insurance for centering
-        }
-    ]}>
-        {errorOtp}
-    </Text>
-) : null}
-
-                        <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
-                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}
-                        </TouchableOpacity>
-
-                        {timer > 0 ? (
-                            <Text style={LoginStyle.timerText}>Wait for <Text style={LoginStyle.timerHighlight}>{timer}</Text> sec to resend</Text>
-                        ) : (
-                            <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
-                                <Text style={[LoginStyle.loginLinks, { textDecorationLine: 'none' }]}>Didn't get the code? Click here</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        <TouchableOpacity onPress={() => setIsOTPModalOpen(false)} style={{ marginTop: 20 }}>
-                            <Text style={[LoginStyle.loginLinks, { color: '#992A46', textDecorationLine: 'none' }]}>Cancel</Text>
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={LoginStyle.eyeIcon}>
+                            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
+
+                {getError ? (
+                    <View style={LoginStyle.inputWrapper}>
+                        <Text style={LoginStyle.errorMessage}>{getError}</Text>
+                    </View>
+                ) : null}
+
+                <View style={LoginStyle.loginLinksContainer}>
+                    <TouchableOpacity onPress={() => { cs.navigate("signup") }}>
+                        <Text style={LoginStyle.loginLinks}>Signup here</Text>
+                    </TouchableOpacity>
+
+                    <Text style={LoginStyle.loginLinksDivider}>|</Text>
+
+                    <TouchableOpacity onPress={() => { cs.navigate("passwordreset") }}>
+                        <Text style={LoginStyle.loginLinks}>Forgot password</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                    style={[LoginStyle.loginButton, { opacity: loading ? 0.7 : 1 }]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={LoginStyle.loginButtonText}>Login</Text>
+                    )}
+                </TouchableOpacity>
+
+                {/* OTP Verification Modal */}
+                <Modal transparent animationType='fade' visible={isOTPModalOpen}>
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+                            <Text style={ModalStyle.modalTitle}>Verify OTP</Text>
+                            <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We've sent a verification code to your Email</Text>
+
+                            <TextInput
+                                style={LoginStyle.otpInput}
+                                keyboardType="numeric"
+                                maxLength={6}
+                                value={otp}
+                                onChangeText={(val) => {
+                                    setOtp(val.replace(/[^0-9]/g, ''))
+                                    setErrorOtp("")
+                                }}
+                            />
+                            {/* Change this line inside the Modal */}
+                            {errorOtp ? (
+                                <Text style={[
+                                    LoginStyle.errorMessage,
+                                    {
+                                        marginLeft: 0,
+                                        marginBottom: 10,
+                                        textAlign: 'center',
+                                        width: '100%',     // 🔥 ADD THIS: Forces text to span the whole modal
+                                        alignSelf: 'center' // 🔥 ADD THIS: Extra insurance for centering
+                                    }
+                                ]}>
+                                    {errorOtp}
+                                </Text>
+                            ) : null}
+
+                            <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}
+                            </TouchableOpacity>
+
+                            {timer > 0 ? (
+                                <Text style={LoginStyle.timerText}>Wait for <Text style={LoginStyle.timerHighlight}>{timer}</Text> sec to resend</Text>
+                            ) : (
+                                <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
+                                    <Text style={[LoginStyle.loginLinks, { textDecorationLine: 'none' }]}>Didn't get the code? Click here</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity onPress={() => setIsOTPModalOpen(false)} style={{ marginTop: 20 }}>
+                                <Text style={[LoginStyle.loginLinks, { color: '#992A46', textDecorationLine: 'none' }]}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            </KeyboardAvoidingView>
         </ImageBackground>
     )
 }

@@ -119,20 +119,25 @@ export default function BookingInvoice({ route, navigation }) {
             setBooking(finalBooking);
             setTransactions(finalTxns);
 
-            // Fetch invoice number from backend endpoint
+            // Fetch invoice number for this booking using controller (MMNN)
             if (reference && reference !== "--") {
                 try {
-                    const invoiceRes = await api.get(`/booking/invoice-number/${reference}`, withUserHeader(user?._id));
+                    const config = { ...(withUserHeader(user?._id) || {}), params: { reference } };
+                    const invoiceRes = await api.get('/booking/bookings-total-month', config);
                     const number = invoiceRes.data?.invoiceNumber;
-                    if (number) setInvoiceNumber(number);
-                    else {
-                        const cDate = finalBooking.createdAt || finalBooking.bookingDate;
-                        if (cDate) setInvoiceNumber(`${dayjs(cDate).format("MM")}01`);
+                    if (number) {
+                        setInvoiceNumber(number);
+                    } else {
+                        const total = Number(invoiceRes.data?.totalBookings || 0);
+                        const createdAtValue = finalBooking.createdAt || finalBooking.bookingDate || new Date();
+                        const monthKey = dayjs(createdAtValue).format('MM');
+                        const sequence = Number(invoiceRes.data?.sequence || total + 1) || total + 1;
+                        setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
                     }
                 } catch (countErr) {
-                    console.log("Error fetching invoice number:", countErr.message);
+                    console.log("Error fetching invoice number for reference:", countErr.message);
                     const cDate = finalBooking.createdAt || finalBooking.bookingDate || new Date();
-                    setInvoiceNumber(`${dayjs(cDate).format("MM")}01`);
+                    setInvoiceNumber(`${dayjs(cDate).format('MM')}01`);
                 }
             }
 

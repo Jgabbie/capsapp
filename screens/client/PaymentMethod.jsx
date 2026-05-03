@@ -252,7 +252,7 @@ export default function PaymentMethod({ route, navigation }) {
                     photoFile: uploadedTravelerFiles[idx]?.photo || null
                 }));
 
-                console.log("Mapped Travelers for Booking Payload:", mappedTravelers);
+                //console.log("Mapped Travelers for Booking Payload:", mappedTravelers);
 
                 const mappedBookingDetails = {
                     bookingType: mappedTravelers.length > 1 ? "Group Booking" : "Solo Booking",
@@ -290,7 +290,7 @@ export default function PaymentMethod({ route, navigation }) {
                     }
                 };
 
-                console.log("Final Booking Payload Payment Details:", mappedBookingDetails.paymentDetails);
+                //console.log("Final Booking Payload Payment Details:", mappedBookingDetails.paymentDetails);
 
                 // Array of Objects format for the Mongoose schema compatibility
                 const travelersPayload =
