@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Modal, ActivityIndicator, Linking } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
@@ -20,6 +20,49 @@ const timeSlots = [
     "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"
 ];
 
+const JAPAN_FALLBACK_STEPS = [
+    {
+        title: 'Application Submitted',
+        description: 'The applicant has successfully submitted the visa application for JAPAN SINGLE ENTRY.'
+    },
+    {
+        title: 'Application Approved',
+        description: "The applicant's application has been approved. The date and time of the appointment has been finalized."
+    },
+    {
+        title: 'Payment Complete',
+        description: 'The applicant has successfully paid the service fee for the visa application.'
+    },
+    {
+        title: 'Documents Uploaded',
+        description: 'The required documents has been uploaded by the applicant online for verification and approval.'
+    },
+    {
+        title: 'Documents Approved',
+        description: 'The uploaded documents has been approved and is ready to submit to the embassy. The user may now deliver the documents to the Travel Agency.'
+    },
+    {
+        title: 'Documents Received',
+        description: 'The documents has been received by the Travel Agency.'
+    },
+    {
+        title: 'Documents Submitted',
+        description: 'The documents has been submitted by the Travel Agency to the Embassy of Japan.'
+    },
+    {
+        title: 'Processing by Embassy',
+        description: 'The documents are currently being processed by the Embassy of Japan.'
+    },
+    {
+        title: 'Embassy Approved',
+        description: 'The visa application has been approved by the Embassy of Japan.'
+    },
+    {
+        title: 'Passport Released',
+        description: "The applicant's passport has been released, it is now ready for pickup from the Travel Agency Office or deliver it to your home address."
+    }
+]
+
 export default function VisaDetailsGuidance() {
     const cs = useNavigation()
     const route = useRoute()
@@ -27,6 +70,7 @@ export default function VisaDetailsGuidance() {
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     
     const selectedService = route.params?.service || {}
+    const [serviceDetails, setServiceDetails] = useState(selectedService)
     
     const [preferredDate, setPreferredDate] = useState(null)
     const [preferredTime, setPreferredTime] = useState(null)
@@ -41,6 +85,33 @@ export default function VisaDetailsGuidance() {
         Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
     })
+
+    useEffect(() => {
+        setServiceDetails(selectedService)
+    }, [selectedService])
+
+    useEffect(() => {
+        const loadServiceDetails = async () => {
+            try {
+                const serviceId = selectedService?.visaItem || selectedService?._id
+                if (!serviceId || !user?._id) return
+
+                const { data } = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id))
+                if (data && typeof data === 'object') {
+                    setServiceDetails((prev) => ({ ...(prev || {}), ...data }))
+                }
+            } catch (error) {
+                console.log('Failed to load full visa service details:', error?.message)
+            }
+        }
+
+        loadServiceDetails()
+    }, [selectedService?.visaItem, selectedService?._id, user?._id])
+
+    const serviceData = useMemo(() => {
+        if (serviceDetails && Object.keys(serviceDetails).length > 0) return serviceDetails
+        return selectedService
+    }, [serviceDetails, selectedService])
 
     const getMinDate = () => {
         const minDate = new Date();
@@ -99,15 +170,61 @@ export default function VisaDetailsGuidance() {
         cs.navigate('userapplications');
     }
 
-    // Helper to determine requirement/optional badge
-    const renderReqBadge = (item) => {
-        if (typeof item !== 'object' || item.isReq === undefined) return null;
-        const isRequired = item.isReq === true || String(item.isReq) === 'true';
-        return (
-            <Text style={[VisaDetailsGuidanceStyle.badgeText, isRequired ? VisaDetailsGuidanceStyle.reqBadge : VisaDetailsGuidanceStyle.optBadge]}>
-                {isRequired ? '(Required)' : '(Optional)'}
-            </Text>
-        );
+    // Filter required and optional requirements
+    const requiredRequirements = useMemo(() => {
+        return (serviceData.visaRequirements || []).filter(item => {
+            if (typeof item === 'object') {
+                return item.isReq === true || String(item.isReq)?.toLowerCase() === 'required';
+            }
+            return true;
+        });
+    }, [serviceData.visaRequirements]);
+
+    const optionalRequirements = useMemo(() => {
+        return (serviceData.visaRequirements || []).filter(item => {
+            if (typeof item === 'object') {
+                return item.isReq === false || String(item.isReq)?.toLowerCase() === 'optional';
+            }
+            return false;
+        });
+    }, [serviceData.visaRequirements]);
+
+    const processSteps = useMemo(() => {
+        const raw = serviceData?.visaProcessSteps
+            || serviceData?.processSteps
+            || serviceData?.steps
+            || serviceData?.visaSteps
+
+        if (Array.isArray(raw) && raw.length > 0) return raw
+
+        if (typeof raw === 'string' && raw.trim()) {
+            try {
+                const parsed = JSON.parse(raw)
+                if (Array.isArray(parsed)) return parsed
+            } catch (_e) {
+                return raw
+                    .split('\n')
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+            }
+        }
+
+        const maybeStatusFlow = serviceData?.status
+        if (Array.isArray(maybeStatusFlow) && maybeStatusFlow.length > 1) {
+            return maybeStatusFlow
+        }
+
+        const visaName = String(serviceData?.visaName || '').toLowerCase()
+        if (visaName.includes('japan')) {
+            return JAPAN_FALLBACK_STEPS
+        }
+
+        return []
+    }, [serviceData])
+
+    const handleOpenLink = (url) => {
+        if (!url) return;
+        Linking.openURL(url);
     };
 
     if (!fontsLoaded) return null;
@@ -122,74 +239,86 @@ export default function VisaDetailsGuidance() {
                     <TouchableOpacity onPress={() => cs.goBack()} style={{ marginBottom: 10 }}>
                         <Ionicons name="arrow-back" size={24} color="#1f2937" />
                     </TouchableOpacity>
-                    <Text style={VisaDetailsGuidanceStyle.title}>{selectedService.visaName || 'Visa Application'}</Text>
-                    <Text style={VisaDetailsGuidanceStyle.subtitle}>{selectedService.visaDescription}</Text>
+                    <Text style={VisaDetailsGuidanceStyle.title}>Visa Application Assistance</Text>
+                    <Text style={VisaDetailsGuidanceStyle.subtitle}>Choose a visa service, review the requirements, and submit your preferred schedule.</Text>
                 </View>
 
                 {/* --- REQUIREMENTS --- */}
                 <View style={VisaDetailsGuidanceStyle.columnCard}>
                     <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Requirements</Text>
-                    {selectedService.visaRequirements?.map((item, index) => {
-                        const reqText = typeof item === 'object' ? item.req : item;
-                        return (
-                            <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <Text style={[VisaDetailsGuidanceStyle.requirementText, { flex: 1 }]}>
-                                        {reqText}
-                                    </Text>
-                                    {renderReqBadge(item)}
-                                </View>
-                                
-                                {typeof item === 'object' && item.desc ? (
-                                    <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
-                                ) : null}
-
-                                {/* 🔥 KOREA LINK: Injected under the specific application form requirement 🔥 */}
-                                {selectedService.visaName?.toLowerCase().includes('korea') && String(reqText).toLowerCase().includes('application form') && (
-                                    <TouchableOpacity onPress={() => Linking.openURL('https://www.visa.go.kr/')}>
-                                        <Text style={[VisaDetailsGuidanceStyle.linkText, { marginTop: 8 }]}>
-                                            Please fill up this Korea Visa Application form here
+                    
+                    {requiredRequirements.length > 0 ? (
+                        <>
+                            <Text style={VisaDetailsGuidanceStyle.requiredSubheading}>Required</Text>
+                            {requiredRequirements.map((item, index) => {
+                                const reqText = typeof item === 'object' ? item.req : item;
+                                return (
+                                    <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
+                                        <Text style={VisaDetailsGuidanceStyle.requirementText}>
+                                            {reqText}
                                         </Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        );
-                    })}
+                                        
+                                        {typeof item === 'object' && item.desc ? (
+                                            <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
+                                        ) : null}
+
+                                        {typeof item === 'object' && item.applicationLink && (
+                                            <TouchableOpacity onPress={() => handleOpenLink(item.applicationLink)} style={{ marginTop: 8 }}>
+                                                <Text style={VisaDetailsGuidanceStyle.openApplicationLinkText}>
+                                                    Open Application Link
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </>
+                    ) : (
+                        <Text style={VisaDetailsGuidanceStyle.emptyText}>No required items.</Text>
+                    )}
                 </View>
 
-                {/* --- ADDITIONAL REQUIREMENTS --- */}
-                {selectedService.visaAdditionalRequirements?.length > 0 && (
+                {/* --- OPTIONAL REQUIREMENTS --- */}
+                {optionalRequirements.length > 0 && (
                     <View style={VisaDetailsGuidanceStyle.columnCard}>
-                        <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Additional Requirements</Text>
-                        {selectedService.visaAdditionalRequirements.map((item, index) => (
-                            <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <Text style={[VisaDetailsGuidanceStyle.requirementText, { flex: 1 }]}>
-                                        {typeof item === 'object' ? item.req : item}
+                        <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Optional Requirements</Text>
+                        {optionalRequirements.map((item, index) => {
+                            const reqText = typeof item === 'object' ? item.req : item;
+                            return (
+                                <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
+                                    <Text style={VisaDetailsGuidanceStyle.requirementText}>
+                                        {reqText}
                                     </Text>
-                                    {renderReqBadge(item)}
+                                    
+                                    {typeof item === 'object' && item.desc ? (
+                                        <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
+                                    ) : null}
+
+                                    {typeof item === 'object' && item.applicationLink && (
+                                        <TouchableOpacity onPress={() => handleOpenLink(item.applicationLink)} style={{ marginTop: 8 }}>
+                                            <Text style={VisaDetailsGuidanceStyle.openApplicationLinkText}>
+                                                Open Application Link
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
-                                {typeof item === 'object' && item.desc ? (
-                                    <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
-                                ) : null}
-                            </View>
-                        ))}
+                            );
+                        })}
                     </View>
                 )}
 
-                {/* --- DYNAMIC STEPS --- */}
-                {selectedService.visaProcessSteps?.length > 0 && (
+                {/* --- ADDITIONAL REQUIREMENTS --- */}
+                {serviceData.visaAdditionalRequirements?.length > 0 && (
                     <View style={VisaDetailsGuidanceStyle.columnCard}>
-                        <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Step-by-step process</Text>
-                        {selectedService.visaProcessSteps.map((step, index) => (
-                            <View key={index} style={VisaDetailsGuidanceStyle.stepRow}>
-                                <View style={VisaDetailsGuidanceStyle.stepNumberContainer}>
-                                    <Text style={VisaDetailsGuidanceStyle.stepNumber}>{index + 1}</Text>
-                                </View>
-                                <View style={VisaDetailsGuidanceStyle.stepContent}>
-                                    <Text style={VisaDetailsGuidanceStyle.stepTitle}>Step {index + 1}</Text>
-                                    <Text style={VisaDetailsGuidanceStyle.stepDesc}>{step}</Text>
-                                </View>
+                        <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Additional Requirements</Text>
+                        {serviceData.visaAdditionalRequirements.map((item, index) => (
+                            <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
+                                <Text style={VisaDetailsGuidanceStyle.requirementText}>
+                                    {typeof item === 'object' ? item.req : item}
+                                </Text>
+                                {typeof item === 'object' && item.desc ? (
+                                    <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
+                                ) : null}
                             </View>
                         ))}
                     </View>
@@ -198,8 +327,8 @@ export default function VisaDetailsGuidance() {
                 {/* --- REMINDERS --- */}
                 <View style={VisaDetailsGuidanceStyle.columnCard}>
                     <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Reminders</Text>
-                    {selectedService.visaReminders?.length > 0 ? (
-                        selectedService.visaReminders.map((rem, index) => (
+                    {serviceData.visaReminders?.length > 0 ? (
+                        serviceData.visaReminders.map((rem, index) => (
                             <View key={index} style={VisaDetailsGuidanceStyle.requirementItem}>
                                 <Text style={VisaDetailsGuidanceStyle.requirementText}>
                                     {typeof rem === 'object' ? rem.req : rem}
@@ -211,6 +340,40 @@ export default function VisaDetailsGuidance() {
                         ))
                     ) : (
                         <Text style={VisaDetailsGuidanceStyle.emptyText}>No reminders available.</Text>
+                    )}
+                </View>
+
+                {/* --- STEP-BY-STEP PROCESS (UNDER REMINDERS) --- */}
+                <View style={VisaDetailsGuidanceStyle.columnCard}>
+                    <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Step-by-step process</Text>
+                    {processSteps.length > 0 ? (
+                        processSteps.map((step, index) => {
+                            const stepTitle = typeof step === 'object' && step?.title
+                                ? step.title
+                                : `Step ${index + 1}`;
+                            const stepDescription = typeof step === 'object'
+                                ? (step?.description || '')
+                                : String(step || '');
+
+                            return (
+                                <View key={index} style={VisaDetailsGuidanceStyle.stepItemCard}>
+                                    <View style={VisaDetailsGuidanceStyle.stepRow}>
+                                        <View style={VisaDetailsGuidanceStyle.stepNumberContainer}>
+                                            <Text style={VisaDetailsGuidanceStyle.stepNumber}>{index + 1}</Text>
+                                        </View>
+                                        <View style={VisaDetailsGuidanceStyle.stepContent}>
+                                            <Text style={VisaDetailsGuidanceStyle.stepLabel}>{`Step ${index + 1}`}</Text>
+                                            <Text style={VisaDetailsGuidanceStyle.stepTitle}>{stepTitle}</Text>
+                                            {!!stepDescription && (
+                                                <Text style={VisaDetailsGuidanceStyle.stepDesc}>{stepDescription}</Text>
+                                            )}
+                                        </View>
+                                    </View>
+                                </View>
+                            );
+                        })
+                    ) : (
+                        <Text style={VisaDetailsGuidanceStyle.emptyText}>No step-by-step process available yet.</Text>
                     )}
                 </View>
 

@@ -56,7 +56,7 @@ export default function VisaGuidance() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView 
-                contentContainerStyle={VisaGuidanceStyle.contentContainer}
+                contentContainerStyle={[VisaGuidanceStyle.contentContainer, { paddingBottom: 180 }]}
                 showsVerticalScrollIndicator={false}
             >
                 {/* 🔥 NEW BANNER ADDED ON TOP */}
@@ -71,8 +71,8 @@ export default function VisaGuidance() {
                 </ImageBackground>
 
                 <View style={VisaGuidanceStyle.headerContainer}>
-                    <Text style={VisaGuidanceStyle.title}>Visa Services</Text>
-                    <Text style={VisaGuidanceStyle.subtitle}>Search and filter the visa you need to apply.</Text>
+                    <Text style={VisaGuidanceStyle.title}>Visa Application Assistance</Text>
+                    <Text style={VisaGuidanceStyle.subtitle}>Choose a visa service, review the requirements, and submit your preferred schedule.</Text>
                 </View>
 
                 <View style={VisaGuidanceStyle.searchContainer}>
@@ -97,22 +97,24 @@ export default function VisaGuidance() {
                     <Text style={VisaGuidanceStyle.emptyText}>No visa services found.</Text>
                 ) : (
                     filteredServices.map((item, index) => (
-                        <View key={item.visaItem || item._id || index} style={VisaGuidanceStyle.card}>
+                        <TouchableOpacity
+                            key={item.visaItem || item._id || index}
+                            activeOpacity={0.85}
+                            style={VisaGuidanceStyle.card}
+                            onPress={() => cs.navigate("visadetailsguidance", { service: item })}
+                        >
                             <View style={VisaGuidanceStyle.cardContent}>
                                 <Text style={VisaGuidanceStyle.visaTitle}>{item.visaName}</Text>
-                                <Text style={VisaGuidanceStyle.description} numberOfLines={2}>
+                                <Text style={VisaGuidanceStyle.description}>
                                     {item.visaDescription}
                                 </Text>
-                                <Text style={VisaGuidanceStyle.price}>₱ {item.visaPrice}</Text>
-                            </View>
 
-                            <TouchableOpacity 
-                                style={VisaGuidanceStyle.applyButton}
-                                onPress={() => cs.navigate("visadetailsguidance", { service: item })}
-                            >
-                                <Text style={VisaGuidanceStyle.applyText}>Apply</Text>
-                            </TouchableOpacity>
-                        </View>
+                                <View style={VisaGuidanceStyle.cardFooter}>
+                                    <Text style={VisaGuidanceStyle.price}>₱ {item.visaPrice}</Text>
+                                    <Text style={VisaGuidanceStyle.applyText}>Apply</Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
                     ))
                 )}
             </ScrollView>

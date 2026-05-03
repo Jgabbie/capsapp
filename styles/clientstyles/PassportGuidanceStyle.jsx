@@ -7,7 +7,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     scrollContent: {
         padding: 20,
-        paddingBottom: 40
+        paddingBottom: 180
     },
     // 🔥 NEW HERO BANNER STYLES (Added without changing anything else)
     heroSection: {
@@ -78,11 +78,21 @@ const PassportGuidanceStyle = StyleSheet.create({
         color: "#6b7280",
         fontFamily: "Roboto_400Regular",
     },
+    selectionFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 12,
+    },
     selectionPrice: {
         fontSize: 15,
         fontFamily: "Roboto_500Medium",
         color: "#374151",
-        marginTop: 12,
+    },
+    selectionApplyText: {
+        color: "#305797",
+        fontSize: 14,
+        fontFamily: "Montserrat_600SemiBold",
     },
     // Used on the Form Screens
     columnCard: {

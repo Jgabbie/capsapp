@@ -78,10 +78,7 @@ const VisaGuidanceStyle = StyleSheet.create({
         marginBottom: 16,
         borderWidth: 1,
         borderColor: '#e5e7eb',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 20,
+        padding: 16,
         ...Platform.select({
             ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
             android: { elevation: 2 }
@@ -89,7 +86,6 @@ const VisaGuidanceStyle = StyleSheet.create({
     },
     cardContent: {
         flex: 1,
-        paddingRight: 16,
     },
     visaTitle: {
         fontSize: 18,
@@ -101,25 +97,24 @@ const VisaGuidanceStyle = StyleSheet.create({
         fontSize: 14,
         color: "#6b7280",
         fontFamily: "Roboto_400Regular",
-        marginBottom: 8,
+        lineHeight: 20,
+        marginBottom: 12,
+    },
+    cardFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
     },
     price: {
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: "Montserrat_700Bold",
-        color: "#4b5563",
-    },
-    applyButton: {
-        backgroundColor: "#305797",
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
+        color: "#1f2937",
     },
     applyText: {
-        color: "#fff",
+        color: "#305797",
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 14
+        fontSize: 14,
     },
     emptyText: {
         textAlign: 'center',

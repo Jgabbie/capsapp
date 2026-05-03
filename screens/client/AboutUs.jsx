@@ -45,48 +45,53 @@ export default function AboutUs() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={AboutUsStyle.container}>
 
                 <View style={AboutUsStyle.section}>
-                    <View style={AboutUsStyle.card}>
-                        <Text style={AboutUsStyle.mainTitle}>About Us</Text>
+                    <View style={[AboutUsStyle.card, AboutUsStyle.fullBleedCard]}>
+                        <Text style={AboutUsStyle.mainTitleWhite}>About Us</Text>
                         
-                        <Text style={AboutUsStyle.paragraph}>
+                        <Text style={AboutUsStyle.paragraphWhite}>
                             M&RC Travel and Tours humbly started travel business in July 2018 when two vibrant entrepreneur, traveler, Maricar Carle and Rhon Carle decided to turn their passion into business. Office is located at #1 Cor Fatima Street San antonio Avenue Valley 1, Brgy. San Antonio Paranaque City with over thousand of agents worldwide and travel partners.
                         </Text>
-                        <Text style={AboutUsStyle.paragraph}>
+                        <Text style={AboutUsStyle.paragraphWhite}>
                             We commit to adapt the changing needs of business sectors and become a major player through satisfying specialized requirements of the small, medium and large organizations.
                         </Text>
-                        <Text style={AboutUsStyle.paragraph}>
+                        <Text style={AboutUsStyle.paragraphWhite}>
                             We value honesty and integrity. M&RC Travel and Tours continuously develop other line of services with the primary objective of extending wide range of quality and excellent service.
                         </Text>
+
+                        <Image 
+                            source={require('../../assets/images/Homepage1.png')} 
+                            style={AboutUsStyle.fullBleedImage} 
+                        />
                     </View>
-                    
-                    <Image 
-                        source={require('../../assets/images/Homepage1.png')} 
-                        style={AboutUsStyle.showcaseImage} 
-                    />
                 </View>
 
-                <View style={AboutUsStyle.rowSection}>
-                    <View style={AboutUsStyle.card}>
-                        <Text style={AboutUsStyle.subTitle}>Our Vision</Text>
-                        <Text style={AboutUsStyle.paragraphSmall}>
+                    <View style={AboutUsStyle.rowSection}>
+                    <View style={[AboutUsStyle.card, AboutUsStyle.fullBleedCard]}>
+                        <Text style={AboutUsStyle.subTitleWhite}>Our Vision</Text>
+                        <Text style={AboutUsStyle.paragraphWhite}>
                             Our Vision is to be the preferred travel and tours agency in the country offering specialized, high quality and cost- efficient travel solutions at all times, anywhere, everywhere.
                         </Text>
-                    </View>
-                    <View style={AboutUsStyle.card}>
-                        <Text style={AboutUsStyle.subTitle}>Our Mission</Text>
-                        <Text style={AboutUsStyle.paragraphSmall}>
+
+                        <View style={AboutUsStyle.whiteSeparator} />
+
+                        <Text style={AboutUsStyle.subTitleWhite}>Our Mission</Text>
+                        <Text style={AboutUsStyle.paragraphWhite}>
                             We are committed to provide value-added travel solutions to our Customers by offering good service and meaningful experience through the help of our reliable and service- oriented travel partners. We aim to grow and profit with the knowledge that each customer we served is fully satisfied. We adhere to the notion of reliability, competence, competitiveness and integrity. We are committed to be updated with the latest technology to keep up with the demands of the global market. We care for the well-being of our employees, our community and our environment.
                         </Text>
-                    </View>
 
-                    <Image 
-                        source={require('../../assets/images/Homepage2.png')} 
-                        style={AboutUsStyle.showcaseImage} 
-                    />
+                        <Image 
+                            source={require('../../assets/images/Homepage2.png')} 
+                            style={AboutUsStyle.fullBleedImageLarge} 
+                        />
+                    </View>
                 </View>
 
                 <View style={[AboutUsStyle.card, AboutUsStyle.section]}>
-                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}>WHY BOOK WITH US?</Text>
+                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}> 
+                        <Text style={[AboutUsStyle.mainTitle, { color: '#000' }]}>WHY </Text>
+                        <Text style={[AboutUsStyle.mainTitle, { color: '#305797' }]}>BOOK </Text>
+                        <Text style={[AboutUsStyle.mainTitle, { color: '#000' }]}>WITH US?</Text>
+                    </Text>
 
                     <View style={{ alignItems: 'center', marginBottom: 30 }}>
                         <Image

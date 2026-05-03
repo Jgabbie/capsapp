@@ -5,6 +5,7 @@ import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { Ionicons } from '@expo/vector-icons'
+import { SvgXml } from 'react-native-svg'
 
 import ModalStyle from '../styles/componentstyles/ModalStyle'
 import SidebarStyle from '../styles/componentstyles/SidebarStyle'
@@ -22,6 +23,13 @@ export default function Sidebar({ visible, onClose }) {
         ? { uri: user.profileImage }
         : require('../assets/images/profile_icon60.png')
 
+    const transactionFilledSvg = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg fill="#ffffff" height="800px" width="800px" version="1.1" id="Filled_Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve" stroke="#ffffff">
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="SVGRepo_iconCarrier"> <g id="Transaction-Filled"> <path d="M14,11V8H1V4h13V1l7,5L14,11z M3,18l7,5v-3h13v-4H10v-3L3,18z"/> </g> </g>
+</svg>`
+
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
         Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
@@ -31,6 +39,15 @@ export default function Sidebar({ visible, onClose }) {
     const MenuItem = ({ icon, title, onPress }) => (
         <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
             <Image source={icon} style={SidebarStyle.navIcon} resizeMode='contain' />
+            <Text style={SidebarStyle.navText}>{title}</Text>
+        </TouchableOpacity>
+    )
+
+    const MenuSvgItem = ({ title, onPress, xml }) => (
+        <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
+            <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
+                <SvgXml xml={xml} width="15" height="15" />
+            </View>
             <Text style={SidebarStyle.navText}>{title}</Text>
         </TouchableOpacity>
     )
@@ -109,9 +126,9 @@ export default function Sidebar({ visible, onClose }) {
                             onPress={() => { onClose(); cs.navigate("userquotations"); }}
                         />
 
-                        <MenuItem
+                        <MenuSvgItem
                             title="Transactions"
-                            icon={require('../assets/images/transactions_icon.png')}
+                            xml={transactionFilledSvg}
                             onPress={() => { onClose(); cs.navigate("usertransactions") }}
                         />
 

@@ -6,7 +6,7 @@ const FAQsStyle = StyleSheet.create({
         backgroundColor: "#f5f7fa"
     },
     scrollContent: {
-        paddingBottom: 40
+        paddingBottom: 120
     },
     heroSection: {
         paddingVertical: 50,
@@ -37,6 +37,22 @@ const FAQsStyle = StyleSheet.create({
         textAlign: "center",
         paddingHorizontal: 10,
         zIndex: 1
+    },
+    introSection: {
+        paddingHorizontal: 20,
+        marginBottom: 18,
+    },
+    introTitle: {
+        fontSize: 22,
+        fontFamily: "Montserrat_700Bold",
+        color: "#1f3b66",
+        marginBottom: 6,
+    },
+    introSubtitle: {
+        fontSize: 13,
+        fontFamily: "Roboto_400Regular",
+        color: "#6b7280",
+        lineHeight: 19,
     },
     filterScroll: {
         paddingHorizontal: 20,

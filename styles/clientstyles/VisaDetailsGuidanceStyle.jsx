@@ -113,41 +113,72 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         marginTop: 4,
     },
 
+    // Required Subheading (like h4 in web)
+    requiredSubheading: {
+        fontSize: 16,
+        fontFamily: "Montserrat_700Bold",
+        color: "#1f2937",
+        marginBottom: 12,
+        marginTop: 0,
+    },
+
+    // Open Application Link button
+    openApplicationLinkText: {
+        fontSize: 14,
+        fontFamily: "Roboto_500Medium",
+        color: "#305797",
+        textDecorationLine: 'underline',
+    },
+
     // Process Steps Styling
+    stepItemCard: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#eef2f7',
+        padding: 12,
+        marginBottom: 10,
+    },
     stepRow: {
         flexDirection: 'row',
-        marginBottom: 16,
         alignItems: 'flex-start',
     },
     stepNumberContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: '#305797',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 10,
+        marginTop: 2,
     },
     stepNumber: {
         color: '#fff',
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 14,
+        fontSize: 12,
     },
     stepContent: {
         flex: 1,
-        justifyContent: 'center',
-        minHeight: 32, 
+        justifyContent: 'center'
+    },
+    stepLabel: {
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#305797",
+        marginBottom: 2,
     },
     stepTitle: {
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: "Montserrat_600SemiBold",
         color: "#1f2937",
     },
     stepDesc: {
-        fontSize: 13,
+        fontSize: 12,
         fontFamily: "Roboto_400Regular",
         color: "#6b7280",
         marginTop: 4,
+        lineHeight: 17,
     },
 
     formLabel: {

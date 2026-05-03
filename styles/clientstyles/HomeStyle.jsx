@@ -60,7 +60,7 @@ const HomeStyle = StyleSheet.create({
     },
     heroOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.45)'
+        backgroundColor: 'rgba(0,0,0,0.35)'
     },
     heroContentWrapper: {
         zIndex: 1,

@@ -38,6 +38,20 @@ const getImageUrl = (img) => {
     return `http://${host}:8000/${img.replace(/^\/+/, "")}`;
 };
 
+const isFullyPaidBooking = (booking, packageId) => {
+    const bookingPkgId = booking.packageId?._id || booking.packageId;
+    if (String(bookingPkgId) !== String(packageId)) return false;
+
+    const bookingStatus = String(booking.status || booking.computedStatus || "").trim().toLowerCase();
+    if (["confirmed", "paid", "fully paid", "successful"].includes(bookingStatus)) {
+        return true;
+    }
+
+    const totalPrice = Number(booking.totalPrice || booking.bookingDetails?.totalPrice || 0);
+    const paidAmount = Number(booking.paidAmount || booking.bookingDetails?.paidAmount || 0);
+    return totalPrice > 0 && paidAmount >= totalPrice;
+};
+
 export default function PackageDetails({ route, navigation }) {
     const { user } = useUser();
     const scrollViewRef = useRef(null);
@@ -87,16 +101,14 @@ export default function PackageDetails({ route, navigation }) {
             if (!user?._id || !packageId) return;
 
             const bookingResponse = await api.get('/booking/my-bookings', withUserHeader(user._id));
-            const bookings = bookingResponse.data || [];
+            const bookings = Array.isArray(bookingResponse.data)
+                ? bookingResponse.data
+                : Array.isArray(bookingResponse.data?.bookings)
+                    ? bookingResponse.data.bookings
+                    : [];
 
             // Check if user has a fully paid booking for this package
-            // Look for bookings with status "Confirmed", "Paid", or similar indicating payment is complete
-            const fullyPaidBooking = bookings.find(booking => {
-                const bookingPkgId = booking.packageId?._id || booking.packageId;
-                const bookingStatus = booking.status?.toLowerCase() || '';
-                const isPaid = bookingStatus === 'confirmed' || bookingStatus === 'paid' || bookingStatus === 'fully paid';
-                return String(bookingPkgId) === String(packageId) && isPaid;
-            });
+            const fullyPaidBooking = bookings.find((booking) => isFullyPaidBooking(booking, packageId));
 
             setHasFullyPaidBooking(!!fullyPaidBooking);
         } catch (bookingErr) {
@@ -571,7 +583,7 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={[DestinationStyles.reviewTitle, { color: '#305797' }]}>Leave a review</Text>
                                 {!hasFullyPaidBooking && (
                                     <Text style={{ fontSize: 12, color: '#b91c1c', fontStyle: 'italic', marginBottom: 12, fontFamily: 'Montserrat_500Medium' }}>
-                                        You can only leave a review after booking this package.
+                                        You can only leave a review after your booking is fully paid.
                                     </Text>
                                 )}
                                 <View style={DestinationStyles.starsContainer}>
