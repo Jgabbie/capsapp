@@ -104,7 +104,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    const response = await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
+                    const response = await api.post('/payment/quotation', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: route.params.existingReference || response.data.reference, mode: 'manual' });
                     return;
@@ -130,7 +130,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/payment/create-checkout-session-quotation', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
                     setLoading(false);
                     if (checkoutUrl) Linking.openURL(checkoutUrl);

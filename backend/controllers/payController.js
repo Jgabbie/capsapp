@@ -526,7 +526,7 @@ export const createManualPaymentDeposit = async (req, res) => {
 
 
 //MANUAL PAYMENT FOR QUOTATION BOOKINGS
-const createManualPaymentQuotation = async (req, res) => {
+export const createManualPaymentQuotation = async (req, res) => {
     const userId = req.userId;
     try {
         const {
@@ -1048,10 +1048,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
 
 
-
-
 //CHECKOUT FOR QUOTATION BOOKINGS
-const createCheckoutSessionQuotation = async (req, res) => {
+export const createCheckoutSessionQuotation = async (req, res) => {
     const userId = req.userId;
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
