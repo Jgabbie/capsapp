@@ -227,9 +227,9 @@ export default function PaymentMode({ route, navigation }) {
         infant: Number(travelers?.infant || 0)
     };
 
-    const adultRate = Number(setupData?.paymentDetails?.adultRate) || Number(setupData?.pkg?.packagePricePerPax) || ratePerPax;
-    const childRate = Number(setupData?.paymentDetails?.childRate) || Number(setupData?.pkg?.packageChildRate) || ratePerPax;
-    const infantRate = Number(setupData?.paymentDetails?.infantRate) || Number(setupData?.pkg?.packageInfantRate) || ratePerPax;
+    const adultRate = Number(setupData?.packagePricePerPax)
+    const childRate = Number(setupData?.childRate)
+    const infantRate = Number(setupData?.infantRate)
 
     const packageTitleDisplay = setupData?.pkg?.title || setupData?.pkg?.packageName || 'TOUR PACKAGE';
 

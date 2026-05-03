@@ -453,9 +453,10 @@ export const createManualPaymentDeposit = async (req, res) => {
             type: 'payment',
             link: '/user-transactions',
         });
+        console.log('Notification created for installment payment, user:', user._id, 'booking:', booking.reference);
 
         try {
-            await transporter.sendMail({
+            const info = await transporter.sendMail({
                 from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
                 to: user.email,
                 subject: `Installment Payment ${reference} Successful`,
@@ -503,6 +504,7 @@ export const createManualPaymentDeposit = async (req, res) => {
                     </div>
                     `
             });
+            console.log('Installment payment email sent:', info && (info.response || info.envelope || info.messageId));
         } catch (emailError) {
             console.error('Failed to send booking email:', emailError);
         }
@@ -823,8 +825,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         const cancelUrl = `${FRONTEND_URL}/booking-payment?status=cancel`;
 
 
-        const package = await PackageModel.findById(packageId).select('packageName');
-        const packageName = package.packageName
+        const getPackage = await PackageModel.findById(packageId).select('packageName');
+        const packageName = getPackage.packageName;
 
         const baseAmountCents = Math.round(totalPrice * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
@@ -1424,10 +1426,11 @@ export const handlePayMongoWebhook = async (req, res) => {
                 link: '/user-bookings',
                 metadata: { bookingId: booking._id },
             });
+            console.log('Notification created for booking confirmation, user:', user._id, 'booking:', booking.reference);
 
             // Send booking confirmation email
             try {
-                await transporter.sendMail({
+                const info = await transporter.sendMail({
                     from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
                     to: user.email,
                     subject: `Booking ${booking.reference} Confirmed`,
@@ -1475,6 +1478,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                     </div>
                     `
                 });
+                console.log('Booking confirmation email sent:', info && (info.response || info.envelope || info.messageId));
             } catch (emailError) {
                 console.error('Failed to send booking email:', emailError);
             }
