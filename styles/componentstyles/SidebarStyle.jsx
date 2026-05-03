@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 const SidebarStyle = StyleSheet.create({
     overlay: {
         position: 'absolute',
-        backgroundColor: "rgba(0,0,0,0.5)",
+        backgroundColor: "rgba(0,0,0,0.4)",
         justifyContent: 'flex-start',
         top: 0,
         left: 0,
@@ -11,11 +11,11 @@ const SidebarStyle = StyleSheet.create({
         height: '100%',
     },
     sidebarContainer: {
-        width: '75%',
+        width: '72%',
         height: '100%',
         backgroundColor: '#4076A0',
-        paddingTop: 40,
-        paddingBottom: 40,
+        paddingTop: 55,
+        paddingBottom: 73,
         paddingHorizontal: 30,
         elevation: 5,
         boxShadow: "2px 0px 8px rgba(0,0,0,0.3)"
@@ -23,7 +23,7 @@ const SidebarStyle = StyleSheet.create({
     profileSection: {
         flexDirection: "row",
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
     },
     profileImg: {
         width: 60,
@@ -65,7 +65,7 @@ const SidebarStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: 'Montserrat_500Medium',
         fontWeight: '500',
-        fontSize: 14,
+        fontSize: 16,
         marginLeft: 12,
         width: '100%',
     },

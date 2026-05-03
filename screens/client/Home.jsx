@@ -442,17 +442,33 @@ export default function Home() {
                         <>
                             <Text style={HomeStyle.title}>Local Packages</Text>
                             {domesticPackages.length > 0 && (
-                                <>
+                                <ScrollView 
+                                    horizontal 
+                                    showsHorizontalScrollIndicator={false} 
+                                    contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                                >
                                     {domesticPackages.map((pkg) => (
-                                        <BannerCard key={pkg._id} item={pkg} />
+                                        /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
+                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 15 }}>
+                                            <BannerCard item={pkg} />
+                                        </View>
                                     ))}
-                                </>
+                                </ScrollView>
                             )}
 
                             <Text style={[HomeStyle.title, { marginTop: 10 }]}>Packages For You</Text>
-                            {internationalPackages.map((pkg) => (
-                                <BannerCard key={`foryou-${pkg._id}`} item={pkg} />
-                            ))}
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false} 
+                                contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                            >
+                                {internationalPackages.map((pkg) => (
+                                    /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
+                                    <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 15 }}>
+                                        <BannerCard item={pkg} />
+                                    </View>
+                                ))}
+                            </ScrollView>
                         </>
                     )}
 

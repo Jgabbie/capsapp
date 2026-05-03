@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, ImageBackground } from 'react-native'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -59,6 +59,17 @@ export default function VisaGuidance() {
                 contentContainerStyle={VisaGuidanceStyle.contentContainer}
                 showsVerticalScrollIndicator={false}
             >
+                {/* 🔥 NEW BANNER ADDED ON TOP */}
+                <ImageBackground 
+                    source={require('../../assets/images/PassportAndVisa_BackgroundImage.png')}
+                    style={VisaGuidanceStyle.heroSection}
+                    resizeMode="cover"
+                >
+                    <View style={VisaGuidanceStyle.heroOverlay} />
+                    <Text style={VisaGuidanceStyle.heroTitleText}>Need some Assistance?</Text>
+                    <Text style={VisaGuidanceStyle.heroSubText}>M&RC Travel and Tours is here to guide you in getting your passport or visa for your upcoming trip!</Text>
+                </ImageBackground>
+
                 <View style={VisaGuidanceStyle.headerContainer}>
                     <Text style={VisaGuidanceStyle.title}>Visa Services</Text>
                     <Text style={VisaGuidanceStyle.subtitle}>Search and filter the visa you need to apply.</Text>

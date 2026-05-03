@@ -9,6 +9,36 @@ const VisaGuidanceStyle = StyleSheet.create({
         padding: 20,
         paddingBottom: 40
     },
+    // 🔥 NEW HERO BANNER STYLES (Added without changing anything else)
+    heroSection: {
+        height: 200,
+        marginHorizontal: -20, // Stretches it to the edges ignoring the 20px padding
+        marginTop: -20,        // Pushes it to the very top
+        marginBottom: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    heroOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    heroTitleText: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 24,
+        color: "#fff",
+        marginBottom: 8,
+        textAlign: 'center',
+        zIndex: 1,
+    },
+    heroSubText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#fff",
+        textAlign: 'center',
+        lineHeight: 20,
+        zIndex: 1,
+    },
     headerContainer: {
         marginBottom: 16,
         marginTop: 10,

@@ -15,7 +15,7 @@ const VECTOR_INDEX = process.env.MONGODB_VECTOR_INDEX || 'knowledgeIndex';
 const VECTOR_CANDIDATES = 100;
 const VECTOR_LIMIT = 5;
 
-const TRAVEX_PROMPT_ID = 'pmpt_69e4a9003a4c8195923e2db164ea4f6208e21becb823361f';
+const TRAVEX_PROMPT_ID = process.env.TRAVEX_PROMPT_ID;
 
 const faqData = [
     {

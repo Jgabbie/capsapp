@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, ImageBackground } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -28,6 +28,17 @@ export default function PassportGuidance() {
             
             <ScrollView contentContainerStyle={PassportGuidanceStyle.scrollContent} showsVerticalScrollIndicator={false}>
                 
+                {/* 🔥 NEW BANNER ADDED ON TOP */}
+                <ImageBackground 
+                    source={require('../../assets/images/PassportAndVisa_BackgroundImage.png')}
+                    style={PassportGuidanceStyle.heroSection}
+                    resizeMode="cover"
+                >
+                    <View style={PassportGuidanceStyle.heroOverlay} />
+                    <Text style={PassportGuidanceStyle.heroTitleText}>Need some Assistance?</Text>
+                    <Text style={PassportGuidanceStyle.heroSubText}>M&RC Travel and Tours is here to guide you in getting your passport or visa for your upcoming trip!</Text>
+                </ImageBackground>
+
                 <View style={PassportGuidanceStyle.headerContainer}>
                     <Text style={PassportGuidanceStyle.title}>Passport Assistance</Text>
                     <Text style={PassportGuidanceStyle.subtitle}>Select the passport service you need.</Text>
