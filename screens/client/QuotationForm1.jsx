@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import { useUser } from '../../context/UserContext'; 
-import { api } from '../../utils/api'; 
+import { useUser } from '../../context/UserContext';
+import { api } from '../../utils/api';
 
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
@@ -35,22 +35,22 @@ const assignRooms = (travelers) => {
 
     return travelers.map(t => {
         let rType = String(t.roomType || '').trim().toUpperCase();
-        
+
         let baseType = '';
         if (rType.includes('TWIN')) baseType = 'TWIN';
         else if (rType.includes('DOUBLE')) baseType = 'DOUBLE';
         else if (rType.includes('TRIPLE')) baseType = 'TRIPLE';
         else if (rType.includes('SINGLE')) baseType = 'SINGLE';
 
-        if (!baseType) return rType; 
+        if (!baseType) return rType;
 
         const state = roomState[baseType];
-        
+
         if (state.count >= state.max) {
             state.number += 1;
             state.count = 0;
         }
-        
+
         state.count += 1;
         return `${baseType} ${state.number}`;
     });
@@ -58,14 +58,19 @@ const assignRooms = (travelers) => {
 
 export default function QuotationForm1({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, travelersData } = route.params || {}; 
-    
-    const totalCount = (setupData?.travelerCounts?.adult || 0) + 
-                       (setupData?.travelerCounts?.child || 0) + 
-                       (setupData?.travelerCounts?.infant || 0);
+    const { quotation, travelerUploads, travelersData } = route.params || {};
 
-    const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
+    const totalCount = (quotation?.travelerCounts?.adult || 0) +
+        (quotation?.travelerCounts?.child || 0) +
+        (quotation?.travelerCounts?.infant || 0);
+
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+
+    const packageType = quotation?.packageId?.packageType || quotation?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
+    const tourPackageVia = latestPdfRevision?.travelDetails.airline || 'N/A';
+    const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
 
     const [fullUserData, setFullUserData] = useState(null);
 
@@ -87,28 +92,28 @@ export default function QuotationForm1({ route, navigation }) {
     const userAddress = fullUserData?.homeAddress || fullUserData?.address || '';
     const userGender = fullUserData?.gender?.toLowerCase() || '';
     const userTitle = userGender === 'male' ? 'MR' : (userGender === 'female' ? 'MS' : '');
-    
+
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
-            const assignedRooms = assignRooms(travelersData); 
+            const assignedRooms = assignRooms(travelersData);
             return travelersData.map((t, index) => ({
-                title: t.title || '', 
+                title: t.title || '',
                 firstName: t.firstName || '',
                 lastName: t.lastName || '',
-                room: assignedRooms[index], 
+                room: assignedRooms[index],
                 bday: t.birthdate || '',
-                age: calculateAge(t.birthdate) || '', 
+                age: calculateAge(t.birthdate) || '',
                 passport: isDomestic ? 'N/A' : (t.passportNo || ''),
                 expiry: isDomestic ? 'N/A' : (t.passportExpiry || '')
             }));
         }
         return Array(totalCount).fill({
-            title: '', firstName: '', lastName: '', room: '', bday: '', age: '', 
-            passport: isDomestic ? 'N/A' : '', 
+            title: '', firstName: '', lastName: '', room: '', bday: '', age: '',
+            passport: isDomestic ? 'N/A' : '',
             expiry: isDomestic ? 'N/A' : ''
         });
     });
@@ -130,14 +135,14 @@ export default function QuotationForm1({ route, navigation }) {
                 contact: userContact || prev.contact,
                 address: userAddress || prev.address
             }));
-            
+
             setPassengers(prev => {
                 const next = [...prev];
                 if (!next[0].title && userTitle) {
                     next[0].title = userTitle;
                 }
                 if (travelersData && travelersData.length > 0) {
-                    const assignedRooms = assignRooms(travelersData); 
+                    const assignedRooms = assignRooms(travelersData);
                     return next.map((passenger, index) => {
                         const sourceTraveler = travelersData[index];
                         if (!sourceTraveler) return passenger;
@@ -157,9 +162,9 @@ export default function QuotationForm1({ route, navigation }) {
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
         if (isDomestic) {
-            return missingBasicInfo; 
+            return missingBasicInfo;
         } else {
-            return missingBasicInfo || !p.passport || !p.expiry; 
+            return missingBasicInfo || !p.passport || !p.expiry;
         }
     });
 
@@ -171,12 +176,12 @@ export default function QuotationForm1({ route, navigation }) {
 
         for (let i = 0; i < passengers.length; i++) {
             const p = passengers[i];
-            
+
             if (!p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age) {
                 Alert.alert("Missing Information", `Please go back to Uploads and complete the basic details for Passenger ${i + 1}.`);
                 return;
             }
-            
+
             if (!isDomestic) {
                 if (!p.passport) {
                     Alert.alert("Missing Information", `Please go back to Uploads and enter the passport number for Passenger ${i + 1}.`);
@@ -189,17 +194,17 @@ export default function QuotationForm1({ route, navigation }) {
             }
         }
 
-        navigation.navigate("quotationform2", { setupData, travelerUploads, passengers, leadGuestInfo });
+        navigation.navigate("quotationform2", { quotation, travelerUploads, passengers, leadGuestInfo });
     };
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={QuotationFormStepStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={QuotationFormStepStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={QuotationFormStepStyle.logo} />
-                    
+
                     <View style={QuotationFormStepStyle.headerGold}>
                         <Text style={QuotationFormStepStyle.headerGoldText}>BOOKING REGISTRATION FORM</Text>
                     </View>
@@ -211,22 +216,22 @@ export default function QuotationForm1({ route, navigation }) {
                         </View>
                         <View style={[QuotationFormStepStyle.inputContainer, { flex: 1 }]}>
                             <Text style={QuotationFormStepStyle.label}>PACKAGE TRAVEL DATE</Text>
-                            <TextInput style={QuotationFormStepStyle.paperInput} value={setupData?.selectedDate} editable={false} />
+                            <TextInput style={QuotationFormStepStyle.paperInput} value={packageTravelDate} editable={false} />
                         </View>
                     </View>
 
                     <View style={QuotationFormStepStyle.row}>
                         <View style={[QuotationFormStepStyle.inputContainer, { flex: 1.5 }]}>
                             <Text style={QuotationFormStepStyle.label}>TOUR PACKAGE TITLE</Text>
-                            <TextInput 
-                                style={[QuotationFormStepStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]} 
-                                value={setupData?.pkg?.packageName || setupData?.pkg?.title || ''} 
-                                editable={false} 
+                            <TextInput
+                                style={[QuotationFormStepStyle.paperInput, { backgroundColor: '#fff', color: '#555' }]}
+                                value={quotation?.packageId?.packageName || quotation?.pkg?.title || ''}
+                                editable={false}
                             />
                         </View>
                         <View style={[QuotationFormStepStyle.inputContainer, { flex: 1 }]}>
                             <Text style={QuotationFormStepStyle.label}>TOUR PACKAGE VIA</Text>
-                            <TextInput style={QuotationFormStepStyle.paperInput} value={setupData?.airline} editable={false} />
+                            <TextInput style={QuotationFormStepStyle.paperInput} value={tourPackageVia} editable={false} />
                         </View>
                     </View>
 
@@ -237,8 +242,8 @@ export default function QuotationForm1({ route, navigation }) {
                     <View style={QuotationFormStepStyle.row}>
                         <View style={[QuotationFormStepStyle.inputContainer, { flex: 0.5 }]}>
                             <Text style={QuotationFormStepStyle.label}>TITLE:</Text>
-                            <TouchableOpacity 
-                                style={[QuotationFormStepStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]} 
+                            <TouchableOpacity
+                                style={[QuotationFormStepStyle.paperInput, { justifyContent: 'center', backgroundColor: '#fff' }]}
                                 onPress={() => setShowTitleDropdown(true)}
                                 disabled={isTitleLocked}
                             >
@@ -260,23 +265,23 @@ export default function QuotationForm1({ route, navigation }) {
                         </View>
                         <View style={[QuotationFormStepStyle.inputContainer, { flex: 1 }]}>
                             <Text style={QuotationFormStepStyle.label}>CONTACT DETAILS:</Text>
-                            <TextInput 
-                                style={[QuotationFormStepStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]} 
-                                value={leadGuestInfo.contact} 
-                                keyboardType="phone-pad" 
+                            <TextInput
+                                style={[QuotationFormStepStyle.paperInput, isContactLocked && { backgroundColor: '#fff', color: '#555' }]}
+                                value={leadGuestInfo.contact}
+                                keyboardType="phone-pad"
                                 editable={!isContactLocked}
-                                onChangeText={(v) => setLeadGuestInfo({...leadGuestInfo, contact: v})} 
+                                onChangeText={(v) => setLeadGuestInfo({ ...leadGuestInfo, contact: v })}
                             />
                         </View>
                     </View>
 
                     <View style={QuotationFormStepStyle.inputContainer}>
                         <Text style={QuotationFormStepStyle.label}>ADDRESS:</Text>
-                        <TextInput 
-                            style={[QuotationFormStepStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]} 
-                            value={leadGuestInfo.address} 
+                        <TextInput
+                            style={[QuotationFormStepStyle.paperInput, isAddressLocked && { backgroundColor: '#fff', color: '#555' }]}
+                            value={leadGuestInfo.address}
                             editable={!isAddressLocked}
-                            onChangeText={(v) => setLeadGuestInfo({...leadGuestInfo, address: v})} 
+                            onChangeText={(v) => setLeadGuestInfo({ ...leadGuestInfo, address: v })}
                         />
                     </View>
 
@@ -355,10 +360,10 @@ export default function QuotationForm1({ route, navigation }) {
                 <Modal visible={showTitleDropdown} transparent animationType="fade">
                     <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>
                         <View style={QuotationFormStepStyle.dropdownBox}>
-                            <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => { setLeadGuestInfo({...leadGuestInfo, title: 'MR'}); setShowTitleDropdown(false); }}>
+                            <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => { setLeadGuestInfo({ ...leadGuestInfo, title: 'MR' }); setShowTitleDropdown(false); }}>
                                 <Text style={QuotationFormStepStyle.dropdownText}>MR</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[QuotationFormStepStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setLeadGuestInfo({...leadGuestInfo, title: 'MS'}); setShowTitleDropdown(false); }}>
+                            <TouchableOpacity style={[QuotationFormStepStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => { setLeadGuestInfo({ ...leadGuestInfo, title: 'MS' }); setShowTitleDropdown(false); }}>
                                 <Text style={QuotationFormStepStyle.dropdownText}>MS</Text>
                             </TouchableOpacity>
                         </View>

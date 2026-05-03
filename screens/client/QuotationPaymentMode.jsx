@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
 
 import QuotationPaymentStyle from '../../styles/clientstyles/QuotationPaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle'; 
+import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -20,8 +21,8 @@ const parseDateStringSafe = (dateStr) => {
         const cleanStr = dateStr.replace(/,/g, '').trim();
         const parts = cleanStr.split(/\s+/);
         if (parts.length === 3) {
-            const monthNames = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
-            const month = monthNames[parts[0].slice(0,3)];
+            const monthNames = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+            const month = monthNames[parts[0].slice(0, 3)];
             const day = parseInt(parts[1], 10);
             const year = parseInt(parts[2], 10);
             if (!isNaN(month) && !isNaN(day) && !isNaN(year)) return new Date(year, month, day);
@@ -37,19 +38,51 @@ const parseDateStringSafe = (dateStr) => {
 export default function QuotationPaymentMode({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
-    const [paymentType, setPaymentType] = useState('deposit'); 
+    const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
     const [showFreqDropdown, setShowFreqDropdown] = useState(false);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+    const travelDetails = latestPdfRevision?.travelDetails || {};
+
+    const packageName = quotation?.packageId?.packageName || 'N/A'
+    const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
+    const totalAmount = travelDetails?.totalPrice || 0;
 
     const travelerTotal = useMemo(() => {
-        const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+        const counts = travelDetails.travelers;
         return counts.adult + counts.child + counts.infant;
-    }, [setupData]);
+    }, [quotation]);
 
-    const totalAmount = setupData?.totalPrice || 0;
+
+    useEffect(() => {
+        const fetchInvoiceNumber = async () => {
+            try {
+                const invoiceRes = await api.get('/booking/current-invoice-number', withUserHeader(user._id));
+                const number = invoiceRes.data?.invoiceNumber;
+
+                console.log('Fetched invoice number:', number);
+
+                if (!number) throw new Error('No invoice number returned');
+
+                setInvoiceNumber(number);
+            } catch (error) {
+                console.log('Error fetching invoice number:', error.message);
+
+                // simple fallback only if API fails
+                const fallbackMonth = dayjs().format('MM');
+                setInvoiceNumber(`${fallbackMonth}01`);
+            }
+        };
+
+        fetchInvoiceNumber();
+    }, [user?._id]);
+
 
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
@@ -62,7 +95,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
         const today = dayjs().startOf('day');
         let travelDateComputation = today;
 
-        const rawTravelDate = setupData?.travelDate?.startDate || (setupData?.selectedDate ? setupData.selectedDate.split(' - ')[0] : null);
+        const rawTravelDate = quotation?.travelDate?.startDate || (quotation?.selectedDate ? quotation.selectedDate.split(' - ')[0] : null);
         if (rawTravelDate) {
             const parsedJsDate = parseDateStringSafe(rawTravelDate);
             if (parsedJsDate) travelDateComputation = dayjs(parsedJsDate).startOf('day');
@@ -71,7 +104,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
         const maxAllowedDate = today.add(45, 'day');
         const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate) ? travelDateComputation : maxAllowedDate;
 
-        const depositAmount = (setupData?.pkg?.packageDeposit || 0) * travelerTotal;
+        const depositAmount = (travelDetails.totalDeposit || 0) * travelerTotal;
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
 
         const paymentDates = [];
@@ -93,16 +126,16 @@ export default function QuotationPaymentMode({ route, navigation }) {
         ];
 
         return { schedule, depositAmount };
-    }, [frequency, travelerTotal, totalAmount, setupData]);
+    }, [frequency, travelerTotal, totalAmount, quotation]);
 
     const handleProceed = () => {
         const amountToPay = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
-        navigation.navigate("quotationpaymentmethod", { 
-            ...route.params, 
-            paymentType, 
-            frequency, 
+        navigation.navigate("quotationpaymentmethod", {
+            ...route.params,
+            paymentType,
+            frequency,
             amountToPay,
-            fullSchedule: scheduleData.schedule 
+            fullSchedule: scheduleData.schedule
         });
     };
 
@@ -112,8 +145,8 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
-    const packageTitleDisplay = setupData?.pkg?.title || setupData?.pkg?.packageName || 'TOUR PACKAGE';
-    const displayTravelDate = setupData?.selectedDate ? setupData.selectedDate : (setupData?.travelDate?.startDate ? `${dayjs(setupData.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(setupData.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
+    const packageTitleDisplay = quotation?.pkg?.title || quotation?.pkg?.packageName || 'TOUR PACKAGE';
+    const displayTravelDate = quotation?.selectedDate ? quotation.selectedDate : (quotation?.travelDate?.startDate ? `${dayjs(quotation.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(quotation.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
 
     return (
         <SafeAreaView style={QuotationPaymentStyle.safeArea}>
@@ -122,8 +155,8 @@ export default function QuotationPaymentMode({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={QuotationPaymentStyle.container} showsVerticalScrollIndicator={false}>
-                <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }} 
+                <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }}
                     onPress={() => navigation.goBack()}
                 >
                     <Ionicons name="arrow-back" size={16} color="#fff" />
@@ -136,7 +169,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                 <View style={QuotationPaymentStyle.progressContainer}>
                     <View style={[QuotationPaymentStyle.progressStep, QuotationPaymentStyle.progressStepActive]}><Text style={QuotationPaymentStyle.progressText}>1</Text></View>
                     <View style={QuotationPaymentStyle.progressLine} />
-                    <View style={QuotationPaymentStyle.progressStep}><Text style={[QuotationPaymentStyle.progressText, {color: '#64748b'}]}>2</Text></View>
+                    <View style={QuotationPaymentStyle.progressStep}><Text style={[QuotationPaymentStyle.progressText, { color: '#64748b' }]}>2</Text></View>
                 </View>
 
                 <View style={{ marginBottom: 10 }}>
@@ -148,7 +181,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     <View style={QuotationPaymentStyle.previewHeader}>
                         <View style={{ flex: 1, paddingRight: 10 }}>
                             <Text style={QuotationPaymentStyle.previewLabel}>Package:</Text>
-                            <Text style={QuotationPaymentStyle.previewValue} numberOfLines={2}>{packageTitleDisplay.toUpperCase()}</Text>
+                            <Text style={QuotationPaymentStyle.previewValue} numberOfLines={2}>{packageName}</Text>
                         </View>
                         <View style={{ alignItems: 'flex-end', justifyContent: 'flex-start' }}>
                             <Text style={QuotationPaymentStyle.previewLabel}>Travelers:</Text>
@@ -165,7 +198,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationPaymentStyle.modeCard, paymentType === 'deposit' && QuotationPaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('deposit')}
@@ -176,12 +209,12 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     <View style={QuotationPaymentStyle.modeContent}>
                         <Text style={QuotationPaymentStyle.modeTitle}>Deposit</Text>
                         <Text style={QuotationPaymentStyle.modeDesc}>Make a partial payment to secure your booking. Choose this option to pay a portion of the total amount.</Text>
-                        
+
                         {paymentType === 'deposit' && (
                             <View style={{ marginTop: 12 }}>
                                 <Text style={{ fontFamily: "Montserrat_600SemiBold", fontSize: 12, color: "#1f2a44", marginBottom: 6 }}>Payment Schedule:</Text>
                                 <TouchableOpacity style={QuotationPaymentStyle.pickerContainer} onPress={() => setShowFreqDropdown(true)}>
-                                    <Text style={{fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44'}}>{frequency}</Text>
+                                    <Text style={{ fontSize: 13, fontFamily: 'Roboto_500Medium', color: '#1f2a44' }}>{frequency}</Text>
                                     <Ionicons name="chevron-down" size={18} color="#64748b" />
                                 </TouchableOpacity>
                             </View>
@@ -189,7 +222,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationPaymentStyle.modeCard, paymentType === 'full' && QuotationPaymentStyle.modeCardSelected]}
                     onPress={() => setPaymentType('full')}
@@ -223,7 +256,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     <Text style={QuotationAllInStyle.proceedButtonText}>Continue to Payment Method</Text>
                 </TouchableOpacity>
 
-                <View style={{height: 50}} />
+                <View style={{ height: 50 }} />
             </ScrollView>
 
             <Modal visible={showFreqDropdown} transparent animationType="fade">
@@ -260,7 +293,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                                         </View>
                                     </View>
                                     <View style={QuotationPaymentStyle.invTitleBlock}>
-                                        <Text style={QuotationPaymentStyle.invTitleText}>Invoice {issueDate.format('MM')}01</Text>
+                                        <Text style={QuotationPaymentStyle.invTitleText}>Invoice {invoiceNumber || `${issueDate.format('MM')}01`}</Text>
                                     </View>
                                 </View>
 
@@ -279,7 +312,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                                             <Text style={QuotationPaymentStyle.invSummaryValue}>{issueDate.format('MM/DD/YYYY')}</Text>
                                         </View>
                                         <View style={[QuotationPaymentStyle.invSummaryCol, QuotationPaymentStyle.invDarkBg]}>
-                                            <Text style={[QuotationPaymentStyle.invTinyLabel, {color: '#fff'}]}>PLEASE PAY</Text>
+                                            <Text style={[QuotationPaymentStyle.invTinyLabel, { color: '#fff' }]}>PLEASE PAY</Text>
                                             <Text style={[QuotationPaymentStyle.invSummaryValue, { color: '#fff', fontSize: 11 }]}>
                                                 {formatPesoDisplay(totalAmount)}
                                             </Text>
@@ -303,7 +336,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                                     <View style={QuotationPaymentStyle.invTableRow}>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageTitleDisplay}</Text>
+                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageName}</Text>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(ratePerPax)}</Text>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalAmount)}</Text>
@@ -312,7 +345,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
 
                                 <View style={QuotationPaymentStyle.invFooter}>
                                     <View style={QuotationPaymentStyle.invBankInfo}>
-                                        <Text style={[QuotationPaymentStyle.invMutedText, {marginBottom: 10}]}>Payment to be deposited in below bank details:</Text>
+                                        <Text style={[QuotationPaymentStyle.invMutedText, { marginBottom: 10 }]}>Payment to be deposited in below bank details:</Text>
                                         <Text style={QuotationPaymentStyle.invTinyLabel}>PESO ACCOUNT:</Text>
                                         <Text style={QuotationPaymentStyle.invMutedText}>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</Text>
                                         <Text style={QuotationPaymentStyle.invMutedText}>ACCOUNT NAME: M&RC TRAVEL AND TOURS</Text>
@@ -329,13 +362,13 @@ export default function QuotationPaymentMode({ route, navigation }) {
 
                                 {paymentType === 'deposit' && (
                                     <View style={QuotationPaymentStyle.invScheduleSection}>
-                                        <Text style={[QuotationPaymentStyle.invCustomerName, {marginBottom: 8, fontSize: 10}]}>Payment Schedule</Text>
+                                        <Text style={[QuotationPaymentStyle.invCustomerName, { marginBottom: 8, fontSize: 10 }]}>Payment Schedule</Text>
                                         {scheduleData.schedule.map((item, idx) => (
                                             <View key={idx} style={QuotationPaymentStyle.invScheduleRow}>
                                                 <Text style={QuotationPaymentStyle.invScheduleLabel}>
                                                     {item.label}
                                                     {'\n'}
-                                                    <Text style={{fontSize: 7, color: '#777', fontWeight: 'normal'}}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
+                                                    <Text style={{ fontSize: 7, color: '#777', fontWeight: 'normal' }}>{dayjs(item.date).format('MM/DD/YYYY')}</Text>
                                                 </Text>
                                                 <Text style={QuotationPaymentStyle.invScheduleAmount}>PHP {formatPesoNumber(item.amount)}</Text>
                                             </View>

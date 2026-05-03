@@ -15,7 +15,7 @@ export default function QuotationForm4({ route, navigation }) {
     const { user } = useUser();
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
 
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
@@ -25,8 +25,8 @@ export default function QuotationForm4({ route, navigation }) {
 
     const confirmBooking = () => {
         setIsProceedModalOpen(false);
-        navigation.navigate("quotationpaymentmode", { 
-            setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency 
+        navigation.navigate("quotationpaymentmode", {
+            quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
 
@@ -34,7 +34,7 @@ export default function QuotationForm4({ route, navigation }) {
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={QuotationFormStepStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={QuotationFormStepStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={QuotationFormStepStyle.logo} />
 
@@ -71,14 +71,14 @@ export default function QuotationForm4({ route, navigation }) {
                 </View>
 
                 <View style={QuotationFormStepStyle.footerContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[QuotationAllInStyle.proceedButton, { backgroundColor: '#28a745' }]}
                         onPress={handleOpenConfirmModal}
                     >
                         <Text style={QuotationAllInStyle.proceedButtonText}>SUBMIT FINAL BOOKING</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={QuotationFormStepStyle.backTextButton}
                         onPress={() => navigation.goBack()}
                     >
@@ -89,7 +89,7 @@ export default function QuotationForm4({ route, navigation }) {
 
             <Modal transparent animationType='fade' visible={isProceedModalOpen} onRequestClose={() => setIsProceedModalOpen(false)}>
                 <View style={ModalStyle.modalOverlay}>
-                    <View style={[ModalStyle.modalBox, { width: '90%', paddingHorizontal: 20, paddingVertical: 25 }]}>                        
+                    <View style={[ModalStyle.modalBox, { width: '90%', paddingHorizontal: 20, paddingVertical: 25 }]}>
                         <Text style={[ModalStyle.modalTitle, { fontSize: 20, textAlign: 'center', marginBottom: 15 }]}>Proceed to Booking</Text>
 
                         <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>

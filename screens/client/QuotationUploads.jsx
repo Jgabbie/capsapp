@@ -9,38 +9,38 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
-import { useUser } from '../../context/UserContext'; 
+import { useUser } from '../../context/UserContext';
 
 const formatDate = (date) => {
     if (!date) return "";
-    return date.toISOString().split('T')[0]; 
+    return date.toISOString().split('T')[0];
 };
 
 const computeAge = (birthDate) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);
     if (isNaN(birth.getTime())) return null;
-    
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age -= 1;
     }
-    
+
     return age < 0 ? null : age;
 };
 
 const getBirthdayBounds = (travelerType) => {
     const today = new Date();
     const category = String(travelerType || '').toLowerCase();
-    
+
     if (category === 'infant') {
         const maxDate = new Date(today);
         const minDate = new Date(today);
         minDate.setFullYear(minDate.getFullYear() - 2);
-        
+
         return {
             minDate: minDate,
             maxDate: maxDate,
@@ -48,13 +48,13 @@ const getBirthdayBounds = (travelerType) => {
             maxAge: 2
         };
     }
-    
+
     if (category === 'child') {
         const maxDate = new Date(today);
         maxDate.setFullYear(maxDate.getFullYear() - 3);
         const minDate = new Date(today);
         minDate.setFullYear(minDate.getFullYear() - 11);
-        
+
         return {
             minDate: minDate,
             maxDate: maxDate,
@@ -62,7 +62,7 @@ const getBirthdayBounds = (travelerType) => {
             maxAge: 11
         };
     }
-    
+
     const adultMinDate = new Date(1935, 0, 1);
     const adultMaxDate = new Date(today);
     adultMaxDate.setFullYear(adultMaxDate.getFullYear() - 12);
@@ -83,21 +83,21 @@ const isMinorTravelerType = (travelerType) => {
 export default function QuotationUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { setupData } = route.params || {};
-    
-    const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+    const { quotation } = route.params || {};
+
+    const counts = quotation?.travelerCounts || { adult: 1, child: 0, infant: 0 };
     const totalTravelers = counts.adult + counts.child + counts.infant;
-    const bookingType = setupData?.bookingType || 'Solo Booking';
-    
-    const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
+    const bookingType = quotation?.bookingType || 'Solo Booking';
+
+    const packageType = quotation?.packageId.packageType || quotation?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
 
     const travelerTypes = useMemo(() => {
         const types = [];
-        for(let i=0; i<counts.adult; i++) types.push('Adult');
-        for(let i=0; i<counts.child; i++) types.push('Child');
-        for(let i=0; i<counts.infant; i++) types.push('Infant');
+        for (let i = 0; i < counts.adult; i++) types.push('Adult');
+        for (let i = 0; i < counts.child; i++) types.push('Child');
+        for (let i = 0; i < counts.infant; i++) types.push('Infant');
         return types;
     }, [counts]);
 
@@ -110,9 +110,9 @@ export default function QuotationUploads({ route, navigation }) {
     const [travelersData, setTravelersData] = useState(() => {
         return Array.from({ length: totalTravelers }).map((_, index) => {
             const travelerType = index < counts.adult ? 'Adult' : index < counts.adult + counts.child ? 'Child' : 'Infant';
-            
+
             let initialRoomType = '';
-            
+
             if (bookingType === 'Solo Booking') {
                 initialRoomType = 'SINGLE';
             } else if (bookingType === 'Group Booking') {
@@ -122,10 +122,10 @@ export default function QuotationUploads({ route, navigation }) {
                     initialRoomType = 'TWIN';
                 }
             }
-            
+
             if (index === 0 && user) {
                 return {
-                    title: user.title || '', 
+                    title: user.title || '',
                     firstName: user.firstname || '',
                     lastName: user.lastname || '',
                     roomType: initialRoomType,
@@ -133,15 +133,15 @@ export default function QuotationUploads({ route, navigation }) {
                 };
             }
             return {
-                title: '', firstName: '', lastName: '', 
-                roomType: initialRoomType, 
+                title: '', firstName: '', lastName: '',
+                roomType: initialRoomType,
                 birthdate: '', passportNo: '', passportExpiry: ''
             };
         });
     });
 
     const [uploads, setUploads] = useState({});
-    const [activeDropdown, setActiveDropdown] = useState(null); 
+    const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
 
@@ -201,7 +201,7 @@ export default function QuotationUploads({ route, navigation }) {
     };
 
     const currentYear = new Date().getFullYear();
-    const maxBirthDate = new Date(); 
+    const maxBirthDate = new Date();
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
 
@@ -219,7 +219,7 @@ export default function QuotationUploads({ route, navigation }) {
     };
 
     const onDateSelected = (event, selectedDate) => {
-        setShowDatePicker(Platform.OS === 'ios'); 
+        setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
             setDatePickerConfig(prev => ({ ...prev, currentDate: selectedDate }));
             if (Platform.OS !== 'ios') {
@@ -241,7 +241,7 @@ export default function QuotationUploads({ route, navigation }) {
             Alert.alert("Missing Documents", `Please upload both ${travelDocumentLabel} and 2x2 Photo for all travelers.`);
             return;
         }
-        navigation.navigate("quotationform1", { setupData, travelerUploads: uploads, travelersData });
+        navigation.navigate("quotationform1", { quotation, travelerUploads: uploads, travelersData });
     };
 
     return (
@@ -257,11 +257,11 @@ export default function QuotationUploads({ route, navigation }) {
                     <View key={index} style={BookingUploadsStyle.uploadCard}>
                         <Text style={BookingUploadsStyle.travelerHeader}>Traveler {index + 1} - {travelerTypes[index]}</Text>
                         <Text style={BookingUploadsStyle.cardSubtitle}>Upload {travelDocumentLabel.toLowerCase()} and 2x2 ID photo</Text>
-                        
+
                         <View style={BookingUploadsStyle.formSection}>
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]} 
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]}
                                     onPress={() => setActiveDropdown({ index, type: 'title' })}
                                 >
                                     <Text style={[BookingUploadsStyle.inputText, !t.title && BookingUploadsStyle.placeholderText]}>
@@ -275,8 +275,8 @@ export default function QuotationUploads({ route, navigation }) {
                             </View>
 
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity 
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]} 
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]}
                                     onPress={() => {
                                         if (bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index])) {
                                             setActiveDropdown({ index, type: 'roomType' });
@@ -301,7 +301,7 @@ export default function QuotationUploads({ route, navigation }) {
                             {!isDomestic && (
                                 <View style={BookingUploadsStyle.formRow}>
                                     <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Passport number" keyboardType="numeric" maxLength={7} value={t.passportNo} onChangeText={(v) => updateTraveler(index, 'passportNo', v.replace(/[^0-9]/g, ''))} />
-                                    
+
                                     <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'passportExpiry')}>
                                         <Text style={[BookingUploadsStyle.inputText, !t.passportExpiry && BookingUploadsStyle.placeholderText]}>
                                             {t.passportExpiry || 'Passport expiry'}

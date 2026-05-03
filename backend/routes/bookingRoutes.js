@@ -10,7 +10,8 @@ import {
   getAllBookings,
   verifyTokenCheckout,
   getBookingsTotalBaseOnMonth,
-  getInvoiceNumber
+  getInvoiceNumber,
+  getCurrentInvoiceNumberQuotation
 } from "../controllers/bookingController.js";
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.post("/create-booking", requireUser, createBooking);
 router.get("/my-bookings", requireUser, getUserBookings);
 router.post("/cancel/:id", requireUser, cancelBooking);
 router.get('/bookings-total-month', requireUser, getBookingsTotalBaseOnMonth);
+router.get('/current-invoice-number', requireUser, getCurrentInvoiceNumberQuotation);
 router.get('/invoice-number/:reference', requireUser, getInvoiceNumber);
 router.post("/verify-payment", requireUser, verifyTokenCheckout);
 router.get("/all-bookings", requireUser, requireAdmin, getAllBookings);

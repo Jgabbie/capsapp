@@ -203,6 +203,35 @@ export const getInvoiceNumber = async (req, res) => {
     }
 };
 
+export const getCurrentInvoiceNumberQuotation = async (req, res) => {
+    try {
+        const monthBookings = await Booking.find({
+            createdAt: {
+                $gte: dayjs().startOf('month').toDate(),
+                $lte: dayjs().endOf('month').toDate()
+            }
+        }).lean();
+        const lastBooking = await Booking.findOne({
+            createdAt: {
+                $gte: dayjs().startOf('month').toDate(),
+                $lte: dayjs().endOf('month').toDate()
+            }
+        }).sort({ createdAt: -1 });
+
+        let sequence = 1;
+
+        if (lastBooking?.invoiceNumber) {
+            const lastSeq = parseInt(lastBooking.invoiceNumber.slice(2));
+            sequence = lastSeq + 1;
+        }
+
+        const invoiceNumber = `${dayjs().format('MM')}${String(sequence).padStart(2, '0')}`;
+        return res.status(200).json({ invoiceNumber });
+    } catch (error) {
+        console.error('Error fetching current invoice number:', error);
+        return res.status(500).json({ message: 'Error fetching current invoice number', error: error.message });
+    }
+};
 
 export const getAllBookings = async (_req, res) => {
     try {

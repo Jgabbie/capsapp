@@ -77,6 +77,7 @@ export default function PaymentMethod({ route, navigation }) {
             }
 
             const safeAmount = Number(setupData?.totalPrice || amountToPay || 0);
+            const finalAmountToPay = safeAmount;
 
             // ==========================================================
             // SCENARIO A: PAYING FOR AN EXISTING BOOKING

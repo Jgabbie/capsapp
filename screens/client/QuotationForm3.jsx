@@ -12,13 +12,13 @@ const formatLongDate = (dateVal) => {
 
 export default function QuotationForm3({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
     const handleNext = () => {
-        navigation.navigate("quotationform4", { 
-            setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency 
+        navigation.navigate("quotationform4", {
+            quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
 
@@ -26,7 +26,7 @@ export default function QuotationForm3({ route, navigation }) {
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={QuotationFormStepStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={QuotationFormStepStyle.paperPage}>
                     <Image source={require('../../assets/images/Logo.png')} style={QuotationFormStepStyle.logo} />
 
@@ -81,14 +81,14 @@ export default function QuotationForm3({ route, navigation }) {
                 </View>
 
                 <View style={QuotationFormStepStyle.footerContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={QuotationAllInStyle.proceedButton}
                         onPress={handleNext}
                     >
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={QuotationFormStepStyle.backTextButton}
                         onPress={() => navigation.goBack()}
                     >
