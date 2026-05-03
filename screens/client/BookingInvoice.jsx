@@ -288,7 +288,9 @@ export default function BookingInvoice({ route, navigation }) {
                 label: 'Deposit',
                 amount: depositAmount,
                 date: finalBaseDate,
-                status: paidAmountParam >= (depositAmount - 0.01) ? 'PAID' : 'PENDING'
+                status: paidAmountParam >= (depositAmount - 0.01) ? 'PAID' : 'PENDING',
+                cumulativeTarget: depositAmount,
+                index: 0
             },
             ...paymentDates.map((date, index) => {
                 const cumulativeTarget = depositAmount + (installmentAmount * (index + 1));
@@ -296,12 +298,14 @@ export default function BookingInvoice({ route, navigation }) {
                     label: `Installment ${index + 1}`,
                     amount: installmentAmount,
                     date: date,
-                    status: paidAmountParam >= (cumulativeTarget - 0.01) ? 'PAID' : 'PENDING'
+                    status: paidAmountParam >= (cumulativeTarget - 0.01) ? 'PAID' : 'PENDING',
+                    cumulativeTarget,
+                    index: index + 1
                 };
             })
         ];
 
-        const nextUnpaid = paymentSchedule.find(item => item.status === 'PENDING');
+        const nextUnpaid = paymentSchedule.find(item => item.status === 'PENDING') || null;
         return { paymentSchedule, totalAmount: finalTotalAmount, subtotal: finalTotalAmount, nextUnpaid };
     };
 
@@ -358,7 +362,7 @@ export default function BookingInvoice({ route, navigation }) {
     }
 
     // Use runInstallmentLogic for payment schedule calculation
-    const { paymentSchedule } = runInstallmentLogic(
+    const { paymentSchedule, nextUnpaid } = runInstallmentLogic(
         previewTotalAmount,
         bookingDetails,
         paidAmount,
@@ -406,13 +410,17 @@ export default function BookingInvoice({ route, navigation }) {
                     return;
                 }
 
+                const amountToCharge = nextUnpaid ? Number(nextUnpaid.amount) : remainingBalance;
+                const installmentIndex = nextUnpaid?.index ?? null;
+
                 const base64Image = `data:${proofImage.mimeType || 'image/jpeg'};base64,${proofImage.base64}`;
                 const filename = proofImage.fileName || proofImage.uri.split('/').pop() || 'deposit.jpg';
 
                 const manualPayload = {
                     bookingId: booking?._id || rawBooking?._id || rawBooking?.id,
                     packageId: targetPackageId,
-                    amount: remainingBalance,
+                    amount: amountToCharge,
+                    installmentIndex,
                     proofImage: base64Image,
                     proofImageType: proofImage.mimeType || 'image/jpeg',
                     proofFileName: filename
@@ -423,7 +431,10 @@ export default function BookingInvoice({ route, navigation }) {
                 navigation.navigate("paymentsuccess", { reference, mode: 'manual' });
 
             } else {
-                // PayMongo
+                // PayMongo / online - charge only the next unpaid installment
+                const amountToCharge = nextUnpaid ? Number(nextUnpaid.amount) : remainingBalance;
+                const installmentIndex = nextUnpaid?.index ?? null;
+
                 const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: reference, mode: 'online' } });
                 const cancelDeepLink = Linking.createURL('bookinginvoice');
 
@@ -431,7 +442,8 @@ export default function BookingInvoice({ route, navigation }) {
                     bookingId: booking?._id || rawBooking?._id || rawBooking?.id,
                     bookingReference: reference,
                     packageId: targetPackageId,
-                    totalPrice: remainingBalance,
+                    amount: amountToCharge,
+                    installmentIndex,
                     successUrl: successDeepLink,
                     cancelUrl: cancelDeepLink,
                 };
@@ -904,7 +916,7 @@ export default function BookingInvoice({ route, navigation }) {
                             <View style={BookingInvoiceStyle.checkoutSection}>
                                 <Text style={BookingInvoiceStyle.checkoutTitle}>Amount to Pay</Text>
                                 <Text style={BookingInvoiceStyle.checkoutAmount}>
-                                    {hasPendingTransaction ? 'Pending Payments...' : formatCurrency(remainingBalance)}
+                                    {hasPendingTransaction ? 'Pending Payments...' : formatCurrency(nextUnpaid ? nextUnpaid.amount : remainingBalance)}
                                 </Text>
 
                                 <TouchableOpacity

@@ -453,7 +453,6 @@ export const createManualPaymentDeposit = async (req, res) => {
             type: 'payment',
             link: '/user-transactions',
         });
-        console.log('Notification created for installment payment, user:', user._id, 'booking:', booking.reference);
 
         try {
             const info = await transporter.sendMail({
@@ -504,7 +503,6 @@ export const createManualPaymentDeposit = async (req, res) => {
                     </div>
                     `
             });
-            console.log('Installment payment email sent:', info && (info.response || info.envelope || info.messageId));
         } catch (emailError) {
             console.error('Failed to send booking email:', emailError);
         }
@@ -798,7 +796,6 @@ export const createCheckoutSessionVisa = async (req, res) => {
 
 export const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
-    const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -808,8 +805,13 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
 
         const bookingId = paymentPayload.bookingId;
-        const totalPrice = paymentPayload.totalPrice
+        const totalPrice = Number(paymentPayload.amount ?? paymentPayload.totalPrice ?? 0);
+        const installmentIndex = paymentPayload.installmentIndex ?? null;
         const token = crypto.randomUUID();
+
+        if (!bookingId || !Number.isFinite(totalPrice) || totalPrice <= 0) {
+            return res.status(400).json({ error: "bookingId and a valid amount are required." });
+        }
 
         const tokenCheckout = await TokenCheckoutModel.create({
             token,
@@ -821,9 +823,6 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
         const bookingReference = paymentPayload.bookingReference;
         const packageId = paymentPayload.packageId;
-        const successUrl = `${FRONTEND_URL}/booking-payment/success?token=${token}`;
-        const cancelUrl = `${FRONTEND_URL}/booking-payment?status=cancel`;
-
 
         const getPackage = await PackageModel.findById(packageId).select('packageName');
         const packageName = getPackage.packageName;
@@ -843,6 +842,7 @@ export const createCheckoutSessionDeposit = async (req, res) => {
             bookingReference,
             transactionType: "Installment Payment",
             packageId,
+            installmentIndex,
             baseAmountCents,
             convenienceFeeCents,
             totalAmountCents: finalTotalCents

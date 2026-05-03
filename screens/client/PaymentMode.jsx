@@ -74,25 +74,35 @@ export default function PaymentMode({ route, navigation }) {
     useEffect(() => {
         const fetchInvoiceNumber = async () => {
             try {
-                const response = await api.get('/booking/bookings-total-month', withUserHeader(user?._id));
-                const number = response.data?.invoiceNumber;
-
-                console.log("Fetched monthly invoice number:", number);
+                // Try to use the same controller logic as BookingInvoice: allow passing a reference
+                const reference = setupData?.reference || setupData?.ref || "--";
+                const config = { ...(withUserHeader(user?._id) || {}), params: reference && reference !== "--" ? { reference } : {} };
+                const invoiceRes = await api.get('/booking/bookings-total-month', config);
+                const number = invoiceRes.data?.invoiceNumber;
 
                 if (number) {
                     setInvoiceNumber(number);
                     return;
                 }
+
+                // If controller didn't return a prebuilt invoiceNumber, construct using sequence/total
+                const total = Number(invoiceRes.data?.totalBookings || 0);
+                const createdAtValue = setupData?.createdAt || setupData?.bookingDate || new Date();
+                const monthKey = dayjs(createdAtValue).format('MM');
+                const sequence = Number(invoiceRes.data?.sequence || total + 1) || total + 1;
+                setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
+                return;
             } catch (error) {
                 console.log('Error fetching monthly invoice number:', error.message);
             }
 
+            // Fallback: current month with sequence 01
             const fallbackMonth = dayjs().format('MM');
             setInvoiceNumber(`${fallbackMonth}01`);
         };
 
         fetchInvoiceNumber();
-    }, [user?._id]);
+    }, [user?._id, setupData]);
 
     const buildInvoiceNumber = (allBookings, currentBooking) => {
         if (!currentBooking) return "";

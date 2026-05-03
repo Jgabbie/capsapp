@@ -8,7 +8,7 @@ router.post("/create-checkout-token", requireUser, createCheckoutToken);
 router.post("/create-checkout-session", requireUser, createCheckoutSession);
 router.post("/create-checkout-session-passport", requireUser, createCheckoutSessionPassport);
 router.post("/create-checkout-session-visa", requireUser, createCheckoutSessionVisa);
-router.post("/create-checkout-deposit", requireUser, createCheckoutSessionDeposit);
+router.post("/create-checkout-session-deposit", requireUser, createCheckoutSessionDeposit);
 router.post("/manual-deposit", requireUser, createManualPaymentDeposit);
 router.post("/manual-payment", requireUser, createManualPayment);
 router.post("/manual-passport", requireUser, createManualPaymentPassport);
