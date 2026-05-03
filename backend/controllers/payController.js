@@ -796,6 +796,7 @@ export const createCheckoutSessionVisa = async (req, res) => {
 
 export const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
+    console.log('Received createCheckoutSessionDeposit request with body:', req.body); // Debug log for incoming request body
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -853,39 +854,41 @@ export const createCheckoutSessionDeposit = async (req, res) => {
             totalAmountCents: finalTotalCents
         };
 
-        const response = await apiFetch.post(
-            "https://api.paymongo.com/v1/checkout_sessions",
-            {
-                data: {
-                    attributes: {
-                        billing: {
-                            name: username.username || "Test User",
-                            email: email.email || "test@example.com",
-                        },
-                        line_items: [
-                            {
-                                name: packageName || 'Tour Package',
-                                quantity: 1,
-                                amount: baseAmountCents,
-                                currency: "PHP",
-                            },
-                            {
-                                name: "Convenience Fee",
-                                description: "Payment processing and service fee",
-                                quantity: 1,
-                                amount: convenienceFeeCents,
-                                currency: "PHP",
-                            }
-                        ],
-                        payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
-                        success_url: successUrl,
-                        cancel_url: cancelUrl,
-                        metadata,
-                        show_description: true,
-                        show_line_items: true,
+        const payload = {
+            data: {
+                attributes: {
+                    billing: {
+                        name: username.username || "Test User",
+                        email: email.email || "test@example.com",
                     },
+                    line_items: [
+                        {
+                            name: packageName || 'Tour Package',
+                            quantity: 1,
+                            amount: baseAmountCents,
+                            currency: "PHP",
+                        },
+                        {
+                            name: "Convenience Fee",
+                            description: "Payment processing and service fee",
+                            quantity: 1,
+                            amount: convenienceFeeCents,
+                            currency: "PHP",
+                        }
+                    ],
+                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
+                    metadata,
+                    show_description: true,
+                    show_line_items: true,
                 },
             },
+        };
+
+        const response = await axios.post(
+            "https://api.paymongo.com/v1/checkout_sessions",
+            payload,
             {
                 headers: {
                     Authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ":").toString("base64")}`,
@@ -895,7 +898,7 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         );
 
 
-        res.json(response);
+        return res.status(200).json(response.data);
     } catch (error) {
         console.error("PayMongo error:", error.response?.data || error.message);
         res.status(500).json({ error: error.response?.data || error.message });

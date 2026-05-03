@@ -98,7 +98,7 @@ export default function BookingInvoice({ route, navigation }) {
                 finalBooking = bookingRes.data?.booking || rawBooking;
                 finalTxns = bookingRes.data?.transactions || [];
             } catch (err) {
-                console.log("Primary fetch failed. Triggering Transaction Fallback...");
+                // console.log("Primary fetch failed. Triggering Transaction Fallback...");
 
                 // If by-reference 500s, we grab the transactions directly and link them!
                 try {
