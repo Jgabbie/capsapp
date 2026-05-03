@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { useNavigation } from '@react-navigation/native'
@@ -23,6 +23,28 @@ export default function Home() {
     const cs = useNavigation()
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
+
+    // 🔥 NEW CAROUSEL DATA & LOGIC 🔥
+    const carouselRef = useRef(null);
+    const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+
+    const carouselData = [
+        {
+            image: require('../../assets/images/Homepage1.png'),
+            title: 'Discover the Philippines',
+            subtitle: 'Sunlit beaches, island escapes, and soulful local journeys.'
+        },
+        {
+            image: require('../../assets/images/Homepage2.png'),
+            title: 'City Lights to Nature Trails',
+            subtitle: 'From skyline adventures to quiet mountain mornings.'
+        },
+        {
+            image: require('../../assets/images/LandingPage_Banner.png'),
+            title: 'Your Next Adventure Awaits',
+            subtitle: 'Handpicked tours that match your pace and budget.'
+        }
+    ];
 
     const [packages, setPackages] = useState([])
     const [searchQuery, setSearchQuery] = useState("")
@@ -75,6 +97,25 @@ export default function Home() {
         Roboto_500Medium,
         Roboto_700Bold
     })
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveCarouselIndex((prevIndex) => {
+                const nextIndex = prevIndex === carouselData.length - 1 ? 0 : prevIndex + 1;
+                carouselRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+                return nextIndex;
+            });
+        }, 5000); // 5 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Keeps the timer in sync if the user swipes manually!
+    const handleCarouselScroll = (event) => {
+        const scrollPosition = event.nativeEvent.contentOffset.x;
+        const index = Math.round(scrollPosition / width);
+        setActiveCarouselIndex(index);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -228,6 +269,23 @@ export default function Home() {
             </View>
         )
     }
+
+    // 🔥 Define the Pagination Dots Component
+    const renderPaginationDots = () => {
+        return (
+            <View style={HomeStyle.dotsContainer}>
+                {carouselData.map((_, index) => (
+                    <View 
+                        key={index} 
+                        style={[
+                            HomeStyle.dot, 
+                            activeCarouselIndex === index ? HomeStyle.dotActive : {}
+                        ]} 
+                    />
+                ))}
+            </View>
+        );
+    };
 
     if (!fontsLoaded) return null;
 
@@ -487,6 +545,39 @@ export default function Home() {
                         </TouchableOpacity>
                     </ImageBackground>
 
+                    {/* --- 🔥 NEW AUTO-SCROLLING CAROUSEL WITH SPECIFIC DESIGN 🔥 --- */}
+                    <View style={HomeStyle.carouselContainer}>
+                        <ScrollView
+                            ref={carouselRef}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            onMomentumScrollEnd={handleCarouselScroll}
+                            scrollEventThrottle={16}
+                        >
+                            {carouselData.map((item, index) => (
+                                <View key={index} style={HomeStyle.carouselSlide}>
+                                    
+                                    <ImageBackground
+                                        source={item.image}
+                                        style={HomeStyle.carouselInner}
+                                        imageStyle={{ borderRadius: 20 }} // 🔥 FIX: All 4 corners rounded perfectly
+                                        resizeMode="cover"
+                                    >
+                                        <View style={HomeStyle.carouselOverlay} />
+                                        <Text style={HomeStyle.carouselTitle}>{item.title}</Text>
+                                        <Text style={HomeStyle.carouselSubtitle}>{item.subtitle}</Text>
+                                    </ImageBackground>
+
+                                </View>
+                            ))}
+                        </ScrollView>
+
+                        {/* 🔥 NEW: DOTS INDICATOR UI ADDED HERE BELOW THE SCROLLVIEW 🔥 */}
+                        {renderPaginationDots()}
+                    </View>
+                    {/* --- END CAROUSEL --- */}
+
                     <View style={HomeStyle.servicesContainer}>
                         <Text style={HomeStyle.servicesHeader}>THE <Text style={{ color: '#305797' }}>SERVICES</Text> WE OFFER</Text>
                         <View style={HomeStyle.servicesGrid}>
@@ -517,7 +608,7 @@ export default function Home() {
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>M&RC Travel and Tours</Text>
                         <Text style={HomeStyle.bgDesc}>
-                            Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait—your dream journey starts now!
+                            M&RC Travel and tours is a travel agency that provides a wide range of travel services, including tour packages, flight bookings, hotel reservations, and travel insurance. With a commitment to customer satisfaction and a passion for travel, M&RC Travel and Tours aims to create unforgettable travel experiences for its clients.
                         </Text>
                     </ImageBackground>
 
