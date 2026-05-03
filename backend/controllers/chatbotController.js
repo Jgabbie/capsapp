@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
-import KnowledgeChunk from '../models/knowledgeChunk.js'; 
+import KnowledgeChunk from '../models/knowledgeChunk.js';
 import PackageModel from '../models/package.js';
 import ServiceModel from '../models/service.js';
 
@@ -15,7 +15,7 @@ const VECTOR_INDEX = process.env.MONGODB_VECTOR_INDEX || 'knowledgeIndex';
 const VECTOR_CANDIDATES = 100;
 const VECTOR_LIMIT = 5;
 
-const TRAVEX_PROMPT_ID = 'pmpt_69e4a9003a4c8195923e2db164ea4f6208e21becb823361f';
+const TRAVEX_PROMPT_ID = process.env.TRAVEX_PROMPT_ID;
 
 const faqData = [
     {

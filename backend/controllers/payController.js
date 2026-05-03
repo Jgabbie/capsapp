@@ -803,6 +803,9 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         }
         const { paymentPayload } = req.body;
 
+        if (!paymentPayload) {
+            return res.status(400).json({ error: "paymentPayload is required." });
+        }
 
         const bookingId = paymentPayload.bookingId;
         const totalPrice = Number(paymentPayload.amount ?? paymentPayload.totalPrice ?? 0);
@@ -823,9 +826,11 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
         const bookingReference = paymentPayload.bookingReference;
         const packageId = paymentPayload.packageId;
+        const successUrl = paymentPayload.successUrl;
+        const cancelUrl = paymentPayload.cancelUrl;
 
         const getPackage = await PackageModel.findById(packageId).select('packageName');
-        const packageName = getPackage.packageName;
+        const packageName = getPackage?.packageName || 'Tour Package';
 
         const baseAmountCents = Math.round(totalPrice * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
