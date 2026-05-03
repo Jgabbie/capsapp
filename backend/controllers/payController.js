@@ -817,7 +817,7 @@ export const createCheckoutSessionDeposit = async (req, res) => {
             return res.status(400).json({ error: "bookingId and a valid amount are required." });
         }
 
-        const tokenCheckout = await TokenCheckoutModel.create({
+        const tokenCheckout = await TokenCheckout.create({
             token,
             userId,
             bookingId,
