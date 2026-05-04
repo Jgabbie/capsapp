@@ -320,6 +320,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     const manualPayload = {
                         bookingId: newBookingId,
                         packageId: targetPackageId,
+                        quotationId: quotation?._id,
                         amount: safeAmount,
                         paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
@@ -338,6 +339,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
                     const paymentPayload = {
                         bookingId: newBookingId,
+                        quotationId: quotation?._id,
                         bookingReference: bookingRef,
                         packageId: targetPackageId,
                         totalPrice: safeAmount,

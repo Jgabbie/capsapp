@@ -592,7 +592,7 @@ export const createManualPaymentQuotation = async (req, res) => {
 
         const packageDoc = await PackageModel.findById(packageId);
 
-        const user = await UserModel.findById(userId).select('email username');
+        const user = await User.findById(userId).select('email username');
 
 
         await Notification.create({
