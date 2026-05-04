@@ -122,6 +122,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         bookingId: route.params.existingBookingId,
                         bookingReference: route.params.existingReference,
                         packageId: targetPackageId,
+                        quotationId: quotation?._id || route.params.quotationId || null,
                         totalPrice: safeAmount,
                         checkoutToken: realCheckoutToken,
                         leadEmail: user?.email || "guest@example.com",
@@ -319,6 +320,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     const manualPayload = {
                         bookingId: newBookingId,
                         packageId: targetPackageId,
+                        quotationId: quotation?._id,
                         amount: safeAmount,
                         paymentType: paymentType || 'Full Payment',
                         proofImage: proofUrl,
@@ -327,7 +329,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
+                    await api.post('/payment/manual-quotation', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
 
@@ -337,6 +339,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
                     const paymentPayload = {
                         bookingId: newBookingId,
+                        quotationId: quotation?._id,
                         bookingReference: bookingRef,
                         packageId: targetPackageId,
                         totalPrice: safeAmount,

@@ -574,15 +574,25 @@ export const createManualPaymentQuotation = async (req, res) => {
         booking.status = 'Pending'
         booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
 
-        const quotation = await Quotation.findById(quotationId);
-
-        quotation.status = 'Booked';
-        await quotation.save();
+        let quotation = null;
+        if (quotationId) {
+            quotation = await Quotation.findById(quotationId);
+            if (!quotation) {
+                console.warn('Quotation not found for ID:', quotationId);
+            } else {
+                quotation.status = 'Booked';
+                console.log("Updated Quotation Status to Booked for Quotation ID:", quotationId);
+                console.log("Quotation status after update:", quotation.status);
+                await quotation.save();
+            }
+        } else {
+            console.log('No quotationId provided for manual quotation payment.');
+        }
 
 
         const packageDoc = await PackageModel.findById(packageId);
 
-        const user = await UserModel.findById(userId).select('email username');
+        const user = await User.findById(userId).select('email username');
 
 
         await Notification.create({
@@ -1060,7 +1070,12 @@ export const createCheckoutSessionQuotation = async (req, res) => {
             return res.status(500).json({ error: "PayMongo secret key is not configured." });
         }
 
-        const { quotationId, paymentToken } = req.body;
+        // support both flat body and nested { paymentPayload }
+        const { paymentPayload } = req.body;
+        const actualPayload = paymentPayload || req.body;
+
+        const { quotationId } = actualPayload;
+        const paymentToken = actualPayload.checkoutToken || actualPayload.paymentToken || actualPayload.token;
 
 
         if (!paymentToken) {
@@ -1084,6 +1099,9 @@ export const createCheckoutSessionQuotation = async (req, res) => {
 
         const packageName = booking.packageId.packageName;
         const totalPrice = tokenDoc.amount;
+
+        const successUrl = actualPayload.successUrl || `${FRONTEND_URL}/paymentsuccess`;
+        const cancelUrl = actualPayload.cancelUrl || `${FRONTEND_URL}/paymentmethod`;
 
 
         const baseAmountCents = Math.round(totalPrice * 100);
