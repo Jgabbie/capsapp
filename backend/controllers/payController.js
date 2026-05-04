@@ -9,6 +9,7 @@ import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
 import Notification from "../models/notification.js";
+import Quotation from "../models/quotation.js";
 import PackageModel from "../models/package.js";
 import User from "../models/users.js";
 import transporter from "../config/nodemailer.js";
@@ -525,7 +526,7 @@ export const createManualPaymentDeposit = async (req, res) => {
 
 
 //MANUAL PAYMENT FOR QUOTATION BOOKINGS
-const createManualPaymentQuotation = async (req, res) => {
+export const createManualPaymentQuotation = async (req, res) => {
     const userId = req.userId;
     try {
         const {
@@ -573,7 +574,7 @@ const createManualPaymentQuotation = async (req, res) => {
         booking.status = 'Pending'
         booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
 
-        const quotation = await QuotationModel.findById(quotationId);
+        const quotation = await Quotation.findById(quotationId);
 
         quotation.status = 'Booked';
         await quotation.save();
@@ -682,8 +683,8 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(500).json({ error: "PayMongo secret key is not configured." });
         }
 
-        const tokenToUse = actualPayload.checkoutToken || checkoutToken;
-        const priceToUse = actualPayload.totalPrice || totalPrice;
+        const tokenToUse = actualPayload.checkoutToken;
+        const priceToUse = actualPayload.totalPrice;
 
         if (!tokenToUse || !priceToUse) {
             return res.status(400).json({ message: "checkoutToken and totalPrice are required" });
@@ -699,11 +700,14 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(500).json({ message: "PAYMONGO_SECRET_KEY is not configured" });
         }
 
-        let pkgName = packageName || actualPayload.packageName || "Tour Package";
+        let pkgName = actualPayload.packageName || "Tour Package";
         if (actualPayload.packageId && pkgName === "Tour Package") {
             const pkg = await PackageModel.findById(actualPayload.packageId);
             if (pkg) pkgName = pkg.packageName;
         }
+
+        const successUrl = actualPayload.successUrl || 'myapp://payment-success';
+        const cancelUrl = actualPayload.cancelUrl || 'myapp://payment-cancel';
 
         // Web Synced Computation: 3.5% + ₱15 Fee
         const baseAmountCents = Math.round(Number(priceToUse) * 100);
@@ -722,8 +726,8 @@ export const createCheckoutSession = async (req, res) => {
                         { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
-                    success_url: actualPayload.successUrl || successUrl,
-                    cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
                     metadata: {
                         userId: req.userId,
                         token: tokenToUse,
@@ -1044,10 +1048,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 
 
 
-
-
 //CHECKOUT FOR QUOTATION BOOKINGS
-const createCheckoutSessionQuotation = async (req, res) => {
+export const createCheckoutSessionQuotation = async (req, res) => {
     const userId = req.userId;
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -1801,7 +1803,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             console.log('Created transaction for Quotation:', metadata.quotationId);
 
-            const quotation = await QuotationModel.findById(metadata.quotationId);
+            const quotation = await Quotation.findById(metadata.quotationId);
             console.log("Quotation found:", quotation);
             quotation.status = 'Booked';
             await quotation.save();

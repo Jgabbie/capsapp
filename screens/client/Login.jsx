@@ -183,8 +183,13 @@ export default function Login() {
                 <View style={LoginStyle.inputWrapper}>
                     <Text style={LoginStyle.loginLabel}>Username</Text>
                     <TextInput
-                        style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
-                        placeholder="Enter username"
+                        maxLength={30}
+                        style={LoginStyle.loginInputs}
+                        onChangeText={(e) => {
+                            const cleaned = e.replace(/[^A-Za-z0-9]/g, '');
+                            setUsername(cleaned);
+                            setError("");
+                        }}
                         value={getUsername}
                         onChangeText={(text) => {
                             setUsername(text)
@@ -225,13 +230,23 @@ export default function Login() {
                 </View>
 
                 <View style={LoginStyle.loginLinksContainer}>
-                    <TouchableOpacity onPress={() => { cs.navigate("signup") }}>
+                    <TouchableOpacity onPress={() => {
+                        setUsername("");
+                        setPassword("");
+                        setError("");
+                        cs.navigate("signup");
+                    }}>
                         <Text style={LoginStyle.loginLinks}>Signup here</Text>
                     </TouchableOpacity>
 
                     <Text style={LoginStyle.loginLinksDivider}>|</Text>
 
-                    <TouchableOpacity onPress={() => { cs.navigate("passwordreset") }}>
+                    <TouchableOpacity onPress={() => {
+                        setUsername("");
+                        setPassword("");
+                        setError("");
+                        cs.navigate("passwordreset");
+                    }}>
                         <Text style={LoginStyle.loginLinks}>Forgot password</Text>
                     </TouchableOpacity>
                 </View>
