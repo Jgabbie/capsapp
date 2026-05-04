@@ -24,11 +24,11 @@ const QuotationFormStepStyle = StyleSheet.create({
         minHeight: 800,
     },
     logo: {
-        width: 160,
-        height: 80,
+        width: 180,
+        height: 100,
         resizeMode: 'contain',
         alignSelf: 'center',
-        marginBottom: 10,
+        marginBottom: 0,
     },
     headerGold: {
         backgroundColor: '#FFD700',

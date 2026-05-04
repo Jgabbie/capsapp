@@ -5,8 +5,8 @@ const { width } = Dimensions.get('window');
 const LoginStyle = StyleSheet.create({
     container: {
         flex: 1,
-        // 🔥 Reverted back to 200 to push it down to its original vertical position
-        paddingTop: 185,
+        // Adjusted paddingTop since logo moved to bottom
+        paddingTop: 200,
         // Centers all children horizontally
         alignItems: 'center', 
     },
@@ -153,22 +153,13 @@ const LoginStyle = StyleSheet.create({
         textAlign: 'left',
         fontFamily: 'Roboto_500Medium',
     },
-    // 🔥 RENAMED AND ADJUSTED FOR THE TOP
-    topLogo: {
-        width: 120, 
-        height: 60,
-        marginBottom: 0, // Adds a little gap between the logo and the M&RC text
-        alignSelf: 'center',
-    },
-    // 🔥 NEW BY TRAVEX TEXT STYLE
-    byTravexText: {
-        color: '#305797',
-        fontFamily: 'Montserrat_500Medium', // Uses the Montserrat font you requested
-        fontSize: 12,
-        marginTop: 150,
+    // 🔥 RENAMED AND ADJUSTED FOR THE BOTTOM
+    bottomLogo: {
+        width: 140, 
+        height: 80,
+        marginTop: 130,
         marginBottom: 20,
-        textAlign: 'center',
-        letterSpacing: 2, // Adds a nice premium spacing to the letters
+        alignSelf: 'center',
     },
 });
 

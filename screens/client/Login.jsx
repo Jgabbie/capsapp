@@ -170,13 +170,6 @@ export default function Login() {
             resizeMode='cover'
         >
             <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-                {/* 🔥 MOVED LOGO: Now exactly on top of the welcome title! */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={LoginStyle.topLogo} 
-                    resizeMode="contain" 
-                />
-
                 <Text style={LoginStyle.loginHeading}>Welcome</Text>
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
@@ -260,8 +253,12 @@ export default function Login() {
                     )}
                 </TouchableOpacity>
 
-                {/* 🔥 NEW TEXT: Placed exactly where the bottom logo used to be */}
-                <Text style={LoginStyle.byTravexText}>BY TRAVEX</Text>
+                {/* 🔥 LOGO AT BOTTOM */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={LoginStyle.bottomLogo} 
+                    resizeMode="contain" 
+                />
 
                 {/* OTP Verification Modal */}
                 <Modal transparent animationType='fade' visible={isOTPModalOpen}>

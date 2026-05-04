@@ -22,8 +22,8 @@ const HeaderStyle = StyleSheet.create({
         height: 45,
     },
     logo: {
-        width: 60,
-        height: 60,
+        width: 70,
+        height: 70,
     },
     rightIconsContainer: {
         flexDirection: "row",

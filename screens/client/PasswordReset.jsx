@@ -99,13 +99,6 @@ export default function PasswordReset() {
         >
             <View style={PasswordResetStyle.container}>
                 
-                {/* 🔥 1. NEW LOGO: Placed exactly on top of the title */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={PasswordResetStyle.topLogo} 
-                    resizeMode="contain" 
-                />
-
                 <Text style={PasswordResetStyle.heading}>Reset Password</Text>
                 <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a One-Time Password</Text>
 
@@ -139,8 +132,12 @@ export default function PasswordReset() {
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={PasswordResetStyle.buttonText}>Send OTP</Text>}
                 </TouchableOpacity>
 
-                {/* 🔥 3. NEW BY TRAVEX TEXT: Placed exactly below the button */}
-                <Text style={PasswordResetStyle.byTravexText}>BY TRAVEX</Text>
+                {/* 🔥 LOGO AT BOTTOM */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={PasswordResetStyle.bottomLogo} 
+                    resizeMode="contain" 
+                />
 
             </View>
 
