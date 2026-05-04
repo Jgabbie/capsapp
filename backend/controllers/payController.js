@@ -1060,7 +1060,12 @@ export const createCheckoutSessionQuotation = async (req, res) => {
             return res.status(500).json({ error: "PayMongo secret key is not configured." });
         }
 
-        const { quotationId, paymentToken } = req.body;
+        // support both flat body and nested { paymentPayload }
+        const { paymentPayload } = req.body;
+        const actualPayload = paymentPayload || req.body;
+
+        const { quotationId } = actualPayload;
+        const paymentToken = actualPayload.checkoutToken || actualPayload.paymentToken || actualPayload.token;
 
 
         if (!paymentToken) {
@@ -1084,6 +1089,9 @@ export const createCheckoutSessionQuotation = async (req, res) => {
 
         const packageName = booking.packageId.packageName;
         const totalPrice = tokenDoc.amount;
+
+        const successUrl = actualPayload.successUrl || `${FRONTEND_URL}/paymentsuccess`;
+        const cancelUrl = actualPayload.cancelUrl || `${FRONTEND_URL}/paymentmethod`;
 
 
         const baseAmountCents = Math.round(totalPrice * 100);

@@ -122,6 +122,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         bookingId: route.params.existingBookingId,
                         bookingReference: route.params.existingReference,
                         packageId: targetPackageId,
+                        quotationId: quotation?._id || route.params.quotationId || null,
                         totalPrice: safeAmount,
                         checkoutToken: realCheckoutToken,
                         leadEmail: user?.email || "guest@example.com",
