@@ -85,12 +85,28 @@ export default function Notifications() {
                 const routeMap = {
                     userpackagequotation: 'userquotations',
                     userpackagequotations: 'userquotations',
+                    // Server may emit "package" — map it to the registered packagedetails screen
+                    package: 'packagedetails',
                 };
 
                 const targetRoute = routeMap[routeKey] || routeKey;
 
-                // Pass metadata routeState if it exists
-                navigation.navigate(targetRoute, routeState ? { state: routeState } : undefined);
+                // Pass metadata routeState if it exists. Normalize common shapes so
+                // `packagedetails` receives `{ id }` or `{ pkg }` like other navigations.
+                let navParams;
+                if (routeState) {
+                    navParams = {};
+                    const pkgId = routeState.packageItem || routeState.packageId || routeState.id;
+                    if (pkgId) navParams.id = pkgId;
+                    if (routeState.pkg || routeState.rawPackage) navParams.pkg = routeState.pkg || routeState.rawPackage;
+
+                    // If nothing matched, preserve the original state under `state`
+                    if (Object.keys(navParams).length === 0) navParams = { state: routeState };
+                } else {
+                    navParams = undefined;
+                }
+
+                navigation.navigate(targetRoute, navParams);
             } catch (err) {
                 console.log("Navigation error:", err);
             }

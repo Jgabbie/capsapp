@@ -129,13 +129,13 @@ function AppNavigator() {
             <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
             <MyScreen.Screen name="notifications" component={Notifications} />
 
-            {/* 🔥 REGISTRATION STEPS */}
+
             <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
             <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
             <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
             <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
 
-            {/* 🔥 RESTORED QUOTATION SCREENS */}
+
             <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
             <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
             <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
