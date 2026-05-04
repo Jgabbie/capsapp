@@ -372,6 +372,7 @@ export default function Profile() {
 
     const getStatusStyle = (status) => {
         const s = String(status).toLowerCase();
+        if (s.includes('fully paid') || s.includes('full paid') || s.includes('paid')) return { bg: '#f6ffed', text: '#52c41a' };
         if (s.includes('success') || s.includes('approve')) return { bg: '#f0f4ff', text: '#305797' };
         if (s.includes('reject') || s.includes('cancel')) return { bg: '#fee2e2', text: '#b91c1c' };
         return { bg: '#fef9c3', text: '#b45309' };
@@ -389,6 +390,10 @@ export default function Profile() {
                 {/* --- MY PROFILE CARD --- */}
                 <View style={ProfileStyle.card}>
                     <Text style={ProfileStyle.profileHeading}>My Profile</Text>
+
+                    <Text style={ProfileStyle.prefSubText}>
+                        View and edit your personal information, manage your preferences, and see your recent activity.
+                    </Text>
 
                     <View style={ProfileStyle.profileImageContainer}>
                         <View style={ProfileStyle.profileAvatarWrapper}>
@@ -410,6 +415,8 @@ export default function Profile() {
 
                     {/* 🔥 NEW ROLE DISPLAY HERE 🔥 */}
                     <Text style={ProfileStyle.roleSubtitle}>Customer</Text>
+
+                    <Text style={ProfileStyle.personalInfoTitle}>Personal Information</Text>
 
                     <Text style={ProfileStyle.profileLabel}>Username</Text>
                     <TextInput value={userData.username} editable={false} style={[ProfileStyle.profileInputs, ProfileStyle.profileInputsDisabled]} />
@@ -525,7 +532,7 @@ export default function Profile() {
                 {/* --- 🔥 NEW: PREFERENCES CARD 🔥 --- */}
                 <View style={ProfileStyle.card}>
                     <View style={ProfileStyle.preferencesHeader}>
-                        <Text style={ProfileStyle.profileHeading}>Preferences</Text>
+                        <Text style={ProfileStyle.profileHeading}>My Preferences</Text>
                         {!editingPreferences && (
                             <TouchableOpacity style={ProfileStyle.editPrefButton} onPress={() => setEditingPreferences(true)}>
                                 <Ionicons name="pencil" size={14} color="#fff" />

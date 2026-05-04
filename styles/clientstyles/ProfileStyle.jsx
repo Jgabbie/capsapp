@@ -11,7 +11,7 @@ const ProfileStyle = StyleSheet.create({
         fontSize: 24,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
-        marginBottom: 20,
+        marginBottom: 10,
         marginTop: 10,
     },
     profileImageContainer: {
@@ -76,9 +76,16 @@ const ProfileStyle = StyleSheet.create({
     profileLabel: {
         fontSize: 13,
         fontFamily: "Montserrat_500Medium",
-        color: "#2f3a4a",
+        color: "#305797",
         marginBottom: 6,
         marginTop: 12,
+    },
+    personalInfoTitle: {
+        fontSize: 18,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        marginBottom: 8,
+        marginTop: 30,
     },
     profileInputs: {
         fontSize: 15,
@@ -255,9 +262,11 @@ const ProfileStyle = StyleSheet.create({
     },
     prefSubText: {
         fontFamily: 'Roboto_400Regular',
-        fontSize: 12,
+        fontSize: 14,
         color: '#6b7280',
-        marginBottom: 12,
+        marginTop: 0,
+        marginBottom: 20,
+        lineHeight: 20,
     },
     chipGrid: {
         flexDirection: 'row',

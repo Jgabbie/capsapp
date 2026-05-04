@@ -183,6 +183,7 @@ export default function Login() {
                 <View style={LoginStyle.inputWrapper}>
                     <Text style={LoginStyle.loginLabel}>Username</Text>
                     <TextInput
+                        placeholder="Enter username"
                         maxLength={30}
                         style={LoginStyle.loginInputs}
                         onChangeText={(e) => {
@@ -191,10 +192,6 @@ export default function Login() {
                             setError("");
                         }}
                         value={getUsername}
-                        onChangeText={(text) => {
-                            setUsername(text)
-                            setError("")
-                        }}
                     />
                 </View>
 

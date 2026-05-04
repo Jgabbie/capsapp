@@ -212,6 +212,7 @@ export default function Signup() {
                         {/* USERNAME */}
                         <Text style={SignupStyle.signupLabel}>Username</Text>
                         <TextInput
+                            placeholder="Enter username"
                             maxLength={30}
                             style={[SignupStyle.signupInputs, errors.username && SignupStyle.inputErrorBorder]}
                             value={user.username}
@@ -224,6 +225,7 @@ export default function Signup() {
                             <View>
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>First Name</Text>
                                 <TextInput
+                                    placeholder="First name"
                                     maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.firstname && SignupStyle.inputErrorBorder]}
                                     value={user.firstname}
@@ -235,6 +237,7 @@ export default function Signup() {
                             <View>
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>Last Name</Text>
                                 <TextInput
+                                    placeholder="Last name"
                                     maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.lastname && SignupStyle.inputErrorBorder]}
                                     value={user.lastname}
@@ -247,6 +250,7 @@ export default function Signup() {
                         {/* EMAIL */}
                         <Text style={SignupStyle.signupLabel}>Email</Text>
                         <TextInput
+                            placeholder="Enter email"
                             maxLength={40}
                             keyboardType="email-address"
                             style={[SignupStyle.signupInputs, errors.email && SignupStyle.inputErrorBorder]}
