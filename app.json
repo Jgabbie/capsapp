@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "capsapp",
+    "name": "M&RC Travel",
     "slug": "travexmobile",
     "version": "1.0.0",
     "scheme": "travex",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/LastPushLogo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/LastPushLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

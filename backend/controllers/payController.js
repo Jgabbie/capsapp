@@ -577,6 +577,10 @@ export const createManualPaymentQuotation = async (req, res) => {
         const quotation = await Quotation.findById(quotationId);
 
         quotation.status = 'Booked';
+
+        console.log("Updated Quotation Status to Booked for Quotation ID:", quotationId);
+        console.log("Quotation status after update:", quotation.status);
+
         await quotation.save();
 
 
