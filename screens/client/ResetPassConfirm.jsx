@@ -94,12 +94,6 @@ export default function ResetPassConfirm() {
             <View style={ResetPassConfirmStyle.container}>
                 
                 {/* 🔥 1. NEW LOGO: Placed exactly on top of the title */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={ResetPassConfirmStyle.topLogo} 
-                    resizeMode="contain" 
-                />
-
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
                 <Text style={ResetPassConfirmStyle.label}>New Password</Text>
@@ -168,8 +162,12 @@ export default function ResetPassConfirm() {
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={ResetPassConfirmStyle.buttonText}>Confirm Password</Text>}
                 </TouchableOpacity>
 
-                {/* 🔥 5. BY TRAVEX TEXT (Below Confirm Button) */}
-                <Text style={ResetPassConfirmStyle.byTravexText}>BY TRAVEX</Text>
+                {/* 🔥 LOGO AT BOTTOM */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={ResetPassConfirmStyle.bottomLogo} 
+                    resizeMode="contain" 
+                />
 
             </View>
 

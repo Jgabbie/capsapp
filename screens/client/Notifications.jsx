@@ -72,9 +72,25 @@ export default function Notifications() {
 
         if (item.link) {
             try {
-                const route = item.link.replace(/[\/-]/g, '').toLowerCase();
+                // Normalize the incoming link to a route key
+                let routeKey = (item.link || '')
+                    .replace(/^\/+|\/+$/g, '') // trim leading/trailing slashes
+                    .split('?')[0] // remove query string
+                    .toLowerCase();
+
+                // remove separators to match existing screen naming strategy
+                routeKey = routeKey.replace(/[-\\/]/g, '');
+
+                // Map known server paths to registered navigator screen names
+                const routeMap = {
+                    userpackagequotation: 'userquotations',
+                    userpackagequotations: 'userquotations',
+                };
+
+                const targetRoute = routeMap[routeKey] || routeKey;
+
                 // Pass metadata routeState if it exists
-                navigation.navigate(route, routeState ? { state: routeState } : undefined);
+                navigation.navigate(targetRoute, routeState ? { state: routeState } : undefined);
             } catch (err) {
                 console.log("Navigation error:", err);
             }

@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const PasswordResetStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 92 
+        paddingTop: 105 
     },
     heading: {
         fontSize: 28,
@@ -107,21 +107,13 @@ const PasswordResetStyle = StyleSheet.create({
         color: "#992A46",
         fontFamily: "Roboto_700Bold"
     },
-    // 🔥 NEW LOGO AND TRAVEX TEXT STYLES 🔥
-    topLogo: {
-        width: 120, 
-        height: 60,
-        marginBottom: 0,
-        alignSelf: 'center',
-    },
-    byTravexText: {
-        color: '#305797',
-        fontFamily: 'Montserrat_500Medium',
-        fontSize: 12,
-        marginTop: 280,
+    // 🔥 LOGO AT BOTTOM 🔥
+    bottomLogo: {
+        width: 140, 
+        height: 80,
+        marginTop: 250,
         marginBottom: 20,
-        textAlign: 'center',
-        letterSpacing: 2,
+        alignSelf: 'center',
     },
 });
 

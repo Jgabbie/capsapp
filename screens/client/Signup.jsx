@@ -200,13 +200,6 @@ export default function Signup() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View>
-                        {/* 🔥 NEW LOGO: Placed on top of the title */}
-                        <Image 
-                            source={require('../../assets/images/TransLogo.png')} 
-                            style={SignupStyle.topLogo} 
-                            resizeMode="contain" 
-                        />
-
                         <Text style={SignupStyle.signupSecondHeading}>Create an Account</Text>
 
                         {/* USERNAME */}
@@ -353,8 +346,12 @@ export default function Signup() {
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={SignupStyle.signupButtonText}>Signup</Text>}
                         </TouchableOpacity>
 
-                        {/* 🔥 NEW TRAVEX TEXT: Placed exactly below the button */}
-                        <Text style={SignupStyle.byTravexText}>BY TRAVEX</Text>
+                        {/* 🔥 LOGO AT BOTTOM */}
+                        <Image 
+                            source={require('../../assets/images/TransLogo.png')} 
+                            style={SignupStyle.bottomLogo} 
+                            resizeMode="contain" 
+                        />
 
                     </View>
                 </ScrollView>

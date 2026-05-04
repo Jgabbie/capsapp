@@ -9,8 +9,9 @@ const UserQuotationRequestStyle = StyleSheet.create({
   },
   scrollContainer: {
     padding: 15,
+    paddingTop: 24,
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: 305,
   },
   loadingContainer: {
     flex: 1,
@@ -272,13 +273,13 @@ const UserQuotationRequestStyle = StyleSheet.create({
     gap: 10,
   },
   secondaryBtn: {
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#439c17",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 6,
   },
   secondaryBtnText: {
-    color: "#305797",
+    color: "#fff",
     fontFamily: "Montserrat_600SemiBold",
     fontSize: 13,
   },

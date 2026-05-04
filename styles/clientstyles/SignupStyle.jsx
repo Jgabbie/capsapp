@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const SignupStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 185 
+        paddingTop: 200 
     },
     signupHeading: {
         display: "none" 
@@ -157,21 +157,13 @@ const SignupStyle = StyleSheet.create({
         fontSize: 18,
         fontFamily: "Roboto_500Medium"
     },
-    // 🔥 NEW LOGO AND TRAVEX TEXT STYLES 🔥
-    topLogo: {
-        width: 120, 
-        height: 60,
-        marginBottom: 0,
-        alignSelf: 'center',
-    },
-    byTravexText: {
-        color: '#305797',
-        fontFamily: 'Montserrat_500Medium',
-        fontSize: 12,
-        marginTop: 15,
+    // 🔥 NEW LOGO STYLE AT BOTTOM 🔥
+    bottomLogo: {
+        width: 140, 
+        height: 80,
+        marginTop: 10,
         marginBottom: 20,
-        textAlign: 'center',
-        letterSpacing: 2,
+        alignSelf: 'center',
     },
 })
 
