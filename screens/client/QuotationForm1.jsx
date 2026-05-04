@@ -203,7 +203,7 @@ export default function QuotationForm1({ route, navigation }) {
             <ScrollView contentContainerStyle={QuotationFormStepStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
 
                 <View style={QuotationFormStepStyle.paperPage}>
-                    <Image source={require('../../assets/images/Logo.png')} style={QuotationFormStepStyle.logo} />
+                    <Image source={require('../../assets/images/LastPushLogo.png')} style={QuotationFormStepStyle.logo} />
 
                     <View style={QuotationFormStepStyle.headerGold}>
                         <Text style={QuotationFormStepStyle.headerGoldText}>BOOKING REGISTRATION FORM</Text>

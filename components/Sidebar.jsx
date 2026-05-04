@@ -1,6 +1,6 @@
 import { View, Text, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native'
 import React, { useState } from 'react'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -13,6 +13,8 @@ import { useUser } from '../context/UserContext'
 
 export default function Sidebar({ visible, onClose }) {
     const cs = useNavigation()
+    const route = useRoute()
+    const currentRoute = route.name
     const [modalVisible, setModalVisible] = useState(false)
     const { user, clearUser } = useUser()
 
@@ -36,31 +38,40 @@ export default function Sidebar({ visible, onClose }) {
     })
 
     // Standard Image-based Menu Item
-    const MenuItem = ({ icon, title, onPress }) => (
-        <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
-            <Image source={icon} style={SidebarStyle.navIcon} resizeMode='contain' />
-            <Text style={SidebarStyle.navText}>{title}</Text>
-        </TouchableOpacity>
-    )
+    const MenuItem = ({ icon, title, targetRoute, onPress }) => {
+        const isActive = currentRoute === targetRoute
+        return (
+            <TouchableOpacity onPress={onPress} style={[SidebarStyle.navItem, isActive && SidebarStyle.navItemActive]}>
+                <Image source={icon} style={SidebarStyle.navIcon} resizeMode='contain' />
+                <Text style={SidebarStyle.navText}>{title}</Text>
+            </TouchableOpacity>
+        )
+    }
 
-    const MenuSvgItem = ({ title, onPress, xml }) => (
-        <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
-            <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
-                <SvgXml xml={xml} width="15" height="15" />
-            </View>
-            <Text style={SidebarStyle.navText}>{title}</Text>
-        </TouchableOpacity>
-    )
+    const MenuSvgItem = ({ title, onPress, xml, targetRoute }) => {
+        const isActive = currentRoute === targetRoute
+        return (
+            <TouchableOpacity onPress={onPress} style={[SidebarStyle.navItem, isActive && SidebarStyle.navItemActive]}>
+                <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
+                    <SvgXml xml={xml} width="15" height="15" />
+                </View>
+                <Text style={SidebarStyle.navText}>{title}</Text>
+            </TouchableOpacity>
+        )
+    }
 
     // Vector-based Menu Item
-    const MenuVectorItem = ({ iconName, title, onPress }) => (
-        <TouchableOpacity onPress={onPress} style={SidebarStyle.navItem}>
-            <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
-                <Ionicons name={iconName} size={15} color="#fff" />
-            </View>
-            <Text style={SidebarStyle.navText}>{title}</Text>
-        </TouchableOpacity>
-    )
+    const MenuVectorItem = ({ iconName, title, onPress, targetRoute }) => {
+        const isActive = currentRoute === targetRoute
+        return (
+            <TouchableOpacity onPress={onPress} style={[SidebarStyle.navItem, isActive && SidebarStyle.navItemActive]}>
+                <View style={[SidebarStyle.navIcon, { alignItems: 'center', justifyContent: 'center' }]}>
+                    <Ionicons name={iconName} size={15} color="#fff" />
+                </View>
+                <Text style={SidebarStyle.navText}>{title}</Text>
+            </TouchableOpacity>
+        )
+    }
 
     if (!fontsLoaded) return null;
 
@@ -92,72 +103,84 @@ export default function Sidebar({ visible, onClose }) {
                     >
                         <MenuItem
                             title="Home"
+                            targetRoute="home"
                             icon={require('../assets/images/home_icon.png')}
                             onPress={() => { onClose(); cs.navigate("home") }}
                         />
 
                         <MenuItem
                             title="Profile"
+                            targetRoute="profile"
                             icon={require('../assets/images/user_icon.png')}
                             onPress={() => { onClose(); cs.navigate("profile") }}
                         />
 
                         <MenuItem
                             title="Destinations"
+                            targetRoute="packages"
                             icon={require('../assets/images/destination_icon.png')}
                             onPress={() => { onClose(); cs.navigate("packages") }}
                         />
 
                         <MenuItem
                             title="Wishlist"
+                            targetRoute="wishlist"
                             icon={require('../assets/images/wishlist_icon.png')}
                             onPress={() => { onClose(); cs.navigate("wishlist") }}
                         />
 
                         <MenuItem
                             title="Bookings"
+                            targetRoute="userbookings"
                             icon={require('../assets/images/booking_icon.png')}
                             onPress={() => { onClose(); cs.navigate("userbookings") }}
                         />
 
                         <MenuItem
                             title="Quotations"
+                            targetRoute="userquotations"
                             icon={require('../assets/images/transactions_icon.png')}
                             onPress={() => { onClose(); cs.navigate("userquotations"); }}
                         />
 
                         <MenuSvgItem
                             title="Transactions"
+                            targetRoute="usertransactions"
                             xml={transactionFilledSvg}
                             onPress={() => { onClose(); cs.navigate("usertransactions") }}
                         />
 
                         <MenuVectorItem
                             title="Applications"
+                            targetRoute="userapplications"
                             iconName="documents-outline"
                             onPress={() => { onClose(); cs.navigate("userapplications") }}
                         />
 
                         <MenuItem
                             title="Visa Assistance"
+                            targetRoute="visaguidance"
                             icon={require('../assets/images/visa_icon.png')}
                             onPress={() => { onClose(); cs.navigate("visaguidance") }}
                         />
 
                         <MenuItem
                             title="Passport Assistance"
+                            targetRoute="passportguidance"
                             icon={require('../assets/images/passport_icon.png')}
                             onPress={() => { onClose(); cs.navigate("passportguidance") }}
                         />
 
                         <MenuVectorItem
                             title="About Us"
+                            targetRoute="aboutus"
                             iconName="information-circle-outline"
                             onPress={() => { onClose(); cs.navigate("aboutus") }}
                         />
 
                         <MenuVectorItem
                             title="General FAQs"
+                            targetRoute="faqs"
                             iconName="help-circle-outline"
                             onPress={() => { onClose(); cs.navigate("faqs") }}
                         />

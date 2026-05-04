@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, Modal, ImageBackground, ToastAndroid, ActivityIndicator, ScrollView, KeyboardAvoidingView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Modal, ImageBackground, ToastAndroid, ActivityIndicator, ScrollView, KeyboardAvoidingView, Image } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -196,6 +196,13 @@ export default function Signup() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View>
+                        {/* 🔥 NEW LOGO: Placed on top of the title */}
+                        <Image 
+                            source={require('../../assets/images/TransLogo.png')} 
+                            style={SignupStyle.topLogo} 
+                            resizeMode="contain" 
+                        />
+
                         <Text style={SignupStyle.signupSecondHeading}>Create an Account</Text>
 
                         {/* USERNAME */}
@@ -267,13 +274,17 @@ export default function Signup() {
                             <TextInput
                                 maxLength={20}
                                 style={SignupStyle.passwordInput}
+                                placeholder="Enter password"
                                 secureTextEntry={!showPassword}
                                 value={user.password}
                                 onChangeText={(e) => changeHandler("password", e)}
                             />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={SignupStyle.eyeIcon}>
-                                <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
-                            </TouchableOpacity>
+                            {/* 🔥 CONDITIONAL EYE: Only shows if there is text */}
+                            {user.password.length > 0 && (
+                                <TouchableOpacity style={SignupStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                                    <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                                </TouchableOpacity>
+                            )}
                         </View>
                         {errors.password ? <Text style={SignupStyle.fieldError}>{errors.password}</Text> : null}
 
@@ -283,13 +294,17 @@ export default function Signup() {
                             <TextInput
                                 maxLength={20}
                                 style={SignupStyle.passwordInput}
+                                placeholder="Confirm password"
                                 secureTextEntry={!showConfirmPassword}
                                 value={user.confirmpassword}
                                 onChangeText={(e) => changeHandler("confirmpassword", e)}
                             />
-                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={SignupStyle.eyeIcon}>
-                                <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
-                            </TouchableOpacity>
+                            {/* 🔥 CONDITIONAL EYE: Only shows if there is text */}
+                            {user.confirmpassword.length > 0 && (
+                                <TouchableOpacity style={SignupStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                    <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                                </TouchableOpacity>
+                            )}
                         </View>
                         {errors.confirmpassword ? <Text style={SignupStyle.fieldError}>{errors.confirmpassword}</Text> : null}
 
@@ -308,6 +323,9 @@ export default function Signup() {
                         >
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={SignupStyle.signupButtonText}>Signup</Text>}
                         </TouchableOpacity>
+
+                        {/* 🔥 NEW TRAVEX TEXT: Placed exactly below the button */}
+                        <Text style={SignupStyle.byTravexText}>BY TRAVEX</Text>
 
                     </View>
                 </ScrollView>

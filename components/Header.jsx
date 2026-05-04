@@ -52,7 +52,7 @@ export default function Header({ openSidebar }) {
             </TouchableOpacity>
 
             <Image
-                source={require('../assets/images/Logo.png')}
+                source={require('../assets/images/TransLogo.png')}
                 style={HeaderStyle.logo}
                 resizeMode='contain'
             />

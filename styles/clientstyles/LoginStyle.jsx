@@ -6,7 +6,7 @@ const LoginStyle = StyleSheet.create({
     container: {
         flex: 1,
         // 🔥 Reverted back to 200 to push it down to its original vertical position
-        paddingTop: 200,
+        paddingTop: 185,
         // Centers all children horizontally
         alignItems: 'center', 
     },
@@ -15,7 +15,7 @@ const LoginStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         margin: 5,
-        marginTop: 30,
+        marginTop: 0,
         height: 65,
         textAlign: "center"
     },
@@ -48,6 +48,11 @@ const LoginStyle = StyleSheet.create({
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
+    },
+    // 🔥 ADD THIS: The red border style for errors
+    inputErrorBorder: {
+        borderColor: "#ef4444", // Using the same red as your error text!
+        borderWidth: 1.5,
     },
     // --- Password Styles with Eye Icon ---
     passwordContainer: {
@@ -87,7 +92,7 @@ const LoginStyle = StyleSheet.create({
         marginBottom: 20,
     },
     loginLinks: {
-        fontSize: 14,
+        fontSize: 16,
         color: "#305797",
         textDecorationLine: 'underline', 
     },
@@ -133,7 +138,38 @@ const LoginStyle = StyleSheet.create({
     timerHighlight: {
         color: "#992A46",
         fontFamily: "Roboto_700Bold"
-    }
-})
+    },
+    // 🔥 NEW STYLES ADDED 🔥
+    errorContainer: {
+        height: 20, 
+        width: width * 0.85,
+        maxWidth: 400,
+        marginBottom: 10,
+        justifyContent: 'center',
+    },
+    errorText: {
+        color: '#ef4444', 
+        fontSize: 14,
+        textAlign: 'left',
+        fontFamily: 'Roboto_500Medium',
+    },
+    // 🔥 RENAMED AND ADJUSTED FOR THE TOP
+    topLogo: {
+        width: 120, 
+        height: 60,
+        marginBottom: 0, // Adds a little gap between the logo and the M&RC text
+        alignSelf: 'center',
+    },
+    // 🔥 NEW BY TRAVEX TEXT STYLE
+    byTravexText: {
+        color: '#305797',
+        fontFamily: 'Montserrat_500Medium', // Uses the Montserrat font you requested
+        fontSize: 12,
+        marginTop: 150,
+        marginBottom: 20,
+        textAlign: 'center',
+        letterSpacing: 2, // Adds a nice premium spacing to the letters
+    },
+});
 
 export default LoginStyle;

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Image } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -91,64 +91,75 @@ export default function ResetPassConfirm() {
             style={ResetPassConfirmStyle.container}
             resizeMode='cover'
         >
-            <View>
+            <View style={ResetPassConfirmStyle.container}>
+                
+                {/* 🔥 1. NEW LOGO: Placed exactly on top of the title */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={ResetPassConfirmStyle.topLogo} 
+                    resizeMode="contain" 
+                />
+
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
                 <Text style={ResetPassConfirmStyle.label}>New Password</Text>
-                {/* 🔥 NEW: Wrapper View for the Password Input */}
                 <View style={ResetPassConfirmStyle.passwordContainer}>
                     <TextInput
-                        style={[ResetPassConfirmStyle.input, errorPassword && ResetPassConfirmStyle.inputErrorBorder]}
-                        secureTextEntry={!showPassword} // Toggle based on state
+                        style={[ResetPassConfirmStyle.input, errorPassword ? ResetPassConfirmStyle.inputErrorBorder : null]}
+                        placeholder="Enter new password"
+                        secureTextEntry={!showPassword}
                         maxLength={20}
                         value={password}
-                        onChangeText={(val) => {
-                            setPassword(val)
-                            setErrorPassword(validatePassword(val))
+                        onChangeText={(text) => {
+                            setPassword(text)
+                            setErrorPassword("")
                         }}
                     />
-                    <TouchableOpacity 
-                        style={ResetPassConfirmStyle.eyeIcon} 
-                        onPress={() => setShowPassword(!showPassword)}
-                    >
-                        <Ionicons 
-                            name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                            size={20} 
-                            color="#6d6d6d" 
-                        />
-                    </TouchableOpacity>
+                    {/* 🔥 2. CONDITIONAL EYE ICON */}
+                    {password.length > 0 && (
+                        <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                            <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                        </TouchableOpacity>
+                    )}
                 </View>
-                {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
-
+                {/* 🔥 3. FIXED ERROR CONTAINER */}
+                <View style={ResetPassConfirmStyle.errorContainer}>
+                    {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
+                </View>
 
                 <Text style={ResetPassConfirmStyle.label}>Confirm Password</Text>
-                {/* 🔥 NEW: Wrapper View for the Confirm Password Input */}
                 <View style={ResetPassConfirmStyle.passwordContainer}>
                     <TextInput
-                        style={[ResetPassConfirmStyle.input, errorConfirm && ResetPassConfirmStyle.inputErrorBorder]}
-                        secureTextEntry={!showConfirmPassword} // Toggle based on state
+                        style={[ResetPassConfirmStyle.input, errorConfirm ? ResetPassConfirmStyle.inputErrorBorder : null]}
+                        placeholder="Confirm new password"
+                        secureTextEntry={!showConfirmPassword}
                         maxLength={20}
                         value={confirmPassword}
-                        onChangeText={(val) => {
-                            setConfirmPassword(val)
-                            if (val !== password) setErrorConfirm("Passwords do not match.")
-                            else setErrorConfirm("")
+                        onChangeText={(text) => {
+                            setConfirmPassword(text)
+                            setErrorConfirm("")
                         }}
                     />
-                    <TouchableOpacity 
-                        style={ResetPassConfirmStyle.eyeIcon} 
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                        <Ionicons 
-                            name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                            size={20} 
-                            color="#6d6d6d" 
-                        />
+                    {/* 🔥 CONDITIONAL EYE ICON */}
+                    {confirmPassword.length > 0 && (
+                        <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                            <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+                {/* 🔥 FIXED ERROR CONTAINER */}
+                <View style={ResetPassConfirmStyle.errorContainer}>
+                    {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
+                </View>
+
+                {/* 🔥 4. REMEMBER PASSWORD LINK (On top of Confirm Button) */}
+                <View style={ResetPassConfirmStyle.linkContainer}>
+                    <TouchableOpacity onPress={() => cs.navigate("login")}>
+                        <Text style={ResetPassConfirmStyle.linkText}>Remember password? Login here</Text>
                     </TouchableOpacity>
                 </View>
-                {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
 
-
+                {/* Confirm Password Button */}
                 <TouchableOpacity 
                     style={[ResetPassConfirmStyle.button, { opacity: loading ? 0.7 : 1 }]} 
                     onPress={handleSubmit} 
@@ -156,6 +167,10 @@ export default function ResetPassConfirm() {
                 >
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={ResetPassConfirmStyle.buttonText}>Confirm Password</Text>}
                 </TouchableOpacity>
+
+                {/* 🔥 5. BY TRAVEX TEXT (Below Confirm Button) */}
+                <Text style={ResetPassConfirmStyle.byTravexText}>BY TRAVEX</Text>
+
             </View>
 
             {/* Success Modal */}

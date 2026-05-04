@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, ToastAndroid, Alert, Platform, ActivityIndicator, Modal, KeyboardAvoidingView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, ToastAndroid, Alert, Platform, ActivityIndicator, Modal, KeyboardAvoidingView } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -170,44 +170,59 @@ export default function Login() {
             resizeMode='cover'
         >
             <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+                {/* 🔥 MOVED LOGO: Now exactly on top of the welcome title! */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={LoginStyle.topLogo} 
+                    resizeMode="contain" 
+                />
+
                 <Text style={LoginStyle.loginHeading}>Welcome</Text>
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
                 <View style={LoginStyle.inputWrapper}>
                     <Text style={LoginStyle.loginLabel}>Username</Text>
                     <TextInput
-                        style={LoginStyle.loginInputs}
-                        onChangeText={(e) => {
-                            setUsername(e);
-                            setError("");
-                        }}
+                        style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
+                        placeholder="Enter username"
                         value={getUsername}
+                        onChangeText={(text) => {
+                            setUsername(text)
+                            setError("")
+                        }}
                     />
                 </View>
 
                 <View style={LoginStyle.inputWrapper}>
                     <Text style={LoginStyle.loginLabel}>Password</Text>
-                    <View style={LoginStyle.passwordContainer}>
+                    <View style={{ position: 'relative', justifyContent: 'center' }}>
                         <TextInput
-                            style={LoginStyle.passwordInput}
-                            onChangeText={(e) => {
-                                setPassword(e);
-                                setError("");
+                            style={[LoginStyle.loginInputs, { paddingRight: 50 }, getError ? LoginStyle.inputErrorBorder : null]}
+                            placeholder="Enter password"
+                            value={getPassword}
+                            onChangeText={(text) => {
+                                setPassword(text)
+                                setError("")
                             }}
                             secureTextEntry={!showPassword}
-                            value={getPassword}
                         />
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={LoginStyle.eyeIcon}>
-                            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6d6d6d" />
-                        </TouchableOpacity>
+                        
+                        {/* 🔥 CHANGED: Only renders the icon if there is text! */}
+                        {getPassword.length > 0 && (
+                            <TouchableOpacity 
+                                style={{ position: 'absolute', right: 15 }} 
+                                onPress={() => setShowPassword(!showPassword)}
+                            >
+                                <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
-                {getError ? (
-                    <View style={LoginStyle.inputWrapper}>
-                        <Text style={LoginStyle.errorMessage}>{getError}</Text>
-                    </View>
-                ) : null}
+                {/* 🔥 CHANGED: Wrapped error in a fixed-height container to stop the layout jump */}
+                <View style={LoginStyle.errorContainer}>
+                    {getError ? <Text style={LoginStyle.errorText}>{getError}</Text> : null}
+                </View>
 
                 <View style={LoginStyle.loginLinksContainer}>
                     <TouchableOpacity onPress={() => { cs.navigate("signup") }}>
@@ -232,6 +247,9 @@ export default function Login() {
                         <Text style={LoginStyle.loginButtonText}>Login</Text>
                     )}
                 </TouchableOpacity>
+
+                {/* 🔥 NEW TEXT: Placed exactly where the bottom logo used to be */}
+                <Text style={LoginStyle.byTravexText}>BY TRAVEX</Text>
 
                 {/* OTP Verification Modal */}
                 <Modal transparent animationType='fade' visible={isOTPModalOpen}>

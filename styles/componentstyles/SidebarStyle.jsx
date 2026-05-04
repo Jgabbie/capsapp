@@ -55,6 +55,13 @@ const SidebarStyle = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 10,
+        paddingHorizontal: 12,
+        marginLeft: -12,
+        borderRadius: 8,
+        marginBottom: 2,
+    },
+    navItemActive: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     navIcon: {
         width: 15,

@@ -24,8 +24,8 @@ const RegistrationFormStyle = StyleSheet.create({
         minHeight: 800,
     },
     logo: {
-        width: 120,
-        height: 60,
+        width: 160,
+        height: 80,
         resizeMode: 'contain',
         alignSelf: 'center',
         marginBottom: 10,

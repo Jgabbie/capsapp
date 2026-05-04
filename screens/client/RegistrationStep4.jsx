@@ -42,7 +42,7 @@ export default function RegistrationStep4({ route, navigation }) {
                 
                 <View style={RegistrationFormStyle.paperPage}>
                     {/* Logo */}
-                    <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
+                    <Image source={require('../../assets/images/LastPushLogo.png')} style={RegistrationFormStyle.logo} />
 
                     {/* Two Column Layout for the Final Terms */}
                     <View style={[RegistrationFormStyle.row, { alignItems: 'flex-start', marginTop: 10 }]}>

@@ -3,13 +3,13 @@ import { StyleSheet } from "react-native";
 const ResetPassConfirmStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 200 
+        paddingTop: 95 
     },
     heading: {
         fontSize: 28,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
-        marginTop: 25,
+        marginTop: 0,
         marginBottom: 20,
         marginHorizontal: 20,
         textAlign: "center"
@@ -74,9 +74,40 @@ const ResetPassConfirmStyle = StyleSheet.create({
     },
     buttonText: {
         color: "#fff",
-        fontSize: 16,
+        fontSize: 18,
         fontFamily: "Roboto_500Medium"
-    }
+    },
+    // 🔥 NEW STYLES ADDED 🔥
+    errorContainer: {
+        height: 25, // Keeps the layout fixed so the button never jumps
+    },
+    topLogo: {
+        width: 120, 
+        height: 60,
+        marginBottom: 0,
+        alignSelf: 'center',
+    },
+    linkContainer: {
+        alignItems: 'flex-start', // 🔥 Changed from 'center' to 'flex-start'
+        marginLeft: 20,           // 🔥 Added margin to align with your inputs
+        marginBottom: 15,
+        marginTop: 5,
+    },
+    linkText: {
+        fontSize: 16,             // 🔥 Increased size from 14 to 16 to match
+        color: '#305797',
+        fontFamily: 'Roboto_400Regular',
+        // 🔥 Removed the underline to mirror the other screen exactly
+    },
+    byTravexText: {
+        color: '#305797',
+        fontFamily: 'Montserrat_500Medium',
+        fontSize: 12,
+        marginTop: 185,
+        marginBottom: 20,
+        textAlign: 'center',
+        letterSpacing: 2,
+    },
 });
 
 export default ResetPassConfirmStyle;

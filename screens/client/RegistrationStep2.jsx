@@ -131,7 +131,7 @@ export default function RegistrationStep2({ route, navigation }) {
             <ScrollView contentContainerStyle={RegistrationFormStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
                 
                 <View style={RegistrationFormStyle.paperPage}>
-                    <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
+                    <Image source={require('../../assets/images/LastPushLogo.png')} style={RegistrationFormStyle.logo} />
                     
                     <View style={RegistrationFormStyle.headerGold}>
                         <Text style={RegistrationFormStyle.headerGoldText}>TRAVEL REGISTRATION DETAILS</Text>

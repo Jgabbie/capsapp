@@ -31,7 +31,7 @@ export default function RegistrationStep3({ route, navigation }) {
                 
                 <View style={RegistrationFormStyle.paperPage}>
                     {/* Logo */}
-                    <Image source={require('../../assets/images/Logo.png')} style={RegistrationFormStyle.logo} />
+                    <Image source={require('../../assets/images/LastPushLogo.png')} style={RegistrationFormStyle.logo} />
 
                     {/* Payment Details Section */}
                     <View style={{ marginBottom: 15 }}>

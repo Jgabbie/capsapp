@@ -19,6 +19,48 @@ import { useUser } from '../../context/UserContext'
 
 const { width } = Dimensions.get("window");
 
+// 🔥 MOVED OUTSIDE: Prevents React from rebuilding the card every 5 seconds!
+const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
+    const imageSource = item.images && item.images.length > 0
+        ? item.images[0]
+        : require('../../assets/images/southkorea_image.png')
+
+    return (
+        <View style={HomeStyle.bannerCard}>
+            <Image
+                source={imageSource}
+                style={HomeStyle.bannerImage}
+                contentFit="cover"
+                transition={300} // 🔥 Will only trigger once on initial load now!
+            />
+
+            {isWishlisted && (
+                <View style={{
+                    position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2
+                }}>
+                    <Ionicons name="heart" size={22} color="#cf1322" />
+                </View>
+            )}
+
+            <View style={HomeStyle.bannerFooter}>
+                <Text style={HomeStyle.bannerTitle}>{item.packageName}</Text>
+                <Text style={HomeStyle.bannerSub} numberOfLines={2}>
+                    {subText || item.packageDescription}
+                </Text>
+            </View>
+            <TouchableOpacity
+                style={HomeStyle.viewAllButton}
+                onPress={onPress}
+            >
+                <Text style={HomeStyle.viewAllText}>View Package</Text>
+                <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, { tintColor: "#fff" }]} contentFit="contain" />
+            </TouchableOpacity>
+        </View>
+    )
+});
+
 export default function Home() {
     const cs = useNavigation()
     const { user, updateUser } = useUser()
@@ -228,47 +270,6 @@ export default function Home() {
     // Done button will simply close the modal; search button triggers navigation
 
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
-
-    const BannerCard = ({ item, subText }) => {
-        const imageSource = item.images && item.images.length > 0
-            ? item.images[0]
-            : require('../../assets/images/southkorea_image.png')
-
-        return (
-            <View style={HomeStyle.bannerCard}>
-                <Image
-                    source={imageSource}
-                    style={HomeStyle.bannerImage}
-                    contentFit="cover"
-                    transition={300}
-                />
-
-                {wishlistedIds.has(String(item._id)) && (
-                    <View style={{
-                        position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2
-                    }}>
-                        <Ionicons name="heart" size={22} color="#cf1322" />
-                    </View>
-                )}
-
-                <View style={HomeStyle.bannerFooter}>
-                    <Text style={HomeStyle.bannerTitle}>{item.packageName}</Text>
-                    <Text style={HomeStyle.bannerSub} numberOfLines={2}>
-                        {subText || item.packageDescription}
-                    </Text>
-                </View>
-                <TouchableOpacity
-                    style={HomeStyle.viewAllButton}
-                    onPress={() => cs.navigate("packagedetails", { id: item._id })}
-                >
-                    <Text style={HomeStyle.viewAllText}>View Package</Text>
-                    <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, { tintColor: "#fff" }]} contentFit="contain" />
-                </TouchableOpacity>
-            </View>
-        )
-    }
 
     // 🔥 Define the Pagination Dots Component
     const renderPaginationDots = () => {
@@ -508,7 +509,11 @@ export default function Home() {
                                     {domesticPackages.map((pkg) => (
                                         /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
                                         <View key={pkg._id} style={{ width: width * 0.85, marginRight: 15 }}>
-                                            <BannerCard item={pkg} />
+                                            <BannerCard
+                                                item={pkg}
+                                                isWishlisted={wishlistedIds.has(String(pkg._id))}
+                                                onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
+                                            />
                                         </View>
                                     ))}
                                 </ScrollView>
@@ -523,7 +528,11 @@ export default function Home() {
                                 {internationalPackages.map((pkg) => (
                                     /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
                                     <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 15 }}>
-                                        <BannerCard item={pkg} />
+                                        <BannerCard
+                                            item={pkg}
+                                            isWishlisted={wishlistedIds.has(String(pkg._id))}
+                                            onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
+                                        />
                                     </View>
                                 ))}
                             </ScrollView>

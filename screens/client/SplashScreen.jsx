@@ -18,7 +18,7 @@ export default function SplashScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <View style={SplashScreenStyle.container}>
                 <Image
-                    source={require('../../assets/images/Logo.png')}
+                    source={require('../../assets/images/LastPushLogo.png')}
                     style={SplashScreenStyle.logo}
                 />
                 <Text style={SplashScreenStyle.footerText}>

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Image } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -97,33 +97,51 @@ export default function PasswordReset() {
             style={PasswordResetStyle.container}
             resizeMode='cover'
         >
-            <View>
-                <Text style={PasswordResetStyle.heading}>Reset Password</Text>
-                <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a verification code.</Text>
+            <View style={PasswordResetStyle.container}>
+                
+                {/* 🔥 1. NEW LOGO: Placed exactly on top of the title */}
+                <Image 
+                    source={require('../../assets/images/TransLogo.png')} 
+                    style={PasswordResetStyle.topLogo} 
+                    resizeMode="contain" 
+                />
 
-                <Text style={PasswordResetStyle.label}>Email</Text>
+                <Text style={PasswordResetStyle.heading}>Reset Password</Text>
+                <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a One-Time Password</Text>
+
+                <Text style={PasswordResetStyle.label}>Email Address</Text>
                 <TextInput
                     style={[PasswordResetStyle.input, errorEmail && PasswordResetStyle.inputErrorBorder]}
+                    placeholder="Enter your email"
                     keyboardType="email-address"
+                    autoCapitalize="none"
                     value={email}
-                    onChangeText={(val) => {
-                        setEmail(val)
-                        setErrorEmail(validateEmail(val))
+                    onChangeText={(text) => {
+                        setEmail(text)
+                        setErrorEmail("")
                     }}
                 />
-                {errorEmail ? <Text style={PasswordResetStyle.fieldError}>{errorEmail}</Text> : null}
+                
+                {/* 🔥 WRAPPED IN ERROR CONTAINER */}
+                <View style={PasswordResetStyle.errorContainer}>
+                    {errorEmail ? <Text style={PasswordResetStyle.fieldError}>{errorEmail}</Text> : null}
+                </View>
 
-                <TouchableOpacity 
-                    style={[PasswordResetStyle.button, { opacity: loading ? 0.7 : 1 }]} 
-                    onPress={handleSendOTP} 
-                    disabled={loading}
-                >
+                {/* 🔥 2. MOVED LINK TEXT: Now sitting perfectly on top of the Send OTP button */}
+                <View style={[PasswordResetStyle.linksContainer, { marginTop: 5, marginBottom: 15 }]}>
+                    <TouchableOpacity onPress={() => cs.navigate("login")}>
+                        <Text style={PasswordResetStyle.linkText}>Remember password? Login here</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Send OTP Button */}
+                <TouchableOpacity style={PasswordResetStyle.button} onPress={handleSendOTP} disabled={loading}>
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={PasswordResetStyle.buttonText}>Send OTP</Text>}
                 </TouchableOpacity>
 
-                <View style={PasswordResetStyle.linksContainer}>
-                    <Text onPress={() => cs.navigate("login")} style={PasswordResetStyle.linkText}>Remembered your password? Login</Text>
-                </View>
+                {/* 🔥 3. NEW BY TRAVEX TEXT: Placed exactly below the button */}
+                <Text style={PasswordResetStyle.byTravexText}>BY TRAVEX</Text>
+
             </View>
 
             {/* OTP Verification Modal */}
