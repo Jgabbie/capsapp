@@ -574,14 +574,20 @@ export const createManualPaymentQuotation = async (req, res) => {
         booking.status = 'Pending'
         booking.statusHistory.push({ status: 'Pending', changedAt: new Date() });
 
-        const quotation = await Quotation.findById(quotationId);
-
-        quotation.status = 'Booked';
-
-        console.log("Updated Quotation Status to Booked for Quotation ID:", quotationId);
-        console.log("Quotation status after update:", quotation.status);
-
-        await quotation.save();
+        let quotation = null;
+        if (quotationId) {
+            quotation = await Quotation.findById(quotationId);
+            if (!quotation) {
+                console.warn('Quotation not found for ID:', quotationId);
+            } else {
+                quotation.status = 'Booked';
+                console.log("Updated Quotation Status to Booked for Quotation ID:", quotationId);
+                console.log("Quotation status after update:", quotation.status);
+                await quotation.save();
+            }
+        } else {
+            console.log('No quotationId provided for manual quotation payment.');
+        }
 
 
         const packageDoc = await PackageModel.findById(packageId);

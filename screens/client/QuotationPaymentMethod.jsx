@@ -328,7 +328,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         status: 'Not Paid'
                     };
 
-                    await api.post('/payment/manual-payment', manualPayload, withUserHeader(user?._id));
+                    await api.post('/payment/manual-quotation', manualPayload, withUserHeader(user?._id));
                     setLoading(false);
                     navigation.navigate("paymentsuccess", { reference: bookingRef, mode: 'manual' });
 
