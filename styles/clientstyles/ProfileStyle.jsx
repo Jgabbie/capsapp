@@ -130,6 +130,7 @@ const ProfileStyle = StyleSheet.create({
     phoneInput: {
         flex: 1,
         paddingHorizontal: 12,
+        paddingLeft: 12,
         fontSize: 15,
         fontFamily: "Roboto_400Regular",
         color: "#333",
@@ -183,6 +184,15 @@ const ProfileStyle = StyleSheet.create({
         backgroundColor: "#305797",
         height: 45,
         borderRadius: 8,
+    },
+    saveButtonDisabled: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#94a3b8",
+        height: 45,
+        borderRadius: 8,
+        opacity: 0.9,
     },
     cancelButton: {
         flex: 1,
@@ -293,6 +303,12 @@ const ProfileStyle = StyleSheet.create({
     chipTextSelected: {
         color: '#fff',
         fontFamily: 'Roboto_500Medium',
+    },
+    removedNote: {
+        color: '#dc2626',
+        fontSize: 12,
+        marginTop: 6,
+        fontFamily: 'Roboto_400Regular',
     },
     roleSubtitle: {
     fontSize: 13,

@@ -157,7 +157,7 @@ const LoginStyle = StyleSheet.create({
     bottomLogo: {
         width: 140, 
         height: 80,
-        marginTop: 130,
+        marginTop: 135,
         marginBottom: 20,
         alignSelf: 'center',
     },

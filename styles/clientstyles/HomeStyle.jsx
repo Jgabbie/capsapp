@@ -16,6 +16,9 @@ const HomeStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
     },
+    mainTitleAccent: {
+        color: "#305797",
+    },
     byTravex: {
         fontSize: 11,
         fontFamily: "Montserrat_500Medium",
@@ -50,9 +53,9 @@ const HomeStyle = StyleSheet.create({
     heroContainer: {
         width: width,
         marginLeft: -15,
-        minHeight: 380,
+        minHeight: 255,
         marginTop: 20,
-        marginBottom: 20,
+        marginBottom: 15,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
@@ -60,40 +63,41 @@ const HomeStyle = StyleSheet.create({
     },
     heroOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.35)'
+        backgroundColor: 'rgba(0,0,0,0.25)'
     },
     heroContentWrapper: {
         zIndex: 1,
         width: '100%',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingTop: 30,
-        paddingBottom: 30,
+        paddingTop: 22,
+        paddingBottom: 22,
     },
     heroTitle: {
         fontFamily: 'Montserrat_700Bold',
-        fontSize: 32,
+        fontSize: 29,
         color: '#fff',
         textAlign: 'center',
-        marginBottom: 8
+        marginBottom: 10,
+        marginTop: -15,
     },
     heroSubtitleWhite: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Roboto_500Medium',
         fontSize: 13,
         color: '#fff',
         textAlign: 'center',
-        marginBottom: 16,
+        marginBottom: 30,
         lineHeight: 18
     },
     heroFilterCard: {
         width: '100%',
-        paddingTop: 10,
-        marginTop: 5,
+        paddingTop: 0,
+        marginTop: 0,
     },
     heroSearchRow: {
         flexDirection: 'row',
         gap: 10,
-        marginBottom: 15
+        marginBottom: 0
     },
     heroSearchInputContainer: {
         flex: 1,
@@ -719,6 +723,223 @@ const HomeStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: "Montserrat_700Bold",
         fontSize: 14,
+    },
+
+    // --- FEATURED PACKAGE MODAL STYLES ---
+    featuredModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    featuredModalBox: {
+        backgroundColor: '#fff',
+        width: '90%',
+        borderRadius: 16,
+        overflow: 'hidden',
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+    },
+    featuredModalCloseBtn: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderRadius: 20,
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+    },
+    featuredModalImage: {
+        width: '100%',
+        height: 220,
+        backgroundColor: '#e0e0e0',
+    },
+    featuredModalContent: {
+        padding: 18,
+    },
+    featuredModalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 18,
+        color: '#305797',
+        marginBottom: 10,
+    },
+    featuredModalPriceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 12,
+    },
+    featuredModalPrice: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 16,
+        color: '#dc2626',
+    },
+    featuredModalOriginalPrice: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+        color: '#999',
+        textDecorationLine: 'line-through',
+    },
+    featuredModalDiscountBadge: {
+        backgroundColor: '#dc2626',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginLeft: 'auto',
+    },
+    featuredModalDiscountText: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 11,
+        color: '#fff',
+    },
+    featuredModalPriceLabel: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#666',
+        marginBottom: 12,
+    },
+    featuredModalDetailsRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 12,
+    },
+    featuredModalDetailItem: {
+        flex: 1,
+    },
+    featuredModalDetailLabel: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#666',
+        marginBottom: 3,
+    },
+    featuredModalDetailValue: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#333',
+    },
+    featuredModalRatingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 12,
+    },
+    featuredModalStars: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 14,
+        color: '#fadb14',
+    },
+    featuredModalRatingCount: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 12,
+        color: '#666',
+    },
+    featuredModalTagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginBottom: 12,
+    },
+    featuredModalTag: {
+        backgroundColor: '#f0f4ff',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+    },
+    featuredModalTagText: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#305797',
+    },
+    featuredModalTypeAndWish: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    featuredModalType: {
+        backgroundColor: '#305797',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    featuredModalTypeText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 11,
+        color: '#fff',
+        textTransform: 'uppercase',
+    },
+    featuredModalWishIcon: {
+        width: 28,
+        height: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    featuredModalButtonsContainer: {
+        gap: 10,
+        paddingHorizontal: 18,
+        paddingBottom: 16,
+    },
+    featuredModalViewBtn: {
+        backgroundColor: '#305797',
+        borderRadius: 8,
+        paddingVertical: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    featuredModalViewBtnText: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 14,
+        color: '#fff',
+    },
+    featuredModalSecondaryButtonsRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    featuredModalRemindBtn: {
+        flex: 1,
+        backgroundColor: '#f3f4f6',
+        borderRadius: 8,
+        paddingVertical: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#dbe3ef',
+    },
+    featuredModalRemindBtnText: {
+        fontFamily: 'Roboto_500Medium',
+        fontSize: 12,
+        color: '#666',
+    },
+    featuredModalNeverBtn: {
+        flex: 1,
+        backgroundColor: '#fee2e2',
+        borderRadius: 8,
+        paddingVertical: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+    },
+    featuredModalNeverBtnText: {
+        fontFamily: 'Roboto_500Medium',
+        fontSize: 12,
+        color: '#dc2626',
     }
 });
 

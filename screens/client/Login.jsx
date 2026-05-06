@@ -1,6 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, ToastAndroid, Alert, Platform, ActivityIndicator, Modal, KeyboardAvoidingView } from 'react-native'
-import React, { useState, useEffect } from 'react'
-import { useNavigation } from '@react-navigation/native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, ToastAndroid, Alert, Platform, ActivityIndicator, Modal, KeyboardAvoidingView, BackHandler } from 'react-native'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -35,6 +35,15 @@ export default function Login() {
     const [errorOtp, setErrorOtp] = useState("")
     const [timer, setTimer] = useState(0)
     const [unverifiedEmail, setUnverifiedEmail] = useState("")
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => true
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+            return () => subscription.remove()
+        }, [])
+    )
 
     useEffect(() => {
         let interval = null
@@ -178,7 +187,7 @@ export default function Login() {
                     <TextInput
                         placeholder="Enter username"
                         maxLength={30}
-                        style={LoginStyle.loginInputs}
+                        style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
                         onChangeText={(e) => {
                             const cleaned = e.replace(/[^A-Za-z0-9]/g, '');
                             setUsername(cleaned);
