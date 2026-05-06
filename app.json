@@ -21,7 +21,7 @@
       "package": "com.yourname.capsapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
+        "foregroundImage": "./assets/images/LastPushLogo.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
@@ -38,9 +38,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "6ff5da90-d76c-48b2-b00e-a233881fb3f1"
+        "projectId": "247d393c-a719-405c-9d69-0ca890288718"
       }
     },
-    "owner": "mariondev"
+    "owner": ""
   }
 }

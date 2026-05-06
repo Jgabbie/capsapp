@@ -21,15 +21,14 @@ export default function Notifications() {
 
     const fetchNotifs = useCallback(async () => {
         try {
-            // 🔥 Match Web: Fetch exactly 25 items
+
             const res = await api.get('/notifications/my?limit=25', withUserHeader(user._id));
-            
-            // 🔥 CRITICAL: You must set the list data here!
-            setNotifs(res.data || []); 
-        } catch (e) { 
-            console.log("Notif Screen Error:", e.message); 
-        } finally { 
-            setLoading(false); 
+
+            setNotifs(res.data || []);
+        } catch (e) {
+            console.log("Notif Screen Error:", e.message);
+        } finally {
+            setLoading(false);
             setRefreshing(false);
         }
     }, [user?._id]);
@@ -48,7 +47,6 @@ export default function Notifications() {
         [notifs]
     );
 
-    // 🔥 FEATURE MATCH: Mark All as Read (from Web)
     const handleMarkAllRead = async () => {
         if (unreadCount === 0) return;
         try {
@@ -61,18 +59,17 @@ export default function Notifications() {
 
     const handleMarkAsRead = async (item) => {
         const routeState = item?.metadata?.routeState;
-        
+
         // 1. Mark it as read in the database if not already read
         if (!item.isRead) {
             try {
                 await api.patch(`/notifications/${item._id}/read`, {}, withUserHeader(user._id));
                 setNotifs(prev => prev.map(n => n._id === item._id ? { ...n, isRead: true } : n));
-            } catch (e) { 
-                console.log(e.message); 
+            } catch (e) {
+                console.log(e.message);
             }
         }
-        
-        // 2. Navigation with Route State (Matching Web Feature)
+
         if (item.link) {
             try {
                 // Normalize the incoming link to a route key
@@ -88,12 +85,28 @@ export default function Notifications() {
                 const routeMap = {
                     userpackagequotation: 'userquotations',
                     userpackagequotations: 'userquotations',
+                    // Server may emit "package" — map it to the registered packagedetails screen
+                    package: 'packagedetails',
                 };
 
                 const targetRoute = routeMap[routeKey] || routeKey;
 
-                // Pass metadata routeState if it exists
-                navigation.navigate(targetRoute, routeState ? { state: routeState } : undefined);
+                // Pass metadata routeState if it exists. Normalize common shapes so
+                // `packagedetails` receives `{ id }` or `{ pkg }` like other navigations.
+                let navParams;
+                if (routeState) {
+                    navParams = {};
+                    const pkgId = routeState.packageItem || routeState.packageId || routeState.id;
+                    if (pkgId) navParams.id = pkgId;
+                    if (routeState.pkg || routeState.rawPackage) navParams.pkg = routeState.pkg || routeState.rawPackage;
+
+                    // If nothing matched, preserve the original state under `state`
+                    if (Object.keys(navParams).length === 0) navParams = { state: routeState };
+                } else {
+                    navParams = undefined;
+                }
+
+                navigation.navigate(targetRoute, navParams);
             } catch (err) {
                 console.log("Navigation error:", err);
             }
@@ -101,8 +114,8 @@ export default function Notifications() {
     };
 
     const filteredNotifs = useMemo(() => {
-        return notifs.filter(n => 
-            n.title.toLowerCase().includes(search.toLowerCase()) || 
+        return notifs.filter(n =>
+            n.title.toLowerCase().includes(search.toLowerCase()) ||
             n.message.toLowerCase().includes(search.toLowerCase())
         );
     }, [notifs, search]);
@@ -111,9 +124,9 @@ export default function Notifications() {
         <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
-            
-            <ScrollView 
-                contentContainerStyle={NotificationStyle.scrollContent} 
+
+            <ScrollView
+                contentContainerStyle={NotificationStyle.scrollContent}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#305797"]} />
@@ -125,7 +138,7 @@ export default function Notifications() {
                             <Text style={NotificationStyle.title}>Notifications</Text>
                             <Text style={NotificationStyle.subtitle}>Stay updated with your recent activities.</Text>
                         </View>
-                        {/* 🔥 FEATURE MATCH: Mark All as Read Button */}
+
                         {unreadCount > 0 && (
                             <TouchableOpacity onPress={handleMarkAllRead}>
                                 <Text style={NotificationStyle.markAllText}>Mark all read</Text>
@@ -136,9 +149,9 @@ export default function Notifications() {
 
                 <View style={NotificationStyle.searchContainer}>
                     <Ionicons name="search" size={18} color="#9ca3af" />
-                    <TextInput 
-                        style={NotificationStyle.searchInput} 
-                        placeholder="Search notifications..." 
+                    <TextInput
+                        style={NotificationStyle.searchInput}
+                        placeholder="Search notifications..."
                         placeholderTextColor="#9ca3af"
                         value={search}
                         onChangeText={setSearch}
@@ -158,8 +171,8 @@ export default function Notifications() {
                                 <Text style={NotificationStyle.emptyText}>No notifications yet.</Text>
                             </View>
                         ) : filteredNotifs.map(item => (
-                            <TouchableOpacity 
-                                key={item._id} 
+                            <TouchableOpacity
+                                key={item._id}
                                 style={[NotificationStyle.notifCard, !item.isRead && NotificationStyle.unreadCard]}
                                 onPress={() => handleMarkAsRead(item)}
                                 activeOpacity={0.7}
@@ -167,7 +180,7 @@ export default function Notifications() {
                                 <View style={NotificationStyle.dotContainer}>
                                     <View style={item.isRead ? NotificationStyle.dotRead : NotificationStyle.dotUnread} />
                                 </View>
-                                
+
                                 <View style={NotificationStyle.content}>
                                     <Text style={NotificationStyle.notifTitle}>{item.title}</Text>
                                     <Text style={NotificationStyle.notifMessage}>{item.message}</Text>
