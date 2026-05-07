@@ -30,7 +30,7 @@ const JAPAN_FALLBACK_STEPS = [
         description: "The applicant's application has been approved. The date and time of the appointment has been finalized."
     },
     {
-        title: 'Payment Complete',
+        title: 'Payment Completed',
         description: 'The applicant has successfully paid the service fee for the visa application.'
     },
     {
@@ -68,10 +68,10 @@ export default function VisaDetailsGuidance() {
     const route = useRoute()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
-    
+
     const selectedService = route.params?.service || {}
     const [serviceDetails, setServiceDetails] = useState(selectedService)
-    
+
     const [preferredDate, setPreferredDate] = useState(null)
     const [preferredTime, setPreferredTime] = useState(null)
     const [purpose, setPurpose] = useState('')
@@ -147,7 +147,7 @@ export default function VisaDetailsGuidance() {
 
         try {
             setIsSubmitting(true)
-            
+
             const payload = {
                 serviceId: selectedService.visaItem || selectedService._id,
                 preferredDate: formatDate(preferredDate),
@@ -246,7 +246,7 @@ export default function VisaDetailsGuidance() {
                 {/* --- REQUIREMENTS --- */}
                 <View style={VisaDetailsGuidanceStyle.columnCard}>
                     <Text style={VisaDetailsGuidanceStyle.sectionTitle}>Requirements</Text>
-                    
+
                     {requiredRequirements.length > 0 ? (
                         <>
                             <Text style={VisaDetailsGuidanceStyle.requiredSubheading}>Required</Text>
@@ -257,7 +257,7 @@ export default function VisaDetailsGuidance() {
                                         <Text style={VisaDetailsGuidanceStyle.requirementText}>
                                             {reqText}
                                         </Text>
-                                        
+
                                         {typeof item === 'object' && item.desc ? (
                                             <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
                                         ) : null}
@@ -289,7 +289,7 @@ export default function VisaDetailsGuidance() {
                                     <Text style={VisaDetailsGuidanceStyle.requirementText}>
                                         {reqText}
                                     </Text>
-                                    
+
                                     {typeof item === 'object' && item.desc ? (
                                         <Text style={VisaDetailsGuidanceStyle.requirementSubText}>{item.desc}</Text>
                                     ) : null}
@@ -465,16 +465,16 @@ export default function VisaDetailsGuidance() {
                         <TouchableOpacity style={{ alignSelf: 'flex-end', padding: 16 }} onPress={handleContinue}>
                             <Ionicons name="close" size={24} color="#9ca3af" />
                         </TouchableOpacity>
-                        
+
                         <View style={VisaDetailsGuidanceStyle.modalIconContainer}>
                             <Ionicons name="checkmark" size={32} color="#0ea5e9" />
                         </View>
-                        
+
                         <Text style={VisaDetailsGuidanceStyle.modalTitle}>Application submitted</Text>
                         <Text style={VisaDetailsGuidanceStyle.modalDesc}>
                             Your visa application has been submitted successfully. Kindly wait for your application to be approved.
                         </Text>
-                        
+
                         <TouchableOpacity style={VisaDetailsGuidanceStyle.modalButton} onPress={handleContinue}>
                             <Text style={VisaDetailsGuidanceStyle.modalButtonText}>Continue</Text>
                         </TouchableOpacity>

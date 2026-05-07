@@ -356,7 +356,7 @@ export default function VisaProgress() {
         return [
             "Application Submitted",
             "Application Approved",
-            "Payment Complete",
+            "Payment Completed",
             "Documents Uploaded",
             "Documents Approved",
             "Documents Received",
@@ -590,7 +590,7 @@ export default function VisaProgress() {
                         </View>
                     )}
 
-                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment complete' && appStatus.toLowerCase() !== 'documents uploaded' &&
+                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment completed' && appStatus.toLowerCase() !== 'documents uploaded' &&
                         appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'embassy approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
                             <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                                 <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
@@ -839,7 +839,7 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === 'payment complete' && serviceRequirements.length > 0 && (
+                {appStatus.toLowerCase() === 'payment completed' && serviceRequirements.length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>

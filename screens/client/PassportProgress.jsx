@@ -484,7 +484,7 @@ export default function PassportProgress() {
     const steps = [
         "Application Submitted",
         "Application Approved",
-        "Payment Complete",
+        "Payment Completed",
         "Documents Uploaded",
         "Documents Approved",
         "Documents Received",
@@ -602,7 +602,7 @@ export default function PassportProgress() {
                         </View>
                     )}
 
-                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment complete' && appStatus.toLowerCase() !== 'documents uploaded' &&
+                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment completed' && appStatus.toLowerCase() !== 'documents uploaded' &&
                         appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'dfa approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
                             <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                                 <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
@@ -765,7 +765,7 @@ export default function PassportProgress() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === 'payment complete' && (
+                {appStatus.toLowerCase() === 'payment completed' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Upload Files</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Upload the required passport documents below.</Text>
@@ -848,7 +848,7 @@ export default function PassportProgress() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === "payment complete" && getUploadedDocumentEntries().length > 0 && (
+                {appStatus.toLowerCase() === "payment completed" && getUploadedDocumentEntries().length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>

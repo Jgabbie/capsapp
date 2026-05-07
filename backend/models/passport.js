@@ -41,7 +41,7 @@ const passportSchema = new mongoose.Schema(
       enum: [
         'Application Submitted',
         'Application Approved',
-        'Payment Complete',
+        'Payment Completed',
         'Documents Uploaded',
         'Documents Approved',
         'Documents Received',
