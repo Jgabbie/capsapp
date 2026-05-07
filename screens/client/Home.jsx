@@ -689,82 +689,104 @@ export default function Home() {
             >
                 <View style={HomeStyle.featuredModalOverlay}>
                     <View style={HomeStyle.featuredModalBox}>
-                        {/* Close Button */}
-                        <TouchableOpacity
-                            style={HomeStyle.featuredModalCloseBtn}
-                            onPress={() => setFeaturedModalVisible(false)}
-                        >
-                            <Ionicons name="close" size={20} color="#333" />
-                        </TouchableOpacity>
+                        <View style={HomeStyle.featuredModalImageContainer}>
+                            {featuredPackage?.images && featuredPackage.images.length > 0 && (
+                                <Image
+                                    source={{ uri: featuredPackage.images[0] }}
+                                    style={HomeStyle.featuredModalImage}
+                                    contentFit="cover"
+                                />
+                            )}
 
-                        {/* Featured Package Image */}
-                        {featuredPackage?.images && featuredPackage.images.length > 0 && (
-                            <Image
-                                source={{ uri: featuredPackage.images[0] }}
-                                style={HomeStyle.featuredModalImage}
-                                contentFit="cover"
-                            />
-                        )}
+                            {/* Overlay holds the PNGs and the Close Button */}
+                            <View style={HomeStyle.featuredModalImageOverlay}>
+
+                                <TouchableOpacity
+                                    style={HomeStyle.featuredModalCloseBtn}
+                                    onPress={() => setFeaturedModalVisible(false)}
+                                >
+                                    <Ionicons name="close" size={20} color="#000" />
+                                </TouchableOpacity>
+
+                                <Image
+                                    source={require('../../assets/images/toprate.png')}
+                                    style={HomeStyle.topRatedPng}
+                                    contentFit="contain"
+                                />
+
+                                <View style={HomeStyle.packagePngRow}>
+                                    <Image
+                                        source={require('../../assets/images/pack.png')}
+                                        style={HomeStyle.packagePng}
+                                        contentFit="contain"
+                                    />
+                                </View>
+
+                                <Image
+                                    source={require('../../assets/images/badge.png')}
+                                    style={HomeStyle.badgePng}
+                                    contentFit="contain"
+                                />
+                            </View>
+                        </View>
 
                         <View style={HomeStyle.featuredModalContent}>
-                            {/* Package Title */}
                             <Text style={HomeStyle.featuredModalTitle}>{featuredPackage?.packageName}</Text>
 
-                            {/* Price Row */}
+                            <View style={HomeStyle.featuredModalTypeAndWish}>
+                                <View style={HomeStyle.featuredModalType}>
+                                    <Text style={HomeStyle.featuredModalTypeText}>
+                                        {String(featuredPackage?.packageType).toLowerCase() === 'domestic' ? 'Domestic' : 'International'}
+                                    </Text>
+                                </View>
+                            </View>
+
                             <View style={HomeStyle.featuredModalPriceRow}>
-                                {/* Original Price (if discounted) */}
                                 {featuredPackage?.packageDiscountPercent > 0 && (
                                     <Text style={HomeStyle.featuredModalOriginalPrice}>
                                         ₱{featuredPackage?.packagePricePerPax ? featuredPackage.packagePricePerPax.toLocaleString() : '0'}
                                     </Text>
                                 )}
-                                {/* Discounted/Main Price */}
                                 <Text style={HomeStyle.featuredModalPrice}>
                                     ₱{featuredPackage?.discountedPrice ? featuredPackage.discountedPrice.toLocaleString() : (featuredPackage?.packagePricePerPax ? featuredPackage.packagePricePerPax.toLocaleString() : 'N/A')}
                                 </Text>
-                                {/* Discount Badge */}
+
                                 {featuredPackage?.packageDiscountPercent > 0 && (
-                                    <View style={HomeStyle.featuredModalDiscountBadge}>
-                                        <Text style={HomeStyle.featuredModalDiscountText}>-{featuredPackage.packageDiscountPercent}%</Text>
-                                    </View>
+                                    <Text style={HomeStyle.featuredModalDiscountText}>-{featuredPackage.packageDiscountPercent}%</Text>
                                 )}
                             </View>
 
-                            {/* Price Label */}
                             <Text style={HomeStyle.featuredModalPriceLabel}>
                                 {featuredPackage?.packageDiscountPercent > 0 ? 'Discounted / Pax' : 'Budget / Pax'}
                             </Text>
 
-                            {/* Details Row: Duration & Available Slots */}
-                            <View style={HomeStyle.featuredModalDetailsRow}>
-                                <View style={HomeStyle.featuredModalDetailItem}>
-                                    <Text style={HomeStyle.featuredModalDetailLabel}>Duration</Text>
+                            <View style={HomeStyle.featuredModalStatsRow}>
+                                <View style={HomeStyle.featuredModalStatColLeft}>
+                                    <Text style={HomeStyle.featuredModalDetailLabel}>Duration:</Text>
                                     <Text style={HomeStyle.featuredModalDetailValue}>
                                         {featuredPackage?.packageDuration ? `${featuredPackage.packageDuration} Days` : 'N/A'}
                                     </Text>
                                 </View>
-                                <View style={HomeStyle.featuredModalDetailItem}>
-                                    <Text style={HomeStyle.featuredModalDetailLabel}>Available Slots</Text>
+
+                                <View style={HomeStyle.featuredModalStatColCenter}>
+                                    <Text style={HomeStyle.featuredModalDetailLabel}>Available Slots:</Text>
                                     <Text style={HomeStyle.featuredModalDetailValue}>
-                                        {featuredPackage?.availableSlots !== undefined ? featuredPackage.availableSlots : 0}
+                                        {featuredPackage?.availableSlots !== undefined ? `${featuredPackage.availableSlots} Left` : 0}
+                                    </Text>
+                                </View>
+
+                                <View style={HomeStyle.featuredModalStatColRight}>
+                                    <Text style={HomeStyle.featuredModalStars}>
+                                        {'★'.repeat(Math.floor(featuredPackage?.rating || 0))}
+                                        {featuredPackage?.rating % 1 !== 0 ? '½' : ''}
+                                        {'☆'.repeat(5 - Math.ceil(featuredPackage?.rating || 0))}
+                                    </Text>
+                                    <Text style={HomeStyle.featuredModalRatingCount}>
+                                        {featuredPackage?.rating || 0} out of 5 stars
                                     </Text>
                                 </View>
                             </View>
 
-                            {/* Rating Row */}
-                            {featuredPackage?.rating && (
-                                <View style={HomeStyle.featuredModalRatingRow}>
-                                    <Text style={HomeStyle.featuredModalStars}>
-                                        {'★'.repeat(Math.floor(featuredPackage.rating))}
-                                        {featuredPackage.rating % 1 !== 0 && '½'}
-                                    </Text>
-                                    <Text style={HomeStyle.featuredModalRatingCount}>
-                                        {featuredPackage.rating} out of 5 stars
-                                    </Text>
-                                </View>
-                            )}
-
-                            {/* Tags */}
                             {featuredPackage?.packageTags && featuredPackage.packageTags.length > 0 && (
                                 <View style={HomeStyle.featuredModalTagsContainer}>
                                     {featuredPackage.packageTags.slice(0, 4).map((tag, idx) => (
@@ -775,26 +797,6 @@ export default function Home() {
                                 </View>
                             )}
 
-                            {/* Package Type & Wishlist */}
-                            <View style={HomeStyle.featuredModalTypeAndWish}>
-                                <View style={HomeStyle.featuredModalType}>
-                                    <Text style={HomeStyle.featuredModalTypeText}>
-                                        {String(featuredPackage?.packageType).toLowerCase() === 'domestic' ? 'Domestic' : 'International'}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={HomeStyle.featuredModalWishIcon}
-                                    onPress={toggleFeaturedWishlist}
-                                >
-                                    <Ionicons
-                                        name={wishlistedIds.has(String(featuredPackage?._id)) ? "heart" : "heart-outline"}
-                                        size={24}
-                                        color={wishlistedIds.has(String(featuredPackage?._id)) ? "#cf1322" : "#999"}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Buttons */}
                             <View style={HomeStyle.featuredModalButtonsContainer}>
                                 <TouchableOpacity
                                     style={HomeStyle.featuredModalViewBtn}

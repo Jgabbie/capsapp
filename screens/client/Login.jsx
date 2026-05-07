@@ -107,7 +107,7 @@ export default function Login() {
                     loginOnce: response.data.loginOnce
                 })
 
-                showMessage("Login successful!");
+                showMessage("Welcome!");
                 // 🛑 Manual navigation removed! App.jsx handles the redirect automatically now.
 
             } else {
