@@ -1,6 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity, Modal, ImageBackground, ToastAndroid, ActivityIndicator, ScrollView, KeyboardAvoidingView, Image } from 'react-native'
-import React, { useState } from 'react'
-import { useNavigation } from '@react-navigation/native'
+import { View, Text, TextInput, TouchableOpacity, Modal, ImageBackground, ToastAndroid, ActivityIndicator, ScrollView, KeyboardAvoidingView, Image, BackHandler } from 'react-native'
+import React, { useState, useCallback } from 'react'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -32,6 +32,15 @@ export default function Signup() {
 
     // State for backend general errors (like "Email already exists")
     const [backendError, setBackendError] = useState("")
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => true
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+            return () => subscription.remove()
+        }, [])
+    )
 
     const [user, setUser] = useState({
         username: "",
@@ -252,18 +261,15 @@ export default function Signup() {
                         />
                         {errors.email ? <Text style={SignupStyle.fieldError}>{errors.email}</Text> : null}
 
-                        {/* PHONE NUMBER (+63 Locked) */}
+                        {/* PHONE NUMBER */}
                         <Text style={SignupStyle.signupLabel}>Phone Number</Text>
                         <View style={[SignupStyle.phoneContainer, errors.phonenum && SignupStyle.inputErrorBorder]}>
-                            <View style={SignupStyle.phonePrefixBox}>
-                                <Text style={SignupStyle.phonePrefixText}>+63</Text>
-                            </View>
                             <TextInput
                                 maxLength={13}
                                 keyboardType="numeric"
                                 style={SignupStyle.phoneInput}
                                 value={user.phonenum}
-                                placeholder="0969 437 5868"
+                                placeholder="0912 345 6789"
                                 onChangeText={(e) => changeHandler("phonenum", e)}
                             />
                         </View>
@@ -396,7 +402,7 @@ export default function Signup() {
                                 cs.navigate("login")
                             }}
                         >
-                            <Text style={ModalStyle.modalButtonText}>Go to Login</Text>
+                            <Text style={ModalStyle.modalButtonText}>Go Login</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

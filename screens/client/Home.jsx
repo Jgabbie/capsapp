@@ -1,8 +1,7 @@
 import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
-import MultiSlider from "@ptomasroos/react-native-multi-slider";
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -19,7 +18,6 @@ import { useUser } from '../../context/UserContext'
 
 const { width } = Dimensions.get("window");
 
-// 🔥 MOVED OUTSIDE: Prevents React from rebuilding the card every 5 seconds!
 const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     const imageSource = item.images && item.images.length > 0
         ? item.images[0]
@@ -31,7 +29,7 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
                 source={imageSource}
                 style={HomeStyle.bannerImage}
                 contentFit="cover"
-                transition={300} // 🔥 Will only trigger once on initial load now!
+                transition={300}
             />
 
             {isWishlisted && (
@@ -66,7 +64,6 @@ export default function Home() {
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
 
-    // 🔥 NEW CAROUSEL DATA & LOGIC 🔥
     const carouselRef = useRef(null);
     const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
@@ -94,22 +91,6 @@ export default function Home() {
 
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
-    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [selectedTags, setSelectedTags] = useState([])
-    const [selectedDuration, setSelectedDuration] = useState('Length of Stay')
-
-    // 🔥 NEW FILTER STATES
-    const [tourType, setTourType] = useState('Tour Type');
-    const [travelers, setTravelers] = useState('');
-    const [budgetRange, setBudgetRange] = useState([12000, 30000]); // Default 12k to 30k
-
-    // 🔥 DYNAMIC TAGS (Pulls only available tags from packages)
-    const tagOptions = React.useMemo(() => {
-        const unique = new Set(['All Tags']);
-        packages.forEach(p => p.packageTags?.forEach(t => unique.add(t)));
-        return Array.from(unique);
-    }, [packages]);
-
     // Contact Form States
     const [contactName, setContactName] = useState('')
     const [contactEmail, setContactEmail] = useState('')
@@ -120,9 +101,6 @@ export default function Home() {
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
     const [isSubjectModalVisible, setSubjectModalVisible] = useState(false)
 
-    const durationOptions = ['All Durations', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7 Days']
-    const tourTypeOptions = ['All Types', 'Domestic', 'International']
-
     const subjectOptions = [
         'Passport Assistance Inquiry',
         'Visa Assistance Inquiry',
@@ -130,6 +108,10 @@ export default function Home() {
         'Quotation Inquiry',
         'Travel Agency Inquiry'
     ]
+
+    // Featured Package Modal States
+    const [featuredModalVisible, setFeaturedModalVisible] = useState(false)
+    const [featuredPackage, setFeaturedPackage] = useState(null)
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -159,11 +141,56 @@ export default function Home() {
         setActiveCarouselIndex(index);
     };
 
+
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const pkgResponse = await api.get('/package/get-packages')
-                setPackages(pkgResponse.data)
+                // Fetch packages and ratings concurrently
+                const [pkgResponse, ratingResponse] = await Promise.all([
+                    api.get('/package/get-packages'),
+                    api.get('/rating/average-ratings').catch(() => ({ data: { averagesPayload: [] } }))
+                ]);
+
+                // Build rating map
+                const ratingMap = new Map();
+                if (ratingResponse.data?.averagesPayload) {
+                    ratingResponse.data.averagesPayload.forEach(r => {
+                        ratingMap.set(String(r.id), Number(r.averageRating));
+                    });
+                }
+
+                // Transform packages with correct field names
+                const transformedPackages = pkgResponse.data.map(item => {
+                    const rating = ratingMap.get(String(item._id)) || Number(item.averageRating) || 0;
+                    let calculatedSlots = 0;
+                    if (item.packageSpecificDate && Array.isArray(item.packageSpecificDate)) {
+                        calculatedSlots = item.packageSpecificDate.reduce((sum, dateObj) => {
+                            return sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0);
+                        }, 0);
+                    }
+                    const availableSlots = item.packageAvailableSlots ?? item.slots ?? calculatedSlots;
+
+                    // Calculate discounts like Packages.jsx
+                    const discountPercent = Number(item.packageDiscountPercent || 0);
+                    const originalPrice = Number(item.packagePricePerPax || 0);
+                    const discountedPrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
+
+                    return {
+                        ...item,
+                        _id: item._id,
+                        packageName: item.packageName,
+                        packagePricePerPax: originalPrice,
+                        packageDiscountPercent: discountPercent,
+                        discountedPrice: discountedPrice,
+                        packageDuration: item.packageDuration || 0,
+                        availableSlots: availableSlots,
+                        rating: Number(rating.toFixed(1)),
+                        packageTags: item.packageTags || [],
+                        packageType: item.packageType || 'domestic'
+                    };
+                });
+                setPackages(transformedPackages);
 
                 if (user?._id) {
                     try {
@@ -212,6 +239,70 @@ export default function Home() {
         (pkg) => String(pkg.packageType).toLowerCase() === 'international'
     )
 
+    // 🔥 FEATURED PACKAGE MODAL LOGIC 🔥
+    const getFeaturedPackage = () => {
+        if (packages.length === 0) return null;
+        const sorted = [...packages].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        const highest = sorted[0]?.rating || 0;
+        const topRated = sorted.filter(p => (p.rating || 0) === highest);
+        return topRated[Math.floor(Math.random() * topRated.length)];
+    };
+
+
+
+    // Show featured modal on focus (when returning to home screen)
+    useFocusEffect(
+        React.useCallback(() => {
+            if (packages.length > 0) {
+                const timeoutId = setTimeout(() => {
+                    const featured = getFeaturedPackage();
+                    setFeaturedPackage(featured);
+                    setFeaturedModalVisible(true);
+                }, 3000); // 3 second delay
+                return () => clearTimeout(timeoutId);
+            }
+        }, [packages])
+    );
+
+    const handleViewPackage = () => {
+        if (!featuredPackage) return;
+        setFeaturedModalVisible(false);
+        cs.navigate('packagedetails', {
+            id: featuredPackage._id,
+            pkg: featuredPackage
+        });
+    };
+
+
+
+    const toggleFeaturedWishlist = async () => {
+        if (!user?._id || !featuredPackage) return;
+        const pkgId = featuredPackage._id;
+        const isCurrentlyWishlisted = wishlistedIds.has(String(pkgId));
+
+        try {
+            if (isCurrentlyWishlisted) {
+                await api.delete(`/wishlist/${pkgId}`, withUserHeader(user._id));
+                setWishlistedIds(prev => {
+                    const updated = new Set(prev);
+                    updated.delete(String(pkgId));
+                    return updated;
+                });
+            } else {
+                await api.post('/wishlist/add', { packageId: pkgId }, withUserHeader(user._id));
+                setWishlistedIds(prev => new Set(prev).add(String(pkgId)));
+            }
+            // Update featured package state
+            setFeaturedPackage(prev => ({
+                ...prev,
+                isWishlisted: !isCurrentlyWishlisted
+            }));
+        } catch (error) {
+            console.log("Wishlist toggle error:", error.message);
+        }
+    };
+
+
     const handleEmailChange = (text) => {
         const cleanedText = text.replace(/\s/g, '');
         setContactEmail(cleanedText);
@@ -257,18 +348,6 @@ export default function Home() {
         }
     }
 
-    // 🔥 Define the function to reset all filters to default
-    const resetFilters = () => {
-        setTourType('Tour Type');
-        setTravelers('');
-        setBudgetRange([12000, 30000]);
-        setSelectedTags([]);
-        setSelectedDuration('Length of Stay');
-        setSearchQuery('');
-    };
-
-    // Done button will simply close the modal; search button triggers navigation
-
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     // 🔥 Define the Pagination Dots Component
@@ -294,93 +373,6 @@ export default function Home() {
         <View style={{ flex: 1, backgroundColor: '#f5f7fa' }} >
             <Header openSidebar={() => { setSidebarVisible(true) }} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
-
-            {/* 🔥 NEW FILTERS MODAL 🔥 */}
-            <Modal visible={isFilterModalVisible} animationType="slide" transparent={true} onRequestClose={() => setFilterModalVisible(false)}>
-                <View style={HomeStyle.filterModalOverlay}>
-                    <View style={HomeStyle.filterModalContainer}>
-                        <View style={HomeStyle.filterModalHeader}>
-                            <Text style={HomeStyle.filterModalTitle}>Advanced Filters</Text>
-                            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#1f2a44" />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            
-                            <Text style={HomeStyle.filterSectionLabel}>Tour Type</Text>
-                                    <View style={HomeStyle.filterPillContainer}>
-                                {tourTypeOptions.map(type => (
-                                    <TouchableOpacity 
-                                        key={type} 
-                                        style={[HomeStyle.filterPill, (tourType === type || (tourType === 'Tour Type' && type === 'All Types')) && HomeStyle.filterPillSelected]}
-                                        onPress={() => setTourType(type === 'All Types' ? 'Tour Type' : type)}
-                                    >
-                                        <Text style={[HomeStyle.filterPillText, (tourType === type || (tourType === 'Tour Type' && type === 'All Types')) && HomeStyle.filterPillTextSelected]}>{type}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-
-                            <Text style={HomeStyle.filterSectionLabel}>Duration</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row' }}>
-                                {durationOptions.map(dur => (
-                                    <TouchableOpacity 
-                                        key={dur} 
-                                        style={[HomeStyle.filterPill, {marginRight: 8}, (selectedDuration === dur || (selectedDuration === 'Length of Stay' && dur === 'All Durations')) && HomeStyle.filterPillSelected]}
-                                        onPress={() => setSelectedDuration(dur === 'All Durations' ? 'Length of Stay' : dur)}
-                                    >
-                                        <Text style={[HomeStyle.filterPillText, (selectedDuration === dur || (selectedDuration === 'Length of Stay' && dur === 'All Durations')) && HomeStyle.filterPillTextSelected]}>{dur}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-
-                            <Text style={HomeStyle.filterSectionLabel}>Tags / Activities</Text>
-                            <View style={HomeStyle.filterPillContainer}>
-                                {tagOptions.map(tag => (
-                                    <TouchableOpacity
-                                        key={tag}
-                                        style={[HomeStyle.filterPill, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillSelected]}
-                                        onPress={() => {
-                                            if (tag === 'All Tags') {
-                                                setSelectedTags([]);
-                                                return;
-                                            }
-                                            setSelectedTags(prev => {
-                                                if (prev.includes(tag)) return prev.filter(t => t !== tag);
-                                                if (prev.length >= 3) {
-                                                    Alert.alert('Limit reached', 'You can select up to 3 tags.');
-                                                    return prev;
-                                                }
-                                                return [...prev, tag];
-                                            })
-                                        }}
-                                    >
-                                        <Text style={[HomeStyle.filterPillText, (selectedTags.includes(tag) || (selectedTags.length === 0 && tag === 'All Tags')) && HomeStyle.filterPillTextSelected]}>{tag}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-
-                            <Text style={HomeStyle.filterSectionLabel}>Travelers</Text>
-                            <TextInput 
-                                style={HomeStyle.filterModalTextInput}
-                                placeholder="How many travelers?"
-                                placeholderTextColor="#999"
-                                keyboardType="numeric"
-                                value={travelers}
-                                onChangeText={(t) => setTravelers(t.replace(/[^0-9]/g, ''))}
-                            />
-
-                            <TouchableOpacity style={HomeStyle.filterModalApplyBtn} onPress={() => setFilterModalVisible(false)}>
-                                <Text style={HomeStyle.filterModalApplyText}>Done</Text>
-                            </TouchableOpacity>
-
-                            {/* 🔥 NEW RESET FILTER BUTTON 🔥 */}
-                            <TouchableOpacity style={HomeStyle.filterModalResetBtn} onPress={resetFilters}>
-                                <Text style={HomeStyle.filterModalResetText}>Reset Filter</Text>
-                            </TouchableOpacity>
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
 
             {/* Subject Selection Modal */}
             <Modal visible={isSubjectModalVisible} transparent={true} animationType="fade">
@@ -429,7 +421,9 @@ export default function Home() {
                 >
 
                     <View style={HomeStyle.mainTitleContainer}>
-                        <Text style={HomeStyle.mainTitle}>M&RC Travel and Tours</Text>
+                        <Text style={HomeStyle.mainTitle}>
+                            M&RC <Text style={HomeStyle.mainTitleAccent}>Travel and Tours</Text>
+                        </Text>
                         <Text style={HomeStyle.byTravex}>by travex</Text>
                     </View>
                     <ImageBackground
@@ -443,53 +437,24 @@ export default function Home() {
                             <Text style={HomeStyle.heroTitle}>Your Link to the World</Text>
                             <Text style={HomeStyle.heroSubtitleWhite}>Discover affordable vacation travel and tours. Book your dream activities and start exploring the world!</Text>
 
-                            {/* 🔥 NEW COMPACT FILTER CARD 🔥 */}
                             <View style={HomeStyle.heroFilterCard}>
-                                
-                                {/* Row 1: Search, Filter Button, Search Button */}
                                 <View style={HomeStyle.heroSearchRow}>
                                     <View style={HomeStyle.heroSearchInputContainer}>
                                         <TextInput
                                             style={HomeStyle.heroSearchInput}
-                                            placeholder='Search here...'
+                                            placeholder='Search your destination'
                                             placeholderTextColor="#999"
                                             value={searchQuery}
                                             onChangeText={setSearchQuery}
                                         />
                                     </View>
                                     
-                                    <TouchableOpacity style={HomeStyle.heroFilterBtn} onPress={() => setFilterModalVisible(true)}>
-                                        <Ionicons name="options-outline" size={20} color="#fff" />
-                                        <Text style={HomeStyle.heroFilterBtnText}>Filters</Text>
-                                    </TouchableOpacity>
-
                                     <TouchableOpacity 
                                         style={HomeStyle.heroSearchBtn} 
-                                        onPress={() => cs.navigate("packages", { 
-                                            // Passing data to Packages screen
-                                            searchQuery, selectedTags, selectedDuration, tourType, travelers, budgetRange 
-                                        })}
+                                        onPress={() => cs.navigate("packages", { searchQuery })}
                                     >
                                         <Ionicons name="search" size={24} color="#fff" />
                                     </TouchableOpacity>
-                                </View>
-
-                                {/* Row 2: Budget Slider */}
-                                <View style={HomeStyle.heroBudgetRow}>
-                                    <View style={HomeStyle.heroBudgetLabels}>
-                                        <Text style={[HomeStyle.heroBudgetText, { flex: 1, textAlign: 'left' }]}>₱{budgetRange[0].toLocaleString()}</Text>
-                                        <Text style={[HomeStyle.heroInputLabel, { flex: 1, textAlign: 'center' }]}>BUDGET</Text>
-                                        <Text style={[HomeStyle.heroBudgetText, { flex: 1, textAlign: 'right' }]}>₱{budgetRange[1].toLocaleString()}</Text>
-                                    </View>
-                                    <MultiSlider 
-                                        values={budgetRange} 
-                                        sliderLength={width - 110} 
-                                        onValuesChange={setBudgetRange} 
-                                        min={0} max={100000} step={1000} 
-                                        selectedStyle={{backgroundColor:'#fff'}} 
-                                        markerStyle={{backgroundColor:'#fff', height: 16, width: 16}} 
-                                        unselectedStyle={{backgroundColor: 'rgba(255,255,255,0.4)'}} 
-                                    />
                                 </View>
                             </View>
                         </View>
@@ -714,6 +679,134 @@ export default function Home() {
 
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* 🔥 FEATURED PACKAGE MODAL 🔥 */}
+            <Modal
+                visible={featuredModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setFeaturedModalVisible(false)}
+            >
+                <View style={HomeStyle.featuredModalOverlay}>
+                    <View style={HomeStyle.featuredModalBox}>
+                        {/* Close Button */}
+                        <TouchableOpacity
+                            style={HomeStyle.featuredModalCloseBtn}
+                            onPress={() => setFeaturedModalVisible(false)}
+                        >
+                            <Ionicons name="close" size={20} color="#333" />
+                        </TouchableOpacity>
+
+                        {/* Featured Package Image */}
+                        {featuredPackage?.images && featuredPackage.images.length > 0 && (
+                            <Image
+                                source={{ uri: featuredPackage.images[0] }}
+                                style={HomeStyle.featuredModalImage}
+                                contentFit="cover"
+                            />
+                        )}
+
+                        <View style={HomeStyle.featuredModalContent}>
+                            {/* Package Title */}
+                            <Text style={HomeStyle.featuredModalTitle}>{featuredPackage?.packageName}</Text>
+
+                            {/* Price Row */}
+                            <View style={HomeStyle.featuredModalPriceRow}>
+                                {/* Original Price (if discounted) */}
+                                {featuredPackage?.packageDiscountPercent > 0 && (
+                                    <Text style={HomeStyle.featuredModalOriginalPrice}>
+                                        ₱{featuredPackage?.packagePricePerPax ? featuredPackage.packagePricePerPax.toLocaleString() : '0'}
+                                    </Text>
+                                )}
+                                {/* Discounted/Main Price */}
+                                <Text style={HomeStyle.featuredModalPrice}>
+                                    ₱{featuredPackage?.discountedPrice ? featuredPackage.discountedPrice.toLocaleString() : (featuredPackage?.packagePricePerPax ? featuredPackage.packagePricePerPax.toLocaleString() : 'N/A')}
+                                </Text>
+                                {/* Discount Badge */}
+                                {featuredPackage?.packageDiscountPercent > 0 && (
+                                    <View style={HomeStyle.featuredModalDiscountBadge}>
+                                        <Text style={HomeStyle.featuredModalDiscountText}>-{featuredPackage.packageDiscountPercent}%</Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Price Label */}
+                            <Text style={HomeStyle.featuredModalPriceLabel}>
+                                {featuredPackage?.packageDiscountPercent > 0 ? 'Discounted / Pax' : 'Budget / Pax'}
+                            </Text>
+
+                            {/* Details Row: Duration & Available Slots */}
+                            <View style={HomeStyle.featuredModalDetailsRow}>
+                                <View style={HomeStyle.featuredModalDetailItem}>
+                                    <Text style={HomeStyle.featuredModalDetailLabel}>Duration</Text>
+                                    <Text style={HomeStyle.featuredModalDetailValue}>
+                                        {featuredPackage?.packageDuration ? `${featuredPackage.packageDuration} Days` : 'N/A'}
+                                    </Text>
+                                </View>
+                                <View style={HomeStyle.featuredModalDetailItem}>
+                                    <Text style={HomeStyle.featuredModalDetailLabel}>Available Slots</Text>
+                                    <Text style={HomeStyle.featuredModalDetailValue}>
+                                        {featuredPackage?.availableSlots !== undefined ? featuredPackage.availableSlots : 0}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Rating Row */}
+                            {featuredPackage?.rating && (
+                                <View style={HomeStyle.featuredModalRatingRow}>
+                                    <Text style={HomeStyle.featuredModalStars}>
+                                        {'★'.repeat(Math.floor(featuredPackage.rating))}
+                                        {featuredPackage.rating % 1 !== 0 && '½'}
+                                    </Text>
+                                    <Text style={HomeStyle.featuredModalRatingCount}>
+                                        {featuredPackage.rating} out of 5 stars
+                                    </Text>
+                                </View>
+                            )}
+
+                            {/* Tags */}
+                            {featuredPackage?.packageTags && featuredPackage.packageTags.length > 0 && (
+                                <View style={HomeStyle.featuredModalTagsContainer}>
+                                    {featuredPackage.packageTags.slice(0, 4).map((tag, idx) => (
+                                        <View key={idx} style={HomeStyle.featuredModalTag}>
+                                            <Text style={HomeStyle.featuredModalTagText}>{tag}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Package Type & Wishlist */}
+                            <View style={HomeStyle.featuredModalTypeAndWish}>
+                                <View style={HomeStyle.featuredModalType}>
+                                    <Text style={HomeStyle.featuredModalTypeText}>
+                                        {String(featuredPackage?.packageType).toLowerCase() === 'domestic' ? 'Domestic' : 'International'}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={HomeStyle.featuredModalWishIcon}
+                                    onPress={toggleFeaturedWishlist}
+                                >
+                                    <Ionicons
+                                        name={wishlistedIds.has(String(featuredPackage?._id)) ? "heart" : "heart-outline"}
+                                        size={24}
+                                        color={wishlistedIds.has(String(featuredPackage?._id)) ? "#cf1322" : "#999"}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Buttons */}
+                            <View style={HomeStyle.featuredModalButtonsContainer}>
+                                <TouchableOpacity
+                                    style={HomeStyle.featuredModalViewBtn}
+                                    onPress={handleViewPackage}
+                                >
+                                    <Text style={HomeStyle.featuredModalViewBtnText}>View Package</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <Chatbot />
         </View>

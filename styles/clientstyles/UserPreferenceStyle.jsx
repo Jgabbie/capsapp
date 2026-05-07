@@ -7,12 +7,12 @@ const UserPreferenceStyle = StyleSheet.create({
     },
     heroSection: {
         padding: 24,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingTop: Platform.OS === 'ios' ? 60 : 60,
         paddingBottom: 30,
     },
     eyebrow: {
-        color: '#6b7280',
-        fontSize: 12,
+        color: '#bb2424',
+        fontSize: 14,
         fontFamily: 'Montserrat_700Bold',
         textTransform: 'uppercase',
         marginBottom: 8,
@@ -71,15 +71,16 @@ const UserPreferenceStyle = StyleSheet.create({
     },
     questionTitle: {
         fontSize: 18,
-        fontFamily: 'Montserrat_700Bold',
-        color: '#1f2937',
-        marginBottom: 4,
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#305797',
+        marginBottom: 20,
     },
     questionSubtitle: {
         fontSize: 13,
         fontFamily: 'Roboto_400Regular',
         color: '#6b7280',
-        marginBottom: 18,
+        marginBottom: 20,
+        marginTop: -15,
     },
     chipGrid: {
         flexDirection: 'row',
@@ -109,7 +110,7 @@ const UserPreferenceStyle = StyleSheet.create({
     },
     footer: {
         padding: 20,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 45,
+        paddingBottom: Platform.OS === 'ios' ? 60 : 60,
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderTopColor: '#e5e7eb',

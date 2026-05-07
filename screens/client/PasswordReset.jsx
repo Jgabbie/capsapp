@@ -1,6 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Image } from 'react-native'
-import React, { useState, useEffect } from 'react'
-import { useNavigation } from '@react-navigation/native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Image, BackHandler } from 'react-native'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -27,6 +27,15 @@ export default function PasswordReset() {
     const [otp, setOtp] = useState("")
     const [errorOtp, setErrorOtp] = useState("")
     const [timer, setTimer] = useState(0)
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => true
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+            return () => subscription.remove()
+        }, [])
+    )
 
     useEffect(() => {
         let interval = null
@@ -123,7 +132,7 @@ export default function PasswordReset() {
                 {/* 🔥 2. MOVED LINK TEXT: Now sitting perfectly on top of the Send OTP button */}
                 <View style={[PasswordResetStyle.linksContainer, { marginTop: 5, marginBottom: 15 }]}>
                     <TouchableOpacity onPress={() => cs.navigate("login")}>
-                        <Text style={PasswordResetStyle.linkText}>Remember password? Login here</Text>
+                        <Text style={PasswordResetStyle.linkText}>Remember password? Login</Text>
                     </TouchableOpacity>
                 </View>
 

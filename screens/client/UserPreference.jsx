@@ -12,7 +12,6 @@ import { useUser } from '../../context/UserContext';
 export default function UserPreference() {
     const navigation = useNavigation();
     
-    // 🔥 FIX 1: Extracted setUser from the context!
     const { user, setUser } = useUser(); 
     
     const [fontsLoaded] = useFonts({
@@ -55,8 +54,8 @@ export default function UserPreference() {
         });
     };
 
-    const totalSelections = selections.moods.length + selections.tours.length + selections.pace.length;
-    const canContinue = totalSelections >= 3;
+    const totalMoodSelections = selections.moods.length;
+    const canContinue = totalMoodSelections === 3 && selections.tours.length >= 1;
 
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
@@ -100,19 +99,18 @@ export default function UserPreference() {
                 
                 <View style={UserPreferenceStyle.heroSection}>
                     <Text style={UserPreferenceStyle.eyebrow}>New here?</Text>
-                    <Text style={UserPreferenceStyle.title}>Let us tailor your travel moodboard</Text>
-                    <Text style={UserPreferenceStyle.subtitle}>Pick a few vibes and tour styles so we can personalize your feed.</Text>
+                    <Text style={UserPreferenceStyle.title}>Let us tailor your travel moodboard!</Text>
+                    <Text style={UserPreferenceStyle.subtitle}>Pick a few vibes and tour styles so we can personalize your feed</Text>
                     
                     <View style={UserPreferenceStyle.progressContainer}>
-                        <Text style={UserPreferenceStyle.progressText}>{totalSelections} selected</Text>
+                        <Text style={UserPreferenceStyle.progressText}>{totalMoodSelections} selected</Text>
                         <View style={UserPreferenceStyle.progressDivider} />
-                        <Text style={UserPreferenceStyle.progressTarget}>Choose at least 3</Text>
+                        <Text style={UserPreferenceStyle.progressTarget}>Choose exactly 3</Text>
                     </View>
                 </View>
 
                 <View style={UserPreferenceStyle.card}>
                     <Text style={UserPreferenceStyle.questionTitle}>What are you in the mood for?</Text>
-                    <Text style={UserPreferenceStyle.questionSubtitle}>Choose up to 3.</Text>
                     
                     <View style={UserPreferenceStyle.chipGrid}>
                         {moodOptions.map((option) => {
@@ -135,7 +133,7 @@ export default function UserPreference() {
 
                 <View style={UserPreferenceStyle.card}>
                     <Text style={UserPreferenceStyle.questionTitle}>What type of tour do you like?</Text>
-                    <Text style={UserPreferenceStyle.questionSubtitle}>Pick as many as you want.</Text>
+                    <Text style={UserPreferenceStyle.questionSubtitle}>Pick Domestic, International, or both.</Text>
                     
                     <View style={UserPreferenceStyle.chipGrid}>
                         {tourOptions.map((option) => {
@@ -158,7 +156,7 @@ export default function UserPreference() {
             </ScrollView>
 
             <View style={UserPreferenceStyle.footer}>
-                <Text style={UserPreferenceStyle.footerNote}>Your picks will shape the tours we recommend next.</Text>
+                <Text style={UserPreferenceStyle.footerNote}>Pick 3 mood tags and at least 1 tour type to continue.</Text>
                 <TouchableOpacity 
                     style={[UserPreferenceStyle.ctaButton, !canContinue && UserPreferenceStyle.ctaButtonDisabled]}
                     disabled={!canContinue || isLoading}

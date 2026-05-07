@@ -70,6 +70,7 @@ export default function Profile() {
     const [originalPreferences, setOriginalPreferences] = useState({ moods: [], tours: [] })
     const [editingPreferences, setEditingPreferences] = useState(false)
     const [savingPreferences, setSavingPreferences] = useState(false)
+    const [removedTagWarning, setRemovedTagWarning] = useState(false)
 
     // --- FETCH USER DATA ---
     useEffect(() => {
@@ -152,6 +153,26 @@ export default function Profile() {
         fetchDashboardData();
     }, [user?._id]);
 
+    // If available mood options change (e.g. a tag was removed from packages),
+    // drop any saved mood selections that no longer exist so the user can
+    // reselect valid tags.
+    useEffect(() => {
+        if (!Array.isArray(moodOptions) || moodOptions.length === 0) return;
+
+        setPreferences(prev => {
+            const filtered = (prev.moods || []).filter(m => moodOptions.includes(m));
+            if (filtered.length === (prev.moods || []).length) return prev;
+            setRemovedTagWarning(true);
+            return { ...prev, moods: filtered };
+        });
+
+        setOriginalPreferences(prev => {
+            const filtered = (prev.moods || []).filter(m => moodOptions.includes(m));
+            if (filtered.length === (prev.moods || []).length) return prev;
+            return { ...prev, moods: filtered };
+        });
+    }, [moodOptions]);
+
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
             ToastAndroid.show(msg, ToastAndroid.SHORT)
@@ -183,8 +204,8 @@ export default function Profile() {
         if (field === "phonenum") {
             const rawDigits = value.replace(/\D/g, "")
             if (rawDigits === "") return "Phone is required.";
-            if (rawDigits.length < 10) return "Phone must be 10 digits";
-            if (rawDigits.slice(0, 1) !== "8" && rawDigits.slice(0, 1) !== "9") return "Must start with 8 or 9";
+            if (rawDigits.length !== 11) return "Phone must be 11 digits";
+            if (!rawDigits.startsWith("09")) return "Must start with 09";
         }
         return "";
     };
@@ -199,9 +220,10 @@ export default function Profile() {
         let value = cleanVal.replace(/\D/g, "");
 
         let formatted = "";
-        if (value.length > 0) formatted += value.slice(0, 3);
-        if (value.length >= 4) formatted += " " + value.slice(3, 6);
-        if (value.length >= 7) formatted += " " + value.slice(6, 10);
+        // Format for 11-digit local mobile: 4-3-4 (e.g. 0977 049 3211)
+        if (value.length > 0) formatted += value.slice(0, Math.min(4, value.length));
+        if (value.length >= 5) formatted += " " + value.slice(4, Math.min(7, value.length));
+        if (value.length >= 8) formatted += " " + value.slice(7, Math.min(11, value.length));
         valueHandler("phonenum", formatted);
     }
 
@@ -344,6 +366,8 @@ export default function Profile() {
             if (!exists && limit && current.length >= limit) return prev;
 
             const next = exists ? current.filter(item => item !== value) : [...current, value];
+            // If user modifies moods, clear any removed-tag warning
+            if (key === 'moods') setRemovedTagWarning(false);
             return { ...prev, [key]: next };
         });
     };
@@ -455,9 +479,8 @@ export default function Profile() {
 
                     <Text style={ProfileStyle.profileLabel}>Phone Number</Text>
                     <View style={[ProfileStyle.phoneInputContainer, !editing && ProfileStyle.profileInputsDisabled, errors.phonenum && ProfileStyle.profileInputsError]}>
-                        <Text style={ProfileStyle.phonePrefix}>+63</Text>
                         <TextInput
-                            value={userData.phonenum} editable={editing} keyboardType="numeric" maxLength={12}
+                            value={userData.phonenum} editable={editing} keyboardType="numeric" maxLength={13}
                             onChangeText={formatPhone} style={[ProfileStyle.phoneInput, !editing && ProfileStyle.profileInputsDisabled]}
                         />
                     </View>
@@ -543,7 +566,12 @@ export default function Profile() {
 
                     {/* Moods Section */}
                     <Text style={ProfileStyle.prefSectionTitle}>What are you in the mood for?</Text>
-                    <Text style={ProfileStyle.prefSubText}>Choose up to 3</Text>
+                    <Text style={ProfileStyle.prefSubText}>Choose 3</Text>
+                    {removedTagWarning && (
+                        <Text style={ProfileStyle.removedNote}>
+                            Note: A package with one of your selected tags was removed. Please choose another tag.
+                        </Text>
+                    )}
                     <View style={ProfileStyle.chipGrid}>
                         {moodOptions.map(option => {
                             const isSelected = preferences.moods.includes(option);
@@ -584,7 +612,11 @@ export default function Profile() {
                     {/* Edit Actions */}
                     {editingPreferences && (
                         <View style={ProfileStyle.actionContainer}>
-                            <TouchableOpacity style={ProfileStyle.saveButton} onPress={savePreferences} disabled={savingPreferences}>
+                            <TouchableOpacity
+                                style={[ProfileStyle.saveButton, (preferences.moods.length !== 3 || preferences.tours.length < 1) && ProfileStyle.saveButtonDisabled]}
+                                onPress={savePreferences}
+                                disabled={savingPreferences || preferences.moods.length !== 3 || preferences.tours.length < 1}
+                            >
                                 {savingPreferences ? <ActivityIndicator color="#fff" size="small" /> : <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff" /> Save</Text>}
                             </TouchableOpacity>
                             <TouchableOpacity style={ProfileStyle.cancelButton} onPress={cancelPreferencesEdit}>
@@ -662,17 +694,20 @@ export default function Profile() {
                 {/* Modals */}
                 <Modal visible={genderModalVisible} transparent={true} animationType="fade">
                     <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setGenderModalVisible(false)}>
-                        <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
-                            {['Male', 'Female', 'Other', 'Prefer not to say'].map((option, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
-                                    onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
-                                >
-                                    <Text style={{ fontSize: 16, color: '#305797', fontFamily: 'Roboto_500Medium' }}>{option}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                                <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
+                                    {['Male', 'Female', 'Other', 'Prefer not to say'].map((option, index) => {
+                                        const isSelected = userData.gender === option;
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
+                                                onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
+                                            >
+                                                <Text style={{ fontSize: 16, color: isSelected ? '#305797' : '#000', fontFamily: isSelected ? 'Roboto_500Medium' : 'Roboto_400Regular' }}>{option}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    })}
+                                </View>
                     </TouchableOpacity>
                 </Modal>
 

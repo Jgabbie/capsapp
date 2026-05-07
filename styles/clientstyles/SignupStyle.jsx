@@ -68,19 +68,6 @@ const SignupStyle = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.8)",
         overflow: "hidden"
     },
-    phonePrefixBox: {
-        backgroundColor: "#e0e0e0",
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 12,
-        borderRightWidth: 1,
-        borderColor: "#6d6d6d"
-    },
-    phonePrefixText: {
-        fontSize: 14,
-        color: "#333",
-        fontFamily: "Roboto_500Medium"
-    },
     phoneInput: {
         flex: 1,
         fontSize: 14,

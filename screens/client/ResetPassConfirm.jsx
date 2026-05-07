@@ -1,6 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Image } from 'react-native'
-import React, { useState } from 'react'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Image, BackHandler } from 'react-native'
+import React, { useState, useCallback } from 'react'
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
@@ -34,6 +34,15 @@ export default function ResetPassConfirm() {
 
     const [loading, setLoading] = useState(false)
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => true
+
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+            return () => subscription.remove()
+        }, [])
+    )
 
     if (!fontsLoaded) return null;
 
