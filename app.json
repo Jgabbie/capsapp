@@ -21,7 +21,7 @@
       "package": "com.yourname.capsapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/LastPushLogo.png",
+        "foregroundImage": "./assets/images/MobileIcon.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
