@@ -1,7 +1,7 @@
 import PassportModel from "../models/passport.js";
 import UserModel from "../models/users.js";
 import NotificationModel from "../models/notification.js";
-import transporter from "../config/emailTransporter.js";
+import transporter from "../config/nodemailer.js";
 import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
 
