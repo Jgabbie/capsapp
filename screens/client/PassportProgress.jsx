@@ -481,6 +481,8 @@ export default function PassportProgress() {
         return Array.isArray(application.status) ? application.status[0] : application.status;
     }, [application]);
 
+    const passportApplicationId = application?._id || applicationId;
+
     const steps = [
         "Application Submitted",
         "Application Approved",
@@ -559,16 +561,11 @@ export default function PassportProgress() {
             setHasProcessedRejection(true);
             const updateStatus = async () => {
                 try {
-                    await apiFetch.put(
-                        `/passport/applications/${id}/status`,
+                    await api.put(
+                        `/passport/applications/${passportApplicationId}/status`,
                         { status: 'Rejected' },
-                        { withCredentials: true }
+                        withUserHeader(user?._id)
                     );
-                    notification.warning({
-                        message: 'Application Rejected',
-                        description: 'Your application has been rejected due to missed deadline.',
-                        placement: 'topRight'
-                    });
                     setApplication(prev => ({ ...prev, status: 'Rejected' }));
                 } catch (err) {
                     console.error('Failed to auto-reject application:', err);
@@ -576,7 +573,7 @@ export default function PassportProgress() {
             };
             updateStatus();
         }
-    }, [statusDeadlineDate, application, hasProcessedRejection, id]);
+    }, [statusDeadlineDate, application, hasProcessedRejection, passportApplicationId, user?._id]);
 
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());

@@ -102,9 +102,12 @@ const getVisaDeadlineInfo = (
     return null;
   }
 
-  // ONLY USE CREATED AT
-  const baseDate = dayjs(application.createdAt)
-    .startOf('day');
+  const baseDate = getVisaStatusSetDate(application, currentStatus)
+    || (application.createdAt ? dayjs(application.createdAt).startOf('day') : null);
+
+  if (!baseDate) {
+    return null;
+  }
 
   const deadlineDate = baseDate
     .add(totalDays, 'day')

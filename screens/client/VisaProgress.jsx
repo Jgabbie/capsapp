@@ -352,48 +352,54 @@ export default function VisaProgress() {
     };
 
     const steps = useMemo(() => {
-        if (dynamicSteps.length > 0) return dynamicSteps;
-        if (application?.serviceName?.includes('Canada')) return ["aaa", "aaa", "aaa"];
+        const source = dynamicSteps.length > 0
+            ? dynamicSteps
+            : [
+                "Application Submitted",
+                "Application Approved",
+                "Payment Completed",
+                "Documents Uploaded",
+                "Documents Approved",
+                "Documents Received",
+                "Documents Submitted",
+                "Processing by Embassy",
+                "Embassy Approved",
+                "Passport Released"
+            ];
 
-        return [
-            "Application Submitted",
-            "Application Approved",
-            "Payment Completed",
-            "Documents Uploaded",
-            "Documents Approved",
-            "Documents Received",
-            "Documents Submitted",
-            "Processing by Embassy",
-            "Embassy Approved",
-            "Passport Released"
-        ];
-    }, [dynamicSteps, application]);
+        return source
+            .filter(Boolean)
+            .map((step, index) => ({
+                title: String(step?.title || step || `Step ${index + 1}`).trim(),
+                description: typeof step === 'object' && step !== null ? String(step?.description || '') : '',
+                daysToBeCompleted: Number(step?.daysToBeCompleted ?? step?.days ?? 0) || 0,
+            }))
+            .filter(step => Boolean(step.title));
+    }, [dynamicSteps]);
 
     const visaStatusTotalDaysMap = useMemo(() => {
-        const source = (dynamicSteps && dynamicSteps.length > 0)
-            ? dynamicSteps
-            : (steps || []).map(s => (typeof s === 'string' ? { title: s, daysToBeCompleted: 0 } : s));
-
-        const map = {};
+        const cumulative = {};
+        const stageDays = {};
+        const lower = {};
+        const lowerStageDays = {};
         let total = 0;
 
-        for (const step of source) {
-            const title = String(step?.title || step || '').trim();
+        for (const step of steps) {
+            const title = String(step?.title || '').trim();
             if (!title) continue;
 
             const days = Number(step?.daysToBeCompleted ?? 0);
             const safe = Number.isFinite(days) && days > 0 ? days : 0;
 
             total += safe;
-            map[title] = total;
+            cumulative[title] = total;
+            stageDays[title] = safe;
+            lower[String(title).toLowerCase()] = total;
+            lowerStageDays[String(title).toLowerCase()] = safe;
         }
 
-        // also provide a lowercase-keyed map for robust lookups
-        const lower = {};
-        Object.keys(map).forEach(k => { lower[String(k).toLowerCase()] = map[k]; });
-
-        return { original: map, lower };
-    }, [dynamicSteps, steps]);
+        return { cumulative, stageDays, lower, lowerStageDays };
+    }, [steps]);
 
     const getStatusSetDate = (app) => {
         if (!app) return null;
@@ -433,18 +439,19 @@ export default function VisaProgress() {
             : null;
     const statusSetDate = getStatusSetDate(application);
     const createdAt = application?.createdAt ? dayjs(application.createdAt).startOf('day') : null;
-    const deadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.lower[String(appStatus || '').toLowerCase()]))
-        ? Number(visaStatusTotalDaysMap.lower[String(appStatus || '').toLowerCase()])
-        : null;
+    const statusKey = String(appStatus || '').toLowerCase();
+    const deadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[statusKey]))
+        ? Number(visaStatusTotalDaysMap.cumulative[statusKey])
+        : Number.isFinite(Number(visaStatusTotalDaysMap.lower[statusKey]))
+            ? Number(visaStatusTotalDaysMap.lower[statusKey])
+            : null;
     const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
 
-    // Use createdAt baseline for deadline calculations (created-at baseline)
+    // Match LEFT4DEVS: deadline is the current status set date plus the cumulative step days.
     const statusDeadlineDate = !terminalStatuses.has(String(appStatus || '').toLowerCase())
-        ? (application?.statusDeadlineDate
-            ? dayjs(application.statusDeadlineDate)
-            : createdAt && Number.isFinite(deadlineDays)
-                ? createdAt.add(deadlineDays, 'day').startOf('day')
-                : null)
+        ? (statusSetDate && Number.isFinite(deadlineDays)
+            ? statusSetDate.add(deadlineDays, 'day').startOf('day')
+            : null)
         : null;
 
     useEffect(() => {
@@ -454,11 +461,17 @@ export default function VisaProgress() {
         }
 
         const update = () => {
-            const diffMs = statusDeadlineDate.diff(dayjs());
-            if (diffMs <= 0) {
+            const now = dayjs();
+            const deadlineCutoff = statusDeadlineDate.endOf('day');
+
+            if (now.isAfter(deadlineCutoff)) {
                 setCountdown('Deadline passed');
                 return;
             }
+
+            const targetDate = now.isSame(statusDeadlineDate, 'day') ? deadlineCutoff : statusDeadlineDate;
+            const diffMs = targetDate.diff(now);
+
             let total = Math.floor(diffMs / 1000);
             const days = Math.floor(total / 86400);
             total = total % 86400;
@@ -475,7 +488,7 @@ export default function VisaProgress() {
     }, [statusDeadlineDate]);
 
     const currentStepIndex = useMemo(() => {
-        const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
+        const index = steps.findIndex(step => String(step?.title || '').toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
     }, [steps, appStatus]);
 
@@ -1149,17 +1162,22 @@ export default function VisaProgress() {
                         </View>
 
                         {steps.map((step, index) => {
-                            const title = typeof step === 'string' ? step : (step?.title || '');
+                            const title = String(step?.title || '');
                             const isCompleted = index <= currentStepIndex;
                             const isActive = index === currentStepIndex;
                             const isLast = index === steps.length - 1;
 
                             const stepSetDate = getStepSetDateForTitle(application, title);
-                            const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.lower[String(title || '').toLowerCase()]))
-                                ? Number(visaStatusTotalDaysMap.lower[String(title || '').toLowerCase()])
+                            const stepKey = String(title || '').toLowerCase();
+                            const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[stepKey]))
+                                ? Number(visaStatusTotalDaysMap.cumulative[stepKey])
                                 : null;
-                            // per-step deadline computed from createdAt baseline
-                            const stepDeadlineDate = createdAt && Number.isFinite(stepDeadlineDays) ? createdAt.add(stepDeadlineDays, 'day').startOf('day') : null;
+                            // step deadline is the step's set date plus the cumulative total up to that step.
+                            const stepDeadlineDate = stepSetDate && Number.isFinite(stepDeadlineDays)
+                                ? stepSetDate.add(stepDeadlineDays, 'day').startOf('day')
+                                : statusSetDate && Number.isFinite(stepDeadlineDays)
+                                    ? statusSetDate.add(stepDeadlineDays, 'day').startOf('day')
+                                    : null;
                             const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs(), 'day') : null;
 
                             return (
@@ -1177,10 +1195,10 @@ export default function VisaProgress() {
 
                                     <View style={VisaProgressStyle.stepContent}>
                                         <Text style={isCompleted ? VisaProgressStyle.stepTitleActive : VisaProgressStyle.stepTitleInactive}>
-                                            {String(title).charAt(0).toUpperCase() + String(title).slice(1)}
+                                            {title}
                                         </Text>
                                         <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
-                                            Set on: {stepSetDate ? dayjs(stepSetDate).format('MMM D, YYYY') : '—'}{stepSetDate ? ` • ${stepSetDate.from ? '' : ''}` : ''}
+                                            Set on: {stepSetDate ? dayjs(stepSetDate).format('MMM D, YYYY') : '—'}
                                         </Text>
                                         {stepDeadlineDate && (
                                             <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
