@@ -436,9 +436,8 @@ export default function VisaProgress() {
         if (!title || !createdAt) return null;
 
         const stepKey = String(title || '').toLowerCase();
-        const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[stepKey]))
-            ? Number(visaStatusTotalDaysMap.cumulative[stepKey])
-            : null;
+        const stepDeadlineDays =
+            visaStatusTotalDaysMap.lower[stepKey] ?? null;
 
         return Number.isFinite(stepDeadlineDays)
             ? createdAt.add(stepDeadlineDays, 'day').startOf('day')
@@ -459,23 +458,22 @@ export default function VisaProgress() {
     const statusKey =
         String(appStatus || '').toLowerCase();
 
-    const deadlineDays =
-        visaStatusTotalDaysMap.lower[statusKey] ?? null;
+    const deadlineDays = application?.statusDeadlineDays ?? null;
 
     const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
 
-    // Match LEFT4DEVS: deadline is the current status set date plus the cumulative step days.
-    const statusDeadlineDate =
-        !terminalStatuses.has(statusKey)
-            ? (
-                baseDate &&
-                    Number.isFinite(deadlineDays)
-                    ? baseDate
-                        .add(deadlineDays, 'day')
-                        .startOf('day')
-                    : null
-            )
-            : null;
+    // Match web: prefer server `statusDeadlineDate`, then use statusSetDate -> appointmentDate -> createdAt with `deadlineDays`.
+    const statusDeadlineDate = !terminalStatuses.has(String(statusKey || '').toLowerCase())
+        ? (application?.statusDeadlineDate
+            ? dayjs(application.statusDeadlineDate)
+            : statusSetDate && Number.isFinite(deadlineDays)
+                ? statusSetDate.add(deadlineDays, 'day').startOf('day')
+                : appointmentDate && Number.isFinite(deadlineDays)
+                    ? appointmentDate.add(deadlineDays, 'day').startOf('day')
+                    : createdAt && Number.isFinite(deadlineDays)
+                        ? createdAt.add(deadlineDays, 'day').startOf('day')
+                        : null)
+        : null;
 
     useEffect(() => {
         if (!statusDeadlineDate) {

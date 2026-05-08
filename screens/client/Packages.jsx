@@ -39,7 +39,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
     const [travelersValue, setTravelersValue] = useState("");
 
     const getAvailabilityStatus = (slots) => {
-        if (slots === undefined || slots === null) return "Available"; 
+        if (slots === undefined || slots === null) return "Available";
         if (slots <= 0) return "Sold out";
         if (slots <= 5) return "Few slots";
         return "Available";
@@ -96,7 +96,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
             try {
                 setLoading(true);
                 setError("");
-                
+
                 // Fetch Packages, Live Ratings, and Wishlist concurrently to match web
                 const [pkgResponse, ratingResponse, wishlistResponse] = await Promise.all([
                     api.get('/package/get-packages'),
@@ -126,7 +126,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                 }
                 setWishlistedIds(wIds);
                 setWishlistEntryMap(wMap);
-                
+
                 const mapped = pkgResponse.data.map((item) => {
                     let calculatedSlots = 0;
                     if (item.packageSpecificDate && Array.isArray(item.packageSpecificDate)) {
@@ -157,7 +157,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                         availability: getAvailabilityStatus(finalSlots),
                         rating: rating.toFixed(1),
                         packageTags: item.packageTags || [],
-                        rawItem: item 
+                        rawItem: item
                     };
                 });
                 setPackages(mapped);
@@ -193,13 +193,38 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
             Alert.alert("Login Required", "Please log in to manage your wishlist.");
             return;
         }
-        
+
         const pId = String(packageId);
         const isWishlisted = wishlistedIds.has(pId);
 
         if (isWishlisted) {
-            const entryId = wishlistEntryMap.get(pId);
-            if (!entryId) return;
+            let entryId = wishlistEntryMap.get(pId);
+
+            // If we don't have the entryId cached, fetch the wishlist to find it
+            if (!entryId) {
+                try {
+                    const res = await api.get('/wishlist', withUserHeader(user._id));
+                    const wIds = new Set();
+                    const wMap = new Map();
+                    res.data.wishlist.forEach(entry => {
+                        const id = entry.packageId?._id || entry.packageId;
+                        if (id) {
+                            wIds.add(String(id));
+                            wMap.set(String(id), String(entry._id));
+                        }
+                    });
+                    setWishlistedIds(wIds);
+                    setWishlistEntryMap(wMap);
+                    entryId = wMap.get(pId);
+                } catch (err) {
+                    console.log('Fetch wishlist error', err.message);
+                }
+            }
+
+            if (!entryId) {
+                Alert.alert('Error', 'Could not find wishlist entry to remove.');
+                return;
+            }
 
             try {
                 await api.delete(`/wishlist/remove/${entryId}`, withUserHeader(user._id));
@@ -213,13 +238,15 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                     next.delete(pId);
                     return next;
                 });
+                Alert.alert('Removed', 'Package removed from your wishlist.');
             } catch (error) {
-                console.log("Remove wishlist error", error.message);
+                console.log('Remove wishlist error', error.message);
+                Alert.alert('Error', 'Failed to remove from wishlist. Please try again.');
             }
         } else {
             try {
                 await api.post('/wishlist/add', { packageId: pId }, withUserHeader(user._id));
-                
+
                 // Re-fetch to get the exact Entry ID from the database for future deletion
                 const res = await api.get('/wishlist', withUserHeader(user._id));
                 const wIds = new Set();
@@ -233,8 +260,10 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                 });
                 setWishlistedIds(wIds);
                 setWishlistEntryMap(wMap);
+                Alert.alert('Added', 'Package added to your wishlist.');
             } catch (error) {
-                console.log("Add wishlist error", error.message);
+                console.log('Add wishlist error', error.message);
+                Alert.alert('Error', 'Failed to add to wishlist. Please try again.');
             }
         }
     };
@@ -319,31 +348,31 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                     </Text>
                 </View>
 
-                {loading ? <ActivityIndicator size="large" color="#305797" style={{marginTop: 50}} /> : error ? <Text style={{color:'red', textAlign:'center', marginTop: 20}}>{error}</Text> : (
+                {loading ? <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} /> : error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{error}</Text> : (
                     filteredPackages.map((item) => {
                         const tv = Number(travelersValue);
                         const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
                         const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
                         const isWishlisted = wishlistedIds.has(String(item.id));
-                        
+
                         return (
                             <View key={item.id} style={DestinationStyles.packageCard}>
-                                <Image 
-                                    source={item.image} 
+                                <Image
+                                    source={item.image}
                                     style={DestinationStyles.packageImage}
                                     contentFit="cover"
-                                    transition={300} 
+                                    transition={300}
                                 />
                                 <View style={DestinationStyles.packageContent}>
-                                    
+
                                     <View style={DestinationStyles.cardHeaderRow}>
-    <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
-    {/* 🔥 Removed the "hide if 0.0" condition so the star is always visible */}
-    <View style={DestinationStyles.ratingContainer}>
-        <Ionicons name="star" size={14} color="#facc15" />
-        <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
-    </View>
-</View>
+                                        <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
+                                        {/* 🔥 Removed the "hide if 0.0" condition so the star is always visible */}
+                                        <View style={DestinationStyles.ratingContainer}>
+                                            <Ionicons name="star" size={14} color="#facc15" />
+                                            <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
+                                        </View>
+                                    </View>
 
                                     <View style={DestinationStyles.cardSubHeaderRow}>
                                         <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
@@ -372,7 +401,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                                 </View>
                                             )}
                                         </View>
-                                        
+
                                         <View style={DestinationStyles.cardRightColumn}>
                                             {item.discountPercent > 0 && (
                                                 <View style={DestinationStyles.discountBadge}>
@@ -380,10 +409,10 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                                 </View>
                                             )}
                                             <TouchableOpacity onPress={() => handleWishlistToggle(item.id)} style={{ padding: 4 }}>
-                                                <Ionicons 
-                                                    name={isWishlisted ? "heart" : "heart-outline"} 
-                                                    size={26} 
-                                                    color={isWishlisted ? "#cf1322" : "#305797"} 
+                                                <Ionicons
+                                                    name={isWishlisted ? "heart" : "heart-outline"}
+                                                    size={26}
+                                                    color={isWishlisted ? "#cf1322" : "#305797"}
                                                 />
                                             </TouchableOpacity>
                                         </View>
@@ -396,7 +425,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                                     {formatPeso(item.discountedPrice)} x {tv} pax =
                                                 </Text>
                                             ) : null}
-                                            
+
                                             {item.discountPercent > 0 && (
                                                 <Text style={DestinationStyles.packagePriceOld}>
                                                     {formatPeso(originalPrice)}
@@ -411,8 +440,8 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                             </View>
                                         </View>
 
-                                        <TouchableOpacity 
-                                            style={DestinationStyles.viewDetailsButton} 
+                                        <TouchableOpacity
+                                            style={DestinationStyles.viewDetailsButton}
                                             onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
                                         >
                                             <Text style={DestinationStyles.viewDetailsText}>View Details</Text>
@@ -433,39 +462,39 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                             <TouchableOpacity onPress={() => setFilterModalVisible(false)}><Ionicons name="close" size={24} color="#333" /></TouchableOpacity>
                         </View>
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                            
+
                             <Text style={DestinationStyles.filterLabel}>Budget Range (₱)</Text>
                             <View style={DestinationStyles.budgetInputRow}>
-                                <TextInput 
-                                    style={DestinationStyles.budgetInputBox} 
+                                <TextInput
+                                    style={DestinationStyles.budgetInputBox}
                                     keyboardType="numeric"
                                     value={minBudgetInput}
                                     onChangeText={(val) => handleBudgetInputChange('min', val)}
                                 />
                                 <Text style={DestinationStyles.budgetInputText}>to</Text>
-                                <TextInput 
-                                    style={DestinationStyles.budgetInputBox} 
+                                <TextInput
+                                    style={DestinationStyles.budgetInputBox}
                                     keyboardType="numeric"
                                     value={maxBudgetInput}
                                     onChangeText={(val) => handleBudgetInputChange('max', val)}
                                 />
                             </View>
                             <View style={{ alignItems: 'center' }}>
-                                <MultiSlider 
-                                    values={budgetRange} 
-                                    sliderLength={width - 80} 
+                                <MultiSlider
+                                    values={budgetRange}
+                                    sliderLength={width - 80}
                                     onValuesChange={(vals) => {
                                         setBudgetRange(vals);
                                         setMinBudgetInput(String(vals[0]));
                                         setMaxBudgetInput(String(vals[1]));
-                                    }} 
-                                    min={0} max={200000} step={1000} 
-                                    selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
+                                    }}
+                                    min={0} max={200000} step={1000}
+                                    selectedStyle={{ backgroundColor: '#305797' }} markerStyle={{ backgroundColor: '#305797' }}
                                 />
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>{formatPeso(budgetRange[0])} - {formatPeso(budgetRange[1])}</Text>
                             </View>
 
-                            <Text style={[DestinationStyles.filterLabel, {marginTop: 20}]}>Tour Type</Text>
+                            <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tour Type</Text>
                             <View style={DestinationStyles.filterPillContainer}>
                                 {['All', 'Domestic', 'International'].map(t => (
                                     <TouchableOpacity key={t} style={[DestinationStyles.filterPill, tourType === t && DestinationStyles.filterPillSelected]} onPress={() => setTourType(t)}>
@@ -475,19 +504,19 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                             </View>
 
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Travelers</Text>
-                            <TextInput 
-                                style={DestinationStyles.searchBar} 
-                                placeholder="How many travellers?" 
-                                keyboardType="numeric" 
-                                value={travelersValue} 
-                                onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))} 
+                            <TextInput
+                                style={DestinationStyles.searchBar}
+                                placeholder="How many travellers?"
+                                keyboardType="numeric"
+                                value={travelersValue}
+                                onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))}
                             />
                             <Text style={DestinationStyles.filterSubtext}>Show packages with available slots for your group size</Text>
 
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Days of Tour</Text>
                             <View style={DestinationStyles.daysInputRow}>
-                                <TextInput 
-                                    style={DestinationStyles.daysInputBox} 
+                                <TextInput
+                                    style={DestinationStyles.daysInputBox}
                                     keyboardType="numeric"
                                     value={daysInput}
                                     onChangeText={handleDaysInputChange}
@@ -495,19 +524,19 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                                 <Text style={DestinationStyles.daysMaxText}>Max{'\n'}Days</Text>
                             </View>
                             <View style={{ alignItems: 'center' }}>
-                                <MultiSlider 
-                                    values={daysValue} 
-                                    sliderLength={width - 80} 
+                                <MultiSlider
+                                    values={daysValue}
+                                    sliderLength={width - 80}
                                     onValuesChange={(vals) => {
                                         setDaysValue(vals);
                                         setDaysInput(String(vals[0]));
-                                    }} 
-                                    min={1} max={10} step={1} 
-                                    selectedStyle={{backgroundColor:'#305797'}} markerStyle={{backgroundColor:'#305797'}} 
+                                    }}
+                                    min={1} max={10} step={1}
+                                    selectedStyle={{ backgroundColor: '#305797' }} markerStyle={{ backgroundColor: '#305797' }}
                                 />
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>
                             </View>
-                            
+
                             {tagOptions.length > 0 && (
                                 <>
                                     <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tags / Activities</Text>

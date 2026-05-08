@@ -163,6 +163,10 @@ const getVisaDeadlineInfo = (
         deadlineDate.format('YYYY-MM-DD')
     );
 
+  console.log("CURRENT STATUS:", currentStatus);
+  console.log("AVAILABLE MAP:", maps.lowerCumulativeMap);
+  console.log("MATCH:", maps.lowerCumulativeMap[statusKey]);
+
   return {
     status: currentStatus,
     totalDays,

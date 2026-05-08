@@ -24,7 +24,7 @@ export default function UserTransactions() {
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('Status')
     const [dateFilter, setDateFilter] = useState(null)
-    
+
     const [isStatusModalVisible, setStatusModalVisible] = useState(false)
     const [showDatePicker, setShowDatePicker] = useState(false)
 
@@ -82,16 +82,16 @@ export default function UserTransactions() {
         return getTransac.filter((item) => {
             const text = searchText.toLowerCase();
             const pName = getTransactionItemLabel(item);
-            
-            const matchesSearch = !text || 
-                pName.toLowerCase().includes(text) || 
+
+            const matchesSearch = !text ||
+                pName.toLowerCase().includes(text) ||
                 item.reference?.toLowerCase().includes(text) ||
                 item.method?.toLowerCase().includes(text);
 
-            const matchesStatus = statusFilter === 'Status' || statusFilter === 'All Status' || 
+            const matchesStatus = statusFilter === 'Status' || statusFilter === 'All Status' ||
                 item.status === statusFilter;
 
-            const matchesDate = !dateFilter || 
+            const matchesDate = !dateFilter ||
                 new Date(item.createdAt).toDateString() === dateFilter.toDateString();
 
             return matchesSearch && matchesStatus && matchesDate;
@@ -108,13 +108,18 @@ export default function UserTransactions() {
         switch (normalized) {
             case 'Failed':
             case 'Cancelled':
-                return { bg: '#fff1f0', text: '#cf1322' }; 
+                return { bg: '#fff1f0', text: '#cf1322' };
             case 'Pending':
-                return { bg: '#fffbe6', text: '#d48806' }; 
+                return { bg: '#fffbe6', text: '#d48806' };
             case 'Successful':
             default:
-                return { bg: '#f6ffed', text: '#389e0d' }; 
+                return { bg: '#f6ffed', text: '#389e0d' };
         }
+    };
+
+    const canViewReceipt = (status) => {
+        const normalized = String(status || '').trim().toLowerCase();
+        return normalized !== 'pending' && normalized !== 'failed';
     };
 
     const handleDownloadReceipt = async () => {
@@ -122,7 +127,7 @@ export default function UserTransactions() {
         try {
             // 🔥 FIXED DESCRIPTION IN PDF 🔥
             const safePackageName = getTransactionItemLabel(selectedTransaction);
-            
+
             const htmlContent = `
                 <html>
                     <head>
@@ -233,7 +238,7 @@ export default function UserTransactions() {
             const fileExt = url.split('.').pop().split('?')[0] || 'jpg';
             // 🔥 FIXED: Specify exact filename for download 🔥
             const fileUri = FileSystem.documentDirectory + `proof-of-payment-${selectedTransaction.reference}.${fileExt}`;
-            
+
             const { uri } = await FileSystem.downloadAsync(url, fileUri);
             await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
         } catch (error) {
@@ -251,7 +256,7 @@ export default function UserTransactions() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={UserTransactionStyle.container} showsVerticalScrollIndicator={false}>
-                
+
                 <Text style={UserTransactionStyle.title}>My Transactions</Text>
                 <Text style={UserTransactionStyle.subtitle}>View your payment history and receipts.</Text>
 
@@ -301,7 +306,8 @@ export default function UserTransactions() {
                         const pName = getTransactionItemLabel(item);
                         const itemType = getItemType(item);
                         const cardTitle = itemType;
-                        
+                        const allowReceiptView = canViewReceipt(item.status);
+
                         return (
                             <View key={item._id} style={UserTransactionStyle.transactionCard}>
                                 <View style={UserTransactionStyle.cardHeader}>
@@ -336,16 +342,18 @@ export default function UserTransactions() {
                                 </View>
 
                                 <View style={UserTransactionStyle.actionButtonsRow}>
-                                    <TouchableOpacity
-                                        style={UserTransactionStyle.viewButton}
-                                        onPress={() => {
-                                            setSelectedTransaction(item);
-                                            setReceiptModalVisible(true);
-                                        }}
-                                    >
-                                        <Ionicons name="receipt-outline" size={14} color="#fff" />
-                                        <Text style={UserTransactionStyle.buttonText}>View</Text>
-                                    </TouchableOpacity>
+                                    {allowReceiptView ? (
+                                        <TouchableOpacity
+                                            style={UserTransactionStyle.viewButton}
+                                            onPress={() => {
+                                                setSelectedTransaction(item);
+                                                setReceiptModalVisible(true);
+                                            }}
+                                        >
+                                            <Ionicons name="receipt-outline" size={14} color="#fff" />
+                                            <Text style={UserTransactionStyle.buttonText}>View</Text>
+                                        </TouchableOpacity>
+                                    ) : null}
 
                                     {item.method?.toLowerCase() === 'manual' && (
                                         <TouchableOpacity
@@ -377,12 +385,12 @@ export default function UserTransactions() {
                             Select Status
                         </Text>
                         {statusOptions.map((opt, index) => (
-                            <TouchableOpacity 
-                                key={opt} 
+                            <TouchableOpacity
+                                key={opt}
                                 style={[UserTransactionStyle.modalOption, { borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#f0f0f0' }]}
                                 onPress={() => { setStatusFilter(opt); setStatusModalVisible(false); }}
                             >
-                                <Text style={[UserTransactionStyle.modalOptionText, { fontFamily: statusFilter === opt ? 'Montserrat_700Bold' : 'Roboto_500Medium'}]}>
+                                <Text style={[UserTransactionStyle.modalOptionText, { fontFamily: statusFilter === opt ? 'Montserrat_700Bold' : 'Roboto_500Medium' }]}>
                                     {opt}
                                 </Text>
                             </TouchableOpacity>
@@ -412,13 +420,13 @@ export default function UserTransactions() {
                         </View>
                         {selectedTransaction?.proofImage ? (
                             <>
-                                <Image 
-                                    source={{ uri: selectedTransaction.proofImage }} 
-                                    style={UserTransactionStyle.proofImage} 
-                                    resizeMode="contain" 
+                                <Image
+                                    source={{ uri: selectedTransaction.proofImage }}
+                                    style={UserTransactionStyle.proofImage}
+                                    resizeMode="contain"
                                 />
                                 <View style={{ width: '100%', marginTop: 15 }}>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={{ backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                                         onPress={handleDownloadProof}
                                     >
@@ -444,7 +452,7 @@ export default function UserTransactions() {
 
                             {selectedTransaction && (
                                 <ScrollView showsVerticalScrollIndicator={false}>
-                                    
+
                                     <View style={UserTransactionStyle.receiptHeaderRow}>
                                         <View style={UserTransactionStyle.receiptCompanyBlock}>
                                             <Image source={require('../../assets/images/Logored.png')} style={UserTransactionStyle.receiptLogo} resizeMode="contain" />
@@ -465,11 +473,11 @@ export default function UserTransactions() {
                                             <Text style={UserTransactionStyle.receiptCustomerName}>You</Text>
                                         </View>
                                         <View style={UserTransactionStyle.receiptMetaRight}>
-                                            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: 140, marginBottom: 4}}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 140, marginBottom: 4 }}>
                                                 <Text style={UserTransactionStyle.receiptTinyLabel}>RECEIPT #</Text>
                                                 <Text style={UserTransactionStyle.receiptMetaValue}>{selectedTransaction.reference}</Text>
                                             </View>
-                                            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: 140}}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 140 }}>
                                                 <Text style={UserTransactionStyle.receiptTinyLabel}>RECEIPT DATE</Text>
                                                 <Text style={UserTransactionStyle.receiptMetaValue}>{dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY')}</Text>
                                             </View>
@@ -485,12 +493,12 @@ export default function UserTransactions() {
                                         </View>
                                         <View style={UserTransactionStyle.receiptTableRow}>
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 1 }]}>1</Text>
-                                            
+
                                             {/* 🔥 FIXED DESCRIPTION IN MODAL 🔥 */}
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 3 }]} numberOfLines={2}>
                                                 {getTransactionItemLabel(selectedTransaction)}
                                             </Text>
-                                            
+
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 2, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 2, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
                                         </View>
@@ -513,7 +521,7 @@ export default function UserTransactions() {
                                     </View>
 
                                     <View style={{ marginTop: 25, alignItems: 'flex-end' }}>
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             style={{ backgroundColor: '#305797', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}
                                             onPress={handleDownloadReceipt}
                                         >
