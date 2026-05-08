@@ -439,20 +439,30 @@ export default function VisaProgress() {
             : null;
     const statusSetDate = getStatusSetDate(application);
     const createdAt = application?.createdAt ? dayjs(application.createdAt).startOf('day') : null;
-    const statusKey = String(appStatus || '').toLowerCase();
-    const deadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[statusKey]))
-        ? Number(visaStatusTotalDaysMap.cumulative[statusKey])
-        : Number.isFinite(Number(visaStatusTotalDaysMap.lower[statusKey]))
-            ? Number(visaStatusTotalDaysMap.lower[statusKey])
-            : null;
+    const baseDate = application?.createdAt
+        ? dayjs(application.createdAt).startOf('day')
+        : null;
+
+    const statusKey =
+        String(appStatus || '').toLowerCase();
+
+    const deadlineDays =
+        visaStatusTotalDaysMap.lower[statusKey] ?? null;
+
     const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
 
     // Match LEFT4DEVS: deadline is the current status set date plus the cumulative step days.
-    const statusDeadlineDate = !terminalStatuses.has(String(appStatus || '').toLowerCase())
-        ? (statusSetDate && Number.isFinite(deadlineDays)
-            ? statusSetDate.add(deadlineDays, 'day').startOf('day')
-            : null)
-        : null;
+    const statusDeadlineDate =
+        !terminalStatuses.has(statusKey)
+            ? (
+                baseDate &&
+                    Number.isFinite(deadlineDays)
+                    ? baseDate
+                        .add(deadlineDays, 'day')
+                        .startOf('day')
+                    : null
+            )
+            : null;
 
     useEffect(() => {
         if (!statusDeadlineDate) {

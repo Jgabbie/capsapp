@@ -4,23 +4,47 @@ import UserModel from "../models/users.js";
 import logAction from "../utils/logger.js";
 
 const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
-  const map = {};
-  let total = 0;
+  const cumulativeMap = {};
+  const stageMap = {};
+  const lowerCumulativeMap = {};
+  const lowerStageMap = {};
   const trace = [];
+
+  let cumulativeTotal = 0;
 
   for (const step of steps) {
     const title = String(step?.title || '').trim();
     if (!title) continue;
 
     const days = Number(step?.daysToBeCompleted ?? 0);
-    const safe = Number.isFinite(days) && days > 0 ? days : 0;
+    const safeDays =
+      Number.isFinite(days) && days > 0
+        ? days
+        : 0;
 
-    total += safe;
-    map[title] = total;
-    trace.push({ title, daysToBeCompleted: safe, cumulativeDays: total });
+    cumulativeTotal += safeDays;
+
+    cumulativeMap[title] = cumulativeTotal;
+    stageMap[title] = safeDays;
+
+    lowerCumulativeMap[title.toLowerCase()] = cumulativeTotal;
+    lowerStageMap[title.toLowerCase()] = safeDays;
+
+    trace.push({
+      title,
+      daysToBeCompleted: safeDays,
+      cumulativeDays: cumulativeTotal,
+      stageDays: safeDays,
+    });
   }
 
-  return map;
+  return {
+    cumulativeMap,
+    stageMap,
+    lowerCumulativeMap,
+    lowerStageMap,
+    trace,
+  };
 };
 
 const getVisaProcessStepsFromApplication = (application) => {
@@ -91,19 +115,25 @@ const getVisaDeadlineInfo = (
     return null;
   }
 
-  const processSteps = getVisaProcessStepsFromApplication(application);
-  const computedDaysMap = buildVisaStatusTotalDaysMapFromSteps(processSteps);
+  const processSteps =
+    getVisaProcessStepsFromApplication(application);
 
-  const totalDays = Number.isFinite(computedDaysMap[currentStatus])
-    ? computedDaysMap[currentStatus]
-    : VISA_STATUS_TOTAL_DAYS_MAP[currentStatus];
+  const maps =
+    buildVisaStatusTotalDaysMapFromSteps(processSteps);
+
+  const statusKey =
+    String(currentStatus || '').toLowerCase();
+
+  const totalDays =
+    maps.lowerStageMap[statusKey];
 
   if (!Number.isFinite(totalDays)) {
     return null;
   }
 
-  const baseDate = getVisaStatusSetDate(application, currentStatus)
-    || (application.createdAt ? dayjs(application.createdAt).startOf('day') : null);
+  const baseDate = application.createdAt
+    ? dayjs(application.createdAt).startOf('day')
+    : null;
 
   if (!baseDate) {
     return null;
@@ -137,7 +167,8 @@ const getVisaDeadlineInfo = (
     status: currentStatus,
     totalDays,
     deadlineDays: totalDays,
-    statusDeadlineMap: computedDaysMap,
+    statusDeadlineMap: maps.cumulativeMap,
+    statusStageDaysMap: maps.stageMap,
     deadlineDate,
     warningDate,
     daysRemaining,
