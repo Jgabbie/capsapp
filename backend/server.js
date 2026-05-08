@@ -3,15 +3,15 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import connectDB from "./config/db.js"; 
+import connectDB from "./config/db.js";
 
-import userRoutes from "./routes/userRoutes.js"; 
+import userRoutes from "./routes/userRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";
-import payRoutes from "./routes/payRoutes.js"; 
+import payRoutes from "./routes/payRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
-import packageRoutes from "./routes/packageRoutes.js"; 
-import wishlistRoutes from "./routes/wishlistRoutes.js"; 
+import packageRoutes from "./routes/packageRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 import passportRoutes from "./routes/passportRoutes.js";
 import visaRoutes from "./routes/visaRoutes.js";
 import visaServiceRoutes from "./routes/visaServiceRoutes.js";
@@ -20,7 +20,6 @@ import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import uploadRoutes from './routes/uploadRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
-
 // 🔥 NEW: Import the log routes we just created 🔥
 import logRoutes from "./routes/logRoutes.js";
 
@@ -49,8 +48,8 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/quotation", quotationRoutes);
 app.use("/api/payment", payRoutes);
 app.use("/api/transaction", transactionRoutes);
-app.use("/api/package", packageRoutes); 
-app.use("/api/wishlist", wishlistRoutes); 
+app.use("/api/package", packageRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/passport", passportRoutes);
 app.use("/api/visa", visaRoutes);
 app.use("/api/visa-services", visaServiceRoutes);

@@ -53,6 +53,17 @@ const passportSchema = new mongoose.Schema(
       ],
       default: 'Application Submitted',
     },
+    statusHistory: [{
+      status: { type: String },
+      changedAt: { type: Date },
+      changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+      changedByName: { type: String }
+    }],
+    deadlineWarnings: [{
+      status: { type: String },
+      deadlineDate: { type: String },
+      warnedAt: { type: Date }
+    }],
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true, collection: "passports", strict: false });
