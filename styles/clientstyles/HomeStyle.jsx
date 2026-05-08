@@ -4,7 +4,7 @@ const { width } = Dimensions.get("window");
 
 const HomeStyle = StyleSheet.create({
     container: {
-        padding: 15, 
+        padding: 15,
     },
     mainTitleContainer: {
         flexDirection: 'row',
@@ -12,7 +12,7 @@ const HomeStyle = StyleSheet.create({
         paddingLeft: 5
     },
     mainTitle: {
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
     },
@@ -36,14 +36,14 @@ const HomeStyle = StyleSheet.create({
         paddingRight: 10
     },
     title: {
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         marginBottom: 12,
         color: "#305797",
-        paddingLeft: 5 
+        paddingLeft: 5
     },
     secondMainTitle: {
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         color: "#000000",
         paddingLeft: 5,
@@ -129,7 +129,7 @@ const HomeStyle = StyleSheet.create({
     heroFilterBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#305797', 
+        backgroundColor: '#305797',
         borderRadius: 12,
         paddingHorizontal: 12,
         height: 50,
@@ -327,7 +327,7 @@ const HomeStyle = StyleSheet.create({
 
     // --- BANNER CARDS ---
     bannerCard: {
-        width: '95%', 
+        width: '95%',
         alignSelf: 'center',
         backgroundColor: "#fff",
         borderRadius: 15,
@@ -337,7 +337,7 @@ const HomeStyle = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         marginBottom: 25,
-        overflow: 'hidden' 
+        overflow: 'hidden'
     },
     bannerImage: {
         width: "100%",
@@ -401,7 +401,7 @@ const HomeStyle = StyleSheet.create({
         color: "#fff",
         textAlign: "center",
         marginBottom: 15,
-        zIndex: 1, 
+        zIndex: 1,
     },
     bgDesc: {
         fontFamily: "Roboto_400Regular",
@@ -428,17 +428,20 @@ const HomeStyle = StyleSheet.create({
     carouselContainer: {
         height: 240, // 🔥 Less height (from 280) for a card-like aspect ratio
         marginBottom: 20,
+        // keep overflow visible so next slide peeks in
+        overflow: 'visible'
     },
     carouselSlide: {
-        width: width, 
+        width: width * 0.85, // narrower slide so it sits left and lets next card peek
         height: '100%',
-        paddingHorizontal: 15, // 🔥 FIX: Equal padding on both sides to center the card perfectly!
+        paddingHorizontal: 0,
+        marginRight: 15, // spacing between slides
     },
     carouselInner: {
         flex: 1, // 🔥 FIX: Flex 1 lets it fill the space safely without math errors
-        justifyContent: 'flex-end', 
-        alignItems: 'flex-start',   
-        padding: 25, 
+        justifyContent: 'flex-end',
+        alignItems: 'flex-start',
+        padding: 25,
     },
     carouselOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -449,7 +452,7 @@ const HomeStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         fontSize: 24,
         color: "#ffffff",
-        textAlign: "left", 
+        textAlign: "left",
         marginBottom: 8,
         zIndex: 1,
     },
@@ -457,7 +460,7 @@ const HomeStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         fontSize: 14,
         color: "#ffffff",
-        textAlign: "left", 
+        textAlign: "left",
         lineHeight: 20,
         zIndex: 1,
     },
@@ -499,7 +502,7 @@ const HomeStyle = StyleSheet.create({
         paddingHorizontal: 10,
     },
     serviceItem: {
-        width: '45%', 
+        width: '45%',
         alignItems: 'center',
         marginBottom: 25,
     },
@@ -613,7 +616,7 @@ const HomeStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         fontSize: 14,
         color: "#333",
-        marginBottom: 15 
+        marginBottom: 15
     },
     inputErrorBorder: {
         borderColor: "#ff4d4f",
@@ -646,7 +649,7 @@ const HomeStyle = StyleSheet.create({
         alignItems: "center"
     },
     contactSubmitBtnDisabled: {
-        backgroundColor: "#a0b4d4" 
+        backgroundColor: "#a0b4d4"
     },
     contactSubmitText: {
         color: "#fff",

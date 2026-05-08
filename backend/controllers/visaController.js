@@ -125,7 +125,7 @@ const getVisaDeadlineInfo = (
     String(currentStatus || '').toLowerCase();
 
   const totalDays =
-    maps.lowerStageMap[statusKey];
+    maps.lowerCumulativeMap[statusKey];
 
   if (!Number.isFinite(totalDays)) {
     return null;

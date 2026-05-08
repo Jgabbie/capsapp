@@ -432,6 +432,19 @@ export default function VisaProgress() {
         return null;
     };
 
+    const getStepDeadlineForTitle = (title) => {
+        if (!title || !createdAt) return null;
+
+        const stepKey = String(title || '').toLowerCase();
+        const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[stepKey]))
+            ? Number(visaStatusTotalDaysMap.cumulative[stepKey])
+            : null;
+
+        return Number.isFinite(stepDeadlineDays)
+            ? createdAt.add(stepDeadlineDays, 'day').startOf('day')
+            : null;
+    };
+
     const appointmentDate = application?.preferredDate
         ? dayjs(application.preferredDate)
         : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
@@ -1179,15 +1192,7 @@ export default function VisaProgress() {
 
                             const stepSetDate = getStepSetDateForTitle(application, title);
                             const stepKey = String(title || '').toLowerCase();
-                            const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.cumulative[stepKey]))
-                                ? Number(visaStatusTotalDaysMap.cumulative[stepKey])
-                                : null;
-                            // step deadline is the step's set date plus the cumulative total up to that step.
-                            const stepDeadlineDate = stepSetDate && Number.isFinite(stepDeadlineDays)
-                                ? stepSetDate.add(stepDeadlineDays, 'day').startOf('day')
-                                : statusSetDate && Number.isFinite(stepDeadlineDays)
-                                    ? statusSetDate.add(stepDeadlineDays, 'day').startOf('day')
-                                    : null;
+                            const stepDeadlineDate = getStepDeadlineForTitle(title);
                             const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs(), 'day') : null;
 
                             return (
