@@ -93,13 +93,14 @@ const getPassportDeadlineInfo = (application, referenceDate = dayjs()) => {
 
   // Determine deadline anchor:
   // - For 'Processing by DFA' (or any mapping explicitly set to 0) we anchor to the appointment (`preferredDate`).
-  // - Otherwise the deadline is computed from the appointment date so the UI and backend
-  //   use the same calendar day regardless of when the status was updated.
+  // - Otherwise the deadline stays relative to when the status was set.
   let deadlineDate = null;
   if (status === 'Processing by DFA' || deadlineDays === 0) {
     deadlineDate = preferredDate.startOf('day');
   } else {
-    deadlineDate = preferredDate.subtract(deadlineDays, 'day').startOf('day');
+    const statusSetDate = getStatusSetDateFromApplication(application, status);
+    if (!statusSetDate) return null;
+    deadlineDate = statusSetDate.add(deadlineDays, 'day').startOf('day');
   }
   const warningDate = deadlineDate.subtract(1, 'day').startOf('day');
   const currentDate = referenceDate.startOf('day');
@@ -137,9 +138,9 @@ const decoratePassportApplication = (application) => {
 
   return {
     ...plainApplication,
-    statusDeadlineDate: deadlineInfo ? deadlineInfo.deadlineDate.toISOString() : null,
+    statusDeadlineDate: deadlineInfo ? deadlineInfo.deadlineDate.format('YYYY-MM-DD') : null,
     statusDeadlineDays: deadlineInfo ? deadlineInfo.deadlineDays : null,
-    statusDeadlineWarningDate: deadlineInfo ? deadlineInfo.warningDate.toISOString() : null,
+    statusDeadlineWarningDate: deadlineInfo ? deadlineInfo.warningDate.format('YYYY-MM-DD') : null,
     statusDeadlineDaysRemaining: deadlineInfo ? deadlineInfo.daysRemaining : null,
     statusDeadlineWarningSent: deadlineInfo ? deadlineInfo.warningAlreadySent : false,
   };
