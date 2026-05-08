@@ -6,6 +6,26 @@ import logAction from "../utils/logger.js";
 const generateApplicationNumber = () =>
   `APP-VISA-${Math.floor(100000000 + Math.random() * 900000000)}`;
 
+const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
+  const map = {};
+  let total = 0;
+  const trace = [];
+
+  for (const step of steps) {
+    const title = String(step?.title || '').trim();
+    if (!title) continue;
+
+    const days = Number(step?.daysToBeCompleted ?? 0);
+    const safe = Number.isFinite(days) && days > 0 ? days : 0;
+
+    total += safe;
+    map[title] = total;
+    trace.push({ title, daysToBeCompleted: safe, cumulativeDays: total });
+  }
+
+  return map;
+};
+
 
 export const applyVisa = async (req, res) => {
   const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
@@ -185,3 +205,5 @@ export const passportReleaseOption = async (req, res) => {
     res.status(500).json({ message: "Error updating passport release option", error: error.message });
   }
 }
+
+export { buildVisaStatusTotalDaysMapFromSteps };

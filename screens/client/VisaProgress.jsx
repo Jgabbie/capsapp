@@ -367,6 +367,10 @@ export default function VisaProgress() {
         ];
     }, [dynamicSteps, application]);
 
+    const visaStatusTotalDaysMap = useMemo(() => {
+        return buildVisaStatusTotalDaysMapFromSteps(dynamicSteps.length > 0 ? dynamicSteps : []);
+    }, [dynamicSteps]);
+
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
         return Math.max(0, index);
