@@ -14,6 +14,15 @@ import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 
+const VISA_TERMINAL_STATUSES = new Set([
+    'documents submitted',
+    'processing by embassy',
+    'embassy approved',
+    'dfa approved',
+    'passport released',
+    'rejected',
+]);
+
 export default function VisaProgress() {
     const cs = useNavigation()
     const route = useRoute()
@@ -398,7 +407,7 @@ export default function VisaProgress() {
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
                 const h = history[i];
-                if (String(h.status).toLowerCase() === String(statusText || '').toLowerCase()) {
+                if (String(h.status).toLowerCase() === String(appStatus || '').toLowerCase()) {
                     return dayjs(h.changedAt);
                 }
             }
@@ -423,15 +432,24 @@ export default function VisaProgress() {
         return null;
     };
 
+    const getStepDeadlineForTitle = (title) => {
+        if (!title || !application?.createdAt) return null;
+
+        const cumulativeDays = Number(cumulativeStepDaysMap?.[title]);
+        if (!Number.isFinite(cumulativeDays)) return null;
+
+        return dayjs(application.createdAt).startOf('day').add(cumulativeDays, 'day');
+    };
+
     const statusSetDate = getStatusSetDate(application);
     const deadlineDays = application?.statusDeadlineDays ?? null;
-    const createdAt = application?.createdAt
-        ? dayjs(application.createdAt).startOf('day')
-        : null;
-    const cumulativeStepDaysMap = React.useMemo(() => {
-        return application?.visaStatusTotalDaysMap || buildVisaStatusTotalDaysMapFromSteps(process);
-    }, [application?.visaStatusTotalDaysMap, process]);
-    const statusDeadlineDate = !terminalStatuses.has(String(statusText || '').toLowerCase())
+    const appointmentDate = application?.preferredDate
+        ? dayjs(application.preferredDate)
+        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
+            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
+            : null;
+    const cumulativeStepDaysMap = application?.visaStatusTotalDaysMap || {};
+    const statusDeadlineDate = !VISA_TERMINAL_STATUSES.has(String(appStatus || '').toLowerCase())
         ? (application?.statusDeadlineDate
             ? dayjs(application.statusDeadlineDate)
             : statusSetDate && Number.isFinite(deadlineDays)
@@ -440,12 +458,6 @@ export default function VisaProgress() {
                     ? appointmentDate.add(deadlineDays, 'day').startOf('day')
                     : null)
         : null;
-
-    const appointmentDate = application?.preferredDate
-        ? dayjs(application.preferredDate)
-        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
-            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
-            : null;
 
 
 
