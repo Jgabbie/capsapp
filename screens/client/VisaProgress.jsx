@@ -46,6 +46,7 @@ export default function VisaProgress() {
     const [passportReleaseOption, setPassportReleaseOption] = useState('pickup');
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [savingReleaseOption, setSavingReleaseOption] = useState(false);
+    const [countdown, setCountdown] = useState(null);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -153,7 +154,8 @@ export default function VisaProgress() {
 
     const appStatus = useMemo(() => {
         if (!application?.status) return "Pending";
-        return Array.isArray(application.status) ? application.status[0] : application.status;
+        if (Array.isArray(application.status)) return String(application.status[application.status.length - 1] || '').trim();
+        return String(application.status || '').trim();
     }, [application]);
 
     const openDocument = (url) => {
@@ -368,8 +370,109 @@ export default function VisaProgress() {
     }, [dynamicSteps, application]);
 
     const visaStatusTotalDaysMap = useMemo(() => {
-        return buildVisaStatusTotalDaysMapFromSteps(dynamicSteps.length > 0 ? dynamicSteps : []);
-    }, [dynamicSteps]);
+        const source = (dynamicSteps && dynamicSteps.length > 0)
+            ? dynamicSteps
+            : (steps || []).map(s => (typeof s === 'string' ? { title: s, daysToBeCompleted: 0 } : s));
+
+        const map = {};
+        let total = 0;
+
+        for (const step of source) {
+            const title = String(step?.title || step || '').trim();
+            if (!title) continue;
+
+            const days = Number(step?.daysToBeCompleted ?? 0);
+            const safe = Number.isFinite(days) && days > 0 ? days : 0;
+
+            total += safe;
+            map[title] = total;
+        }
+
+        // also provide a lowercase-keyed map for robust lookups
+        const lower = {};
+        Object.keys(map).forEach(k => { lower[String(k).toLowerCase()] = map[k]; });
+
+        return { original: map, lower };
+    }, [dynamicSteps, steps]);
+
+    const getStatusSetDate = (app) => {
+        if (!app) return null;
+        const history = app.statusHistory;
+        if (Array.isArray(history) && history.length > 0) {
+            for (let i = history.length - 1; i >= 0; i--) {
+                const h = history[i];
+                if (String(h.status).toLowerCase() === String(appStatus || '').toLowerCase()) {
+                    return dayjs(h.changedAt);
+                }
+            }
+        }
+        if (app.statusUpdatedAt) return dayjs(app.statusUpdatedAt);
+        if (app.updatedAt) return dayjs(app.updatedAt);
+        if (app.createdAt) return dayjs(app.createdAt);
+        return null;
+    };
+
+    const getStepSetDateForTitle = (app, title) => {
+        if (!app || !title) return null;
+        const history = app.statusHistory;
+        if (Array.isArray(history) && history.length > 0) {
+            for (let i = history.length - 1; i >= 0; i--) {
+                const h = history[i];
+                if (String(h.status).toLowerCase() === String(title).toLowerCase()) {
+                    return dayjs(h.changedAt);
+                }
+            }
+        }
+        return null;
+    };
+
+    const appointmentDate = application?.preferredDate
+        ? dayjs(application.preferredDate)
+        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
+            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
+            : null;
+    const statusSetDate = getStatusSetDate(application);
+    const createdAt = application?.createdAt ? dayjs(application.createdAt).startOf('day') : null;
+    const deadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.lower[String(appStatus || '').toLowerCase()]))
+        ? Number(visaStatusTotalDaysMap.lower[String(appStatus || '').toLowerCase()])
+        : null;
+    const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
+
+    // Use createdAt baseline for deadline calculations (created-at baseline)
+    const statusDeadlineDate = !terminalStatuses.has(String(appStatus || '').toLowerCase())
+        ? (application?.statusDeadlineDate
+            ? dayjs(application.statusDeadlineDate)
+            : createdAt && Number.isFinite(deadlineDays)
+                ? createdAt.add(deadlineDays, 'day').startOf('day')
+                : null)
+        : null;
+
+    useEffect(() => {
+        if (!statusDeadlineDate) {
+            setCountdown(null);
+            return;
+        }
+
+        const update = () => {
+            const diffMs = statusDeadlineDate.diff(dayjs());
+            if (diffMs <= 0) {
+                setCountdown('Deadline passed');
+                return;
+            }
+            let total = Math.floor(diffMs / 1000);
+            const days = Math.floor(total / 86400);
+            total = total % 86400;
+            const hours = Math.floor(total / 3600);
+            total = total % 3600;
+            const minutes = Math.floor(total / 60);
+            const seconds = total % 60;
+            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        update();
+        const timerId = setInterval(update, 1000);
+        return () => clearInterval(timerId);
+    }, [statusDeadlineDate]);
 
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
@@ -632,6 +735,20 @@ export default function VisaProgress() {
                         <Text style={VisaProgressStyle.infoLabel}>Preferred Time</Text>
                         <Text style={VisaProgressStyle.infoValue}>{application.preferredTime}</Text>
                     </View>
+
+                    {statusDeadlineDate && (
+                        <View style={VisaProgressStyle.infoRow}>
+                            <Text style={VisaProgressStyle.infoLabel}>Deadline</Text>
+                            <Text style={VisaProgressStyle.infoValue}>{dayjs(statusDeadlineDate).format('MMM D, YYYY')}</Text>
+                        </View>
+                    )}
+
+                    {countdown && (
+                        <View style={VisaProgressStyle.infoRow}>
+                            <Text style={VisaProgressStyle.infoLabel}>Countdown</Text>
+                            <Text style={[VisaProgressStyle.infoValue, { color: '#305797', fontWeight: '700' }]}>{countdown}</Text>
+                        </View>
+                    )}
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Application Type</Text>
@@ -1008,12 +1125,42 @@ export default function VisaProgress() {
                 {/* Progress Tracker Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Progress Tracker</Text>
-
                     <View style={{ marginTop: 10 }}>
+                        {/* Header with current status set date, action deadline and countdown */}
+                        <View style={{ backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 13, color: '#374151', marginBottom: 6 }}>
+                                    <Text style={{ fontWeight: '700' }}>Current status set on:</Text> {statusSetDate ? dayjs(statusSetDate).format('MMM D, YYYY') : '—'}
+                                </Text>
+                                <Text style={{ fontSize: 13, color: '#374151' }}>
+                                    <Text style={{ fontWeight: '700' }}>Action deadline:</Text> {statusDeadlineDate ? dayjs(statusDeadlineDate).format('MMM D, YYYY') : '—'}{statusDeadlineDate && ` (${statusDeadlineDate.diff(dayjs(), 'day')} days left)`}
+                                </Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-end', marginLeft: 10 }}>
+                                <View style={{ backgroundColor: '#fff3cc', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, marginBottom: 6 }}>
+                                    <Text style={{ color: '#92400e', fontWeight: '700' }}>Time-limited action</Text>
+                                </View>
+                                {countdown ? (
+                                    <View style={{ backgroundColor: '#eaf1ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}>
+                                        <Text style={{ color: '#1e40af', fontWeight: '700' }}>Time left: {countdown}</Text>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </View>
+
                         {steps.map((step, index) => {
+                            const title = typeof step === 'string' ? step : (step?.title || '');
                             const isCompleted = index <= currentStepIndex;
                             const isActive = index === currentStepIndex;
                             const isLast = index === steps.length - 1;
+
+                            const stepSetDate = getStepSetDateForTitle(application, title);
+                            const stepDeadlineDays = Number.isFinite(Number(visaStatusTotalDaysMap.lower[String(title || '').toLowerCase()]))
+                                ? Number(visaStatusTotalDaysMap.lower[String(title || '').toLowerCase()])
+                                : null;
+                            // per-step deadline computed from createdAt baseline
+                            const stepDeadlineDate = createdAt && Number.isFinite(stepDeadlineDays) ? createdAt.add(stepDeadlineDays, 'day').startOf('day') : null;
+                            const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs(), 'day') : null;
 
                             return (
                                 <View key={index} style={VisaProgressStyle.stepItem}>
@@ -1030,10 +1177,18 @@ export default function VisaProgress() {
 
                                     <View style={VisaProgressStyle.stepContent}>
                                         <Text style={isCompleted ? VisaProgressStyle.stepTitleActive : VisaProgressStyle.stepTitleInactive}>
-                                            {step.charAt(0).toUpperCase() + step.slice(1)}
+                                            {String(title).charAt(0).toUpperCase() + String(title).slice(1)}
                                         </Text>
+                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
+                                            Set on: {stepSetDate ? dayjs(stepSetDate).format('MMM D, YYYY') : '—'}{stepSetDate ? ` • ${stepSetDate.from ? '' : ''}` : ''}
+                                        </Text>
+                                        {stepDeadlineDate && (
+                                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
+                                                Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}{stepDaysLeft !== null ? ` (${stepDaysLeft} days left)` : ''}
+                                            </Text>
+                                        )}
                                         {isActive && (
-                                            <Text style={VisaProgressStyle.stepDesc}>Current Stage</Text>
+                                            <Text style={[VisaProgressStyle.stepDesc, { marginTop: 6 }]}>Current Stage {countdown ? `• ${countdown}` : ''}</Text>
                                         )}
                                     </View>
                                 </View>
