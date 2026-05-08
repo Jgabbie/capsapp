@@ -396,10 +396,12 @@ export default function Profile() {
 
     const getStatusStyle = (status) => {
         const s = String(status).toLowerCase();
-        if (s.includes('fully paid') || s.includes('full paid') || s.includes('paid')) return { bg: '#f6ffed', text: '#52c41a' };
+        if (s === 'fully paid' || s.includes('fully paid') || s === 'full paid') return { bg: '#f6ffed', text: '#52c41a' };
+        if (s === 'not paid' || s.includes('not paid')) return { bg: '#fee2e2', text: '#dc2626' };
+        if (s === 'cancelled' || s === 'canceled' || s.includes('cancel')) return { bg: '#fff7ed', text: '#c2410c' };
+        if (s === 'pending' || s.includes('pending')) return { bg: '#fef9c3', text: '#b45309' };
         if (s.includes('success') || s.includes('approve')) return { bg: '#f0f4ff', text: '#305797' };
-        if (s.includes('reject') || s.includes('cancel')) return { bg: '#fee2e2', text: '#b91c1c' };
-        return { bg: '#fef9c3', text: '#b45309' };
+        return { bg: '#e5e7eb', text: '#4b5563' };
     };
 
     if (!fontsLoaded) return null;
@@ -694,20 +696,20 @@ export default function Profile() {
                 {/* Modals */}
                 <Modal visible={genderModalVisible} transparent={true} animationType="fade">
                     <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setGenderModalVisible(false)}>
-                                <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
-                                    {['Male', 'Female', 'Other', 'Prefer not to say'].map((option, index) => {
-                                        const isSelected = userData.gender === option;
-                                        return (
-                                            <TouchableOpacity
-                                                key={index}
-                                                style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
-                                                onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
-                                            >
-                                                <Text style={{ fontSize: 16, color: isSelected ? '#305797' : '#000', fontFamily: isSelected ? 'Roboto_500Medium' : 'Roboto_400Regular' }}>{option}</Text>
-                                            </TouchableOpacity>
-                                        )
-                                    })}
-                                </View>
+                        <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
+                            {['Male', 'Female', 'Other', 'Prefer not to say'].map((option, index) => {
+                                const isSelected = userData.gender === option;
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
+                                        onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
+                                    >
+                                        <Text style={{ fontSize: 16, color: isSelected ? '#305797' : '#000', fontFamily: isSelected ? 'Roboto_500Medium' : 'Roboto_400Regular' }}>{option}</Text>
+                                    </TouchableOpacity>
+                                )
+                            })}
+                        </View>
                     </TouchableOpacity>
                 </Modal>
 

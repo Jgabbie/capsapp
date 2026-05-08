@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator, ToastAndroid, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { Image } from 'expo-image';
@@ -14,6 +14,15 @@ import { useUser } from "../../context/UserContext";
 const { width } = Dimensions.get('window');
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
+
+const showToast = (message) => {
+    if (Platform.OS === 'android') {
+        ToastAndroid.show(message, ToastAndroid.SHORT);
+        return;
+    }
+
+    console.log(message);
+};
 
 export default function Packages({ navigation, route }) { // 🔥 Add route here!
     const { user, updateUser } = useUser();
@@ -190,7 +199,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
 
     const handleWishlistToggle = async (packageId) => {
         if (!user?._id) {
-            Alert.alert("Login Required", "Please log in to manage your wishlist.");
+            showToast("Please log in to manage your wishlist.");
             return;
         }
 
@@ -198,36 +207,11 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
         const isWishlisted = wishlistedIds.has(pId);
 
         if (isWishlisted) {
-            let entryId = wishlistEntryMap.get(pId);
-
-            // If we don't have the entryId cached, fetch the wishlist to find it
-            if (!entryId) {
-                try {
-                    const res = await api.get('/wishlist', withUserHeader(user._id));
-                    const wIds = new Set();
-                    const wMap = new Map();
-                    res.data.wishlist.forEach(entry => {
-                        const id = entry.packageId?._id || entry.packageId;
-                        if (id) {
-                            wIds.add(String(id));
-                            wMap.set(String(id), String(entry._id));
-                        }
-                    });
-                    setWishlistedIds(wIds);
-                    setWishlistEntryMap(wMap);
-                    entryId = wMap.get(pId);
-                } catch (err) {
-                    console.log('Fetch wishlist error', err.message);
-                }
-            }
-
-            if (!entryId) {
-                Alert.alert('Error', 'Could not find wishlist entry to remove.');
-                return;
-            }
-
             try {
-                await api.delete(`/wishlist/remove/${entryId}`, withUserHeader(user._id));
+                await api.delete('/wishlist/remove', {
+                    ...withUserHeader(user._id),
+                    data: { packageId: pId },
+                });
                 setWishlistedIds(prev => {
                     const next = new Set(prev);
                     next.delete(pId);
@@ -238,10 +222,10 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                     next.delete(pId);
                     return next;
                 });
-                Alert.alert('Removed', 'Package removed from your wishlist.');
+                showToast('Package removed from your wishlist.');
             } catch (error) {
                 console.log('Remove wishlist error', error.message);
-                Alert.alert('Error', 'Failed to remove from wishlist. Please try again.');
+                showToast('Failed to remove from wishlist. Please try again.');
             }
         } else {
             try {
@@ -260,10 +244,10 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                 });
                 setWishlistedIds(wIds);
                 setWishlistEntryMap(wMap);
-                Alert.alert('Added', 'Package added to your wishlist.');
+                showToast('Package added to your wishlist.');
             } catch (error) {
                 console.log('Add wishlist error', error.message);
-                Alert.alert('Error', 'Failed to add to wishlist. Please try again.');
+                showToast('Failed to add to wishlist. Please try again.');
             }
         }
     };
