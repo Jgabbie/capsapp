@@ -377,29 +377,20 @@ export default function VisaProgress() {
             .filter(step => Boolean(step.title));
     }, [dynamicSteps]);
 
-    const visaStatusTotalDaysMap = useMemo(() => {
-        const cumulative = {};
-        const stageDays = {};
-        const lower = {};
-        const lowerStageDays = {};
-        let total = 0;
-
-        for (const step of steps) {
-            const title = String(step?.title || '').trim();
-            if (!title) continue;
-
-            const days = Number(step?.daysToBeCompleted ?? 0);
-            const safe = Number.isFinite(days) && days > 0 ? days : 0;
-
-            total += safe;
-            cumulative[title] = total;
-            stageDays[title] = safe;
-            lower[String(title).toLowerCase()] = total;
-            lowerStageDays[String(title).toLowerCase()] = safe;
-        }
-
-        return { cumulative, stageDays, lower, lowerStageDays };
-    }, [steps]);
+    const countdownStyle = {
+        fontSize: 15,
+        color: '#305797',
+        fontWeight: 700,
+        background: 'rgba(48,87,151,0.06)',
+        padding: '6px 10px',
+        borderRadius: 14,
+        border: '1px solid rgba(48,87,151,0.12)',
+        boxShadow: '0 6px 18px rgba(48,87,151,0.06)',
+        minWidth: 96,
+        textAlign: 'center',
+        fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+        lineHeight: 1,
+    };
 
     const getStatusSetDate = (app) => {
         if (!app) return null;
@@ -407,7 +398,7 @@ export default function VisaProgress() {
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
                 const h = history[i];
-                if (String(h.status).toLowerCase() === String(appStatus || '').toLowerCase()) {
+                if (String(h.status).toLowerCase() === String(statusText || '').toLowerCase()) {
                     return dayjs(h.changedAt);
                 }
             }
@@ -432,61 +423,31 @@ export default function VisaProgress() {
         return null;
     };
 
-    const getStepDeadlineForTitle = (title) => {
-        if (!title || !createdAt) return null;
-
-        const stepKey = String(title || '').toLowerCase();
-        const stepDeadlineDays =
-            visaStatusTotalDaysMap.lower[stepKey] ?? null;
-
-        return Number.isFinite(stepDeadlineDays)
-            ? createdAt.add(stepDeadlineDays, 'day').startOf('day')
-            : null;
-    };
-
-    const appointmentDate = application?.preferredDate
-        ? dayjs(application.preferredDate)
-        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
-            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
-            : null;
     const statusSetDate = getStatusSetDate(application);
-    const createdAt = application?.createdAt ? dayjs(application.createdAt).startOf('day') : null;
-    const baseDate = application?.createdAt
+    const deadlineDays = application?.statusDeadlineDays ?? null;
+    const createdAt = application?.createdAt
         ? dayjs(application.createdAt).startOf('day')
         : null;
-
-    const statusKey =
-        String(appStatus || '').toLowerCase();
-    // Default fallback mapping (matches server's left4devs implementation)
-    const DEFAULT_VISA_STATUS_TOTAL_DAYS_MAP = {
-        'application submitted': 2,
-        'application approved': 4,
-        'payment completed': 7,
-        'documents uploaded': 12,
-        'documents approved': 15,
-        'documents received': 17,
-        'documents submitted': 19,
-        'processing by embassy': 19,
-    };
-
-    // Use server-provided `statusDeadlineDays` when available; otherwise use computed map or default map
-    const computedDeadlineDays = visaStatusTotalDaysMap.lower[String(statusKey || '').toLowerCase()] ?? null;
-    const deadlineDays = application?.statusDeadlineDays ?? computedDeadlineDays ?? DEFAULT_VISA_STATUS_TOTAL_DAYS_MAP[statusKey] ?? null;
-
-    const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
-
-    // Match web: prefer server `statusDeadlineDate`, then use statusSetDate -> appointmentDate -> createdAt with `deadlineDays`.
-    const statusDeadlineDate = !terminalStatuses.has(String(statusKey || '').toLowerCase())
+    const cumulativeStepDaysMap = React.useMemo(() => {
+        return application?.visaStatusTotalDaysMap || buildVisaStatusTotalDaysMapFromSteps(process);
+    }, [application?.visaStatusTotalDaysMap, process]);
+    const statusDeadlineDate = !terminalStatuses.has(String(statusText || '').toLowerCase())
         ? (application?.statusDeadlineDate
             ? dayjs(application.statusDeadlineDate)
             : statusSetDate && Number.isFinite(deadlineDays)
                 ? statusSetDate.add(deadlineDays, 'day').startOf('day')
                 : appointmentDate && Number.isFinite(deadlineDays)
                     ? appointmentDate.add(deadlineDays, 'day').startOf('day')
-                    : createdAt && Number.isFinite(deadlineDays)
-                        ? createdAt.add(deadlineDays, 'day').startOf('day')
-                        : null)
+                    : null)
         : null;
+
+    const appointmentDate = application?.preferredDate
+        ? dayjs(application.preferredDate)
+        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
+            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
+            : null;
+
+
 
     useEffect(() => {
         if (!statusDeadlineDate) {
@@ -495,17 +456,11 @@ export default function VisaProgress() {
         }
 
         const update = () => {
-            const now = dayjs();
-            const deadlineCutoff = statusDeadlineDate.endOf('day');
-
-            if (now.isAfter(deadlineCutoff)) {
+            const diffMs = statusDeadlineDate.diff(dayjs());
+            if (diffMs <= 0) {
                 setCountdown('Deadline passed');
                 return;
             }
-
-            const targetDate = now.isSame(statusDeadlineDate, 'day') ? deadlineCutoff : statusDeadlineDate;
-            const diffMs = targetDate.diff(now);
-
             let total = Math.floor(diffMs / 1000);
             const days = Math.floor(total / 86400);
             total = total % 86400;
@@ -520,6 +475,14 @@ export default function VisaProgress() {
         const timerId = setInterval(update, 1000);
         return () => clearInterval(timerId);
     }, [statusDeadlineDate]);
+
+
+
+
+
+
+
+
 
     const currentStepIndex = useMemo(() => {
         const index = steps.findIndex(step => String(step?.title || '').toLowerCase() === appStatus.toLowerCase());

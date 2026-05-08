@@ -6,62 +6,60 @@ import transporter from "../config/nodemailer.js";
 import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
 
-const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
-  const cumulativeMap = {};
-  const stageMap = {};
-  const lowerCumulativeMap = {};
-  const lowerStageMap = {};
-  const trace = [];
+// Fallback days map - only used if process steps are not available
+const VISA_STATUS_TOTAL_DAYS_MAP_FALLBACK = {
+  'Application Submitted': 2,
+  'Application Approved': 4,
+  'Payment Completed': 7,
+  'Documents Uploaded': 12,
+  'Documents Approved': 15,
+  'Documents Received': 17,
+  'Documents Submitted': 19,
+  'Processing by Embassy': 19,
+};
 
-  let cumulativeTotal = 0;
+const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
+  const map = {};
+  let cumulativeDays = 0;
 
   for (const step of steps) {
     const title = String(step?.title || '').trim();
     if (!title) continue;
 
-    const days = Number(step?.daysToBeCompleted ?? 0);
-    const safeDays =
-      Number.isFinite(days) && days > 0
-        ? days
-        : 0;
+    const stepDays = Number(step?.daysToBeCompleted ?? 0);
+    const daysToAdd = Number.isFinite(stepDays) && stepDays > 0 ? stepDays : 0;
 
-    cumulativeTotal += safeDays;
-
-    cumulativeMap[title] = cumulativeTotal;
-    stageMap[title] = safeDays;
-
-    lowerCumulativeMap[title.toLowerCase()] = cumulativeTotal;
-    lowerStageMap[title.toLowerCase()] = safeDays;
-
-    trace.push({
-      title,
-      daysToBeCompleted: safeDays,
-      cumulativeDays: cumulativeTotal,
-      stageDays: safeDays,
-    });
+    cumulativeDays += daysToAdd;
+    map[title] = cumulativeDays;
   }
 
-  return {
-    cumulativeMap,
-    stageMap,
-    lowerCumulativeMap,
-    lowerStageMap,
-    trace,
-  };
+  return map;
 };
 
 const getVisaProcessStepsFromApplication = (application) => {
   if (!application) return [];
 
+  // Try application's own steps first
   if (Array.isArray(application.visaProcessSteps)) {
     return application.visaProcessSteps;
   }
 
-  if (application.serviceId && typeof application.serviceId === 'object' && Array.isArray(application.serviceId.visaProcessSteps)) {
-    return application.serviceId.visaProcessSteps;
+  // Fall back to service's steps
+  if (application.serviceId?.visaProcessSteps) {
+    return Array.isArray(application.serviceId.visaProcessSteps)
+      ? application.serviceId.visaProcessSteps
+      : [];
   }
 
   return [];
+};
+
+const getStatusTotalDaysMap = (application) => {
+  const steps = getVisaProcessStepsFromApplication(application);
+  if (steps.length > 0) {
+    return buildVisaStatusTotalDaysMapFromSteps(steps);
+  }
+  return VISA_STATUS_TOTAL_DAYS_MAP_FALLBACK;
 };
 
 
@@ -77,12 +75,7 @@ const getCurrentVisaStatus = (application) => {
   return String(application.status || '').trim();
 };
 
-const normalizeVisaDate = (value) => {
-  if (!value) return null;
 
-  const parsed = dayjs(value);
-  return parsed.isValid() ? parsed.startOf('day') : null;
-};
 
 const getVisaStatusSetDate = (application, status) => {
   if (!application) return null;
@@ -108,81 +101,45 @@ const getVisaDeadlineInfo = (
 ) => {
   if (!application) return null;
 
-  const currentStatus =
-    getCurrentVisaStatus(application);
+  const currentStatus = getCurrentVisaStatus(application);
 
-  if (
-    !currentStatus ||
-    VISA_TERMINAL_STATUSES.has(currentStatus)
-  ) {
+  if (!currentStatus || VISA_TERMINAL_STATUSES.has(currentStatus)) {
     return null;
   }
 
-  const processSteps =
-    getVisaProcessStepsFromApplication(application);
-
-  const maps =
-    buildVisaStatusTotalDaysMapFromSteps(processSteps);
-
-  const statusKey =
-    String(currentStatus || '').toLowerCase();
-
-  const totalDays =
-    maps.lowerCumulativeMap[statusKey];
+  // Get the cumulative days map from steps or fallback
+  const statusDeadlineMap = getStatusTotalDaysMap(application);
+  const totalDays = statusDeadlineMap[currentStatus];
 
   if (!Number.isFinite(totalDays)) {
     return null;
   }
 
-  const baseDate = application.createdAt
-    ? dayjs(application.createdAt).startOf('day')
-    : null;
+  // Calculate deadline from application creation date
+  const baseDate = dayjs(application.createdAt).startOf('day');
+  const deadlineDate = baseDate.add(totalDays, 'day').startOf('day');
+  const warningDate = deadlineDate.subtract(1, 'day').startOf('day');
+  const currentDate = referenceDate.startOf('day');
+  const daysRemaining = deadlineDate.diff(currentDate, 'day');
 
-  if (!baseDate) {
-    return null;
-  }
-
-  const deadlineDate = baseDate
-    .add(totalDays, 'day')
-    .startOf('day');
-
-  const warningDate = deadlineDate
-    .subtract(1, 'day')
-    .startOf('day');
-
-  const currentDate =
-    referenceDate.startOf('day');
-
-  const daysRemaining =
-    deadlineDate.diff(currentDate, 'day');
-
+  // Check if warning was already sent
   const warningAlreadySent =
     Array.isArray(application.deadlineWarnings) &&
     application.deadlineWarnings.some(
       (warning) =>
-        warning &&
-        warning.status === currentStatus &&
-        warning.deadlineDate ===
-        deadlineDate.format('YYYY-MM-DD')
+        warning?.status === currentStatus &&
+        warning.deadlineDate === deadlineDate.format('YYYY-MM-DD')
     );
-
-  console.log("CURRENT STATUS:", currentStatus);
-  console.log("AVAILABLE MAP:", maps.lowerCumulativeMap);
-  console.log("MATCH:", maps.lowerCumulativeMap[statusKey]);
 
   return {
     status: currentStatus,
     totalDays,
-    deadlineDays: totalDays,
-    statusDeadlineMap: maps.cumulativeMap,
-    statusStageDaysMap: maps.stageMap,
+    statusDeadlineMap,
     deadlineDate,
     warningDate,
     daysRemaining,
     warningAlreadySent,
-    shouldSendWarning:
-      daysRemaining === 1 &&
-      !warningAlreadySent,
+    shouldSendWarning: daysRemaining === 1 && !warningAlreadySent,
     isOverdue: daysRemaining < 0,
   };
 };
@@ -194,18 +151,19 @@ const decorateVisaApplication = (application) => {
     ? application.toObject()
     : { ...application };
 
-  const deadlineInfo = getVisaDeadlineInfo(plainApplication);
   const statusText = getCurrentVisaStatus(plainApplication);
+  const deadlineInfo = getVisaDeadlineInfo(plainApplication);
+  const statusDeadlineMap = getStatusTotalDaysMap(plainApplication);
 
   return {
     ...plainApplication,
     status: statusText || plainApplication.status,
-    statusDeadlineDate: deadlineInfo ? deadlineInfo.deadlineDate.toISOString() : null,
-    statusDeadlineDays: deadlineInfo ? deadlineInfo.deadlineDays : null,
-    visaStatusTotalDaysMap: deadlineInfo ? deadlineInfo.statusDeadlineMap : buildVisaStatusTotalDaysMapFromSteps(getVisaProcessStepsFromApplication(plainApplication)),
-    statusDeadlineWarningDate: deadlineInfo ? deadlineInfo.warningDate.toISOString() : null,
-    statusDeadlineDaysRemaining: deadlineInfo ? deadlineInfo.daysRemaining : null,
-    statusDeadlineWarningSent: deadlineInfo ? deadlineInfo.warningAlreadySent : false,
+    statusDeadlineDate: deadlineInfo?.deadlineDate.toISOString() ?? null,
+    statusDeadlineDays: deadlineInfo?.totalDays ?? null,
+    visaStatusTotalDaysMap: statusDeadlineMap,
+    statusDeadlineWarningDate: deadlineInfo?.warningDate.toISOString() ?? null,
+    statusDeadlineDaysRemaining: deadlineInfo?.daysRemaining ?? null,
+    statusDeadlineWarningSent: deadlineInfo?.warningAlreadySent ?? false,
   };
 };
 
