@@ -1,6 +1,9 @@
 import VisaApplicationModel from "../models/visaApplication.js";
 import VisaServiceModel from "../models/visaService.js";
 import UserModel from "../models/users.js";
+import NotificationModel from "../models/notification.js";
+import transporter from "../config/nodemailer.js";
+import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
 
 const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
@@ -467,7 +470,9 @@ export const getUserVisaApplications = async (req, res) => {
     const applications = await VisaApplicationModel.find({ userId })
       .populate("serviceId")
       .sort({ createdAt: -1 });
-    res.status(200).json(applications);
+    // Decorate each application with deadline info so client doesn't need fallbacks
+    const decorated = applications.map((app) => decorateVisaApplication(app));
+    res.status(200).json(decorated);
   } catch (error) {
     res.status(500).json({ message: "Error fetching user visa applications", error: error.message });
   }
@@ -482,7 +487,9 @@ export const getVisaApplicationById = async (req, res) => {
     if (!application) {
       return res.status(404).json({ message: "Visa application not found" });
     }
-    res.status(200).json(application);
+    // Decorate with deadline info
+    const decorated = decorateVisaApplication(application);
+    res.status(200).json(decorated);
   } catch (error) {
     res.status(500).json({ message: "Error fetching visa application", error: error.message });
   }

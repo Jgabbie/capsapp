@@ -457,8 +457,21 @@ export default function VisaProgress() {
 
     const statusKey =
         String(appStatus || '').toLowerCase();
+    // Default fallback mapping (matches server's left4devs implementation)
+    const DEFAULT_VISA_STATUS_TOTAL_DAYS_MAP = {
+        'application submitted': 2,
+        'application approved': 4,
+        'payment completed': 7,
+        'documents uploaded': 12,
+        'documents approved': 15,
+        'documents received': 17,
+        'documents submitted': 19,
+        'processing by embassy': 19,
+    };
 
-    const deadlineDays = application?.statusDeadlineDays ?? null;
+    // Use server-provided `statusDeadlineDays` when available; otherwise use computed map or default map
+    const computedDeadlineDays = visaStatusTotalDaysMap.lower[String(statusKey || '').toLowerCase()] ?? null;
+    const deadlineDays = application?.statusDeadlineDays ?? computedDeadlineDays ?? DEFAULT_VISA_STATUS_TOTAL_DAYS_MAP[statusKey] ?? null;
 
     const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released', 'rejected']);
 
