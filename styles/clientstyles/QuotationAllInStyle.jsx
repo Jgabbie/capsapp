@@ -292,6 +292,72 @@ const QuotationAllInStyle = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
     },
+    backButtonBottom: {
+        backgroundColor: "#305797",
+        height: 50,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 12,
+    },
+    backButtonTextBottom: {
+        fontFamily: "Montserrat_700Bold",
+        color: "#ffffff",
+        fontSize: 16,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 24,
+        width: '90%',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84
+    },
+    modalCloseIcon: {
+        position: 'absolute',
+        top: 15,
+        right: 15,
+        padding: 5,
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        marginBottom: 12,
+        textAlign: 'center',
+        marginTop: 10
+    },
+    modalText: {
+        fontSize: 14,
+        color: "#4b5563",
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+        fontFamily: "Roboto_400Regular"
+    },
+    modalButton: {
+        backgroundColor: "#305797",
+        paddingVertical: 14,
+        width: '100%',
+        borderRadius: 8,
+        alignItems: "center",
+        justifyContent: 'center'
+    },
+    modalButtonText: {
+        color: "#fff",
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 15,
+    },
 });
 
 export default QuotationAllInStyle;

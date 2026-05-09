@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -112,6 +112,22 @@ export default function Home() {
     // Featured Package Modal States
     const [featuredModalVisible, setFeaturedModalVisible] = useState(false)
     const [featuredPackage, setFeaturedPackage] = useState(null)
+
+    // 🔥 NEW: Animation value (starts at scale 0)
+    const scaleValue = useRef(new Animated.Value(0)).current;
+
+    // 🔥 NEW: Triggers the bouncy pop-up whenever the modal becomes visible
+    useEffect(() => {
+        if (featuredModalVisible) {
+            scaleValue.setValue(0); // Reset to 0
+            Animated.spring(scaleValue, {
+                toValue: 1,         // Pop up to full size (1)
+                friction: 5,        // Lower number = more bouncy!
+                tension: 40,        // Controls the speed of the pop
+                useNativeDriver: true, // Makes the animation butter-smooth
+            }).start();
+        }
+    }, [featuredModalVisible]);
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -688,7 +704,8 @@ export default function Home() {
                 onRequestClose={() => setFeaturedModalVisible(false)}
             >
                 <View style={HomeStyle.featuredModalOverlay}>
-                    <View style={HomeStyle.featuredModalBox}>
+                    {/* 🔥 CHANGED: View to Animated.View and added the transform scale! */}
+                    <Animated.View style={[HomeStyle.featuredModalBox, { transform: [{ scale: scaleValue }] }]}>
                         <View style={HomeStyle.featuredModalImageContainer}>
                             {featuredPackage?.images && featuredPackage.images.length > 0 && (
                                 <Image
@@ -806,7 +823,7 @@ export default function Home() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    </View>
+                    </Animated.View>
                 </View>
             </Modal>
 

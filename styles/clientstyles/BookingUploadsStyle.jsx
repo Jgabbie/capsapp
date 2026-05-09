@@ -75,8 +75,15 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     formRow: {
         flexDirection: 'row',
-        gap: 8,
-        marginBottom: 10,
+        gap: 12,
+        width: '100%',
+        marginBottom: 8,
+    },
+    formCol: {
+        flex: 1,
+    },
+    formColSmall: {
+        width: 85,
     },
     input: {
         borderWidth: 1,
@@ -233,6 +240,31 @@ const BookingUploadsStyle = StyleSheet.create({
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 15, 
         color: "#6b7486",
+    },
+    // 🔥 NEW: Black, uppercase labels for the input boxes
+    inputLabel: {
+        fontSize: 12,
+        fontFamily: "Montserrat_700Bold",
+        color: "#000",
+        marginBottom: 4,
+        marginTop: 15,
+        textTransform: 'uppercase'
+    }
+    ,
+    // 🔥 NEW: greyed disabled input style
+    disabledInput: {
+        backgroundColor: '#e2e8f0',
+        color: '#94a3b8',
+    }
+    ,
+    // 🔥 NEW: Remove Image Text Button Style
+    removeImageText: {
+        color: '#dc2626',
+        fontSize: 12,
+        fontFamily: 'Montserrat_600SemiBold',
+        textAlign: 'center',
+        marginTop: 8,
+        textDecorationLine: 'underline',
     }
 });
 

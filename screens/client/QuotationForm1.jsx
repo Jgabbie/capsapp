@@ -23,6 +23,15 @@ const calculateAge = (birthdateString) => {
     return age.toString();
 };
 
+const formatPassportDisplay = (passportNo) => {
+    if (!passportNo) return '';
+
+    const cleaned = String(passportNo).trim().toUpperCase();
+    if (cleaned === 'N/A') return 'N/A';
+
+    return cleaned.startsWith('P') ? cleaned : `P${cleaned}`;
+};
+
 const assignRooms = (travelers) => {
     if (!travelers || travelers.length === 0) return [];
 
@@ -96,6 +105,7 @@ export default function QuotationForm1({ route, navigation }) {
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
@@ -107,7 +117,7 @@ export default function QuotationForm1({ route, navigation }) {
                 room: assignedRooms[index],
                 bday: t.birthdate || '',
                 age: calculateAge(t.birthdate) || '',
-                passport: isDomestic ? 'N/A' : (t.passportNo || ''),
+                passport: isDomestic ? 'N/A' : formatPassportDisplay(t.passportNo || ''),
                 expiry: isDomestic ? 'N/A' : (t.passportExpiry || '')
             }));
         }
@@ -149,7 +159,7 @@ export default function QuotationForm1({ route, navigation }) {
                         return {
                             ...passenger,
                             room: assignedRooms[index],
-                            passport: isDomestic ? 'N/A' : (sourceTraveler.passportNo || passenger.passport),
+                            passport: isDomestic ? 'N/A' : formatPassportDisplay(sourceTraveler.passportNo || passenger.passport),
                             expiry: isDomestic ? 'N/A' : (sourceTraveler.passportExpiry || passenger.expiry)
                         };
                     });
@@ -194,6 +204,11 @@ export default function QuotationForm1({ route, navigation }) {
             }
         }
 
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
         navigation.navigate("quotationform2", { quotation, travelerUploads, passengers, leadGuestInfo });
     };
 
@@ -356,6 +371,30 @@ export default function QuotationForm1({ route, navigation }) {
                         <Text style={QuotationFormStepStyle.backText}>Back to Uploads</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                    <View style={QuotationFormStepStyle.modalOverlay}>
+                        <View style={QuotationFormStepStyle.verifyModalCard}>
+                            <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                            </TouchableOpacity>
+
+                            <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                            <Text style={QuotationFormStepStyle.verifyModalText}>
+                                Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                            </Text>
+
+                            <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                    <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                    <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
                 <Modal visible={showTitleDropdown} transparent animationType="fade">
                     <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>

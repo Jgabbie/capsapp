@@ -34,7 +34,7 @@ export default function BookingReview({ route, navigation }) {
             <ScrollView contentContainerStyle={BookingReviewStyle.container} showsVerticalScrollIndicator={false}>
 
                 <View style={BookingReviewStyle.headerGroup}>
-                    <Text style={QuotationAllInStyle.mainTitle}>Review Package</Text>
+                    <Text style={QuotationAllInStyle.mainTitle}>Itinerary, Inclusions & Exclusions</Text>
                     <Text style={QuotationAllInStyle.subtitle}>Review the day-by-day schedule and what your package covers.</Text>
                 </View>
 
@@ -71,9 +71,9 @@ export default function BookingReview({ route, navigation }) {
                     <View style={BookingReviewStyle.cardHeader}>
                         <View>
                             <View style={BookingReviewStyle.pill}>
-                                <Text style={BookingReviewStyle.pillText}>Coverage</Text>
+                                <Text style={BookingReviewStyle.pillText}>Package</Text>
                             </View>
-                            <Text style={BookingReviewStyle.sectionTitle}>Inclusions & Exclusions</Text>
+                            <Text style={BookingReviewStyle.sectionTitle}>Inclusions, Exclusions, Requirements and Policies</Text>
                             <Text style={BookingReviewStyle.sectionSubtitle}>Know what is covered and what is not.</Text>
                         </View>
                     </View>

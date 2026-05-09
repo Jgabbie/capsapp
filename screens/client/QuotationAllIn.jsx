@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform, Modal, BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Constants from "expo-constants";
@@ -29,6 +30,16 @@ export default function QuotationAllIn() {
     const navigation = useNavigation();
     const route = useRoute();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    // Only intercept hardware back while this screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            const backAction = () => true; // prevent default hardware back behavior
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+            return () => backHandler.remove();
+        }, [])
+    );
 
     // Destructure passed data from PackageDetails/Date Modal
     const { pkg, selectedDate, selectedDateSlots, selectedDatePrice, selectedDateRate } = route.params || {};
@@ -237,12 +248,9 @@ export default function QuotationAllIn() {
                 {/* --- BOOKING SUMMARY SECTION --- */}
                 <View style={QuotationAllInStyle.headerRow}>
                     <View style={QuotationAllInStyle.titleGroup}>
-                        <Text style={QuotationAllInStyle.mainTitle}>Booking Summary</Text>
-                        <Text style={QuotationAllInStyle.subtitle}>Kindly check the details of your booking before proceeding.</Text>
+                        <Text style={QuotationAllInStyle.mainTitle}>Overview</Text>
+                        <Text style={QuotationAllInStyle.subtitle}>Confirm your tour package, travel dates, and traveler details before proceeding.</Text>
                     </View>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={QuotationAllInStyle.backButton}>
-                        <Text style={QuotationAllInStyle.backButtonText}>BACK</Text>
-                    </TouchableOpacity>
                 </View>
 
                 {/* Scrollable Images */}
@@ -469,8 +477,40 @@ export default function QuotationAllIn() {
                     <Text style={QuotationAllInStyle.proceedButtonText}>Proceed to Details</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                    style={QuotationAllInStyle.backButtonBottom}
+                    onPress={() => setIsGoBackModalOpen(true)}
+                >
+                    <Text style={QuotationAllInStyle.backButtonTextBottom}>Go Back</Text>
+                </TouchableOpacity>
+
                 <View style={{ height: 60 }} />
             </ScrollView>
+
+            <Modal visible={isGoBackModalOpen} transparent animationType="fade" onRequestClose={() => setIsGoBackModalOpen(false)}>
+                <View style={QuotationAllInStyle.modalOverlay}>
+                    <View style={QuotationAllInStyle.modalCard}>
+                        <TouchableOpacity style={QuotationAllInStyle.modalCloseIcon} onPress={() => setIsGoBackModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+
+                        <Text style={QuotationAllInStyle.modalTitle}>Go Back?</Text>
+                        <Text style={QuotationAllInStyle.modalText}>
+                            Are you sure you want to go back? If you go back, all the information you have entered in the booking form will reset and you will have to start the booking process from the beginning.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={QuotationAllInStyle.modalButton}
+                            onPress={() => {
+                                setIsGoBackModalOpen(false);
+                                navigation.goBack();
+                            }}
+                        >
+                            <Text style={QuotationAllInStyle.modalButtonText}>Go Back</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
