@@ -67,7 +67,7 @@ export default function PassportProgress() {
         const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
         const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
 
-        const parsedDate = rawDate ? dayjs(rawDate) : null;
+        const parsedDate = rawDate ? parseCalendarDate(rawDate) : null;
         const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
 
         let time = '';
