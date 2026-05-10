@@ -55,7 +55,6 @@ export default function VisaProgress() {
     const [passportReleaseOption, setPassportReleaseOption] = useState('pickup');
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [savingReleaseOption, setSavingReleaseOption] = useState(false);
-    const [countdown, setCountdown] = useState(null);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -386,20 +385,7 @@ export default function VisaProgress() {
             .filter(step => Boolean(step.title));
     }, [dynamicSteps]);
 
-    const countdownStyle = {
-        fontSize: 15,
-        color: '#305797',
-        fontWeight: 700,
-        background: 'rgba(48,87,151,0.06)',
-        padding: '6px 10px',
-        borderRadius: 14,
-        border: '1px solid rgba(48,87,151,0.12)',
-        boxShadow: '0 6px 18px rgba(48,87,151,0.06)',
-        minWidth: 96,
-        textAlign: 'center',
-        fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
-        lineHeight: 1,
-    };
+
 
     const getStatusSetDate = (app) => {
         if (!app) return null;
@@ -461,32 +447,7 @@ export default function VisaProgress() {
 
 
 
-    useEffect(() => {
-        if (!statusDeadlineDate) {
-            setCountdown(null);
-            return;
-        }
 
-        const update = () => {
-            const diffMs = statusDeadlineDate.diff(dayjs());
-            if (diffMs <= 0) {
-                setCountdown('Deadline passed');
-                return;
-            }
-            let total = Math.floor(diffMs / 1000);
-            const days = Math.floor(total / 86400);
-            total = total % 86400;
-            const hours = Math.floor(total / 3600);
-            total = total % 3600;
-            const minutes = Math.floor(total / 60);
-            const seconds = total % 60;
-            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-        };
-
-        update();
-        const timerId = setInterval(update, 1000);
-        return () => clearInterval(timerId);
-    }, [statusDeadlineDate]);
 
 
 
@@ -763,19 +724,7 @@ export default function VisaProgress() {
                         <Text style={VisaProgressStyle.infoValue}>{application.preferredTime}</Text>
                     </View>
 
-                    {statusDeadlineDate && (
-                        <View style={VisaProgressStyle.infoRow}>
-                            <Text style={VisaProgressStyle.infoLabel}>Deadline</Text>
-                            <Text style={VisaProgressStyle.infoValue}>{dayjs(statusDeadlineDate).format('MMM D, YYYY')}</Text>
-                        </View>
-                    )}
 
-                    {countdown && (
-                        <View style={VisaProgressStyle.infoRow}>
-                            <Text style={VisaProgressStyle.infoLabel}>Countdown</Text>
-                            <Text style={[VisaProgressStyle.infoValue, { color: '#305797', fontWeight: '700' }]}>{countdown}</Text>
-                        </View>
-                    )}
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Application Type</Text>
@@ -1153,25 +1102,12 @@ export default function VisaProgress() {
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Progress Tracker</Text>
                     <View style={{ marginTop: 10 }}>
-                        {/* Header with current status set date, action deadline and countdown */}
-                        <View style={{ backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 13, color: '#374151', marginBottom: 6 }}>
+                        {/* Header with current status set date */}
+                        <View style={{ backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 12 }}>
+                            <View>
+                                <Text style={{ fontSize: 13, color: '#374151' }}>
                                     <Text style={{ fontWeight: '700' }}>Current status set on:</Text> {statusSetDate ? dayjs(statusSetDate).format('MMM D, YYYY') : '—'}
                                 </Text>
-                                <Text style={{ fontSize: 13, color: '#374151' }}>
-                                    <Text style={{ fontWeight: '700' }}>Action deadline:</Text> {statusDeadlineDate ? dayjs(statusDeadlineDate).format('MMM D, YYYY') : '—'}{statusDeadlineDate && ` (${statusDeadlineDate.diff(dayjs(), 'day')} days left)`}
-                                </Text>
-                            </View>
-                            <View style={{ alignItems: 'flex-end', marginLeft: 10 }}>
-                                <View style={{ backgroundColor: '#fff3cc', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, marginBottom: 6 }}>
-                                    <Text style={{ color: '#92400e', fontWeight: '700' }}>Time-limited action</Text>
-                                </View>
-                                {countdown ? (
-                                    <View style={{ backgroundColor: '#eaf1ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}>
-                                        <Text style={{ color: '#1e40af', fontWeight: '700' }}>Time left: {countdown}</Text>
-                                    </View>
-                                ) : null}
                             </View>
                         </View>
 
@@ -1212,7 +1148,7 @@ export default function VisaProgress() {
                                             </Text>
                                         )}
                                         {isActive && (
-                                            <Text style={[VisaProgressStyle.stepDesc, { marginTop: 6 }]}>Current Stage {countdown ? `• ${countdown}` : ''}</Text>
+                                            <Text style={[VisaProgressStyle.stepDesc, { marginTop: 6 }]}>Current Stage</Text>
                                         )}
                                     </View>
                                 </View>

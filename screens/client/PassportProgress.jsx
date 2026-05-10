@@ -366,8 +366,27 @@ export default function PassportProgress() {
         return null;
     };
 
+    const getProcessStepData = (app, title) => {
+        if (!app?.processSteps || !title) return null;
+
+        const direct = app.processSteps[title];
+        if (direct && typeof direct === 'object') {
+            return direct;
+        }
+
+        const entry = Object.entries(app.processSteps).find(([key]) => String(key).toLowerCase() === String(title).toLowerCase());
+        return entry?.[1] && typeof entry[1] === 'object' ? entry[1] : null;
+    };
+
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
+
+        const stepData = getProcessStepData(app, title);
+        if (stepData?.setDate) {
+            const parsed = parseCalendarDate(stepData.setDate);
+            if (parsed?.isValid()) return parsed;
+        }
+
         const history = app.statusHistory;
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
@@ -384,16 +403,26 @@ export default function PassportProgress() {
         if (!app || !stepTitle) return null;
 
         const terminalStatuses = ['DFA Approved', 'Passport Released', 'Rejected'];
-        if (terminalStatuses.includes(stepTitle)) return null;
+        const normalizedStepTitle = Object.keys(statusDeadlineDaysMap).find(
+            (title) => String(title).toLowerCase() === String(stepTitle).toLowerCase()
+        ) || stepTitle;
+
+        if (terminalStatuses.some((title) => title.toLowerCase() === String(normalizedStepTitle).toLowerCase())) return null;
+
+        const stepData = getProcessStepData(app, normalizedStepTitle) || getProcessStepData(app, stepTitle);
+        if (stepData?.deadlineDate) {
+            const parsed = parseCalendarDate(stepData.deadlineDate);
+            if (parsed?.isValid()) return parsed.startOf('day');
+        }
 
         // If backend provided a deadline (prefer statusDeadlineDates), use it
-        const rawBackendDeadline = resolveStatusDeadlineRaw(app, stepTitle);
-        if (String(app.status || '').toLowerCase() === String(stepTitle).toLowerCase() && rawBackendDeadline) {
+        const rawBackendDeadline = resolveStatusDeadlineRaw(app, normalizedStepTitle) ?? resolveStatusDeadlineRaw(app, stepTitle);
+        if (String(app.status || '').toLowerCase() === String(normalizedStepTitle).toLowerCase() && rawBackendDeadline) {
             const parsed = parseCalendarDate(rawBackendDeadline);
             if (parsed?.isValid()) return parsed.startOf('day');
         }
 
-        const deadlineDays = statusDeadlineDaysMap[stepTitle];
+        const deadlineDays = statusDeadlineDaysMap[normalizedStepTitle] ?? statusDeadlineDaysMap[stepTitle];
         if (!Number.isFinite(deadlineDays)) return null;
 
         const preferredDate = app.preferredDate ? dayjs(app.preferredDate) : null;
@@ -401,7 +430,7 @@ export default function PassportProgress() {
             return preferredDate.startOf('day');
         }
 
-        const setDate = providedSetDate || getStepSetDateForTitle(app, stepTitle);
+        const setDate = providedSetDate || getStepSetDateForTitle(app, normalizedStepTitle) || getStepSetDateForTitle(app, stepTitle);
         if (!setDate?.isValid()) return null;
 
         return setDate.add(deadlineDays, 'day').startOf('day');
@@ -450,45 +479,9 @@ export default function PassportProgress() {
     };
 
     const currentStatusSetDate = getStatusSetDate(application);
-    const appointmentDate = parseCalendarDate(application?.preferredDate);
-    const deadlineDays = application?.statusDeadlineDays ?? statusDeadlineDaysMap[application?.status] ?? null;
-    const rawStatusDeadline = resolveStatusDeadlineRaw(application);
-    const statusDeadlineDate = rawStatusDeadline
-        ? parseCalendarDate(rawStatusDeadline)
-        : appointmentDate && Number.isFinite(deadlineDays)
-            ? appointmentDate.subtract(deadlineDays, 'day').startOf('day')
-            : null;
+    const statusDeadlineDate = getStepDeadlineDate(application, appStatus, currentStatusSetDate);
 
-    // Live countdown state for current active step
-    const [countdown, setCountdown] = useState(null);
     const [hasProcessedRejection, setHasProcessedRejection] = useState(false);
-
-    useEffect(() => {
-        if (!statusDeadlineDate) {
-            setCountdown(null);
-            return;
-        }
-
-        const update = () => {
-            const diffMs = statusDeadlineDate.diff(dayjs());
-            if (diffMs <= 0) {
-                setCountdown('Deadline passed');
-                return;
-            }
-            let total = Math.floor(diffMs / 1000);
-            const days = Math.floor(total / 86400);
-            total = total % 86400;
-            const hours = Math.floor(total / 3600);
-            total = total % 3600;
-            const minutes = Math.floor(total / 60);
-            const seconds = total % 60;
-            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-        };
-
-        update();
-        const id = setInterval(update, 1000);
-        return () => clearInterval(id);
-    }, [statusDeadlineDate]);
 
     // Auto-reject application if deadline is passed
     useEffect(() => {
@@ -705,47 +698,6 @@ export default function PassportProgress() {
         "Passport Released"
     ];
 
-    const statusDeadlineDays = application?.statusDeadlineDays
-        ?? statusDeadlineDaysMap[appStatus]
-        ?? null;
-
-    const statusDeadlineDaysLeft = useMemo(() => {
-        // Use backend-calculated value when available
-        if (application?.statusDeadlineDaysRemaining !== undefined) {
-            return application.statusDeadlineDaysRemaining;
-        }
-        // Fallback for cases without backend value
-        if (!statusDeadlineDate) return null;
-        return statusDeadlineDate.diff(dayjs(), 'day');
-    }, [application?.statusDeadlineDaysRemaining, statusDeadlineDate]);
-
-    useEffect(() => {
-        if (!statusDeadlineDate) {
-            setCountdown(null);
-            return;
-        }
-
-        const update = () => {
-            const diffMs = statusDeadlineDate.endOf('day').diff(dayjs());
-            if (diffMs <= 0) {
-                setCountdown('Deadline passed');
-                return;
-            }
-            let total = Math.floor(diffMs / 1000);
-            const days = Math.floor(total / 86400);
-            total = total % 86400;
-            const hours = Math.floor(total / 3600);
-            total = total % 3600;
-            const minutes = Math.floor(total / 60);
-            const seconds = total % 60;
-            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-        };
-
-        update();
-        const id = setInterval(update, 1000);
-        return () => clearInterval(id);
-    }, [statusDeadlineDate]);
-
     // Auto-reject application if deadline is passed
     useEffect(() => {
         if (!application || !statusDeadlineDate || hasProcessedRejection) return;
@@ -779,8 +731,11 @@ export default function PassportProgress() {
 
     const stepTimeline = useMemo(() => {
         return steps.map((step, index) => {
-            const setDate = getStepSetDateForTitle(application, step);
-            const deadlineDate = getStepDeadlineDate(application, step, setDate);
+            const stepData = getProcessStepData(application, step);
+            const setDate = stepData?.setDate ? parseCalendarDate(stepData.setDate) : getStepSetDateForTitle(application, step);
+            const deadlineDate = stepData?.deadlineDate
+                ? parseCalendarDate(stepData.deadlineDate)
+                : getStepDeadlineDate(application, step, setDate);
             const daysLeft = deadlineDate
                 ? deadlineDate.diff(dayjs().startOf('day'), 'day')
                 : null;
@@ -954,13 +909,6 @@ export default function PassportProgress() {
                         <View style={PassportProgressStyle.infoRow}>
                             <Text style={PassportProgressStyle.infoLabel}>Deadline</Text>
                             <Text style={PassportProgressStyle.infoValue}>{statusDeadlineDate.format('MMM D, YYYY')}</Text>
-                        </View>
-                    )}
-
-                    {countdown && (
-                        <View style={PassportProgressStyle.infoRow}>
-                            <Text style={PassportProgressStyle.infoLabel}>Countdown</Text>
-                            <Text style={[PassportProgressStyle.infoValue, { color: '#305797', fontWeight: '700' }]}>{countdown}</Text>
                         </View>
                     )}
 
@@ -1369,19 +1317,6 @@ export default function PassportProgress() {
                                 <Text style={{ fontSize: 13, color: '#1f2937', marginBottom: 6 }}>
                                     <Text style={{ fontWeight: '700' }}>Current status set on:</Text> {currentStatusSetDate?.isValid() ? currentStatusSetDate.format('MMM D, YYYY') : '—'}
                                 </Text>
-                                <Text style={{ fontSize: 13, color: '#1f2937' }}>
-                                    <Text style={{ fontWeight: '700' }}>Action deadline:</Text> {statusDeadlineDate?.isValid() ? statusDeadlineDate.format('MMM D, YYYY') : '—'}{statusDeadlineDate?.isValid() ? ` (${statusDeadlineDaysLeft} day${statusDeadlineDaysLeft === 1 ? '' : 's'} left)` : ''}
-                                </Text>
-                            </View>
-                            <View style={{ alignItems: 'flex-end', marginLeft: 10 }}>
-                                <View style={{ backgroundColor: '#fff3cc', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, marginBottom: 8 }}>
-                                    <Text style={{ color: '#92400e', fontWeight: '700' }}>Time-limited action</Text>
-                                </View>
-                                {countdown ? (
-                                    <Text style={{ color: countdown === 'Deadline passed' ? '#b91c1c' : '#1d4ed8', fontWeight: '700', fontSize: 15 }}>
-                                        Time left: {countdown}
-                                    </Text>
-                                ) : null}
                             </View>
                         </View>
                     </View>
@@ -1420,7 +1355,7 @@ export default function PassportProgress() {
 
                                         {isActive && (
                                             <Text style={[PassportProgressStyle.stepDesc, { marginTop: 6 }]}>
-                                                Current Stage {countdown ? `• ${countdown}` : ''}
+                                                Current Stage
                                             </Text>
                                         )}
                                     </View>
