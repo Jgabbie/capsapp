@@ -172,68 +172,6 @@ const getManagedByInfo = async (application) => {
   return { managedBy: null, managedById: null };
 };
 
-// Build a cascade of deadline dates for all process steps.
-// Uses the application's creation date as the initial anchor and then
-// successively adds each step's mapped days to the previous step's deadline.
-const buildStatusDeadlineDates = (application) => {
-  if (!application) return {};
-
-  const steps = [
-    'Application Submitted',
-    'Application Approved',
-    'Payment Completed',
-    'Documents Uploaded',
-    'Documents Approved',
-    'Documents Received',
-    'Documents Submitted',
-    'Processing by DFA',
-    'DFA Approved',
-    'Passport Released'
-  ];
-
-  // Steps we intentionally do not generate deadlines for (per request)
-  const noDeadlineAfter = new Set(['Documents Submitted', 'Processing by DFA', 'DFA Approved', 'Passport Released']);
-
-  const anchorDate = normalizePassportDate(application.createdAt) || normalizePassportDate(application.preferredDate);
-  const result = {};
-  let previousDeadline = null;
-
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-
-    if (noDeadlineAfter.has(step)) {
-      result[step] = null;
-      continue;
-    }
-
-    const days = PASSPORT_STATUS_DEADLINE_DAYS_MAP[step];
-    if (!Number.isFinite(days)) {
-      result[step] = null;
-      continue;
-    }
-
-    let deadline = null;
-    if (!previousDeadline) {
-      if (!anchorDate) {
-        deadline = null;
-      } else {
-        deadline = anchorDate.add(days, 'day').startOf('day');
-      }
-    } else {
-      deadline = previousDeadline.add(days, 'day').startOf('day');
-    }
-
-    if (deadline) {
-      result[step] = deadline.format('YYYY-MM-DD');
-      previousDeadline = deadline;
-    } else {
-      result[step] = null;
-    }
-  }
-
-  return result;
-};
-
 const decoratePassportApplication = async (application) => {
   if (!application) return application;
 
@@ -242,8 +180,11 @@ const decoratePassportApplication = async (application) => {
     : { ...application };
 
   const deadlineInfo = getPassportDeadlineInfo(plainApplication);
-  const statusDeadlineDates = buildStatusDeadlineDates(plainApplication);
   const managedByInfo = await getManagedByInfo(plainApplication);
+  // prefer stored processSteps; if not present compute an initial one
+  const processSteps = plainApplication.processSteps && Object.keys(plainApplication.processSteps).length > 0
+    ? plainApplication.processSteps
+    : buildProcessSteps(plainApplication);
 
   return {
     ...plainApplication,
@@ -252,7 +193,7 @@ const decoratePassportApplication = async (application) => {
     statusDeadlineWarningDate: deadlineInfo ? deadlineInfo.warningDate.format('YYYY-MM-DD') : null,
     statusDeadlineDaysRemaining: deadlineInfo ? deadlineInfo.daysRemaining : null,
     statusDeadlineWarningSent: deadlineInfo ? deadlineInfo.warningAlreadySent : false,
-    statusDeadlineDates,
+    processSteps,
     managedBy: managedByInfo.managedBy,
     managedById: managedByInfo.managedById,
   };
@@ -325,6 +266,10 @@ const sendPassportDeadlineWarning = async (application) => {
 
 
 
+
+
+
+
 const randomApplicationNumber = () =>
   `APP-PASS-${Math.floor(100000000 + Math.random() * 900000000)}`;
 
@@ -359,14 +304,14 @@ export const applyPassport = async (req, res) => {
       logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
     }
 
-    // compute and persist per-step deadline dates
+    // Populate initial processSteps and persist them on the application document.
     try {
-      const mapping = buildStatusDeadlineDates(application.toObject ? application.toObject() : application);
-      application.statusDeadlineDates = mapping;
+      const built = buildProcessSteps(application);
+      application.processSteps = built;
       await application.save();
     } catch (e) {
-      // non-fatal: continue and return created application even if persist fails
-      console.error('Failed to persist statusDeadlineDates:', e);
+      // non-fatal — continue returning application but log
+      console.error('Failed to build/persist processSteps:', e);
     }
 
     return res.status(201).json(application);
@@ -402,6 +347,15 @@ export const chooseAppointment = async (req, res) => {
     };
 
     await application.save();
+
+    // Rebuild processSteps since preferredDate changed (affects deadlines)
+    try {
+      const built = buildProcessSteps(application);
+      application.processSteps = built;
+      await application.save();
+    } catch (e) {
+      console.error('Failed to rebuild/persist processSteps after chooseAppointment:', e);
+    }
 
     if (typeof logAction === 'function') {
       logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
@@ -447,6 +401,15 @@ export const updatePassportApplicationWithDocs = async (req, res) => {
       logAction('PASSPORT_DOCUMENTS_UPLOADED', req.userId, { Application: application._id });
     }
 
+    // Rebuild processSteps since status changed
+    try {
+      const built = buildProcessSteps(application);
+      application.processSteps = built;
+      await application.save();
+    } catch (e) {
+      console.error('Failed to rebuild/persist processSteps after documents upload:', e);
+    }
+
     return res.status(200).json({
       message: "Passport documents updated successfully",
       application,
@@ -454,4 +417,63 @@ export const updatePassportApplicationWithDocs = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: "Error updating passport documents", error: error.message });
   }
+};
+
+// Ordered steps used to build the processSteps object stored on the application.
+const STEPS_ORDER = [
+  'Application Submitted',
+  'Application Approved',
+  'Payment Completed',
+  'Documents Uploaded',
+  'Documents Approved',
+  'Documents Received',
+  'Documents Submitted',
+  'Processing by DFA',
+  'DFA Approved',
+  'Passport Released'
+];
+
+// Build a processSteps object keyed by step name with setDate and deadlineDate (YYYY-MM-DD or null).
+// Deadline chaining rule: the first step's deadline = setDate + mapped days; subsequent deadlines
+// are computed by adding the mapped days to the previous step's computed deadline (if available).
+const buildProcessSteps = (application) => {
+  const out = {};
+  if (!application) return out;
+
+  const preferredDate = normalizePassportDate(application.preferredDate);
+  const createdAt = normalizePassportDate(application.createdAt) || dayjs().startOf('day');
+
+  let prevDeadline = null;
+
+  for (const step of STEPS_ORDER) {
+    const setDate = getStatusSetDateFromApplication(application, step) || (step === 'Application Submitted' ? createdAt : null);
+    const deadlineDays = PASSPORT_STATUS_DEADLINE_DAYS_MAP[step];
+
+    let deadline = null;
+
+    if (Number.isFinite(deadlineDays) && deadlineDays > 0) {
+      if (step === 'Application Submitted') {
+        if (setDate) deadline = setDate.add(deadlineDays, 'day').startOf('day');
+      } else if (prevDeadline) {
+        deadline = prevDeadline.add(deadlineDays, 'day').startOf('day');
+      } else if (setDate) {
+        deadline = setDate.add(deadlineDays, 'day').startOf('day');
+      } else if (preferredDate) {
+        // fallback: if nothing else, anchor to preferredDate
+        deadline = preferredDate.add(-0, 'day').startOf('day').add(deadlineDays, 'day');
+      }
+    } else {
+      // mapping days === 0 or undefined => no deadline stored
+      deadline = null;
+    }
+
+    if (deadline) prevDeadline = deadline;
+
+    out[step] = {
+      setDate: setDate ? setDate.format('YYYY-MM-DD') : null,
+      deadlineDate: deadline ? deadline.format('YYYY-MM-DD') : null,
+    };
+  }
+
+  return out;
 };
