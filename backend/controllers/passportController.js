@@ -265,11 +265,6 @@ const sendPassportDeadlineWarning = async (application) => {
 };
 
 
-
-
-
-
-
 const randomApplicationNumber = () =>
   `APP-PASS-${Math.floor(100000000 + Math.random() * 900000000)}`;
 
@@ -476,4 +471,28 @@ const buildProcessSteps = (application) => {
   }
 
   return out;
+};
+
+export const getPassportApplications = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const applications = await PassportModel.find({ userId }).sort({ createdAt: -1 });
+
+    if (!applications || applications.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const decorated = await Promise.all(
+      applications.map((app) => decoratePassportApplication(app))
+    );
+
+    return res.status(200).json(decorated);
+  } catch (error) {
+    return res.status(500).json({ message: "Error retrieving passport applications", error: error.message });
+  }
 };
