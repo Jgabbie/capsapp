@@ -37,7 +37,7 @@ export const sendContactEmail = async (req, res) => {
         }
         : null;
 
-    // 🔥 FIXED: We now actually insert the image into the HTML!
+    //  FIXED: We now actually insert the image into the HTML!
     const logoHtml = logoAttachment
         ? `<div style="text-align: center; margin-bottom: 20px;"><img src="cid:companyLogo" alt="M&RC Travel and Tours" style="max-width: 150px; height: auto;" /></div>`
         : ``;
@@ -45,7 +45,7 @@ export const sendContactEmail = async (req, res) => {
     try {
         // 1. Email sent to the Company (Admin)
         const companyResult = await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${senderEmail}>`, // 🔥 STRICT FORMATTING TO PREVENT SILENT DROPS
+            from: `"M&RC Travel and Tours" <${senderEmail}>`, //  STRICT FORMATTING TO PREVENT SILENT DROPS
             to: companyEmail,
             replyTo: normalizedEmail,
             subject: `New Inquiry from ${name} - ${subject}`,
@@ -69,7 +69,7 @@ export const sendContactEmail = async (req, res) => {
 
         // 2. Auto-reply sent to the Customer
         const customerResult = await transporter.sendMail({
-            from: `"M&RC Travel and Tours" <${senderEmail}>`, // 🔥 STRICT FORMATTING
+            from: `"M&RC Travel and Tours" <${senderEmail}>`, //  STRICT FORMATTING
             to: normalizedEmail,
             subject: 'We received your inquiry: ' + subject,
             html: buildBrandedEmail({

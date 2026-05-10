@@ -1,7 +1,7 @@
 import Transaction from "../models/transaction.js";
-import Booking from "../models/booking.js"; 
-import Package from "../models/package.js"; // 🔥 IMPORT THIS: Now the controller knows what a Package is!
-import logAction from "../utils/logger.js"; 
+import Booking from "../models/booking.js";
+import Package from "../models/package.js"; // IMPORT THIS: Now the controller knows what a Package is!
+import logAction from "../utils/logger.js";
 
 const generateTransactionReference = () => {
     const timestamp = Date.now().toString().slice(-6);
@@ -28,7 +28,7 @@ export const createTransaction = async (req, res) => {
             amount: Number(amount),
             method,
             status,
-            packageName: packageName || "Custom Package", 
+            packageName: packageName || "Custom Package",
         });
         if (typeof logAction === 'function') {
             logAction('TRANSACTION_CREATED', userId, { transactionId: transaction._id });
@@ -45,16 +45,16 @@ export const getUserTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({ userId: req.userId })
             .sort({ createdAt: -1 })
-            // 🔥 THE JEDI MIND TRICK 2.0 (Nested Populate) 🔥
+            // THE JEDI MIND TRICK 2.0 (Nested Populate)
             // This is how we get the nested Package Name from inside Booking!
             .populate({
                 path: "bookingId",
-                model: Booking, 
+                model: Booking,
                 select: "reference bookingDetails packageName packageId status",
-                populate: { // 🔥 Add this nested fill! 🔥
+                populate: { // Add this nested fill!
                     path: "packageId",
-                    model: Package, 
-                    select: "packageName" 
+                    model: Package,
+                    select: "packageName"
                 }
             });
         return res.status(200).json(transactions);

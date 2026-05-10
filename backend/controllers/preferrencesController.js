@@ -1,5 +1,5 @@
 import Preferrences from "../models/preferrences.js";
-import logAction from "../utils/logger.js"; // 🔥 Tracking added!
+import logAction from "../utils/logger.js"; //  Tracking added!
 
 export const savePreferrences = async (req, res) => {
     try {
@@ -13,11 +13,11 @@ export const savePreferrences = async (req, res) => {
         const updated = await Preferrences.findOneAndUpdate(
             { userId },
             { moods, tours, pace },
-            // 🔥 FIX 3: Replaced 'new: true' with 'returnDocument: "after"' to clear Mongoose warning
-            { returnDocument: 'after', upsert: true } 
+            //  FIX 3: Replaced 'new: true' with 'returnDocument: "after"' to clear Mongoose warning
+            { returnDocument: 'after', upsert: true }
         );
 
-        // 🔥 LOG ACTION: Track preference updates
+        //  LOG ACTION: Track preference updates
         if (typeof logAction === 'function') {
             logAction('UPDATE_PREFERENCES', userId, { "Preferences": "User updated their travel moodboard" });
         }

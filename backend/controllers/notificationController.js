@@ -49,12 +49,12 @@ export const markAllRead = async (req, res) => {
     }
 };
 
-// 🔥 NEW: Specifically for the Badge counter to show the TRUE total
+// NEW: Specifically for the Badge counter to show the TRUE total
 export const getUnreadCount = async (req, res) => {
     try {
-        const count = await Notification.countDocuments({ 
-            userId: req.userId, 
-            isRead: false 
+        const count = await Notification.countDocuments({
+            userId: req.userId,
+            isRead: false
         });
         res.status(200).json({ unreadCount: count });
     } catch (error) {
