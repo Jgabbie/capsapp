@@ -14,6 +14,8 @@ import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
 import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 export default function BookingInvoice({ route, navigation }) {
     const { user } = useUser();
@@ -27,6 +29,7 @@ export default function BookingInvoice({ route, navigation }) {
     const [booking, setBooking] = useState(rawBooking);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [enlargedQR, setEnlargedQR] = useState(null);
 
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -872,15 +875,21 @@ export default function BookingInvoice({ route, navigation }) {
                                     <Text style={[BookingInvoiceStyle.cardTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={BookingInvoiceStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO Unibank', acc: '0012-3456-7890' },
-                                            { name: 'BPI', acc: '9876-5432-10' },
-                                            { name: 'Metro Bank', acc: '0012-3456-7890' },
-                                            { name: 'Land Bank', acc: '9876-5432-10' },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
                                         ].map((bank, index) => (
                                             <View key={index} style={BookingInvoiceStyle.bankGridCard}>
                                                 <Text style={BookingInvoiceStyle.bankName}>{bank.name}</Text>
                                                 <Text style={BookingInvoiceStyle.bankAccount}>{bank.acc}</Text>
-                                                <Text style={BookingInvoiceStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                                <Text style={BookingInvoiceStyle.bankHolder}>{bank.holder}</Text>
+                                                {bank.qr ? (
+                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                )}
                                             </View>
                                         ))}
                                     </View>
@@ -1209,6 +1218,20 @@ export default function BookingInvoice({ route, navigation }) {
                         </View>
                     </SafeAreaView>
                 </View>
+            </Modal>
+
+            <Modal visible={!!enlargedQR} transparent animationType="fade" onRequestClose={() => setEnlargedQR(null)}>
+                <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setEnlargedQR(null)}>
+                    <View style={{ position: 'relative', width: '85%', aspectRatio: 1 }}>
+                        <Image source={enlargedQR} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: -40, right: -10, width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}
+                            onPress={() => setEnlargedQR(null)}
+                        >
+                            <Ionicons name="close-circle" size={40} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
             </Modal>
 
         </SafeAreaView>

@@ -12,6 +12,8 @@ import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 dayjs.extend(customParseFormat);
 
@@ -20,6 +22,7 @@ export default function PaymentMethod({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+    const [enlargedQR, setEnlargedQR] = useState(null);
 
     const { setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
@@ -450,15 +453,21 @@ export default function PaymentMethod({ route, navigation }) {
                         <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={PaymentStyle.bankGrid}>
                             {[
-                                { name: 'BDO Unibank', acc: '0012-3456-7890' },
-                                { name: 'BPI', acc: '9876-5432-10' },
-                                { name: 'Metro Bank', acc: '0012-3456-7890' },
-                                { name: 'Land Bank', acc: '9876-5432-10' },
+                                { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
                             ].map((bank, index) => (
                                 <View key={index} style={PaymentStyle.bankGridCard}>
                                     <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                     <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
-                                    <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                    <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
+                                    {bank.qr ? (
+                                        <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                            <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -534,6 +543,20 @@ export default function PaymentMethod({ route, navigation }) {
                         <Text style={localStyles.loadingSubtext}>Please do not close the app or tap anything.</Text>
                     </View>
                 </View>
+            </Modal>
+
+            <Modal visible={!!enlargedQR} transparent animationType="fade" onRequestClose={() => setEnlargedQR(null)}>
+                <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setEnlargedQR(null)}>
+                    <View style={{ position: 'relative', width: '85%', aspectRatio: 1 }}>
+                        <Image source={enlargedQR} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: -40, right: -10, width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}
+                            onPress={() => setEnlargedQR(null)}
+                        >
+                            <Ionicons name="close-circle" size={40} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
             </Modal>
         </SafeAreaView>
     );

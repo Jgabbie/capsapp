@@ -13,6 +13,8 @@ import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 const parseCalendarDate = (value) => {
     if (!value) return null;
@@ -58,6 +60,7 @@ export default function PassportProgress() {
     const [uploadingAll, setUploadingAll] = useState(false);
     const [showAppointmentSuccessModal, setShowAppointmentSuccessModal] = useState(false);
     const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
+    const [enlargedQR, setEnlargedQR] = useState(null);
 
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
@@ -979,15 +982,21 @@ export default function PassportProgress() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO Unibank', acc: '0012-3456-7890' },
-                                            { name: 'BPI', acc: '9876-5432-10' },
-                                            { name: 'Metro Bank', acc: '0012-3456-7890' },
-                                            { name: 'Land Bank', acc: '9876-5432-10' },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
                                         ].map((bank, index) => (
                                             <View key={index} style={PaymentStyle.bankGridCard}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
-                                                <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
+                                                {bank.qr ? (
+                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                )}
                                             </View>
                                         ))}
                                     </View>
@@ -1318,6 +1327,11 @@ export default function PassportProgress() {
                                     <Text style={{ fontWeight: '700' }}>Current status set on:</Text> {currentStatusSetDate?.isValid() ? currentStatusSetDate.format('MMM D, YYYY') : '—'}
                                 </Text>
                             </View>
+                            <View style={{ alignItems: 'flex-end', marginLeft: 10 }}>
+                                <View style={{ backgroundColor: '#fff3cc', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, marginBottom: 8 }}>
+                                    <Text style={{ color: '#92400e', fontWeight: '700' }}>Time-limited action</Text>
+                                </View>
+                            </View>
                         </View>
                     </View>
 
@@ -1424,6 +1438,21 @@ export default function PassportProgress() {
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
             </Modal>
+
+            <Modal visible={!!enlargedQR} transparent animationType="fade" onRequestClose={() => setEnlargedQR(null)}>
+                <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setEnlargedQR(null)}>
+                    <View style={{ position: 'relative', width: '85%', aspectRatio: 1 }}>
+                        <Image source={enlargedQR} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                        <TouchableOpacity
+                            style={{ position: 'absolute', top: -40, right: -10, width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}
+                            onPress={() => setEnlargedQR(null)}
+                        >
+                            <Ionicons name="close-circle" size={40} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
         </View>
     );
 }
