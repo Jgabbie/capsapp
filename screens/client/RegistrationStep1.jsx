@@ -32,6 +32,17 @@ const determineAgeCategory = (age) => {
     return "";
 }
 
+const formatPassportDisplay = (passportNo) => {
+    if (!passportNo) return '';
+
+    const cleaned = String(passportNo).trim().toUpperCase();
+    if (cleaned === 'N/A') return 'N/A';
+
+    return cleaned.startsWith('P') ? cleaned : `P${cleaned}`;
+};
+
+const buildPassengerPassport = (passportNo, isDomestic) => (isDomestic ? 'N/A' : formatPassportDisplay(passportNo));
+
 const assignRooms = (travelers) => {
     if (!travelers || travelers.length === 0) return [];
 
@@ -103,6 +114,7 @@ export default function RegistrationStep1({ route, navigation }) {
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
@@ -116,7 +128,7 @@ export default function RegistrationStep1({ route, navigation }) {
                 age: calculateAge(t.birthdate) || '',
                 ageCategory: determineAgeCategory(calculateAge(t.birthdate)) || t.ageCategory || '',
                 // 🔥 AUTO-FILL "N/A" IF DOMESTIC
-                passport: isDomestic ? 'N/A' : (t.passportNo || ''),
+                passport: buildPassengerPassport(t.passportNo, isDomestic),
                 expiry: isDomestic ? 'N/A' : (t.passportExpiry || '')
             }));
         }
@@ -162,7 +174,7 @@ export default function RegistrationStep1({ route, navigation }) {
                             age: computedAge || passenger.age,
                             ageCategory: determineAgeCategory(computedAge) || passenger.ageCategory,
                             // 🔥 ENSURE "N/A" STAYS IF IT RE-RENDERS
-                            passport: isDomestic ? 'N/A' : (sourceTraveler.passportNo || passenger.passport),
+                            passport: isDomestic ? 'N/A' : formatPassportDisplay(sourceTraveler.passportNo || passenger.passport),
                             expiry: isDomestic ? 'N/A' : (sourceTraveler.passportExpiry || passenger.expiry)
                         };
                     });
@@ -207,6 +219,11 @@ export default function RegistrationStep1({ route, navigation }) {
             }
         }
 
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
         navigation.navigate("registrationstep2", { setupData, travelerUploads, passengers, leadGuestInfo });
     };
 
@@ -390,6 +407,30 @@ export default function RegistrationStep1({ route, navigation }) {
                         <Text style={RegistrationFormStyle.backText}>Back to Uploads</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                    <View style={RegistrationFormStyle.modalOverlay}>
+                        <View style={RegistrationFormStyle.verifyModalCard}>
+                            <TouchableOpacity style={RegistrationFormStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={RegistrationFormStyle.closeButtonText}>×</Text>
+                            </TouchableOpacity>
+
+                            <Text style={RegistrationFormStyle.verifyModalTitle}>Please Verify Details</Text>
+                            <Text style={RegistrationFormStyle.verifyModalText}>
+                                Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                            </Text>
+
+                            <View style={RegistrationFormStyle.verifyModalButtonsRow}>
+                                <TouchableOpacity style={RegistrationFormStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                    <Text style={RegistrationFormStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={RegistrationFormStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                    <Text style={RegistrationFormStyle.verifySecondaryButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
             </ScrollView>
 

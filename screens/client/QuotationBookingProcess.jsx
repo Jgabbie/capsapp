@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform, Modal } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform, Modal, BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -65,6 +66,15 @@ export default function QuotationBookingProcess() {
     const [packageData, setPackageData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    // Only prevent hardware back while this screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            const backAction = () => true; // consume the event
+            const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+            return () => subscription.remove();
+        }, [])
+    );
 
     // Expecting quotation data passed from UserQuotationRequest
     const quotationId = route.params?.quotationId || route.params?.id || route.params?.quotation?._id;

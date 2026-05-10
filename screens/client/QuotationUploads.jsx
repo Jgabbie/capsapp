@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibraryAsync, MediaTypeOptions } from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
+import QuotationUploadsStyle from '../../styles/clientstyles/QuotationUploadsStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -183,11 +184,19 @@ export default function QuotationUploads({ route, navigation }) {
     };
 
     const pickImage = async (index, type) => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 0.7,
-        });
+        const options = {
+            mediaTypes: MediaTypeOptions.Images,
+            quality: type === 'photo' ? 0.8 : 0.7,
+        };
+
+        if (type === 'photo') {
+            options.allowsEditing = true;
+            options.aspect = [1, 1];
+        } else {
+            options.allowsEditing = false;
+        }
+
+        const result = await launchImageLibraryAsync(options);
 
         if (!result.canceled) {
             setUploads(prev => ({
@@ -233,6 +242,8 @@ export default function QuotationUploads({ route, navigation }) {
         setShowDatePicker(false);
     };
 
+    const isValidPassportNumber = (passportNo) => /^\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
+
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
         const isComplete = Object.values(uploads).every(u => u.passport && u.photo);
@@ -241,6 +252,18 @@ export default function QuotationUploads({ route, navigation }) {
             Alert.alert("Missing Documents", `Please upload both ${travelDocumentLabel} and 2x2 Photo for all travelers.`);
             return;
         }
+
+        if (!isDomestic) {
+            const invalidPassportIndex = travelersData.findIndex(traveler => !isValidPassportNumber(traveler.passportNo));
+            if (invalidPassportIndex !== -1) {
+                Alert.alert(
+                    "Invalid Passport Number",
+                    "Passport number must start with 7 digits and end with a letter (e.g. 8263213C)"
+                );
+                return;
+            }
+        }
+
         navigation.navigate("quotationform1", { quotation, travelerUploads: uploads, travelersData });
     };
 
@@ -259,55 +282,100 @@ export default function QuotationUploads({ route, navigation }) {
                         <Text style={BookingUploadsStyle.cardSubtitle}>Upload {travelDocumentLabel.toLowerCase()} and 2x2 ID photo</Text>
 
                         <View style={BookingUploadsStyle.formSection}>
+                            {/* Row 1: Title, First Name, Last Name */}
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, BookingUploadsStyle.titleSelect]}
-                                    onPress={() => setActiveDropdown({ index, type: 'title' })}
-                                >
-                                    <Text style={[BookingUploadsStyle.inputText, !t.title && BookingUploadsStyle.placeholderText]}>
-                                        {t.title || 'MR/MS'}
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={14} color="#9ca3af" />
-                                </TouchableOpacity>
+                                <View style={BookingUploadsStyle.formColSmall}>
+                                    <Text style={QuotationUploadsStyle.inputLabel}>Title</Text>
+                                    <TouchableOpacity
+                                        style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput]}
+                                        onPress={() => setActiveDropdown({ index, type: 'title' })}
+                                    >
+                                        <Text style={[BookingUploadsStyle.inputText, !t.title && BookingUploadsStyle.placeholderText]}>
+                                            {t.title || 'MR'}
+                                        </Text>
+                                        <Ionicons name="chevron-down" size={14} color="#9ca3af" />
+                                    </TouchableOpacity>
+                                </View>
 
-                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
-                                <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
+                                <View style={BookingUploadsStyle.formCol}>
+                                    <Text style={QuotationUploadsStyle.inputLabel}>First Name</Text>
+                                    <TextInput style={BookingUploadsStyle.input} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
+                                </View>
+
+                                <View style={BookingUploadsStyle.formCol}>
+                                    <Text style={QuotationUploadsStyle.inputLabel}>Last Name</Text>
+                                    <TextInput style={BookingUploadsStyle.input} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
+                                </View>
                             </View>
 
+                            {/* Row 2: Room Type & Birthdate */}
                             <View style={BookingUploadsStyle.formRow}>
-                                <TouchableOpacity
-                                    style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }, isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 }]}
-                                    onPress={() => {
-                                        if (bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index])) {
-                                            setActiveDropdown({ index, type: 'roomType' });
-                                        }
-                                    }}
-                                    disabled={isMinorTravelerType(travelerTypes[index])}
-                                >
-                                    <Text style={[BookingUploadsStyle.inputText, !t.roomType && BookingUploadsStyle.placeholderText]}>
-                                        {t.roomType || 'Room type'}
-                                    </Text>
-                                    {bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index]) && <Ionicons name="chevron-down" size={14} color="#9ca3af" />}
-                                </TouchableOpacity>
+                                <View style={BookingUploadsStyle.formCol}>
+                                    <Text style={QuotationUploadsStyle.inputLabel}>Room Type</Text>
+                                    <TouchableOpacity
+                                        style={[
+                                            BookingUploadsStyle.input,
+                                            BookingUploadsStyle.selectInput,
+                                            isMinorTravelerType(travelerTypes[index]) && { opacity: 0.6 },
+                                            (bookingType === 'Solo Booking' || isMinorTravelerType(travelerTypes[index])) && BookingUploadsStyle.disabledInput
+                                        ]}
+                                        onPress={() => {
+                                            if (bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index])) {
+                                                setActiveDropdown({ index, type: 'roomType' });
+                                            }
+                                        }}
+                                        disabled={bookingType === 'Solo Booking' || isMinorTravelerType(travelerTypes[index])}
+                                    >
+                                        <Text style={[BookingUploadsStyle.inputText, !t.roomType && BookingUploadsStyle.placeholderText]}>
+                                            {t.roomType || 'Room type'}
+                                        </Text>
+                                        {bookingType !== 'Solo Booking' && !isMinorTravelerType(travelerTypes[index]) && <Ionicons name="chevron-down" size={14} color="#9ca3af" />}
+                                    </TouchableOpacity>
+                                </View>
 
-                                <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'birthdate')}>
-                                    <Text style={[BookingUploadsStyle.inputText, !t.birthdate && BookingUploadsStyle.placeholderText]}>
-                                        {t.birthdate || 'Birthdate'}
-                                    </Text>
-                                    <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
-                                </TouchableOpacity>
-                            </View>
-
-                            {!isDomestic && (
-                                <View style={BookingUploadsStyle.formRow}>
-                                    <TextInput style={[BookingUploadsStyle.input, { flex: 1 }]} placeholder="Passport number" placeholderTextColor="#9ca3af" keyboardType="numeric" maxLength={7} value={t.passportNo} onChangeText={(v) => updateTraveler(index, 'passportNo', v.replace(/[^0-9]/g, ''))} />
-
-                                    <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput, { flex: 1 }]} onPress={() => openDatePicker(index, 'passportExpiry')}>
-                                        <Text style={[BookingUploadsStyle.inputText, !t.passportExpiry && BookingUploadsStyle.placeholderText]}>
-                                            {t.passportExpiry || 'Passport expiry'}
+                                <View style={BookingUploadsStyle.formCol}>
+                                    <Text style={QuotationUploadsStyle.inputLabel}>Birthdate</Text>
+                                    <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput]} onPress={() => openDatePicker(index, 'birthdate')}>
+                                        <Text style={[BookingUploadsStyle.inputText, !t.birthdate && BookingUploadsStyle.placeholderText]}>
+                                            {t.birthdate || 'Birthdate'}
                                         </Text>
                                         <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
                                     </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            {/* Row 3: Passport Fields (Non-Domestic Only) */}
+                            {!isDomestic && (
+                                <View style={BookingUploadsStyle.formRow}>
+                                    <View style={BookingUploadsStyle.formCol}>
+                                        <Text style={QuotationUploadsStyle.inputLabel}>Passport Number</Text>
+                                        <TextInput
+                                            style={BookingUploadsStyle.input}
+                                            placeholder="1234567A"
+                                            placeholderTextColor="#9ca3af"
+                                            maxLength={8}
+                                            value={t.passportNo}
+                                            onChangeText={(text) => {
+                                                const cleaned = (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                                let numbers = cleaned.replace(/[^0-9]/g, '');
+                                                let letters = cleaned.replace(/[^A-Z]/g, '');
+                                                if (numbers.length > 7) numbers = numbers.slice(0, 7);
+                                                if (letters.length > 1) letters = letters.slice(0, 1);
+                                                const finalPassport = numbers + letters;
+                                                updateTraveler(index, 'passportNo', finalPassport);
+                                            }}
+                                        />
+                                    </View>
+
+                                    <View style={BookingUploadsStyle.formCol}>
+                                        <Text style={QuotationUploadsStyle.inputLabel}>Passport Expiry</Text>
+                                        <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput]} onPress={() => openDatePicker(index, 'passportExpiry')}>
+                                            <Text style={[BookingUploadsStyle.inputText, !t.passportExpiry && BookingUploadsStyle.placeholderText]}>
+                                                {t.passportExpiry || 'Passport expiry'}
+                                            </Text>
+                                            <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             )}
                         </View>
@@ -315,16 +383,40 @@ export default function QuotationUploads({ route, navigation }) {
                         <View style={BookingUploadsStyle.uploadRow}>
                             <View style={BookingUploadsStyle.uploadSlot}>
                                 <Text style={BookingUploadsStyle.slotLabel}>{travelDocumentLabel.toUpperCase()} PREVIEW</Text>
-                                <TouchableOpacity style={[BookingUploadsStyle.dragger, uploads[index]?.passport && BookingUploadsStyle.draggerActive]} onPress={() => pickImage(index, 'passport')}>
-                                    {uploads[index]?.passport ? <Image source={{ uri: uploads[index].passport }} style={BookingUploadsStyle.previewImage} /> : <Ionicons name={isDomestic ? "id-card-outline" : "book-outline"} size={24} color="#305797" />}
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.dragger, uploads[index]?.passport && BookingUploadsStyle.draggerActive]}
+                                    onPress={() => pickImage(index, 'passport')}
+                                >
+                                    {uploads[index]?.passport ? (
+                                        <Image source={{ uri: uploads[index].passport }} style={BookingUploadsStyle.previewImage} />
+                                    ) : (
+                                        <Ionicons name={isDomestic ? "id-card-outline" : "book-outline"} size={24} color="#305797" />
+                                    )}
                                 </TouchableOpacity>
+                                {uploads[index]?.passport ? (
+                                    <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], passport: null } }))}>
+                                        <Text style={QuotationUploadsStyle.removeImageText}>Remove Image</Text>
+                                    </TouchableOpacity>
+                                ) : null}
                             </View>
 
                             <View style={BookingUploadsStyle.uploadSlot}>
                                 <Text style={BookingUploadsStyle.slotLabel}>2x2 PHOTO</Text>
-                                <TouchableOpacity style={[BookingUploadsStyle.dragger, uploads[index]?.photo && BookingUploadsStyle.draggerActive]} onPress={() => pickImage(index, 'photo')}>
-                                    {uploads[index]?.photo ? <Image source={{ uri: uploads[index].photo }} style={BookingUploadsStyle.previewImage} /> : <Ionicons name="person-outline" size={24} color="#305797" />}
+                                <TouchableOpacity
+                                    style={[BookingUploadsStyle.dragger, uploads[index]?.photo && BookingUploadsStyle.draggerActive]}
+                                    onPress={() => pickImage(index, 'photo')}
+                                >
+                                    {uploads[index]?.photo ? (
+                                        <Image source={{ uri: uploads[index].photo }} style={BookingUploadsStyle.previewImage} />
+                                    ) : (
+                                        <Ionicons name="person-outline" size={24} color="#305797" />
+                                    )}
                                 </TouchableOpacity>
+                                {uploads[index]?.photo ? (
+                                    <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], photo: null } }))}>
+                                        <Text style={QuotationUploadsStyle.removeImageText}>Remove Image</Text>
+                                    </TouchableOpacity>
+                                ) : null}
                             </View>
                         </View>
                     </View>

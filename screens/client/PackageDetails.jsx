@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView, Dimensions } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView, Dimensions, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
@@ -83,6 +83,13 @@ export default function PackageDetails({ route, navigation }) {
 
     const [selectedArrangement, setSelectedArrangement] = useState("All in Package");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+    // 🔥 ADD THESE TWO NEW STATES:
+    const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);
+    const [isRecommendVisaModalOpen, setIsRecommendVisaModalOpen] = useState(false);
+    // 🔥 ADD FILTER STATES:
+    const [dateSearchQuery, setDateSearchQuery] = useState("");
+    const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
     const passedPkg = route?.params?.pkg;
     const packageId = route?.params?.id || passedPkg?._id || passedPkg?.id;
@@ -230,7 +237,13 @@ export default function PackageDetails({ route, navigation }) {
             Alert.alert("Login Required", "Please login to proceed.");
             return;
         }
-        setIsArrangementModalOpen(true);
+
+        // 🔥 NEW: Check if a Visa is required first!
+        if (fullPkg?.visaRequired) {
+            setIsVisaRequiredModalOpen(true);
+        } else {
+            setIsArrangementModalOpen(true); // Normal flow
+        }
     };
 
     const handleWishlistAdd = async () => {
@@ -717,6 +730,82 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
+            {/* 🔥 NEW: VISA REQUIRED MODAL 🔥 */}
+            <Modal visible={isVisaRequiredModalOpen} transparent animationType="fade" onRequestClose={() => setIsVisaRequiredModalOpen(false)}>
+                <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <View style={DestinationStyles.visaModalCard}>
+                        <TouchableOpacity style={DestinationStyles.visaModalCloseBtn} onPress={() => setIsVisaRequiredModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+
+                        <Text style={DestinationStyles.visaModalTitle}>Visa Required</Text>
+                        <Text style={DestinationStyles.visaModalText}>
+                            This international package requires a visa. Do you already have a valid visa for this trip?
+                        </Text>
+
+                        <View style={DestinationStyles.visaButtonRow}>
+                            <TouchableOpacity 
+                                style={DestinationStyles.visaPrimaryButton} 
+                                onPress={() => {
+                                    setIsVisaRequiredModalOpen(false);
+                                    setIsArrangementModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Yes — I have a visa</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={DestinationStyles.visaPrimaryButton} 
+                                onPress={() => {
+                                    setIsVisaRequiredModalOpen(false);
+                                    setIsRecommendVisaModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>No — I need a visa</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* 🔥 NEW: WE RECOMMEND A VISA MODAL 🔥 */}
+            <Modal visible={isRecommendVisaModalOpen} transparent animationType="fade" onRequestClose={() => setIsRecommendVisaModalOpen(false)}>
+                <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <View style={DestinationStyles.visaModalCard}>
+                        <TouchableOpacity style={DestinationStyles.visaModalCloseBtn} onPress={() => setIsRecommendVisaModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+
+                        <Text style={DestinationStyles.visaModalTitle}>We Recommend a Visa</Text>
+                        <Text style={DestinationStyles.visaModalText}>
+                            We highly recommend that you obtain a visa before booking this tour package to avoid issues during travel.
+                        </Text>
+
+                        <View style={DestinationStyles.visaButtonRow}>
+                            <TouchableOpacity 
+                                style={DestinationStyles.visaPrimaryButton} 
+                                onPress={() => {
+                                    setIsRecommendVisaModalOpen(false);
+                                    setIsArrangementModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Continue to Booking</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={DestinationStyles.visaPrimaryButton} 
+                                onPress={() => {
+                                    setIsRecommendVisaModalOpen(false);
+                                    navigation.navigate("visaguidance");
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Proceed to Visa Services</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             <Modal transparent animationType='fade' visible={isDeleteReviewModalOpen} onRequestClose={() => setIsDeleteReviewModalOpen(false)}>
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
@@ -784,16 +873,54 @@ export default function PackageDetails({ route, navigation }) {
                     <View style={DestinationStyles.dateSelectionModalCard}>
                         <View style={{ marginBottom: 15 }}>
                             <Text style={[DestinationStyles.modalTitle, { fontSize: 18 }]}>Select Preferred Date</Text>
+                            {/* 🔥 FIX: Package title is now M&RC Blue */}
                             <Text style={{ fontSize: 12, color: '#555', marginTop: 4, fontWeight: 'bold' }}>
-                                Available Dates for {fullPkg?.title?.toUpperCase()}
+                                Available Dates for <Text style={{ color: '#305797' }}>{fullPkg?.title?.toUpperCase()}</Text>
                             </Text>
                         </View>
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {(fullPkg?.packageSpecificDate || []).length > 0 ? (
-                                (fullPkg.packageSpecificDate).map((range, index) => {
-                                    const isSelected = selectedSchedule === range;
-                                    const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
 
+                        {/* 🔥 NEW: FILTER ROW 🔥 */}
+                        <View style={DestinationStyles.dateFilterRow}>
+                            <View style={DestinationStyles.dateSearchContainer}>
+                                <TextInput
+                                    style={DestinationStyles.dateSearchInput}
+                                    placeholder="Search dates"
+                                    placeholderTextColor="#94a3b8"
+                                    value={dateSearchQuery}
+                                    onChangeText={setDateSearchQuery}
+                                />
+                                {dateSearchQuery.length > 0 && (
+                                    <TouchableOpacity style={DestinationStyles.dateClearSearchBtn} onPress={() => setDateSearchQuery("")}>
+                                        <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            <View style={DestinationStyles.dateToggleContainer}>
+                                <Switch
+                                    trackColor={{ false: "#cbd5e1", true: "#93c5fd" }}
+                                    thumbColor={showAvailableOnly ? "#305797" : "#f1f5f9"}
+                                    onValueChange={setShowAvailableOnly}
+                                    value={showAvailableOnly}
+                                />
+                                <Text style={DestinationStyles.dateToggleText}>Show available</Text>
+                            </View>
+
+                            <TouchableOpacity 
+                                style={DestinationStyles.dateClearFiltersBtn}
+                                onPress={() => {
+                                    setDateSearchQuery("");
+                                    setShowAvailableOnly(false);
+                                }}
+                            >
+                                <Text style={DestinationStyles.dateClearFiltersText}>Clear</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                            {/* 🔥 NEW: Filtering Logic implemented right before the map! */}
+                            {(() => {
+                                const filteredDates = (fullPkg?.packageSpecificDate || []).filter(range => {
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
                                     const startDate = new Date(range.startdaterange);
@@ -803,63 +930,91 @@ export default function PackageDetails({ route, navigation }) {
                                     const isSoldOut = range.slots <= 0;
                                     const isDisabled = isSoldOut || isPastOrToday;
 
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            disabled={isDisabled}
-                                            style={[
-                                                DestinationStyles.dateCard,
-                                                isSelected && DestinationStyles.dateCardSelected,
-                                                isDisabled && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
-                                            ]}
-                                            onPress={() => {
-                                                if (!isDisabled) {
-                                                    setSelectedSchedule(range);
-                                                }
-                                            }}
-                                            activeOpacity={isDisabled ? 1 : 0.8}
-                                        >
-                                            {isSelected && (
-                                                <View style={DestinationStyles.selectedBadge}>
-                                                    <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
-                                                </View>
-                                            )}
-                                            <View style={DestinationStyles.dateRow}>
-                                                <Ionicons name="calendar-outline" size={18} color={isDisabled ? "#9ca3af" : "#305797"} />
-                                                <Text style={[DestinationStyles.dateText, isDisabled && { color: '#9ca3af' }]}>
-                                                    Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
-                                                </Text>
-                                            </View>
-                                            <View style={DestinationStyles.priceRowDate}>
-                                                <Text style={[
-                                                    DestinationStyles.priceTextDate,
-                                                    isDisabled && { color: '#9ca3af' }
-                                                ]}>
-                                                    {formatPeso(fullPkg.price || 0)} / pax
-                                                    {range.extrarate > 0 && (
-                                                        <Text style={{ color: isDisabled ? '#9ca3af' : '#64748b', fontSize: 12 }}>
-                                                            {` + ${formatPeso(range.extrarate)} extra`}
-                                                        </Text>
-                                                    )}
-                                                </Text>
-                                                <View style={DestinationStyles.slotsBadge}>
-                                                    <Text style={[
-                                                        DestinationStyles.slotsBadgeText,
-                                                        (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
-                                                        isDisabled && { color: '#9ca3af', fontWeight: 'bold' }
-                                                    ]}>
-                                                        {isPastOrToday ? "Date Passed" : isSoldOut ? "Sold Out" : `${range.slots} slots left`}
+                                    // Filter out unavailable dates if toggle is ON
+                                    if (showAvailableOnly && isDisabled) return false;
+
+                                    // Filter by search query (checks both start and end dates)
+                                    if (dateSearchQuery.trim() !== "") {
+                                        const query = dateSearchQuery.toLowerCase();
+                                        const startStr = formatShortDate(range.startdaterange).toLowerCase();
+                                        const endStr = formatShortDate(range.enddaterange).toLowerCase();
+                                        if (!startStr.includes(query) && !endStr.includes(query)) return false;
+                                    }
+                                    return true;
+                                });
+
+                                return filteredDates.length > 0 ? (
+                                    filteredDates.map((range, index) => {
+                                        const isSelected = selectedSchedule === range;
+                                        const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
+
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        const startDate = new Date(range.startdaterange);
+                                        startDate.setHours(0, 0, 0, 0);
+
+                                        const isPastOrToday = startDate.getTime() <= today.getTime();
+                                        const isSoldOut = range.slots <= 0;
+                                        const isDisabled = isSoldOut || isPastOrToday;
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                disabled={isDisabled}
+                                                style={[
+                                                    DestinationStyles.dateCard,
+                                                    isSelected && DestinationStyles.dateCardSelected,
+                                                    isDisabled && { opacity: 0.5, backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
+                                                ]}
+                                                onPress={() => {
+                                                    if (!isDisabled) {
+                                                        setSelectedSchedule(range);
+                                                    }
+                                                }}
+                                                activeOpacity={isDisabled ? 1 : 0.8}
+                                            >
+                                                {isSelected && (
+                                                    <View style={DestinationStyles.selectedBadge}>
+                                                        <Text style={DestinationStyles.selectedBadgeText}>SELECTED</Text>
+                                                    </View>
+                                                )}
+                                                <View style={DestinationStyles.dateRow}>
+                                                    <Ionicons name="calendar-outline" size={18} color={isDisabled ? "#9ca3af" : "#305797"} />
+                                                    <Text style={[DestinationStyles.dateText, isDisabled && { color: '#9ca3af' }]}> 
+                                                        Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
                                                     </Text>
                                                 </View>
-                                            </View>
-                                        </TouchableOpacity>
-                                    );
-                                })
-                            ) : (
-                                <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
-                                    No available dates for this package.
-                                </Text>
-                            )}
+                                                <View style={DestinationStyles.priceRowDate}>
+                                                    <Text style={[
+                                                        DestinationStyles.priceTextDate,
+                                                        isDisabled && { color: '#9ca3af' }
+                                                    ]}>
+                                                        {formatPeso(fullPkg.price || 0)} / pax
+                                                        {range.extrarate > 0 && (
+                                                            <Text style={{ color: isDisabled ? '#9ca3af' : '#64748b', fontSize: 12 }}>
+                                                                {` + ${formatPeso(range.extrarate)} extra`}
+                                                            </Text>
+                                                        )}
+                                                    </Text>
+                                                    <View style={DestinationStyles.slotsBadge}>
+                                                        <Text style={[
+                                                            DestinationStyles.slotsBadgeText,
+                                                            (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
+                                                            isDisabled && { color: '#9ca3af', fontWeight: 'bold' }
+                                                        ]}>
+                                                            {isPastOrToday ? "Date Passed" : isSoldOut ? "Sold Out" : `${range.slots} slots left`}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    })
+                                ) : (
+                                    <Text style={{ textAlign: 'center', color: '#777', paddingVertical: 20 }}>
+                                        No available dates match your filter.
+                                    </Text>
+                                );
+                            })()}
                         </ScrollView>
 
                         <View style={DestinationStyles.selectionFooter}>
