@@ -38,6 +38,8 @@ export default function QuotationForm2({ route, navigation }) {
 
     const [activeDropdown, setActiveDropdown] = useState(null);
 
+    const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
+
     const isValidEmail = (email) => {
         if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
@@ -97,6 +99,8 @@ export default function QuotationForm2({ route, navigation }) {
             setMedicalData({ ...medicalData, insurance2: value });
         } else if (activeDropdown === 'emergencyTitle') {
             setEmergency({ ...emergency, title: value });
+        } else if (activeDropdown === 'relation') {
+            setEmergency({ ...emergency, relation: value });
         }
         setActiveDropdown(null);
     };
@@ -125,6 +129,18 @@ export default function QuotationForm2({ route, navigation }) {
             </>
         );
     };
+
+    if (activeDropdown === 'relation') {
+        return relationOptions.map((option, index) => (
+            <TouchableOpacity
+                key={option}
+                style={[QuotationFormStepStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
+                onPress={() => handleDropdownSelect(option)}
+            >
+                <Text style={QuotationFormStepStyle.dropdownText}>{option}</Text>
+            </TouchableOpacity>
+        ));
+    }
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
@@ -263,7 +279,14 @@ export default function QuotationForm2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Relation: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v.replace(/[^A-Za-z\s-]/g, '') })} />
+                                <TouchableOpacity
+                                    style={{ flex: 1, marginLeft: 5 }}
+                                    onPress={() => setActiveDropdown('relation')}
+                                >
+                                    <Text style={{ fontSize: 9, color: emergency.relation ? '#000' : '#888' }}>
+                                        {emergency.relation || 'Select'}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>

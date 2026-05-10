@@ -15,7 +15,7 @@ const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-U
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
 
-// 🔥 NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
+//  NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
 const parseDateStringSafe = (dateStr) => {
     if (!dateStr) return null;
 
@@ -146,7 +146,7 @@ export default function PaymentMode({ route, navigation }) {
         return `${monthKey}${String(sequence).padStart(2, "0")}`;
     };
 
-    // 🔥 BULLETPROOF SCHEDULE LOGIC
+    //  BULLETPROOF SCHEDULE LOGIC
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;

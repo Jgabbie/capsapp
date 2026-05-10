@@ -42,7 +42,7 @@ export default function VisaGuidance() {
 
     const filteredServices = useMemo(() => {
         if (!searchQuery) return services;
-        return services.filter(service => 
+        return services.filter(service =>
             service.visaName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             service.visaDescription.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -55,12 +55,12 @@ export default function VisaGuidance() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView 
+            <ScrollView
                 contentContainerStyle={[VisaGuidanceStyle.contentContainer, { paddingBottom: 180 }]}
                 showsVerticalScrollIndicator={false}
             >
-                {/* 🔥 NEW BANNER ADDED ON TOP */}
-                <ImageBackground 
+                {/*  NEW BANNER ADDED ON TOP */}
+                <ImageBackground
                     source={require('../../assets/images/PassportAndVisa_BackgroundImage.png')}
                     style={VisaGuidanceStyle.heroSection}
                     resizeMode="cover"

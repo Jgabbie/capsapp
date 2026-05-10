@@ -749,6 +749,11 @@ export default function VisaProgress() {
                     </View>
 
                     <View style={VisaProgressStyle.infoRow}>
+                        <Text style={VisaProgressStyle.infoLabel}>Managed By</Text>
+                        <Text style={VisaProgressStyle.infoValue}>{application.managedBy || 'N/A'}</Text>
+                    </View>
+
+                    <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Preferred Date</Text>
                         <Text style={VisaProgressStyle.infoValue}>{dayjs(application.preferredDate).format('MMM D, YYYY')}</Text>
                     </View>

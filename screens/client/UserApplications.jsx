@@ -200,7 +200,7 @@ export default function UserApplications() {
                                 <View key={item.key || index} style={UserApplicationsStyle.card}>
                                     <View style={UserApplicationsStyle.cardHeader}>
 
-                                        {/* 🔥 FIXED: Added headerLeft to handle flex space cleanly */}
+                                        {/* FIXED: Added headerLeft to handle flex space cleanly */}
                                         <View style={UserApplicationsStyle.headerLeft}>
                                             <Text style={UserApplicationsStyle.typeLabel}>{item.ref}</Text>
                                             <Text style={UserApplicationsStyle.applicationName} numberOfLines={2}>

@@ -66,12 +66,12 @@ export default function UserBookings() {
         if (normalized === 'pending') {
             return 'Pending';
         }
-        
+
         // Fall back to paidAmount logic
         if (Number(booking.paidAmount || 0) <= 0) {
             return 'Not Paid';
         }
-        
+
         return formatted || 'No Status';
     };
 
@@ -127,7 +127,7 @@ export default function UserBookings() {
                     }
                 }
 
-                // 🔥 FIXED: Reads the Object format perfectly now
+                // FIXED: Reads the Object format perfectly now
                 let computedTravelers = 1;
                 if (Array.isArray(b.travelers)) {
                     if (b.travelers.length > 0 && b.travelers[0].adult !== undefined) {

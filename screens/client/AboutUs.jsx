@@ -26,7 +26,7 @@ export default function AboutUs() {
         Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
     };
 
-    // 🔥 UPDATED: Map Search Query vs Display Text 🔥
+    // UPDATED: Map Search Query vs Display Text
     const openMaps = () => {
         // This is the exact string Google Maps needs to find the pin
         const mapQuery = "Valley 1, M&RC TRAVEL AND TOURS, Finasia Homes, 1 Cor Fatima Street, San Antonio Ave, Parañaque, Metro Manila";
@@ -47,7 +47,7 @@ export default function AboutUs() {
                 <View style={AboutUsStyle.section}>
                     <View style={[AboutUsStyle.card, AboutUsStyle.fullBleedCard]}>
                         <Text style={AboutUsStyle.mainTitleWhite}>About Us</Text>
-                        
+
                         <Text style={AboutUsStyle.paragraphWhite}>
                             M&RC Travel and Tours humbly started travel business in July 2018 when two vibrant entrepreneur, traveler, Maricar Carle and Rhon Carle decided to turn their passion into business. Office is located at #1 Cor Fatima Street San antonio Avenue Valley 1, Brgy. San Antonio Paranaque City with over thousand of agents worldwide and travel partners.
                         </Text>
@@ -58,14 +58,14 @@ export default function AboutUs() {
                             We value honesty and integrity. M&RC Travel and Tours continuously develop other line of services with the primary objective of extending wide range of quality and excellent service.
                         </Text>
 
-                        <Image 
-                            source={require('../../assets/images/Homepage1.png')} 
-                            style={AboutUsStyle.fullBleedImage} 
+                        <Image
+                            source={require('../../assets/images/Homepage1.png')}
+                            style={AboutUsStyle.fullBleedImage}
                         />
                     </View>
                 </View>
 
-                    <View style={AboutUsStyle.rowSection}>
+                <View style={AboutUsStyle.rowSection}>
                     <View style={[AboutUsStyle.card, AboutUsStyle.fullBleedCard]}>
                         <Text style={AboutUsStyle.subTitleWhite}>Our Vision</Text>
                         <Text style={AboutUsStyle.paragraphWhite}>
@@ -79,15 +79,15 @@ export default function AboutUs() {
                             We are committed to provide value-added travel solutions to our Customers by offering good service and meaningful experience through the help of our reliable and service- oriented travel partners. We aim to grow and profit with the knowledge that each customer we served is fully satisfied. We adhere to the notion of reliability, competence, competitiveness and integrity. We are committed to be updated with the latest technology to keep up with the demands of the global market. We care for the well-being of our employees, our community and our environment.
                         </Text>
 
-                        <Image 
-                            source={require('../../assets/images/Homepage2.png')} 
-                            style={AboutUsStyle.fullBleedImageLarge} 
+                        <Image
+                            source={require('../../assets/images/Homepage2.png')}
+                            style={AboutUsStyle.fullBleedImageLarge}
                         />
                     </View>
                 </View>
 
                 <View style={[AboutUsStyle.card, AboutUsStyle.section]}>
-                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}> 
+                    <Text style={[AboutUsStyle.mainTitle, { textAlign: 'center', marginBottom: 20 }]}>
                         <Text style={[AboutUsStyle.mainTitle, { color: '#000' }]}>WHY </Text>
                         <Text style={[AboutUsStyle.mainTitle, { color: '#305797' }]}>BOOK </Text>
                         <Text style={[AboutUsStyle.mainTitle, { color: '#000' }]}>WITH US?</Text>
@@ -114,7 +114,7 @@ export default function AboutUs() {
                     </View>
                 </View>
 
-                {/* 🔥 CLICKABLE ADDRESS CARD 🔥 */}
+                {/* CLICKABLE ADDRESS CARD */}
                 <TouchableOpacity style={AboutUsStyle.card} onPress={openMaps} activeOpacity={0.7}>
                     <Text style={AboutUsStyle.subTitle}>Our Address</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 5 }}>

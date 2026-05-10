@@ -84,10 +84,10 @@ export default function PackageDetails({ route, navigation }) {
     const [selectedArrangement, setSelectedArrangement] = useState("All in Package");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
 
-    // 🔥 ADD THESE TWO NEW STATES:
+    //  ADD THESE TWO NEW STATES:
     const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);
     const [isRecommendVisaModalOpen, setIsRecommendVisaModalOpen] = useState(false);
-    // 🔥 ADD FILTER STATES:
+    //  ADD FILTER STATES:
     const [dateSearchQuery, setDateSearchQuery] = useState("");
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
@@ -238,7 +238,7 @@ export default function PackageDetails({ route, navigation }) {
             return;
         }
 
-        // 🔥 NEW: Check if a Visa is required first!
+        //  NEW: Check if a Visa is required first!
         if (fullPkg?.visaRequired) {
             setIsVisaRequiredModalOpen(true);
         } else {
@@ -730,7 +730,7 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
-            {/* 🔥 NEW: VISA REQUIRED MODAL 🔥 */}
+            {/*  NEW: VISA REQUIRED MODAL  */}
             <Modal visible={isVisaRequiredModalOpen} transparent animationType="fade" onRequestClose={() => setIsVisaRequiredModalOpen(false)}>
                 <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
                     <View style={DestinationStyles.visaModalCard}>
@@ -744,8 +744,8 @@ export default function PackageDetails({ route, navigation }) {
                         </Text>
 
                         <View style={DestinationStyles.visaButtonRow}>
-                            <TouchableOpacity 
-                                style={DestinationStyles.visaPrimaryButton} 
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsVisaRequiredModalOpen(false);
                                     setIsArrangementModalOpen(true);
@@ -754,8 +754,8 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.visaButtonText}>Yes — I have a visa</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                style={DestinationStyles.visaPrimaryButton} 
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsVisaRequiredModalOpen(false);
                                     setIsRecommendVisaModalOpen(true);
@@ -768,7 +768,7 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
-            {/* 🔥 NEW: WE RECOMMEND A VISA MODAL 🔥 */}
+            {/*  NEW: WE RECOMMEND A VISA MODAL  */}
             <Modal visible={isRecommendVisaModalOpen} transparent animationType="fade" onRequestClose={() => setIsRecommendVisaModalOpen(false)}>
                 <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
                     <View style={DestinationStyles.visaModalCard}>
@@ -782,8 +782,8 @@ export default function PackageDetails({ route, navigation }) {
                         </Text>
 
                         <View style={DestinationStyles.visaButtonRow}>
-                            <TouchableOpacity 
-                                style={DestinationStyles.visaPrimaryButton} 
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsRecommendVisaModalOpen(false);
                                     setIsArrangementModalOpen(true);
@@ -792,8 +792,8 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.visaButtonText}>Continue to Booking</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                style={DestinationStyles.visaPrimaryButton} 
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsRecommendVisaModalOpen(false);
                                     navigation.navigate("visaguidance");
@@ -873,13 +873,13 @@ export default function PackageDetails({ route, navigation }) {
                     <View style={DestinationStyles.dateSelectionModalCard}>
                         <View style={{ marginBottom: 15 }}>
                             <Text style={[DestinationStyles.modalTitle, { fontSize: 18 }]}>Select Preferred Date</Text>
-                            {/* 🔥 FIX: Package title is now M&RC Blue */}
+                            {/*  FIX: Package title is now M&RC Blue */}
                             <Text style={{ fontSize: 12, color: '#555', marginTop: 4, fontWeight: 'bold' }}>
                                 Available Dates for <Text style={{ color: '#305797' }}>{fullPkg?.title?.toUpperCase()}</Text>
                             </Text>
                         </View>
 
-                        {/* 🔥 NEW: FILTER ROW 🔥 */}
+                        {/*  NEW: FILTER ROW  */}
                         <View style={DestinationStyles.dateFilterRow}>
                             <View style={DestinationStyles.dateSearchContainer}>
                                 <TextInput
@@ -906,7 +906,7 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.dateToggleText}>Show available</Text>
                             </View>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={DestinationStyles.dateClearFiltersBtn}
                                 onPress={() => {
                                     setDateSearchQuery("");
@@ -918,7 +918,7 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
 
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                            {/* 🔥 NEW: Filtering Logic implemented right before the map! */}
+                            {/*  NEW: Filtering Logic implemented right before the map! */}
                             {(() => {
                                 const filteredDates = (fullPkg?.packageSpecificDate || []).filter(range => {
                                     const today = new Date();
@@ -980,7 +980,7 @@ export default function PackageDetails({ route, navigation }) {
                                                 )}
                                                 <View style={DestinationStyles.dateRow}>
                                                     <Ionicons name="calendar-outline" size={18} color={isDisabled ? "#9ca3af" : "#305797"} />
-                                                    <Text style={[DestinationStyles.dateText, isDisabled && { color: '#9ca3af' }]}> 
+                                                    <Text style={[DestinationStyles.dateText, isDisabled && { color: '#9ca3af' }]}>
                                                         Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
                                                     </Text>
                                                 </View>

@@ -44,7 +44,7 @@ export default function QuotationAllIn() {
     // Destructure passed data from PackageDetails/Date Modal
     const { pkg, selectedDate, selectedDateSlots, selectedDatePrice, selectedDateRate } = route.params || {};
 
-    // 🔥 FIXED: Prefer the actual slot count passed from the date picker
+    //  FIXED: Prefer the actual slot count passed from the date picker
     const getAvailableSlots = () => {
         const directSlotCount = Number(selectedDateSlots);
         if (Number.isFinite(directSlotCount) && directSlotCount > 0) return directSlotCount;
@@ -108,7 +108,7 @@ export default function QuotationAllIn() {
     const maxChildren = pkg?.maxChildren || 10;
     const maxInfants = pkg?.maxInfants || 10;
 
-    // 🔥 Cap max travelers based on available slots
+    //  Cap max travelers based on available slots
     // With 2 slots: 2 adults, 0 children, 0 infants (locked)
     // With 3 slots: 3 adults, 1 child max, 1 infant max, etc.
     const maxTravelersFromSlots = availableSlots;
@@ -166,7 +166,7 @@ export default function QuotationAllIn() {
         });
     }, [selectedSoloGrouped, availableSlots, effectiveMaxAdults, effectiveMaxChildren, effectiveMaxInfants, maxTravelersFromSlots]);
 
-    // 🔥 NEW: Calculate Original Total (Before Discount)
+    //  NEW: Calculate Original Total (Before Discount)
     const originalTotalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return baseSoloRate;
         return (travelersCount.adult * basePackagePricePerPax) +
@@ -306,7 +306,7 @@ export default function QuotationAllIn() {
                     <Text style={QuotationAllInStyle.totalLabel}>TOTAL AMOUNT</Text>
                     <Text style={QuotationAllInStyle.totalValue}>{formatPeso(totalAmount)}</Text>
 
-                    {/* 🔥 UPDATED: Dynamic Pricing Breakdown perfectly matching Web */}
+                    {/*  UPDATED: Dynamic Pricing Breakdown perfectly matching Web */}
                     {discountPercent > 0 && (
                         <View style={QuotationAllInStyle.pricingRow}>
                             <Text style={QuotationAllInStyle.pricingText}>Discount</Text>
@@ -381,7 +381,7 @@ export default function QuotationAllIn() {
                     <Text style={QuotationAllInStyle.subtitle}>Select if you are traveling alone or with a group.</Text>
                 </View>
 
-                {/* 🔥 UPDATED: Solo Selection Card Image */}
+                {/*  UPDATED: Solo Selection Card Image */}
                 <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'solo' && QuotationAllInStyle.cardSelected]}
@@ -395,7 +395,7 @@ export default function QuotationAllIn() {
                     </View>
                 </TouchableOpacity>
 
-                {/* 🔥 UPDATED: Group Selection Card Image */}
+                {/*  UPDATED: Group Selection Card Image */}
                 <TouchableOpacity
                     activeOpacity={0.9}
                     style={[QuotationAllInStyle.card, selectedSoloGrouped === 'group' && QuotationAllInStyle.cardSelected, isGroupBookingDisabled && { opacity: 0.5 }]}

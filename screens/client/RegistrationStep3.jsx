@@ -19,8 +19,8 @@ export default function RegistrationStep3({ route, navigation }) {
 
     const handleNext = () => {
         // Move to the final Terms & Conditions step (Step 4)
-        navigation.navigate("registrationstep4", { 
-            setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency 
+        navigation.navigate("registrationstep4", {
+            setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
 
@@ -28,7 +28,7 @@ export default function RegistrationStep3({ route, navigation }) {
         <SafeAreaView style={RegistrationFormStyle.safeArea}>
             <StatusBar barStyle="light-content" />
             <ScrollView contentContainerStyle={RegistrationFormStyle.scrollViewContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={RegistrationFormStyle.paperPage}>
                     {/* Logo */}
                     <Image source={require('../../assets/images/LastPushLogo.png')} style={RegistrationFormStyle.logo} />
@@ -51,10 +51,10 @@ export default function RegistrationStep3({ route, navigation }) {
 
                     {/* Two Column Layout for the Terms */}
                     <View style={[RegistrationFormStyle.row, { alignItems: 'flex-start', marginTop: 10 }]}>
-                        
+
                         {/* LEFT COLUMN */}
                         <View style={{ flex: 1, paddingRight: 5 }}>
-                            {/* 🔥 Made this explicitly bold and slightly larger for mobile screens 🔥 */}
+                            {/*  Made this explicitly bold and slightly larger for mobile screens  */}
                             <Text style={{ fontFamily: "Montserrat_700Bold", fontWeight: 'bold', fontStyle: 'italic', fontSize: 8, textAlign: 'justify', marginBottom: 8, lineHeight: 11, color: '#000' }}>
                                 Complete and signed copy this form must be sent together with all the participant's PASSPORT COPIES (for international) or VALID ID's (for domestic). Failure to send accomplished form will be subject to penalties or cancellation of your package. Upon completion of your booking process and deposit, you will receive a Booking Confirmation of your purchase and registration.
                             </Text>
@@ -118,14 +118,14 @@ export default function RegistrationStep3({ route, navigation }) {
 
                 {/* Footer Navigation Buttons */}
                 <View style={RegistrationFormStyle.footerContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={QuotationAllInStyle.proceedButton}
                         onPress={handleNext}
                     >
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={RegistrationFormStyle.backTextButton}
                         onPress={() => navigation.goBack()}
                     >

@@ -32,6 +32,8 @@ export default function RegistrationStep2({ route, navigation }) {
 
     const [activeDropdown, setActiveDropdown] = useState(null);
 
+    const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
+
     // --- Validation Logic ---
     const isValidEmail = (email) => {
         if (!email) return true;
@@ -94,6 +96,8 @@ export default function RegistrationStep2({ route, navigation }) {
             setMedicalData({ ...medicalData, insurance2: value });
         } else if (activeDropdown === 'emergencyTitle') {
             setEmergency({ ...emergency, title: value });
+        } else if (activeDropdown === 'relation') {
+            setEmergency({ ...emergency, relation: value });
         }
         setActiveDropdown(null);
     };
@@ -110,6 +114,18 @@ export default function RegistrationStep2({ route, navigation }) {
                     </TouchableOpacity>
                 </>
             );
+        }
+
+        if (activeDropdown === 'relation') {
+            return relationOptions.map((option, index) => (
+                <TouchableOpacity
+                    key={option}
+                    style={[RegistrationFormStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
+                    onPress={() => handleDropdownSelect(option)}
+                >
+                    <Text style={RegistrationFormStyle.dropdownText}>{option}</Text>
+                </TouchableOpacity>
+            ));
         }
 
         // Default to Y/N for the others (matching the web format)
@@ -132,7 +148,7 @@ export default function RegistrationStep2({ route, navigation }) {
 
                 <View style={RegistrationFormStyle.paperPage}>
                     <Image source={require('../../assets/images/LastPushLogo.png')} style={RegistrationFormStyle.logo} />
-                    
+
                     <View style={RegistrationFormStyle.headerGold}>
                         <Text style={RegistrationFormStyle.headerGoldText}>TRAVEL REGISTRATION DETAILS</Text>
                     </View>
@@ -142,7 +158,7 @@ export default function RegistrationStep2({ route, navigation }) {
 
                     {/* Package Info */}
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 4 }]}>
-                        {/* 🔥 FIXED: Now properly checks for packageName first, just like Step 1 */}
+                        {/*  FIXED: Now properly checks for packageName first, just like Step 1 */}
                         TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.pkg?.packageName || setupData?.pkg?.title || ''}</Text>
                     </Text>
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 15 }]}>
@@ -167,7 +183,7 @@ export default function RegistrationStep2({ route, navigation }) {
                             value={medicalData.dietaryDetails}
                             onChangeText={(v) => setMedicalData({ ...medicalData, dietaryDetails: v })}
                             editable={medicalData.dietary === 'Y'}
-                            backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
+                            backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'} //  Kept white as requested
                         />
                     </View>
 
@@ -189,7 +205,7 @@ export default function RegistrationStep2({ route, navigation }) {
                             value={medicalData.medicalDetails}
                             onChangeText={(v) => setMedicalData({ ...medicalData, medicalDetails: v })}
                             editable={medicalData.medical === 'Y'}
-                            backgroundColor={medicalData.medical === 'Y' ? '#fff' : '#fff'} // 🔥 Kept white as requested
+                            backgroundColor={medicalData.medical === 'Y' ? '#fff' : '#fff'} //  Kept white as requested
                         />
                     </View>
 
@@ -282,7 +298,14 @@ export default function RegistrationStep2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Relation: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.relation} onChangeText={(v) => setEmergency({ ...emergency, relation: v.replace(/[^A-Za-z\s-]/g, '') })} />
+                                <TouchableOpacity
+                                    style={{ flex: 1, marginLeft: 5 }}
+                                    onPress={() => setActiveDropdown('relation')}
+                                >
+                                    <Text style={{ fontSize: 9, color: emergency.relation ? '#000' : '#888' }}>
+                                        {emergency.relation || 'Select'}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>

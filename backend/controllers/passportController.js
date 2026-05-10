@@ -4,6 +4,7 @@ import NotificationModel from "../models/notification.js";
 import transporter from "../config/nodemailer.js";
 import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
+import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 
 const PASSPORT_STATUS_DEADLINE_DAYS_MAP = {
@@ -127,7 +128,113 @@ const getPassportDeadlineInfo = (application, referenceDate = dayjs()) => {
   };
 };
 
-const decoratePassportApplication = (application) => {
+const formatManagedByName = (user) => {
+  if (!user) return null;
+  const fullName = [user.firstname, user.lastname]
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  return fullName || String(user.username || '').trim() || null;
+};
+
+const getManagedByInfo = async (application) => {
+  if (!application) return { managedBy: null, managedById: null };
+
+  const history = Array.isArray(application.statusHistory) ? application.statusHistory : [];
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (!entry || !entry.changedBy) continue;
+
+    const changedBy = entry.changedBy;
+    if (typeof changedBy === 'object') {
+      const role = String(changedBy.role || '').toLowerCase();
+      if (role && role !== 'admin') continue;
+
+      const managedBy = formatManagedByName(changedBy);
+      if (managedBy) {
+        return { managedBy, managedById: changedBy._id || null };
+      }
+    }
+
+    const changedById = changedBy._id || changedBy;
+    if (!changedById) continue;
+
+    const user = await UserModel.findById(changedById).select('firstname lastname username role');
+    if (!user || String(user.role || '').toLowerCase() !== 'admin') continue;
+
+    const managedBy = formatManagedByName(user);
+    if (managedBy) {
+      return { managedBy, managedById: user._id };
+    }
+  }
+
+  return { managedBy: null, managedById: null };
+};
+
+// Build a cascade of deadline dates for all process steps.
+// Uses the application's creation date as the initial anchor and then
+// successively adds each step's mapped days to the previous step's deadline.
+const buildStatusDeadlineDates = (application) => {
+  if (!application) return {};
+
+  const steps = [
+    'Application Submitted',
+    'Application Approved',
+    'Payment Completed',
+    'Documents Uploaded',
+    'Documents Approved',
+    'Documents Received',
+    'Documents Submitted',
+    'Processing by DFA',
+    'DFA Approved',
+    'Passport Released'
+  ];
+
+  // Steps we intentionally do not generate deadlines for (per request)
+  const noDeadlineAfter = new Set(['Documents Submitted', 'Processing by DFA', 'DFA Approved', 'Passport Released']);
+
+  const anchorDate = normalizePassportDate(application.createdAt) || normalizePassportDate(application.preferredDate);
+  const result = {};
+  let previousDeadline = null;
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+
+    if (noDeadlineAfter.has(step)) {
+      result[step] = null;
+      continue;
+    }
+
+    const days = PASSPORT_STATUS_DEADLINE_DAYS_MAP[step];
+    if (!Number.isFinite(days)) {
+      result[step] = null;
+      continue;
+    }
+
+    let deadline = null;
+    if (!previousDeadline) {
+      if (!anchorDate) {
+        deadline = null;
+      } else {
+        deadline = anchorDate.add(days, 'day').startOf('day');
+      }
+    } else {
+      deadline = previousDeadline.add(days, 'day').startOf('day');
+    }
+
+    if (deadline) {
+      result[step] = deadline.format('YYYY-MM-DD');
+      previousDeadline = deadline;
+    } else {
+      result[step] = null;
+    }
+  }
+
+  return result;
+};
+
+const decoratePassportApplication = async (application) => {
   if (!application) return application;
 
   const plainApplication = typeof application.toObject === 'function'
@@ -135,6 +242,8 @@ const decoratePassportApplication = (application) => {
     : { ...application };
 
   const deadlineInfo = getPassportDeadlineInfo(plainApplication);
+  const statusDeadlineDates = buildStatusDeadlineDates(plainApplication);
+  const managedByInfo = await getManagedByInfo(plainApplication);
 
   return {
     ...plainApplication,
@@ -143,6 +252,9 @@ const decoratePassportApplication = (application) => {
     statusDeadlineWarningDate: deadlineInfo ? deadlineInfo.warningDate.format('YYYY-MM-DD') : null,
     statusDeadlineDaysRemaining: deadlineInfo ? deadlineInfo.daysRemaining : null,
     statusDeadlineWarningSent: deadlineInfo ? deadlineInfo.warningAlreadySent : false,
+    statusDeadlineDates,
+    managedBy: managedByInfo.managedBy,
+    managedById: managedByInfo.managedById,
   };
 };
 
@@ -185,32 +297,16 @@ const sendPassportDeadlineWarning = async (application) => {
     from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
     to: user.email,
     subject: `Passport Deadline Reminder: ${statusLabel} due ${deadlineLabel}`,
-    html: `
-            <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
-                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                    <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                    <h2 style="color:#305797;">Passport Deadline Reminder</h2>
-                    <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">One day remains to complete <b>${statusLabel}</b> for your passport application <b>${applicationNumber}</b>.</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Deadline: <b>${deadlineLabel}</b></p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Please log in and finish the required step to stay on track for your appointment date.</p>
-
-                    <a href="https://mrctravelandtours.com/home"
-                        style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                        Login to Your Account
-                    </a>
-
-                    <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                    <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                        <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                        <p>M&RC Travel and Tours</p>
-                        <p>info1@mrctravels.com</p>
-                        <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                    </div>
-                </div>
-            </div>
-        `,
+    html: buildBrandedEmail({
+      title: 'Passport Deadline Reminder',
+      introHtml: `Hello <b>${displayName}</b>, one day remains to complete <b>${statusLabel}</b> for your passport application <b>${applicationNumber}</b>.`,
+      bodyHtml: `
+        <p style="margin:0 0 10px;">Deadline: <b>${deadlineLabel}</b></p>
+        <p style="margin:0;">Please log in and finish the required step to stay on track for your appointment date.</p>
+      `,
+      ctaText: 'Continue in App',
+      ctaUrl: 'travex://passportprogress',
+    }),
   });
 
   application.deadlineWarnings = application.deadlineWarnings || [];
@@ -226,10 +322,6 @@ const sendPassportDeadlineWarning = async (application) => {
 
   return { sent: true, application };
 };
-
-
-
-
 
 
 
@@ -267,26 +359,19 @@ export const applyPassport = async (req, res) => {
       logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
     }
 
+    // compute and persist per-step deadline dates
+    try {
+      const mapping = buildStatusDeadlineDates(application.toObject ? application.toObject() : application);
+      application.statusDeadlineDates = mapping;
+      await application.save();
+    } catch (e) {
+      // non-fatal: continue and return created application even if persist fails
+      console.error('Failed to persist statusDeadlineDates:', e);
+    }
+
     return res.status(201).json(application);
   } catch (error) {
     return res.status(500).json({ message: "Error submitting passport application", error: error.message });
-  }
-};
-
-export const getPassportApplications = async (req, res) => {
-  try {
-    const user = await UserModel.findById(req.userId).select("role");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const isAdmin = String(user.role || "").toLowerCase() === "admin";
-    const query = isAdmin ? {} : { userId: req.userId };
-
-    const applications = await PassportModel.find(query).sort({ createdAt: -1 });
-    return res.status(200).json(applications.map(decoratePassportApplication));
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 

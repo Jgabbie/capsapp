@@ -25,11 +25,11 @@ export default function PassportGuidance() {
         <View style={PassportGuidanceStyle.container}>
             <Header openSidebar={() => { setSidebarVisible(true) }} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
-            
+
             <ScrollView contentContainerStyle={PassportGuidanceStyle.scrollContent} showsVerticalScrollIndicator={false}>
-                
-                {/* 🔥 NEW BANNER ADDED ON TOP */}
-                <ImageBackground 
+
+                {/*  NEW BANNER ADDED ON TOP */}
+                <ImageBackground
                     source={require('../../assets/images/PassportAndVisa_BackgroundImage.png')}
                     style={PassportGuidanceStyle.heroSection}
                     resizeMode="cover"
@@ -44,8 +44,8 @@ export default function PassportGuidance() {
                     <Text style={PassportGuidanceStyle.subtitle}>Select the passport service you need.</Text>
                 </View>
 
-                <TouchableOpacity 
-                    style={PassportGuidanceStyle.selectionCard} 
+                <TouchableOpacity
+                    style={PassportGuidanceStyle.selectionCard}
                     onPress={() => cs.navigate("passportguidancenew")}
                     activeOpacity={0.7}
                 >
@@ -57,8 +57,8 @@ export default function PassportGuidance() {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={PassportGuidanceStyle.selectionCard} 
+                <TouchableOpacity
+                    style={PassportGuidanceStyle.selectionCard}
                     onPress={() => cs.navigate("passportguidancerenew")}
                     activeOpacity={0.7}
                 >

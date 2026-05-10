@@ -99,7 +99,7 @@ export default function Login() {
 
                 const canonicalRole = "Customer"
 
-                // 🔥 UPDATE: Added loginOnce to the context payload
+                //  UPDATE: Added loginOnce to the context payload
                 setUser({
                     _id: response.data.userId,
                     username: response.data.username,
@@ -108,7 +108,7 @@ export default function Login() {
                 })
 
                 showMessage("Welcome!");
-                // 🛑 Manual navigation removed! App.jsx handles the redirect automatically now.
+                //  Manual navigation removed! App.jsx handles the redirect automatically now.
 
             } else {
                 setError(response.data.message || "Invalid username or password");
@@ -210,11 +210,11 @@ export default function Login() {
                             }}
                             secureTextEntry={!showPassword}
                         />
-                        
-                        {/* 🔥 CHANGED: Only renders the icon if there is text! */}
+
+                        {/*  CHANGED: Only renders the icon if there is text! */}
                         {getPassword.length > 0 && (
-                            <TouchableOpacity 
-                                style={{ position: 'absolute', right: 15 }} 
+                            <TouchableOpacity
+                                style={{ position: 'absolute', right: 15 }}
                                 onPress={() => setShowPassword(!showPassword)}
                             >
                                 <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
@@ -223,7 +223,7 @@ export default function Login() {
                     </View>
                 </View>
 
-                {/* 🔥 CHANGED: Wrapped error in a fixed-height container to stop the layout jump */}
+                {/*  CHANGED: Wrapped error in a fixed-height container to stop the layout jump */}
                 <View style={LoginStyle.errorContainer}>
                     {getError ? <Text style={LoginStyle.errorText}>{getError}</Text> : null}
                 </View>
@@ -262,11 +262,11 @@ export default function Login() {
                     )}
                 </TouchableOpacity>
 
-                {/* 🔥 LOGO AT BOTTOM */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={LoginStyle.bottomLogo} 
-                    resizeMode="contain" 
+                {/*  LOGO AT BOTTOM */}
+                <Image
+                    source={require('../../assets/images/TransLogo.png')}
+                    style={LoginStyle.bottomLogo}
+                    resizeMode="contain"
                 />
 
                 {/* OTP Verification Modal */}
@@ -294,8 +294,8 @@ export default function Login() {
                                         marginLeft: 0,
                                         marginBottom: 10,
                                         textAlign: 'center',
-                                        width: '100%',     // 🔥 ADD THIS: Forces text to span the whole modal
-                                        alignSelf: 'center' // 🔥 ADD THIS: Extra insurance for centering
+                                        width: '100%',     //  ADD THIS: Forces text to span the whole modal
+                                        alignSelf: 'center' //  ADD THIS: Extra insurance for centering
                                     }
                                 ]}>
                                     {errorOtp}

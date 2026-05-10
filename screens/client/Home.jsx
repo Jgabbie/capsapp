@@ -59,7 +59,7 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     )
 });
 
-export default function Home() {
+export default function Home({ route }) {
     const cs = useNavigation()
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
@@ -113,10 +113,17 @@ export default function Home() {
     const [featuredModalVisible, setFeaturedModalVisible] = useState(false)
     const [featuredPackage, setFeaturedPackage] = useState(null)
 
-    // 🔥 NEW: Animation value (starts at scale 0)
+    const [postPrefModalVisible, setPostPrefModalVisible] = useState(false)
+
     const scaleValue = useRef(new Animated.Value(0)).current;
 
-    // 🔥 NEW: Triggers the bouncy pop-up whenever the modal becomes visible
+    useEffect(() => {
+        if (route?.params?.showPreferenceModal) {
+            setPostPrefModalVisible(true);
+        }
+    }, [route?.params?.showPreferenceModal]);
+
+
     useEffect(() => {
         if (featuredModalVisible) {
             scaleValue.setValue(0); // Reset to 0
@@ -255,7 +262,6 @@ export default function Home() {
         (pkg) => String(pkg.packageType).toLowerCase() === 'international'
     )
 
-    // 🔥 FEATURED PACKAGE MODAL LOGIC 🔥
     const getFeaturedPackage = () => {
         if (packages.length === 0) return null;
         const sorted = [...packages].sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -269,15 +275,15 @@ export default function Home() {
     // Show featured modal on focus (when returning to home screen)
     useFocusEffect(
         React.useCallback(() => {
-            if (packages.length > 0) {
+            if (packages.length > 0 && !postPrefModalVisible) {
                 const timeoutId = setTimeout(() => {
                     const featured = getFeaturedPackage();
                     setFeaturedPackage(featured);
                     setFeaturedModalVisible(true);
-                }, 3000); // 3 second delay
+                }, 3000);
                 return () => clearTimeout(timeoutId);
             }
-        }, [packages])
+        }, [packages, postPrefModalVisible])
     );
 
     const handleViewPackage = () => {
@@ -366,17 +372,16 @@ export default function Home() {
 
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
-    // 🔥 Define the Pagination Dots Component
     const renderPaginationDots = () => {
         return (
             <View style={HomeStyle.dotsContainer}>
                 {carouselData.map((_, index) => (
-                    <View 
-                        key={index} 
+                    <View
+                        key={index}
                         style={[
-                            HomeStyle.dot, 
+                            HomeStyle.dot,
                             activeCarouselIndex === index ? HomeStyle.dotActive : {}
-                        ]} 
+                        ]}
                     />
                 ))}
             </View>
@@ -464,9 +469,9 @@ export default function Home() {
                                             onChangeText={setSearchQuery}
                                         />
                                     </View>
-                                    
-                                    <TouchableOpacity 
-                                        style={HomeStyle.heroSearchBtn} 
+
+                                    <TouchableOpacity
+                                        style={HomeStyle.heroSearchBtn}
                                         onPress={() => cs.navigate("packages", { searchQuery })}
                                     >
                                         <Ionicons name="search" size={24} color="#fff" />
@@ -482,13 +487,12 @@ export default function Home() {
                         <>
                             <Text style={HomeStyle.title}>Local Packages</Text>
                             {domesticPackages.length > 0 && (
-                                <ScrollView 
-                                    horizontal 
-                                    showsHorizontalScrollIndicator={false} 
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
                                 >
                                     {domesticPackages.map((pkg) => (
-                                        /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
                                         <View key={pkg._id} style={{ width: width * 0.85, marginRight: 15 }}>
                                             <BannerCard
                                                 item={pkg}
@@ -501,13 +505,12 @@ export default function Home() {
                             )}
 
                             <Text style={[HomeStyle.title, { marginTop: 10 }]}>Packages For You</Text>
-                            <ScrollView 
-                                horizontal 
-                                showsHorizontalScrollIndicator={false} 
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
                             >
                                 {internationalPackages.map((pkg) => (
-                                    /* 🔥 Wrapped the exact BannerCard in a View to set its horizontal width */
                                     <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 15 }}>
                                         <BannerCard
                                             item={pkg}
@@ -527,7 +530,7 @@ export default function Home() {
                     >
                         <View style={HomeStyle.bgOverlay} />
                         <Text style={HomeStyle.bgTitle}>Book Your Tours Now</Text>
-                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}> 
+                        <Text style={[HomeStyle.bgDesc, { marginBottom: 15 }]}>
                             Ready for your next adventure? Book your international tour with M&RC Travel today and explore the world with ease and comfort. From stunning destinations to well-planned itineraries, we handle all the details so you can focus on making unforgettable memories. Don’t wait-your dream journey starts now!
                         </Text>
                         <TouchableOpacity style={HomeStyle.bgButton} onPress={() => cs.navigate("packages")}>
@@ -535,7 +538,6 @@ export default function Home() {
                         </TouchableOpacity>
                     </ImageBackground>
 
-                    {/* --- 🔥 NEW AUTO-SCROLLING CAROUSEL WITH SPECIFIC DESIGN 🔥 --- */}
                     <View style={HomeStyle.carouselContainer}>
                         <ScrollView
                             ref={carouselRef}
@@ -547,11 +549,11 @@ export default function Home() {
                         >
                             {carouselData.map((item, index) => (
                                 <View key={index} style={HomeStyle.carouselSlide}>
-                                    
+
                                     <ImageBackground
                                         source={item.image}
                                         style={HomeStyle.carouselInner}
-                                        imageStyle={{ borderRadius: 20 }} // 🔥 FIX: All 4 corners rounded perfectly
+                                        imageStyle={{ borderRadius: 20 }}
                                         resizeMode="cover"
                                     >
                                         <View style={HomeStyle.carouselOverlay} />
@@ -563,7 +565,6 @@ export default function Home() {
                             ))}
                         </ScrollView>
 
-                        {/* 🔥 NEW: DOTS INDICATOR UI ADDED HERE BELOW THE SCROLLVIEW 🔥 */}
                         {renderPaginationDots()}
                     </View>
                     {/* --- END CAROUSEL --- */}
@@ -608,7 +609,6 @@ export default function Home() {
                             Have questions or need assistance? Our friendly customer support team is here to help you with all your travel needs. Whether you’re looking for more information about our tour packages, need help with booking, or want to customize your itinerary, we’re just a message away. Contact us today and let us make your travel dreams a reality!
                         </Text>
 
-                        {/* 🔥 NEW: Contact Information Card (Blue) */}
                         <View style={HomeStyle.contactInfoCard}>
                             <Text style={HomeStyle.contactInfoTitle}>Contact Information</Text>
                             <Text style={HomeStyle.contactInfoSubtitle}>We are here to help you plan your trip.</Text>
@@ -654,7 +654,6 @@ export default function Home() {
                                 {emailError ? <Text style={HomeStyle.errorText}>{emailError}</Text> : null}
                             </View>
 
-                            {/* 🔥 NEW: Subject Dropdown Input */}
                             <TouchableOpacity
                                 style={[HomeStyle.contactInput, { justifyContent: 'center' }]}
                                 onPress={() => setSubjectModalVisible(true)}
@@ -696,7 +695,6 @@ export default function Home() {
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* 🔥 FEATURED PACKAGE MODAL 🔥 */}
             <Modal
                 visible={featuredModalVisible}
                 transparent
@@ -704,7 +702,6 @@ export default function Home() {
                 onRequestClose={() => setFeaturedModalVisible(false)}
             >
                 <View style={HomeStyle.featuredModalOverlay}>
-                    {/* 🔥 CHANGED: View to Animated.View and added the transform scale! */}
                     <Animated.View style={[HomeStyle.featuredModalBox, { transform: [{ scale: scaleValue }] }]}>
                         <View style={HomeStyle.featuredModalImageContainer}>
                             {featuredPackage?.images && featuredPackage.images.length > 0 && (
@@ -824,6 +821,240 @@ export default function Home() {
                             </View>
                         </View>
                     </Animated.View>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={postPrefModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setPostPrefModalVisible(false)}
+            >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingHorizontal: 20
+                }}>
+                    <View style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 20,
+                        padding: 24,
+                        width: '100%',
+                        maxWidth: 350,
+                        elevation: 8,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8
+                    }}>
+                        {/* Header */}
+                        <Text style={{
+                            fontSize: 24,
+                            fontWeight: '700',
+                            color: '#305797',
+                            marginBottom: 8,
+                            fontFamily: 'Montserrat_700Bold'
+                        }}>
+                            Welcome!
+                        </Text>
+                        <Text style={{
+                            fontSize: 14,
+                            color: '#666',
+                            marginBottom: 24,
+                            fontFamily: 'Montserrat_400Regular'
+                        }}>
+                            Your preferences are set. What would you like to do next?
+                        </Text>
+
+                        {/* Card 1: Explore Packages */}
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#F5F7FA',
+                                borderRadius: 12,
+                                padding: 16,
+                                marginBottom: 12,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#305797',
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2
+                            }}
+                            onPress={() => {
+                                setPostPrefModalVisible(false);
+                                cs.navigate('packages');
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    backgroundColor: '#305797',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 12
+                                }}>
+                                    <Ionicons name="map" size={24} color="#fff" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#333',
+                                        fontFamily: 'Montserrat_600SemiBold'
+                                    }}>
+                                        Explore Packages
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: '#999',
+                                        marginTop: 4,
+                                        fontFamily: 'Montserrat_400Regular'
+                                    }}>
+                                        Browse tours tailored for you
+                                    </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color="#305797" />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Card 2: Manage Profile */}
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#F5F7FA',
+                                borderRadius: 12,
+                                padding: 16,
+                                marginBottom: 12,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#305797',
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2
+                            }}
+                            onPress={() => {
+                                setPostPrefModalVisible(false);
+                                cs.navigate('profile');
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    backgroundColor: '#305797',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 12
+                                }}>
+                                    <Ionicons name="person" size={24} color="#fff" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#333',
+                                        fontFamily: 'Montserrat_600SemiBold'
+                                    }}>
+                                        Manage Profile
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: '#999',
+                                        marginTop: 4,
+                                        fontFamily: 'Montserrat_400Regular'
+                                    }}>
+                                        Update your information
+                                    </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color="#305797" />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Card 3: View Services */}
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#F5F7FA',
+                                borderRadius: 12,
+                                padding: 16,
+                                marginBottom: 0,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#305797',
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2
+                            }}
+                            onPress={() => {
+                                setPostPrefModalVisible(false);
+                                cs.navigate('visaguidance');
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    backgroundColor: '#305797',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 12
+                                }}>
+                                    <Ionicons name="document-text" size={24} color="#fff" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#333',
+                                        fontFamily: 'Montserrat_600SemiBold'
+                                    }}>
+                                        View Services
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: '#999',
+                                        marginTop: 4,
+                                        fontFamily: 'Montserrat_400Regular'
+                                    }}>
+                                        Visa & Passport guidance
+                                    </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color="#305797" />
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* Dismiss Button */}
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 20,
+                                paddingVertical: 12,
+                                borderRadius: 8,
+                                backgroundColor: '#F0F0F0'
+                            }}
+                            onPress={() => setPostPrefModalVisible(false)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={{
+                                textAlign: 'center',
+                                fontSize: 14,
+                                color: '#666',
+                                fontWeight: '500',
+                                fontFamily: 'Montserrat_500Medium'
+                            }}>
+                                Explore Later
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </Modal>
 

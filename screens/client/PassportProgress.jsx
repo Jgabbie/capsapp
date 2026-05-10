@@ -337,20 +337,34 @@ export default function PassportProgress() {
     };
 
     const statusDeadlineDaysMap = {
-        'Application Submitted': 7,
-        'Application Approved': 4,
-        'Payment Completed': 2,
+        'Application Submitted': 2,
+        'Application Approved': 2,
+        'Payment Completed': 3,
         'Documents Uploaded': 5,
-        'Documents Approved': 3,
-        'Documents Received': 3,
-        'Documents Submitted': 4,
-        'Processing by DFA': 14,
+        'Documents Approved': 2,
+        'Documents Received': 2,
+        'Documents Submitted': 2,
+        'Processing by DFA': 0,
         'DFA Approved': 0,
         'Passport Released': 0,
     };
 
     // Deadline policy aligned with backend passport status deadline rules.
 
+    // Prefer `statusDeadlineDates` from backend when available.
+    // This resolver accepts multiple possible shapes: a single date string,
+    // or an object keyed by step title / `current` / application.status.
+    const resolveStatusDeadlineRaw = (app, stepTitle = null) => {
+        const sd = app?.statusDeadlineDates ?? app?.statusDeadlineDate;
+        if (!sd) return null;
+        if (typeof sd === 'string' || typeof sd === 'number') return sd;
+        if (sd && typeof sd === 'object') {
+            if (stepTitle && sd[stepTitle] !== undefined) return sd[stepTitle];
+            if (sd.current !== undefined) return sd.current;
+            if (app?.status && sd[app.status] !== undefined) return sd[app.status];
+        }
+        return null;
+    };
 
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
@@ -372,12 +386,11 @@ export default function PassportProgress() {
         const terminalStatuses = ['DFA Approved', 'Passport Released', 'Rejected'];
         if (terminalStatuses.includes(stepTitle)) return null;
 
-        // If this is the application's current status and backend provided a deadline, use it
-        if (
-            String(app.status || '').toLowerCase() === String(stepTitle).toLowerCase()
-            && app.statusDeadlineDate
-        ) {
-            return parseCalendarDate(app.statusDeadlineDate);
+        // If backend provided a deadline (prefer statusDeadlineDates), use it
+        const rawBackendDeadline = resolveStatusDeadlineRaw(app, stepTitle);
+        if (String(app.status || '').toLowerCase() === String(stepTitle).toLowerCase() && rawBackendDeadline) {
+            const parsed = parseCalendarDate(rawBackendDeadline);
+            if (parsed?.isValid()) return parsed.startOf('day');
         }
 
         const deadlineDays = statusDeadlineDaysMap[stepTitle];
@@ -439,8 +452,9 @@ export default function PassportProgress() {
     const currentStatusSetDate = getStatusSetDate(application);
     const appointmentDate = parseCalendarDate(application?.preferredDate);
     const deadlineDays = application?.statusDeadlineDays ?? statusDeadlineDaysMap[application?.status] ?? null;
-    const statusDeadlineDate = application?.statusDeadlineDate
-        ? parseCalendarDate(application.statusDeadlineDate)
+    const rawStatusDeadline = resolveStatusDeadlineRaw(application);
+    const statusDeadlineDate = rawStatusDeadline
+        ? parseCalendarDate(rawStatusDeadline)
         : appointmentDate && Number.isFinite(deadlineDays)
             ? appointmentDate.subtract(deadlineDays, 'day').startOf('day')
             : null;
@@ -914,6 +928,11 @@ export default function PassportProgress() {
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Applicant Name</Text>
                         <Text style={PassportProgressStyle.infoValue}>{application.username || 'N/A'}</Text>
+                    </View>
+
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Managed By</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{application.managedBy || 'N/A'}</Text>
                     </View>
 
                     <View style={PassportProgressStyle.infoRow}>

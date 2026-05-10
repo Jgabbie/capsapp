@@ -24,7 +24,7 @@ const showToast = (message) => {
     console.log(message);
 };
 
-export default function Packages({ navigation, route }) { // 🔥 Add route here!
+export default function Packages({ navigation, route }) { //  Add route here!
     const { user, updateUser } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [packages, setPackages] = useState([]);
@@ -54,7 +54,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
         return "Available";
     };
 
-    // 🔥 CATCH FILTERS FROM HOME SCREEN 🔥
+    //  CATCH FILTERS FROM HOME SCREEN 
     useEffect(() => {
         if (route?.params) {
             const p = route.params;
@@ -80,7 +80,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
         }
     }, [route?.params]);
 
-    // 🔥 RESET FILTERS FUNCTION 🔥
+    //  RESET FILTERS FUNCTION 
     const resetFilters = () => {
         setBudgetRange([0, 200000]);
         setMinBudgetInput('0');
@@ -351,7 +351,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
 
                                     <View style={DestinationStyles.cardHeaderRow}>
                                         <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
-                                        {/* 🔥 Removed the "hide if 0.0" condition so the star is always visible */}
+                                        {/*  Removed the "hide if 0.0" condition so the star is always visible */}
                                         <View style={DestinationStyles.ratingContainer}>
                                             <Ionicons name="star" size={14} color="#facc15" />
                                             <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
@@ -540,7 +540,7 @@ export default function Packages({ navigation, route }) { // 🔥 Add route here
                             <Text style={DestinationStyles.primaryText}>Apply Filters</Text>
                         </TouchableOpacity>
 
-                        {/* 🔥 NEW RESET BUTTON 🔥 */}
+                        {/*  NEW RESET BUTTON  */}
                         <TouchableOpacity style={DestinationStyles.resetButton} onPress={resetFilters}>
                             <Text style={DestinationStyles.resetText}>Reset Filters</Text>
                         </TouchableOpacity>

@@ -311,7 +311,7 @@ export default function UserQuotationRequest({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContentCentered, { paddingTop: 35 }]}>
 
-            {/* 🔥 NEW: Close 'X' Button */}
+            {/*  NEW: Close 'X' Button */}
             <TouchableOpacity
               style={{ position: 'absolute', top: 15, right: 15, padding: 5, zIndex: 10 }}
               onPress={() => setIsAcceptModalOpen(false)}
@@ -319,7 +319,7 @@ export default function UserQuotationRequest({ route, navigation }) {
               <Ionicons name="close" size={24} color="#888" />
             </TouchableOpacity>
 
-            {/* 🔥 NEW: Blue Title */}
+            {/*  NEW: Blue Title */}
             <Text style={[styles.modalTitleCentered, { color: "#305797", fontSize: 20 }]}>Accepting Quotation</Text>
 
             <Text style={styles.modalTextCentered}>Are you sure you want to proceed with this quotation?</Text>
@@ -330,7 +330,7 @@ export default function UserQuotationRequest({ route, navigation }) {
                 <Text style={styles.modalPrimaryBtnTextHalf}>Proceed</Text>
               </TouchableOpacity>
 
-              {/* 🔥 NEW: Red Cancel Button */}
+              {/*  NEW: Red Cancel Button */}
               <TouchableOpacity
                 style={[styles.modalSecondaryBtnHalf, { backgroundColor: '#b82222', borderWidth: 0 }]}
                 onPress={() => setIsAcceptModalOpen(false)}

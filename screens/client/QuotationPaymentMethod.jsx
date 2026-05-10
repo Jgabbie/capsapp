@@ -376,7 +376,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={[QuotationPaymentStyle.container, { paddingBottom: 30 }]} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={[QuotationPaymentStyle.container, { paddingBottom: 30 }]}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={!loading}
+            >
 
                 <TouchableOpacity
                     style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#305797', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 16 }}
@@ -511,6 +515,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     </View>
                 </View>
             </Modal>
+
+            <Modal visible={loading} transparent animationType="fade">
+                <View style={localStyles.loadingOverlay}>
+                    <View style={localStyles.loadingCard}>
+                        <ActivityIndicator size="large" color="#305797" />
+                        <Text style={localStyles.loadingText}>Processing payment...</Text>
+                        <Text style={localStyles.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -525,5 +539,9 @@ const localStyles = StyleSheet.create({
     proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
     proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
     cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 }
+    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
+    loadingOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+    loadingCard: { width: '100%', backgroundColor: '#fff', borderRadius: 16, paddingVertical: 28, paddingHorizontal: 22, alignItems: 'center', elevation: 6 },
+    loadingText: { marginTop: 14, fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#305797', textAlign: 'center' },
+    loadingSubtext: { marginTop: 6, fontFamily: 'Roboto_400Regular', fontSize: 13, color: '#64748b', textAlign: 'center' }
 });

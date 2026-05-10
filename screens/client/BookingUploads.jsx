@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
@@ -16,7 +17,7 @@ const formatDate = (date) => {
     return date.toISOString().split('T')[0];
 };
 
-// 🔥 CALCULATE AGE FROM BIRTHDATE
+//  CALCULATE AGE FROM BIRTHDATE
 const computeAge = (birthDate) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);
@@ -33,7 +34,7 @@ const computeAge = (birthDate) => {
     return age < 0 ? null : age;
 };
 
-// 🔥 GET BIRTHDAY BOUNDS (MIN AND MAX DATES) BASED ON TRAVELER TYPE
+//  GET BIRTHDAY BOUNDS (MIN AND MAX DATES) BASED ON TRAVELER TYPE
 const getBirthdayBounds = (travelerType) => {
     const today = new Date();
     const category = String(travelerType || '').toLowerCase();
@@ -78,7 +79,7 @@ const getBirthdayBounds = (travelerType) => {
     };
 };
 
-// 🔥 CHECK IF TRAVELER TYPE IS MINOR (CHILD OR INFANT)
+//  CHECK IF TRAVELER TYPE IS MINOR (CHILD OR INFANT)
 const isMinorTravelerType = (travelerType) => {
     const normalized = String(travelerType || '').toLowerCase();
     return normalized === 'child' || normalized === 'infant';
@@ -93,7 +94,7 @@ export default function BookingUploads({ route, navigation }) {
     const totalTravelers = counts.adult + counts.child + counts.infant;
     const bookingType = setupData?.bookingType || 'Solo Booking';
 
-    // 🔥 THE FIX: Web-Synced Domestic Logic
+    //  THE FIX: Web-Synced Domestic Logic
     // We check both paths just in case the data structure shifted during navigation
     const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
@@ -152,8 +153,9 @@ export default function BookingUploads({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-    // 🔥 ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
+    //  ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
     useEffect(() => {
         setTravelersData(prevData =>
             prevData.map((traveler, index) => {
@@ -212,7 +214,7 @@ export default function BookingUploads({ route, navigation }) {
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
 
-    // 🔥 GET BIRTHDAY BOUNDS FOR CURRENT TRAVELER IN DATE PICKER
+    //  GET BIRTHDAY BOUNDS FOR CURRENT TRAVELER IN DATE PICKER
     const getBirthdayLimits = (travelerIndex) => {
         const travelerType = travelerTypes[travelerIndex];
         const bounds = getBirthdayBounds(travelerType);
@@ -249,7 +251,7 @@ export default function BookingUploads({ route, navigation }) {
         setShowDatePicker(false);
     };
 
-    const isValidPassportNumber = (passportNo) => /^\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
+    const isValidPassportNumber = (passportNo) => /^P\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
 
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
@@ -271,6 +273,11 @@ export default function BookingUploads({ route, navigation }) {
             }
         }
 
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
         navigation.navigate("registrationstep1", { setupData, travelerUploads: uploads, travelersData });
     };
 
@@ -361,17 +368,16 @@ export default function BookingUploads({ route, navigation }) {
                                         <Text style={BookingUploadsStyle.inputLabel}>Passport Number</Text>
                                         <TextInput
                                             style={BookingUploadsStyle.input}
-                                            placeholder="1234567A"
+                                            placeholder="P1234567C"
                                             placeholderTextColor="#9ca3af"
-                                            maxLength={8}
+                                            maxLength={9}
                                             value={t.passportNo}
                                             onChangeText={(text) => {
                                                 const cleaned = (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-                                                let numbers = cleaned.replace(/[^0-9]/g, '');
-                                                let letters = cleaned.replace(/[^A-Z]/g, '');
-                                                if (numbers.length > 7) numbers = numbers.slice(0, 7);
-                                                if (letters.length > 1) letters = letters.slice(0, 1);
-                                                const finalPassport = numbers + letters;
+                                                const body = cleaned.startsWith('P') ? cleaned.slice(1) : cleaned.replace(/^P+/, '');
+                                                let numbers = body.replace(/[^0-9]/g, '').slice(0, 7);
+                                                let letters = body.replace(/[^A-Z]/g, '').slice(0, 1);
+                                                const finalPassport = `P${numbers}${letters}`;
                                                 updateTraveler(index, 'passportNo', finalPassport);
                                             }}
                                         />
@@ -469,6 +475,30 @@ export default function BookingUploads({ route, navigation }) {
                         <Text style={BookingUploadsStyle.backText}>Back to Review</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                    <View style={QuotationFormStepStyle.modalOverlay}>
+                        <View style={QuotationFormStepStyle.verifyModalCard}>
+                            <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                            </TouchableOpacity>
+
+                            <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                            <Text style={QuotationFormStepStyle.verifyModalText}>
+                                Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                            </Text>
+
+                            <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                    <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                    <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
             </ScrollView>
 

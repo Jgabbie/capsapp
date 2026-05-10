@@ -12,11 +12,11 @@ export default function BookingReview({ route, navigation }) {
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
 
-    // 🔥 FIX: Properly check for "Yes", "true", or boolean true
+    //  FIX: Properly check for "Yes", "true", or boolean true
     const rawVisaValue = pkg?.requiresVisa ?? pkg?.packageRequiresVisa ?? pkg?.visaRequired;
     const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
-    // 🔥 NEW: Check if it's a domestic package to dynamically change the button text
+    //  NEW: Check if it's a domestic package to dynamically change the button text
     const isDomestic = String(pkg?.packageType || '').toLowerCase().includes('domestic');
     const documentLabel = isDomestic ? 'Valid ID' : 'Passport';
 

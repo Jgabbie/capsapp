@@ -7,7 +7,7 @@ import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-googl
 import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 
-import { api } from '../../utils/api' 
+import { api } from '../../utils/api'
 
 export default function PasswordReset() {
     const cs = useNavigation()
@@ -107,7 +107,7 @@ export default function PasswordReset() {
             resizeMode='cover'
         >
             <View style={PasswordResetStyle.container}>
-                
+
                 <Text style={PasswordResetStyle.heading}>Reset Password</Text>
                 <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a One-Time Password</Text>
 
@@ -123,13 +123,13 @@ export default function PasswordReset() {
                         setErrorEmail("")
                     }}
                 />
-                
-                {/* 🔥 WRAPPED IN ERROR CONTAINER */}
+
+                {/*  WRAPPED IN ERROR CONTAINER */}
                 <View style={PasswordResetStyle.errorContainer}>
                     {errorEmail ? <Text style={PasswordResetStyle.fieldError}>{errorEmail}</Text> : null}
                 </View>
 
-                {/* 🔥 2. MOVED LINK TEXT: Now sitting perfectly on top of the Send OTP button */}
+                {/*  2. MOVED LINK TEXT: Now sitting perfectly on top of the Send OTP button */}
                 <View style={[PasswordResetStyle.linksContainer, { marginTop: 5, marginBottom: 15 }]}>
                     <TouchableOpacity onPress={() => cs.navigate("login")}>
                         <Text style={PasswordResetStyle.linkText}>Remember password? Login</Text>
@@ -141,11 +141,11 @@ export default function PasswordReset() {
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={PasswordResetStyle.buttonText}>Send OTP</Text>}
                 </TouchableOpacity>
 
-                {/* 🔥 LOGO AT BOTTOM */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={PasswordResetStyle.bottomLogo} 
-                    resizeMode="contain" 
+                {/*  LOGO AT BOTTOM */}
+                <Image
+                    source={require('../../assets/images/TransLogo.png')}
+                    style={PasswordResetStyle.bottomLogo}
+                    resizeMode="contain"
                 />
 
             </View>
@@ -181,8 +181,8 @@ export default function PasswordReset() {
                             </TouchableOpacity>
                         )}
 
-                         <TouchableOpacity onPress={() => setIsModalOpen(false)} style={{ marginTop: 20 }}>
-                                <Text style={[PasswordResetStyle.linkText, { color: '#992A46' }]}>Cancel</Text>
+                        <TouchableOpacity onPress={() => setIsModalOpen(false)} style={{ marginTop: 20 }}>
+                            <Text style={[PasswordResetStyle.linkText, { color: '#992A46' }]}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

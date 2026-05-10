@@ -5,6 +5,7 @@ import NotificationModel from "../models/notification.js";
 import transporter from "../config/nodemailer.js";
 import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
+import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 // Fallback days map - only used if process steps are not available
 const VISA_STATUS_TOTAL_DAYS_MAP_FALLBACK = {
@@ -73,6 +74,50 @@ const getCurrentVisaStatus = (application) => {
   }
 
   return String(application.status || '').trim();
+};
+
+const formatManagedByName = (user) => {
+  if (!user) return null;
+  const fullName = [user.firstname, user.lastname]
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  return fullName || String(user.username || '').trim() || null;
+};
+
+const getManagedByInfo = async (application) => {
+  if (!application) return { managedBy: null, managedById: null };
+
+  const history = Array.isArray(application.statusHistory) ? application.statusHistory : [];
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (!entry || !entry.changedBy) continue;
+
+    const changedBy = entry.changedBy;
+    if (typeof changedBy === 'object') {
+      const role = String(changedBy.role || '').toLowerCase();
+      if (role && role !== 'admin') continue;
+
+      const managedBy = formatManagedByName(changedBy);
+      if (managedBy) {
+        return { managedBy, managedById: changedBy._id || null };
+      }
+    }
+
+    const changedById = changedBy._id || changedBy;
+    if (!changedById) continue;
+
+    const user = await UserModel.findById(changedById).select('firstname lastname username role');
+    if (!user || String(user.role || '').toLowerCase() !== 'admin') continue;
+
+    const managedBy = formatManagedByName(user);
+    if (managedBy) {
+      return { managedBy, managedById: user._id };
+    }
+  }
+
+  return { managedBy: null, managedById: null };
 };
 
 
@@ -144,7 +189,7 @@ const getVisaDeadlineInfo = (
   };
 };
 
-const decorateVisaApplication = (application) => {
+const decorateVisaApplication = async (application) => {
   if (!application) return application;
 
   const plainApplication = typeof application.toObject === 'function'
@@ -154,6 +199,7 @@ const decorateVisaApplication = (application) => {
   const statusText = getCurrentVisaStatus(plainApplication);
   const deadlineInfo = getVisaDeadlineInfo(plainApplication);
   const statusDeadlineMap = getStatusTotalDaysMap(plainApplication);
+  const managedByInfo = await getManagedByInfo(plainApplication);
 
   return {
     ...plainApplication,
@@ -164,6 +210,8 @@ const decorateVisaApplication = (application) => {
     statusDeadlineWarningDate: deadlineInfo?.warningDate.toISOString() ?? null,
     statusDeadlineDaysRemaining: deadlineInfo?.daysRemaining ?? null,
     statusDeadlineWarningSent: deadlineInfo?.warningAlreadySent ?? false,
+    managedBy: managedByInfo.managedBy,
+    managedById: managedByInfo.managedById,
   };
 };
 
@@ -206,32 +254,16 @@ const sendVisaDeadlineWarning = async (application) => {
     from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
     to: user.email,
     subject: `Visa Deadline Reminder: ${statusLabel} due ${deadlineLabel}`,
-    html: `
-            <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
-                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                    <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                    <h2 style="color:#305797;">Visa Deadline Reminder</h2>
-                    <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">One day remains to complete <b>${statusLabel}</b> for your visa application <b>${applicationNumber}</b>.</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Deadline: <b>${deadlineLabel}</b></p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Please log in and finish the required step to keep your application on track.</p>
-
-                    <a href="https://mrctravelandtours.com/home"
-                        style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                        Login to Your Account
-                    </a>
-
-                    <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                    <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                        <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                        <p>M&RC Travel and Tours</p>
-                        <p>info1@mrctravels.com</p>
-                        <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                    </div>
-                </div>
-            </div>
-        `,
+    html: buildBrandedEmail({
+      title: 'Visa Deadline Reminder',
+      introHtml: `Hello <b>${displayName}</b>, one day remains to complete <b>${statusLabel}</b> for your visa application <b>${applicationNumber}</b>.`,
+      bodyHtml: `
+        <p style="margin:0 0 10px;">Deadline: <b>${deadlineLabel}</b></p>
+        <p style="margin:0;">Please log in and finish the required step to keep your application on track.</p>
+      `,
+      ctaText: 'Continue in App',
+      ctaUrl: 'travex://visaprogress',
+    }),
   });
 
   application.deadlineWarnings = application.deadlineWarnings || [];
@@ -318,31 +350,15 @@ const autoRejectVisaApplication = async (application, deadlineInfo = null) => {
         from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
         to: user.email,
         subject: `Visa Application Automatically Rejected: ${applicationNumber}`,
-        html: `
-                    <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
-                        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                            <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                            <h2 style="color:#305797;">Visa Application Automatically Rejected</h2>
-                            <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
-                            <p style="color:#555; font-size:15px; line-height:1.6;">Your visa application <b>${applicationNumber}</b> was automatically rejected because <b>${resolvedDeadlineInfo.status}</b> was not completed by <b>${deadlineLabel}</b>.</p>
-                            <p style="color:#555; font-size:15px; line-height:1.6;">Please contact our office if you need assistance or wish to submit a new application.</p>
-
-                            <a href="https://mrctravelandtours.com/home"
-                                style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                                Login to Your Account
-                            </a>
-
-                            <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                            <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                                <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                                <p>M&RC Travel and Tours</p>
-                                <p>info1@mrctravels.com</p>
-                                <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                            </div>
-                        </div>
-                    </div>
-                `,
+        html: buildBrandedEmail({
+          title: 'Visa Application Automatically Rejected',
+          introHtml: `Hello <b>${displayName}</b>, your visa application <b>${applicationNumber}</b> was automatically rejected because <b>${resolvedDeadlineInfo.status}</b> was not completed by <b>${deadlineLabel}</b>.`,
+          bodyHtml: `
+            <p style="margin:0;">Please contact our office if you need assistance or wish to submit a new application.</p>
+          `,
+          ctaText: 'View Application',
+          ctaUrl: 'travex://userapplications',
+        }),
       });
     } catch (emailError) {
       console.error('Failed to send visa auto-rejection email:', emailError);
@@ -429,7 +445,7 @@ export const getUserVisaApplications = async (req, res) => {
       .populate("serviceId")
       .sort({ createdAt: -1 });
     // Decorate each application with deadline info so client doesn't need fallbacks
-    const decorated = applications.map((app) => decorateVisaApplication(app));
+    const decorated = await Promise.all(applications.map((app) => decorateVisaApplication(app)));
     res.status(200).json(decorated);
   } catch (error) {
     res.status(500).json({ message: "Error fetching user visa applications", error: error.message });
@@ -446,7 +462,7 @@ export const getVisaApplicationById = async (req, res) => {
       return res.status(404).json({ message: "Visa application not found" });
     }
     // Decorate with deadline info
-    const decorated = decorateVisaApplication(application);
+    const decorated = await decorateVisaApplication(application);
     res.status(200).json(decorated);
   } catch (error) {
     res.status(500).json({ message: "Error fetching visa application", error: error.message });

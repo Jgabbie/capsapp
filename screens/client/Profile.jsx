@@ -356,7 +356,7 @@ export default function Profile() {
         setEditing(false)
     }
 
-    // 🔥 PREFERENCES HANDLERS 🔥
+    //  PREFERENCES HANDLERS 
     const togglePreference = (key, value, limit) => {
         if (!editingPreferences) return;
         setPreferences(prev => {
@@ -439,7 +439,7 @@ export default function Profile() {
                         )}
                     </View>
 
-                    {/* 🔥 NEW ROLE DISPLAY HERE 🔥 */}
+                    {/*  NEW ROLE DISPLAY HERE  */}
                     <Text style={ProfileStyle.roleSubtitle}>Customer</Text>
 
                     <Text style={ProfileStyle.personalInfoTitle}>Personal Information</Text>
@@ -554,7 +554,7 @@ export default function Profile() {
                     )}
                 </View>
 
-                {/* --- 🔥 NEW: PREFERENCES CARD 🔥 --- */}
+                {/* ---  NEW: PREFERENCES CARD  --- */}
                 <View style={ProfileStyle.card}>
                     <View style={ProfileStyle.preferencesHeader}>
                         <Text style={ProfileStyle.profileHeading}>My Preferences</Text>

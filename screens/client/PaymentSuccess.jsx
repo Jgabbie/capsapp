@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 export default function PaymentSuccess({ route, navigation }) {
     // Timer state starting at 8 seconds
     const [countdown, setCountdown] = useState(8);
-    // 🔥 NEW: Kill switch to stop the timer if the user navigates manually
+    //  NEW: Kill switch to stop the timer if the user navigates manually
     const [isActive, setIsActive] = useState(true);
 
     useEffect(() => {
-        // 🔥 If the kill switch is flipped (user clicked a button), stop running this effect!
+        //  If the kill switch is flipped (user clicked a button), stop running this effect!
         if (!isActive) return;
 
         // If countdown hits 0, auto-navigate to Home
@@ -32,36 +32,36 @@ export default function PaymentSuccess({ route, navigation }) {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f4f8' }}>
             <StatusBar barStyle="dark-content" />
             <View style={localStyles.container}>
-                
+
                 <View style={localStyles.iconWrapper}>
                     <Ionicons name="checkmark" size={50} color="#fff" />
                 </View>
 
                 <Text style={localStyles.title}>Payment Successful</Text>
-                
+
                 <Text style={localStyles.desc}>
                     Your booking has been confirmed. Your booking will appear in your account shortly once payment is verified.
                 </Text>
 
                 <Text style={localStyles.countdown}>
-                    Redirecting to home in <Text style={{fontWeight: 'bold', color: '#6b7280'}}>{countdown}</Text> seconds...
+                    Redirecting to home in <Text style={{ fontWeight: 'bold', color: '#6b7280' }}>{countdown}</Text> seconds...
                 </Text>
 
                 <View style={localStyles.buttonRow}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={localStyles.button}
                         onPress={() => {
-                            setIsActive(false); // 🔥 Kill the timer!
+                            setIsActive(false); //  Kill the timer!
                             navigation.navigate("userbookings");
                         }}
                     >
                         <Text style={localStyles.buttonText}>View Bookings</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={localStyles.button}
                         onPress={() => {
-                            setIsActive(false); // 🔥 Kill the timer!
+                            setIsActive(false); //  Kill the timer!
                             navigation.navigate("home");
                         }}
                     >
@@ -74,7 +74,7 @@ export default function PaymentSuccess({ route, navigation }) {
     );
 }
 
-// 🔥 Local styles to match the Web Screenshot exactly! 🔥
+//  Local styles to match the Web Screenshot exactly! 
 const localStyles = StyleSheet.create({
     container: {
         flex: 1,

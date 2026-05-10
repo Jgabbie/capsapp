@@ -171,7 +171,7 @@ export default function Signup() {
         try {
             const fullPhoneNumber = user.phonenum.replace(/\D/g, "");
 
-            // 🔥 CHANGED THIS LINE! 🔥
+            //  CHANGED THIS LINE! 
             // Uses our smart 'api' variable instead of hardcoded 10.0.2.2
             // Note: Since your old code went to /api/create-user and our api.js base URL ends with /api, 
             // we just need to append /create-user here.
@@ -286,7 +286,7 @@ export default function Signup() {
                                 value={user.password}
                                 onChangeText={(e) => changeHandler("password", e)}
                             />
-                            {/* 🔥 CONDITIONAL EYE: Only shows if there is text */}
+                            {/*  CONDITIONAL EYE: Only shows if there is text */}
                             {user.password.length > 0 && (
                                 <TouchableOpacity style={SignupStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
                                     <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
@@ -306,7 +306,7 @@ export default function Signup() {
                                 value={user.confirmpassword}
                                 onChangeText={(e) => changeHandler("confirmpassword", e)}
                             />
-                            {/* 🔥 CONDITIONAL EYE: Only shows if there is text */}
+                            {/*  CONDITIONAL EYE: Only shows if there is text */}
                             {user.confirmpassword.length > 0 && (
                                 <TouchableOpacity style={SignupStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                                     <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
@@ -352,11 +352,11 @@ export default function Signup() {
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={SignupStyle.signupButtonText}>Signup</Text>}
                         </TouchableOpacity>
 
-                        {/* 🔥 LOGO AT BOTTOM */}
-                        <Image 
-                            source={require('../../assets/images/TransLogo.png')} 
-                            style={SignupStyle.bottomLogo} 
-                            resizeMode="contain" 
+                        {/*  LOGO AT BOTTOM */}
+                        <Image
+                            source={require('../../assets/images/TransLogo.png')}
+                            style={SignupStyle.bottomLogo}
+                            resizeMode="contain"
                         />
 
                     </View>

@@ -107,7 +107,7 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         </Text>
                     </View>
 
-                    {/* 🔥 NEW BOTTOM NAVIGATION BUTTONS 🔥 */}
+                    {/*  NEW BOTTOM NAVIGATION BUTTONS  */}
                     <View style={QuotationIncluExcluStyle.actionContainer}>
 
                         {/* Upload ID Button (Goes Forward) */}

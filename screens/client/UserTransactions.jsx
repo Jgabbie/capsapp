@@ -32,6 +32,11 @@ export default function UserTransactions() {
     const [isProofModalVisible, setProofModalVisible] = useState(false)
     const [isReceiptModalVisible, setReceiptModalVisible] = useState(false)
 
+    const getCurrentUserFullName = () => {
+        const fullName = `${user?.firstname || ''} ${user?.lastname || ''}`.trim();
+        return fullName || user?.username || 'Customer';
+    }
+
     const statusOptions = useMemo(() => {
         const priority = ['Successful', 'Pending', 'Failed', 'Cancelled'];
         const available = new Set();
@@ -125,7 +130,7 @@ export default function UserTransactions() {
     const handleDownloadReceipt = async () => {
         if (!selectedTransaction) return;
         try {
-            // 🔥 FIXED DESCRIPTION IN PDF 🔥
+            //  FIXED DESCRIPTION IN PDF 
             const safePackageName = getTransactionItemLabel(selectedTransaction);
 
             const htmlContent = `
@@ -172,7 +177,7 @@ export default function UserTransactions() {
                         <div class="meta-row">
                             <div class="billed-to">
                                 <span class="label">Billed To</span>
-                                <div class="name">You</div>
+                                <div class="name">${getCurrentUserFullName()}</div>
                             </div>
                             <div class="meta-right">
                                 <div class="row">
@@ -236,13 +241,13 @@ export default function UserTransactions() {
         try {
             const url = selectedTransaction.proofImage;
             const fileExt = url.split('.').pop().split('?')[0] || 'jpg';
-            // 🔥 FIXED: Specify exact filename for download 🔥
+            //  FIXED: Specify exact filename for download 
             const fileUri = FileSystem.documentDirectory + `proof-of-payment-${selectedTransaction.reference}.${fileExt}`;
 
             const { uri } = await FileSystem.downloadAsync(url, fileUri);
             await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
         } catch (error) {
-            // 🔥 NEW: Add detailed logging to find the error 🔥
+            //  NEW: Add detailed logging to find the error 
             console.error("Download Image Error:", error);
             console.log("Error Reason:", error.message);
             Alert.alert("Error", `Could not download image. Reason: ${error.message || 'Unknown'}`);
@@ -326,12 +331,12 @@ export default function UserTransactions() {
                                         <Text style={UserTransactionStyle.detailValue}>{pName}</Text>
                                     </View>
                                     <View style={UserTransactionStyle.detailRow}>
-                                        {/* 🔥 FIXED LABEL: Date -> Date and Time 🔥 */}
+                                        {/*  FIXED LABEL: Date -> Date and Time  */}
                                         <Text style={UserTransactionStyle.detailLabel}>Date and Time:</Text>
                                         <Text style={UserTransactionStyle.detailValue}>{dayjs(item.createdAt).format('MMM D, YYYY h:mm A')}</Text>
                                     </View>
                                     <View style={UserTransactionStyle.detailRow}>
-                                        {/* 🔥 FIXED LABEL: Method -> Payment Method 🔥 */}
+                                        {/*  FIXED LABEL: Method -> Payment Method  */}
                                         <Text style={UserTransactionStyle.detailLabel}>Payment Method:</Text>
                                         <Text style={UserTransactionStyle.detailValue}>{item.method || 'N/A'}</Text>
                                     </View>
@@ -412,7 +417,7 @@ export default function UserTransactions() {
                 <View style={UserTransactionStyle.modalOverlay}>
                     <View style={UserTransactionStyle.proofImageContainer}>
                         <View style={UserTransactionStyle.proofHeader}>
-                            {/* 🔥 FIXED TITLE: Proof of Payment -> Proof of Payment - [Reference] 🔥 */}
+                            {/*  FIXED TITLE: Proof of Payment -> Proof of Payment - [Reference]  */}
                             <Text style={UserTransactionStyle.proofTitle}>Proof of Payment - {selectedTransaction?.reference || ""}</Text>
                             <TouchableOpacity onPress={() => setProofModalVisible(false)}>
                                 <Ionicons name="close" size={24} color="#9ca3af" />
@@ -470,7 +475,7 @@ export default function UserTransactions() {
                                     <View style={UserTransactionStyle.receiptMetaRow}>
                                         <View style={UserTransactionStyle.receiptBilledTo}>
                                             <Text style={UserTransactionStyle.receiptTinyLabel}>BILLED TO</Text>
-                                            <Text style={UserTransactionStyle.receiptCustomerName}>You</Text>
+                                            <Text style={UserTransactionStyle.receiptCustomerName}>{getCurrentUserFullName()}</Text>
                                         </View>
                                         <View style={UserTransactionStyle.receiptMetaRight}>
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 140, marginBottom: 4 }}>
@@ -494,7 +499,7 @@ export default function UserTransactions() {
                                         <View style={UserTransactionStyle.receiptTableRow}>
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 1 }]}>1</Text>
 
-                                            {/* 🔥 FIXED DESCRIPTION IN MODAL 🔥 */}
+                                            {/*  FIXED DESCRIPTION IN MODAL  */}
                                             <Text style={[UserTransactionStyle.receiptTd, { flex: 3 }]} numberOfLines={2}>
                                                 {getTransactionItemLabel(selectedTransaction)}
                                             </Text>

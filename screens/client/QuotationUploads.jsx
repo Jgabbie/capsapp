@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
 import QuotationUploadsStyle from '../../styles/clientstyles/QuotationUploadsStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
@@ -145,6 +146,7 @@ export default function QuotationUploads({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     useEffect(() => {
         // Only apply adjustments if necessary to avoid unnecessary re-renders or loops
@@ -242,7 +244,7 @@ export default function QuotationUploads({ route, navigation }) {
         setShowDatePicker(false);
     };
 
-    const isValidPassportNumber = (passportNo) => /^\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
+    const isValidPassportNumber = (passportNo) => /^P\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
 
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
@@ -264,6 +266,11 @@ export default function QuotationUploads({ route, navigation }) {
             }
         }
 
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
         navigation.navigate("quotationform1", { quotation, travelerUploads: uploads, travelersData });
     };
 
@@ -351,17 +358,16 @@ export default function QuotationUploads({ route, navigation }) {
                                         <Text style={QuotationUploadsStyle.inputLabel}>Passport Number</Text>
                                         <TextInput
                                             style={BookingUploadsStyle.input}
-                                            placeholder="1234567A"
+                                            placeholder="P1234567C"
                                             placeholderTextColor="#9ca3af"
-                                            maxLength={8}
+                                            maxLength={9}
                                             value={t.passportNo}
                                             onChangeText={(text) => {
                                                 const cleaned = (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-                                                let numbers = cleaned.replace(/[^0-9]/g, '');
-                                                let letters = cleaned.replace(/[^A-Z]/g, '');
-                                                if (numbers.length > 7) numbers = numbers.slice(0, 7);
-                                                if (letters.length > 1) letters = letters.slice(0, 1);
-                                                const finalPassport = numbers + letters;
+                                                const body = cleaned.startsWith('P') ? cleaned.slice(1) : cleaned.replace(/^P+/, '');
+                                                let numbers = body.replace(/[^0-9]/g, '').slice(0, 7);
+                                                let letters = body.replace(/[^A-Z]/g, '').slice(0, 1);
+                                                const finalPassport = `P${numbers}${letters}`;
                                                 updateTraveler(index, 'passportNo', finalPassport);
                                             }}
                                         />
@@ -459,6 +465,30 @@ export default function QuotationUploads({ route, navigation }) {
                         <Text style={BookingUploadsStyle.backText}>Back to Review</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                    <View style={QuotationFormStepStyle.modalOverlay}>
+                        <View style={QuotationFormStepStyle.verifyModalCard}>
+                            <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                            </TouchableOpacity>
+
+                            <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                            <Text style={QuotationFormStepStyle.verifyModalText}>
+                                Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                            </Text>
+
+                            <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                    <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                    <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
             </ScrollView>
 

@@ -4,16 +4,16 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import { Ionicons } from '@expo/vector-icons' // 🔥 ADDED: Icon library
+import { Ionicons } from '@expo/vector-icons' //  ADDED: Icon library
 
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
-import { api } from '../../utils/api' 
+import { api } from '../../utils/api'
 
 export default function ResetPassConfirm() {
     const cs = useNavigation()
-    const route = useRoute() 
-    
+    const route = useRoute()
+
     const { token } = route.params || {};
 
     const [fontsLoaded] = useFonts({
@@ -27,8 +27,8 @@ export default function ResetPassConfirm() {
     const [confirmPassword, setConfirmPassword] = useState("")
     const [errorPassword, setErrorPassword] = useState("")
     const [errorConfirm, setErrorConfirm] = useState("")
-    
-    // 🔥 NEW: States to track password visibility
+
+    //  NEW: States to track password visibility
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -50,7 +50,7 @@ export default function ResetPassConfirm() {
         if (Platform.OS === "android") {
             ToastAndroid.show(message, ToastAndroid.LONG);
         } else {
-            alert(message); 
+            alert(message);
         }
     }
 
@@ -72,7 +72,7 @@ export default function ResetPassConfirm() {
     const handleSubmit = async () => {
         const passErr = validatePassword(password)
         const confErr = validateConfirm(confirmPassword)
-        
+
         setErrorPassword(passErr)
         setErrorConfirm(confErr)
 
@@ -80,9 +80,9 @@ export default function ResetPassConfirm() {
 
         setLoading(true)
         try {
-            const response = await api.post('/users/auth/reset-password', { 
-                newPassword: password, 
-                token: token 
+            const response = await api.post('/users/auth/reset-password', {
+                newPassword: password,
+                token: token
             })
             if (response.data.success || response.status === 200) {
                 setIsSuccessModalOpen(true)
@@ -101,8 +101,8 @@ export default function ResetPassConfirm() {
             resizeMode='cover'
         >
             <View style={ResetPassConfirmStyle.container}>
-                
-                {/* 🔥 1. NEW LOGO: Placed exactly on top of the title */}
+
+                {/*  1. NEW LOGO: Placed exactly on top of the title */}
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
                 <Text style={ResetPassConfirmStyle.label}>New Password</Text>
@@ -118,14 +118,14 @@ export default function ResetPassConfirm() {
                             setErrorPassword("")
                         }}
                     />
-                    {/* 🔥 2. CONDITIONAL EYE ICON */}
+                    {/*  2. CONDITIONAL EYE ICON */}
                     {password.length > 0 && (
                         <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
                             <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
                         </TouchableOpacity>
                     )}
                 </View>
-                {/* 🔥 3. FIXED ERROR CONTAINER */}
+                {/*  3. FIXED ERROR CONTAINER */}
                 <View style={ResetPassConfirmStyle.errorContainer}>
                     {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
                 </View>
@@ -143,19 +143,19 @@ export default function ResetPassConfirm() {
                             setErrorConfirm("")
                         }}
                     />
-                    {/* 🔥 CONDITIONAL EYE ICON */}
+                    {/*  CONDITIONAL EYE ICON */}
                     {confirmPassword.length > 0 && (
                         <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                             <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
                         </TouchableOpacity>
                     )}
                 </View>
-                {/* 🔥 FIXED ERROR CONTAINER */}
+                {/*  FIXED ERROR CONTAINER */}
                 <View style={ResetPassConfirmStyle.errorContainer}>
                     {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
                 </View>
 
-                {/* 🔥 4. REMEMBER PASSWORD LINK (On top of Confirm Button) */}
+                {/*  4. REMEMBER PASSWORD LINK (On top of Confirm Button) */}
                 <View style={ResetPassConfirmStyle.linkContainer}>
                     <TouchableOpacity onPress={() => cs.navigate("login")}>
                         <Text style={ResetPassConfirmStyle.linkText}>Remember password? Login here</Text>
@@ -163,19 +163,19 @@ export default function ResetPassConfirm() {
                 </View>
 
                 {/* Confirm Password Button */}
-                <TouchableOpacity 
-                    style={[ResetPassConfirmStyle.button, { opacity: loading ? 0.7 : 1 }]} 
-                    onPress={handleSubmit} 
+                <TouchableOpacity
+                    style={[ResetPassConfirmStyle.button, { opacity: loading ? 0.7 : 1 }]}
+                    onPress={handleSubmit}
                     disabled={loading}
                 >
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={ResetPassConfirmStyle.buttonText}>Confirm Password</Text>}
                 </TouchableOpacity>
 
-                {/* 🔥 LOGO AT BOTTOM */}
-                <Image 
-                    source={require('../../assets/images/TransLogo.png')} 
-                    style={ResetPassConfirmStyle.bottomLogo} 
-                    resizeMode="contain" 
+                {/*  LOGO AT BOTTOM */}
+                <Image
+                    source={require('../../assets/images/TransLogo.png')}
+                    style={ResetPassConfirmStyle.bottomLogo}
+                    resizeMode="contain"
                 />
 
             </View>
@@ -187,8 +187,8 @@ export default function ResetPassConfirm() {
                         <Text style={ModalStyle.modalTitle}>Password Changed</Text>
                         <Text style={[ModalStyle.modalText, { marginBottom: 20 }]}>Your password has been updated successfully.</Text>
 
-                        <TouchableOpacity 
-                            style={ModalStyle.modalButton} 
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
                             onPress={() => {
                                 setIsSuccessModalOpen(false)
                                 cs.navigate("login")

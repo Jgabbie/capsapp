@@ -64,6 +64,12 @@ const passportSchema = new mongoose.Schema(
       deadlineDate: { type: String },
       warnedAt: { type: Date }
     }],
+    // Map of process step => deadline date string (YYYY-MM-DD)
+    statusDeadlineDates: {
+      type: Map,
+      of: String,
+      default: {}
+    },
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true, collection: "passports", strict: false });

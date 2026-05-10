@@ -280,7 +280,7 @@ export default function QuotationForm({ route, navigation }) {
                     <Text style={{ color: "#305797", fontFamily: "Montserrat_600SemiBold", marginLeft: 8 }}>Back</Text>
                 </TouchableOpacity>
 
-                {/* 🔥 REMOVED CARD BORDERS HERE */}
+                {/*  REMOVED CARD BORDERS HERE */}
                 <View style={QuotationFormStyle.headerGroup}>
                     <Text style={QuotationFormStyle.mainTitle}>Package Quotation</Text>
                     <Text style={QuotationFormStyle.subtitle}>Kindly input your preferences and requests so that we can tailor your customized package.</Text>
@@ -289,7 +289,7 @@ export default function QuotationForm({ route, navigation }) {
                 {/* --- PACKAGE INFO DISPLAY --- */}
                 <View style={QuotationFormStyle.infoCard}>
 
-                    {/* 🔥 LIVE SCROLLING EXPO-IMAGES HERE */}
+                    {/*  LIVE SCROLLING EXPO-IMAGES HERE */}
                     {images.length > 0 && (
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
                             {images.map((img, idx) => (
@@ -488,7 +488,7 @@ export default function QuotationForm({ route, navigation }) {
                         <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444' }]}>Note: Hotel rates may increase if you choose a hotel other than the fixed one. Rates may also increase or decrease depending on the stars of the chosen hotel.</Text>
                     </View>
 
-                    {/* 🔥 UPDATED DATES TO MATCH WEB SELECTOR 🔥 */}
+                    {/*  UPDATED DATES TO MATCH WEB SELECTOR  */}
                     <View style={QuotationFormStyle.inputGroup}>
                         <Text style={QuotationFormStyle.inputLabel}>Preferred Travel Dates <Text style={{ color: 'red' }}>*</Text></Text>
                         <TouchableOpacity
@@ -802,7 +802,7 @@ export default function QuotationForm({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/* 🔥 NEW SUCCESS MODAL (WEB DESIGN MATCH) 🔥 */}
+            {/*  NEW SUCCESS MODAL (WEB DESIGN MATCH)  */}
             <Modal visible={isSuccessModalVisible} transparent animationType="fade">
                 <View style={ModalStyle.modalOverlay}>
                     <View style={[ModalStyle.modalBox, { width: '90%', padding: 25, alignItems: 'center', borderRadius: 12 }]}>
