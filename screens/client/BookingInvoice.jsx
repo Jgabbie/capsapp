@@ -873,25 +873,42 @@ export default function BookingInvoice({ route, navigation }) {
                             {method === 'manual' && !hasPendingTransaction && (
                                 <View style={BookingInvoiceStyle.manualBankSection}>
                                     <Text style={[BookingInvoiceStyle.cardTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
-                                    <View style={BookingInvoiceStyle.bankGrid}>
-                                        {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
-                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
-                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
-                                        ].map((bank, index) => (
-                                            <View key={index} style={BookingInvoiceStyle.bankGridCard}>
-                                                <Text style={BookingInvoiceStyle.bankName}>{bank.name}</Text>
-                                                <Text style={BookingInvoiceStyle.bankAccount}>{bank.acc}</Text>
-                                                <Text style={BookingInvoiceStyle.bankHolder}>{bank.holder}</Text>
-                                                {bank.qr ? (
-                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
-                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                                    </TouchableOpacity>
-                                                ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
-                                                )}
+                                    <View>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                                            <View style={[BookingInvoiceStyle.bankGridCard, { flex: 1, marginBottom: 0 }]}>
+                                                <Text style={BookingInvoiceStyle.bankName}>GCASH</Text>
+                                                <Text style={BookingInvoiceStyle.bankAccount}>09688880405</Text>
+                                                <Text style={BookingInvoiceStyle.bankHolder}>RHN C.</Text>
+                                                {(() => {
+                                                    const qr = QRCodeRhon;
+                                                    return (
+                                                        <TouchableOpacity onPress={() => setEnlargedQR(qr)}>
+                                                            <Image source={qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                        </TouchableOpacity>
+                                                    );
+                                                })()}
                                             </View>
-                                        ))}
+
+                                            <View style={[BookingInvoiceStyle.bankGridCard, { flex: 1, marginBottom: 0 }]}>
+                                                <Text style={BookingInvoiceStyle.bankName}>GCASH</Text>
+                                                <Text style={BookingInvoiceStyle.bankAccount}>09690554806</Text>
+                                                <Text style={BookingInvoiceStyle.bankHolder}>MA***R C.</Text>
+                                                {(() => {
+                                                    const qr = QRCodeMaricar;
+                                                    return (
+                                                        <TouchableOpacity onPress={() => setEnlargedQR(qr)}>
+                                                            <Image source={qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                        </TouchableOpacity>
+                                                    );
+                                                })()}
+                                            </View>
+                                        </View>
+
+                                        <View style={[BookingInvoiceStyle.bankGridCard, { width: '100%', alignItems: 'center' }]}>
+                                            <Text style={[BookingInvoiceStyle.bankName, { textAlign: 'center' }]}>BDO</Text>
+                                            <Text style={[BookingInvoiceStyle.bankAccount, { textAlign: 'center' }]}>006838032692</Text>
+                                            <Text style={[BookingInvoiceStyle.bankHolder, { textAlign: 'center' }]}>M&RC TRAVEL AND TOURS</Text>
+                                        </View>
                                     </View>
 
                                     <View style={BookingInvoiceStyle.uploadSection}>

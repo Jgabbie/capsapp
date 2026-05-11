@@ -442,24 +442,29 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     <View style={QuotationPaymentStyle.manualBankSection}>
                         <Text style={[QuotationPaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={QuotationPaymentStyle.bankGrid}>
-                            {[
-                                { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
-                                { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
-                                { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
-                            ].map((bank, index) => (
-                                <View key={index} style={QuotationPaymentStyle.bankGridCard}>
-                                    <Text style={QuotationPaymentStyle.bankName}>{bank.name}</Text>
-                                    <Text style={QuotationPaymentStyle.bankAccount}>{bank.acc}</Text>
-                                    <Text style={QuotationPaymentStyle.bankHolder}>{bank.holder}</Text>
-                                    {bank.qr ? (
-                                        <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
-                                            <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                        </TouchableOpacity>
-                                    ) : (
-                                        <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
-                                    )}
-                                </View>
-                            ))}
+                            <View style={QuotationPaymentStyle.bankGridCard}>
+                                <Text style={QuotationPaymentStyle.bankName}>GCASH</Text>
+                                <Text style={QuotationPaymentStyle.bankAccount}>09688880405</Text>
+                                <Text style={QuotationPaymentStyle.bankHolder}>RHN C.</Text>
+                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeRhon)}>
+                                    <Image source={QRCodeRhon} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={QuotationPaymentStyle.bankGridCard}>
+                                <Text style={QuotationPaymentStyle.bankName}>GCASH</Text>
+                                <Text style={QuotationPaymentStyle.bankAccount}>09690554806</Text>
+                                <Text style={QuotationPaymentStyle.bankHolder}>MA***R C.</Text>
+                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeMaricar)}>
+                                    <Image source={QRCodeMaricar} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={QuotationPaymentStyle.bankGridCardFull}>
+                                <Text style={QuotationPaymentStyle.bankName}>BDO</Text>
+                                <Text style={QuotationPaymentStyle.bankAccount}>006838032692</Text>
+                                <Text style={QuotationPaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                            </View>
                         </View>
 
                         <View style={QuotationPaymentStyle.uploadSection}>

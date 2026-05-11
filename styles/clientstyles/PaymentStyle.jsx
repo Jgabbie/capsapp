@@ -503,6 +503,17 @@ const PaymentStyle = StyleSheet.create({
         borderColor: '#e2e8f0',
         elevation: 2,
     },
+    bankGridCardFull: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        elevation: 2,
+        alignItems: 'center',
+    },
     bankName: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 13,

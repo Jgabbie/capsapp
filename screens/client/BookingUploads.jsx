@@ -153,6 +153,7 @@ export default function BookingUploads({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     //  ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
     useEffect(() => {
@@ -272,6 +273,11 @@ export default function BookingUploads({ route, navigation }) {
             }
         }
 
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
         navigation.navigate("registrationstep1", { setupData, travelerUploads: uploads, travelersData });
     };
 
@@ -532,6 +538,30 @@ export default function BookingUploads({ route, navigation }) {
                     />
                 )
             )}
+
+            <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowVerifyModal(false)}>
+                    <View style={QuotationFormStepStyle.verifyModalCard}>
+                        <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                            <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                        </TouchableOpacity>
+
+                        <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                        <Text style={QuotationFormStepStyle.verifyModalText}>
+                            Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                        </Text>
+
+                        <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                            <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 }

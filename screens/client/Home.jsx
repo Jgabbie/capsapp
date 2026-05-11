@@ -43,7 +43,9 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
             )}
 
             <View style={HomeStyle.bannerFooter}>
-                <Text style={HomeStyle.bannerTitle}>{item.packageName}</Text>
+                <Text style={HomeStyle.bannerTitle} numberOfLines={2} ellipsizeMode="tail">
+                    {item.packageName}
+                </Text>
                 <Text style={HomeStyle.bannerSub} numberOfLines={2}>
                     {subText || item.packageDescription}
                 </Text>
@@ -544,6 +546,8 @@ export default function Home({ route }) {
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
+                            snapToAlignment="center"
+                            decelerationRate="fast"
                             onMomentumScrollEnd={handleCarouselScroll}
                             scrollEventThrottle={16}
                         >

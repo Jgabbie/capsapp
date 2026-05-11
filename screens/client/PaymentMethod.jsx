@@ -452,24 +452,29 @@ export default function PaymentMethod({ route, navigation }) {
                     <View style={PaymentStyle.manualBankSection}>
                         <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={PaymentStyle.bankGrid}>
-                            {[
-                                { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
-                                { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
-                                { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
-                            ].map((bank, index) => (
-                                <View key={index} style={PaymentStyle.bankGridCard}>
-                                    <Text style={PaymentStyle.bankName}>{bank.name}</Text>
-                                    <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
-                                    <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
-                                    {bank.qr ? (
-                                        <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
-                                            <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                        </TouchableOpacity>
-                                    ) : (
-                                        <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
-                                    )}
-                                </View>
-                            ))}
+                            <View style={PaymentStyle.bankGridCard}>
+                                <Text style={PaymentStyle.bankName}>GCASH</Text>
+                                <Text style={PaymentStyle.bankAccount}>09688880405</Text>
+                                <Text style={PaymentStyle.bankHolder}>RHN C.</Text>
+                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeRhon)}>
+                                    <Image source={QRCodeRhon} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={PaymentStyle.bankGridCard}>
+                                <Text style={PaymentStyle.bankName}>GCASH</Text>
+                                <Text style={PaymentStyle.bankAccount}>09690554806</Text>
+                                <Text style={PaymentStyle.bankHolder}>MA***R C.</Text>
+                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeMaricar)}>
+                                    <Image source={QRCodeMaricar} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={PaymentStyle.bankGridCardFull}>
+                                <Text style={PaymentStyle.bankName}>BDO</Text>
+                                <Text style={PaymentStyle.bankAccount}>006838032692</Text>
+                                <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
+                            </View>
                         </View>
 
                         <View style={PaymentStyle.uploadSection}>
