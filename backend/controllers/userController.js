@@ -73,8 +73,15 @@ export const createUser = async (req, res) => {
             return res.status(400).json({ message: "Username, email, and password are required" });
         }
 
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        const existingUser = await User.findOne({ $or: [{ username }, { email }, { phonenum }, { phone: phonenum }] });
         if (existingUser) {
+            if (existingUser.username === username) {
+                return res.status(400).json({ message: "Username already exists" });
+            } else if (existingUser.email === email) {
+                return res.status(400).json({ message: "Email already exists" });
+            } else if (existingUser.phonenum === phonenum || existingUser.phone === phonenum) {
+                return res.status(400).json({ message: "Phone number already registered" });
+            }
             return res.status(400).json({ message: "Username or email already exists" });
         }
 
@@ -390,6 +397,29 @@ export const updateLoginOnce = async (req, res) => {
         await user.save();
 
         res.status(200).json({ success: true, message: "Updated loginOnce status" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// CHECK IF PHONE NUMBER EXISTS
+export const checkPhoneNumberExists = async (req, res) => {
+    try {
+        const { phonenum } = req.params;
+
+        if (!phonenum) {
+            return res.status(400).json({ success: false, message: "Phone number is required" });
+        }
+
+        const existingUser = await User.findOne({ 
+            $or: [{ phonenum }, { phone: phonenum }] 
+        });
+
+        if (existingUser) {
+            return res.status(200).json({ success: true, exists: true, message: "Phone number already registered" });
+        }
+
+        res.status(200).json({ success: true, exists: false, message: "Phone number is available" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

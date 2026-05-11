@@ -171,7 +171,7 @@ export default function Signup() {
         try {
             const fullPhoneNumber = user.phonenum.replace(/\D/g, "");
 
-            //  CHANGED THIS LINE! 
+            //  USES OUR SMART 'API' VARIABLE INSTEAD OF RAW AXIOS!
             // Uses our smart 'api' variable instead of hardcoded 10.0.2.2
             // Note: Since your old code went to /api/create-user and our api.js base URL ends with /api, 
             // we just need to append /create-user here.
