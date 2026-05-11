@@ -12,23 +12,27 @@ const formatLongDate = (dateVal) => {
 
 export default function RegistrationStep2({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, passengers, leadGuestInfo } = route.params || {};
+    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
     // --- State Management ---
-    const [medicalData, setMedicalData] = useState({
-        dietary: '',
-        dietaryDetails: '',
-        medical: '',
-        medicalDetails: '',
-        insurance1: '',
-        insurance2: '',
-    });
+    const [medicalData, setMedicalData] = useState(
+        prevMedicalData || {
+            dietary: '',
+            dietaryDetails: '',
+            medical: '',
+            medicalDetails: '',
+            insurance1: '',
+            insurance2: '',
+        }
+    );
 
-    const [emergency, setEmergency] = useState({
-        title: '', fullName: '', email: '', contact: '', relation: ''
-    });
+    const [emergency, setEmergency] = useState(
+        prevEmergency || {
+            title: '', fullName: '', email: '', contact: '', relation: ''
+        }
+    );
 
     const [activeDropdown, setActiveDropdown] = useState(null);
 
@@ -43,9 +47,12 @@ export default function RegistrationStep2({ route, navigation }) {
     const isValidContact = (contact) => {
         if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
-        if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
-        if (digits.length === 11 && digits.startsWith("09")) return true;
-        return false;
+        // If starts with 09: must have 11 digits
+        if (digits.startsWith("09")) {
+            return digits.length === 11;
+        }
+        // If doesn't start with 09: must have 7-8 digits
+        return digits.length >= 7 && digits.length <= 8;
     };
 
     const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
@@ -70,7 +77,7 @@ export default function RegistrationStep2({ route, navigation }) {
             return Alert.alert("Invalid Input", "Please enter a valid email address.");
         }
         if (contactHasError) {
-            return Alert.alert("Invalid Input", "Please enter a valid 10 or 11 digit contact number.");
+            return Alert.alert("Invalid Input", "Enter valid contact number (09xxxxxxxxxx or 8xxxxxxx-8xxxxxxxx)");
         }
 
         navigation.navigate("registrationstep3", { ...route.params, medicalData, emergency });
@@ -107,10 +114,10 @@ export default function RegistrationStep2({ route, navigation }) {
             return (
                 <>
                     <TouchableOpacity style={RegistrationFormStyle.dropdownItem} onPress={() => handleDropdownSelect('MR')}>
-                        <Text style={RegistrationFormStyle.dropdownText}>MR</Text>
+                        <Text style={[RegistrationFormStyle.dropdownText, { color: emergency.title === 'MR' ? '#305797' : '#000' }]}>MR</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[RegistrationFormStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('MS')}>
-                        <Text style={RegistrationFormStyle.dropdownText}>MS</Text>
+                        <Text style={[RegistrationFormStyle.dropdownText, { color: emergency.title === 'MS' ? '#305797' : '#000' }]}>MS</Text>
                     </TouchableOpacity>
                 </>
             );
@@ -123,7 +130,7 @@ export default function RegistrationStep2({ route, navigation }) {
                     style={[RegistrationFormStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
                     onPress={() => handleDropdownSelect(option)}
                 >
-                    <Text style={RegistrationFormStyle.dropdownText}>{option}</Text>
+                    <Text style={[RegistrationFormStyle.dropdownText, { color: emergency.relation === option ? '#305797' : '#000' }]}>{option}</Text>
                 </TouchableOpacity>
             ));
         }
@@ -296,7 +303,7 @@ export default function RegistrationStep2({ route, navigation }) {
                                     onChangeText={(v) => setEmergency({ ...emergency, contact: v.replace(/[^0-9]/g, '') })}
                                 />
                             </View>
-                            <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={{ flex: 1.3, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={RegistrationFormStyle.label}>Relation: </Text>
                                 <TouchableOpacity
                                     style={{ flex: 1, marginLeft: 5 }}
@@ -330,7 +337,7 @@ export default function RegistrationStep2({ route, navigation }) {
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={RegistrationFormStyle.backTextButton} onPress={() => navigation.goBack()}>
+                    <TouchableOpacity style={RegistrationFormStyle.backTextButton} onPress={() => navigation.navigate("registrationstep1", { ...route.params, medicalData, emergency })}>
                         <Text style={RegistrationFormStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
                 </View>

@@ -67,7 +67,7 @@ const assignRooms = (travelers) => {
 
 export default function QuotationForm1({ route, navigation }) {
     const { user } = useUser();
-    const { quotation, travelerUploads, travelersData } = route.params || {};
+    const { quotation, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
 
     const totalCount = (quotation?.travelerCounts?.adult || 0) +
         (quotation?.travelerCounts?.child || 0) +
@@ -105,6 +105,8 @@ export default function QuotationForm1({ route, navigation }) {
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
+
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
@@ -203,7 +205,20 @@ export default function QuotationForm1({ route, navigation }) {
             }
         }
 
-        navigation.navigate("quotationform2", { quotation, travelerUploads, passengers, leadGuestInfo });
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
+        navigation.navigate("quotationform2", {
+            ...route.params,
+            quotation,
+            travelerUploads,
+            passengers,
+            leadGuestInfo,
+            medicalData: savedMedicalData,
+            emergency: savedEmergency
+        });
     };
 
     return (
@@ -365,6 +380,29 @@ export default function QuotationForm1({ route, navigation }) {
                         <Text style={QuotationFormStepStyle.backText}>Back to Uploads</Text>
                     </TouchableOpacity>
                 </View>
+                    <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                        <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowVerifyModal(false)}>
+                            <View style={QuotationFormStepStyle.verifyModalCard}>
+                                <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                                    <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                                </TouchableOpacity>
+
+                                <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                                <Text style={QuotationFormStepStyle.verifyModalText}>
+                                    Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                                </Text>
+
+                                <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                                    <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                        <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                        <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
 
                 <Modal visible={showTitleDropdown} transparent animationType="fade">
                     <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>

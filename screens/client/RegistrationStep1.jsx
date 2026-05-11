@@ -81,7 +81,7 @@ const assignRooms = (travelers) => {
 
 export default function RegistrationStep1({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, travelersData } = route.params || {};
+    const { setupData, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
 
     const totalCount = (setupData?.travelerCounts?.adult || 0) +
         (setupData?.travelerCounts?.child || 0) +
@@ -114,6 +114,8 @@ export default function RegistrationStep1({ route, navigation }) {
     const isTitleLocked = !!userTitle;
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
+
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
 
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
@@ -218,7 +220,20 @@ export default function RegistrationStep1({ route, navigation }) {
             }
         }
 
-        navigation.navigate("registrationstep2", { setupData, travelerUploads, passengers, leadGuestInfo });
+        setShowVerifyModal(true);
+    };
+
+    const handleConfirmContinue = () => {
+        setShowVerifyModal(false);
+        navigation.navigate("registrationstep2", {
+            ...route.params,
+            setupData,
+            travelerUploads,
+            passengers,
+            leadGuestInfo,
+            medicalData: savedMedicalData,
+            emergency: savedEmergency
+        });
     };
 
     return (
@@ -403,6 +418,30 @@ export default function RegistrationStep1({ route, navigation }) {
                 </View>
 
             </ScrollView>
+
+            <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                <TouchableOpacity style={RegistrationFormStyle.modalOverlay} activeOpacity={1} onPress={() => setShowVerifyModal(false)}>
+                    <View style={RegistrationFormStyle.verifyModalCard}>
+                        <TouchableOpacity style={RegistrationFormStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                            <Text style={RegistrationFormStyle.closeButtonText}>×</Text>
+                        </TouchableOpacity>
+
+                        <Text style={RegistrationFormStyle.verifyModalTitle}>Please Verify Details</Text>
+                        <Text style={RegistrationFormStyle.verifyModalText}>
+                            Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                        </Text>
+
+                        <View style={RegistrationFormStyle.verifyModalButtonsRow}>
+                            <TouchableOpacity style={RegistrationFormStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                <Text style={RegistrationFormStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={RegistrationFormStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={RegistrationFormStyle.verifySecondaryButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             <Modal visible={showTitleDropdown} transparent animationType="fade">
                 <TouchableOpacity style={RegistrationFormStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>

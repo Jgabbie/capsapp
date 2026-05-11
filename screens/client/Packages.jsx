@@ -87,7 +87,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         setMaxBudgetInput('200000');
         setTourType('All');
         setTravelersValue('');
-        setDaysValue([10]);
+        setDaysValue([maxDaysAvailable]);
+        setDaysInput(String(maxDaysAvailable));
         setSelectedTags([]);
         setSearchText('');
     };
@@ -258,6 +259,20 @@ export default function Packages({ navigation, route }) { //  Add route here!
         return Array.from(unique);
     }, [packages]);
 
+    // CALCULATE MAX DAYS FROM AVAILABLE PACKAGES
+    const maxDaysAvailable = useMemo(() => {
+        if (packages.length === 0) return 10;
+        const maxDays = Math.max(...packages.map(p => p.packageDuration || 0));
+        return maxDays > 0 ? maxDays : 10;
+    }, [packages]);
+    // UPDATE DAYS VALUE WHEN MAX DAYS CHANGES (e.g., after packages load)
+    useEffect(() => {
+        if (daysValue[0] > maxDaysAvailable) {
+            setDaysValue([maxDaysAvailable]);
+            setDaysInput(String(maxDaysAvailable));
+        }
+    }, [maxDaysAvailable]);
+
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
@@ -289,7 +304,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
         const numericValue = value.replace(/[^0-9]/g, '');
         setDaysInput(numericValue);
         const num = Number(numericValue);
-        if (num >= 1 && num <= 10) setDaysValue([num]);
+        if (num >= 1 && num <= maxDaysAvailable) setDaysValue([num]);
     };
 
     return (
@@ -515,7 +530,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
                                         setDaysValue(vals);
                                         setDaysInput(String(vals[0]));
                                     }}
-                                    min={1} max={10} step={1}
+                                    min={1} max={maxDaysAvailable} step={1}
                                     selectedStyle={{ backgroundColor: '#305797' }} markerStyle={{ backgroundColor: '#305797' }}
                                 />
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>
