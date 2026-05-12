@@ -150,6 +150,40 @@ export default StyleSheet.create({
         fontSize: 13,
         fontFamily: 'Roboto_400Regular',
     },
+    
+    // --- REVIEW NOTICE CARD ---
+    reviewNoticeCard: {
+        backgroundColor: '#f0fdf4',
+        borderLeftWidth: 4,
+        borderLeftColor: '#22c55e',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 12,
+    },
+    reviewNoticeCheckmark: {
+        fontSize: 24,
+        color: '#22c55e',
+        fontWeight: 'bold',
+        marginTop: 2,
+    },
+    reviewNoticeContent: {
+        flex: 1,
+    },
+    reviewNoticeTitle: {
+        fontSize: 14,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#22c55e',
+        marginBottom: 6,
+    },
+    reviewNoticeText: {
+        fontSize: 12,
+        fontFamily: 'Roboto_400Regular',
+        color: '#4b5563',
+        lineHeight: 18,
+    },
     txnCard: {
         backgroundColor: '#f8fafc',
         borderRadius: 8,

@@ -39,6 +39,7 @@ const HomeStyle = StyleSheet.create({
         fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         marginBottom: 12,
+        marginTop: 10,
         color: "#305797",
         paddingLeft: 5
     },
@@ -325,63 +326,90 @@ const HomeStyle = StyleSheet.create({
         textAlign: 'center'
     },
 
-    // --- BANNER CARDS ---
+    // --- BANNER CARDS (NEW CANVA DESIGN) ---
     bannerCard: {
-        width: '95%',
+        width: width - 65, // Keeps it nicely sized within the horizontal scroll
         alignSelf: 'center',
         backgroundColor: "#fff",
-        borderRadius: 15,
-        height: 340,
-        elevation: 4,
+        borderRadius: 0, // 🔥 NO corner radius as requested
+        elevation: 10,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        marginBottom: 25,
-        overflow: 'hidden'
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+        marginBottom: 15,
+        marginTop: 0,
     },
     bannerImage: {
         width: "100%",
-        height: 180,
-        backgroundColor: '#e0e0e0'
+        height: 200, 
+        borderRadius: 0, // 🔥 NO corner radius
+        backgroundColor: '#e0e0e0',
+    },
+    wishlistButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: '#fff',
+        width: 35,
+        height: 35,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        zIndex: 2,
     },
     bannerFooter: {
-        padding: 15,
         backgroundColor: "#fff",
-        flexGrow: 1
+        paddingHorizontal: 0,
+        paddingBottom: 20,
+    },
+    titleBanner: {
+        backgroundColor: '#305797',
+        borderRadius: 30, // 🔥 This is the ONLY thing with rounded corners!
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 15,
+        marginTop: -25, // 🔥 This pulls the blue box up so it overlaps the image perfectly
+        marginBottom: 15,
+        minHeight: 65,
+    },
+    locationIcon: {
+        width: 18,
+        height: 18,
+        marginRight: 10,
+        tintColor: '#fff', // Ensures the icon is pure white against the blue
     },
     bannerTitle: {
-        fontFamily: 'Montserrat_700Bold',
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 14,
+        color: "#ffffff",
+        flex: 1,
+        textTransform: 'uppercase',
+    },
+    bannerDesc: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#305797", // Matches the dark blue-ish text in your design
+        lineHeight: 20,
+        textAlign: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 20,
+        minHeight: 80,
+    },
+    viewPackageBtn: {
+        alignItems: 'center',
+        paddingBottom: 0,
+    },
+    viewPackageText: {
+        fontFamily: "Roboto_500Medium",
         fontSize: 16,
-        color: "#305797",
-        lineHeight: 22
-    },
-    bannerSub: {
-        fontFamily: 'Roboto_400Regular',
-        fontSize: 13,
-        color: '#777',
-        marginTop: 2,
-        lineHeight: 18
-    },
-    viewAllButton: {
-        backgroundColor: "#305797",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: 'center',
-        paddingVertical: 10,
-        borderBottomLeftRadius: 15,
-        borderBottomRightRadius: 15,
-        gap: 8,
-        marginTop: 'auto'
-    },
-    viewAllText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: 'bold'
-    },
-    arrowIcon: {
-        width: 14,
-        height: 14,
+        color: "#b22820", // 🔥 The exact red color requested!
     },
 
     // --- BACKGROUND IMAGES ---
@@ -431,12 +459,12 @@ const HomeStyle = StyleSheet.create({
 
     // --- 🔥 NEW CAROUSEL & DOTS STYLES 🔥 ---
     carouselContainer: {
-        height: 240, // 🔥 Less height (from 280) for a card-like aspect ratio
+        height: 240,
         marginBottom: 20,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative',
     },
     carouselSlide: {
-        width: width - 30,
         height: '100%',
         paddingHorizontal: 0,
         marginRight: 0,
@@ -460,6 +488,8 @@ const HomeStyle = StyleSheet.create({
         textAlign: "left",
         marginBottom: 8,
         zIndex: 1,
+        flexShrink: 1,
+        maxWidth: '85%',
     },
     carouselSubtitle: {
         fontFamily: "Roboto_400Regular",
@@ -468,23 +498,29 @@ const HomeStyle = StyleSheet.create({
         textAlign: "left",
         lineHeight: 20,
         zIndex: 1,
+        flexShrink: 1,
+        maxWidth: '85%',
     },
-    // 🔥 NEW DOTS STYLES 🔥
-    dotsContainer: {
+    // 🔥 IMPROVED CAROUSEL DOT STYLES - Matching PackageDetails 🔥
+    carouselDots: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10, // Space below the images
+        position: 'absolute',
+        bottom: 12,
+        alignSelf: 'center',
+        gap: 6,
+        zIndex: 10,
     },
     dot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#cbd5e1', // Default dot (light gray)
-        marginHorizontal: 4, // Spacing between dots
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
     },
-    dotActive: {
-        backgroundColor: '#305797', // Active dot (your primary blue)
+    activeDot: {
+        backgroundColor: '#fff',
+        width: 10,
+        height: 10,
+        borderRadius: 5,
     },
 
     // --- SERVICES GRID ---
