@@ -90,7 +90,6 @@ export const createUser = async (req, res) => {
             lastname,
             email,
             phone: phone || phonenum || "",
-            phonenum: phonenum || phone || "",
             password: hashedPassword,
             hashedPassword,
             role: roleValue,
