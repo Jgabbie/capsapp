@@ -260,7 +260,7 @@ export default function QuotationUploads({ route, navigation }) {
             if (invalidPassportIndex !== -1) {
                 Alert.alert(
                     "Invalid Passport Number",
-                    "Passport number must start with 7 digits and end with a letter (e.g. 8263213C)"
+                    "Passport number must start with P, followed by 7 digits, and end with a letter (e.g. P1234567A)"
                 );
                 return;
             }
@@ -358,7 +358,7 @@ export default function QuotationUploads({ route, navigation }) {
                                         <Text style={QuotationUploadsStyle.inputLabel}>Passport Number</Text>
                                         <TextInput
                                             style={BookingUploadsStyle.input}
-                                            placeholder="P1234567C"
+                                            placeholder="P1234567A"
                                             placeholderTextColor="#9ca3af"
                                             maxLength={9}
                                             value={t.passportNo}
@@ -466,30 +466,6 @@ export default function QuotationUploads({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
-                    <View style={QuotationFormStepStyle.modalOverlay}>
-                        <View style={QuotationFormStepStyle.verifyModalCard}>
-                            <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
-                                <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
-                            </TouchableOpacity>
-
-                            <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
-                            <Text style={QuotationFormStepStyle.verifyModalText}>
-                                Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
-                            </Text>
-
-                            <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
-                                <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
-                                    <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
-                                    <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
             </ScrollView>
 
             <Modal visible={activeDropdown !== null} transparent={true} animationType="fade">
@@ -551,6 +527,30 @@ export default function QuotationUploads({ route, navigation }) {
                     />
                 )
             )}
+
+            <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
+                <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowVerifyModal(false)}>
+                    <View style={QuotationFormStepStyle.verifyModalCard}>
+                        <TouchableOpacity style={QuotationFormStepStyle.closeButton} onPress={() => setShowVerifyModal(false)}>
+                            <Text style={QuotationFormStepStyle.closeButtonText}>×</Text>
+                        </TouchableOpacity>
+
+                        <Text style={QuotationFormStepStyle.verifyModalTitle}>Please Verify Details</Text>
+                        <Text style={QuotationFormStepStyle.verifyModalText}>
+                            Kindly make sure to verify and check the information of your details - ensure passport and photo are clear and correct.
+                        </Text>
+
+                        <View style={QuotationFormStepStyle.verifyModalButtonsRow}>
+                            <TouchableOpacity style={QuotationFormStepStyle.verifyPrimaryButton} onPress={handleConfirmContinue}>
+                                <Text style={QuotationFormStepStyle.verifyPrimaryButtonText}>Confirm & Continue</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={QuotationFormStepStyle.verifySecondaryButton} onPress={() => setShowVerifyModal(false)}>
+                                <Text style={QuotationFormStepStyle.verifySecondaryButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 }

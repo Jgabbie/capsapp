@@ -3,7 +3,8 @@ import {
     createUser, deleteUser, getUsers, loginUser, updateUser, getUserById,
     sendResetOtp, checkResetOtp, resetPassword,
     sendVerifyOtp, verifyAccount, redirectToApp,
-    updateLoginOnce // <-- ADDED THIS
+    updateLoginOnce, // <-- ADDED THIS
+    checkPhoneNumberExists // <-- ADDED THIS
 } from "../controllers/userController.js"; 
 
 // 🔥 ADDED THIS to decode the token so the backend knows WHICH user is clicking "Continue"
@@ -16,6 +17,9 @@ router.post("/create-user", createUser);
 router.post("/login-user", loginUser);
 router.get("/get-user", getUsers);
 router.delete("/delete-user/:id", deleteUser);
+
+// 🔥 NEW: Route to check if phone number already exists (MUST come before /:id routes)
+router.get("/check-phone/:phonenum", checkPhoneNumberExists);
 
 // Updated & New Routes for Mobile Profile
 router.get("/users/:id", getUserById);

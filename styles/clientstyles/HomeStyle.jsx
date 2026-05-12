@@ -331,6 +331,7 @@ const HomeStyle = StyleSheet.create({
         alignSelf: 'center',
         backgroundColor: "#fff",
         borderRadius: 15,
+        height: 340,
         elevation: 4,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -346,18 +347,21 @@ const HomeStyle = StyleSheet.create({
     },
     bannerFooter: {
         padding: 15,
-        backgroundColor: "#fff"
+        backgroundColor: "#fff",
+        flexGrow: 1
     },
     bannerTitle: {
         fontFamily: 'Montserrat_700Bold',
         fontSize: 16,
-        color: "#305797"
+        color: "#305797",
+        lineHeight: 22
     },
     bannerSub: {
         fontFamily: 'Roboto_400Regular',
         fontSize: 13,
         color: '#777',
-        marginTop: 2
+        marginTop: 2,
+        lineHeight: 18
     },
     viewAllButton: {
         backgroundColor: "#305797",
@@ -367,7 +371,8 @@ const HomeStyle = StyleSheet.create({
         paddingVertical: 10,
         borderBottomLeftRadius: 15,
         borderBottomRightRadius: 15,
-        gap: 8
+        gap: 8,
+        marginTop: 'auto'
     },
     viewAllText: {
         color: '#fff',
@@ -428,14 +433,14 @@ const HomeStyle = StyleSheet.create({
     carouselContainer: {
         height: 240, // 🔥 Less height (from 280) for a card-like aspect ratio
         marginBottom: 20,
-        // keep overflow visible so next slide peeks in
-        overflow: 'visible'
+        overflow: 'hidden'
     },
     carouselSlide: {
-        width: width * 0.85, // narrower slide so it sits left and lets next card peek
+        width: width - 30,
         height: '100%',
         paddingHorizontal: 0,
-        marginRight: 15, // spacing between slides
+        marginRight: 0,
+        alignSelf: 'center'
     },
     carouselInner: {
         flex: 1, // 🔥 FIX: Flex 1 lets it fill the space safely without math errors

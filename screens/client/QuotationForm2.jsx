@@ -12,7 +12,7 @@ const formatLongDate = (dateVal) => {
 
 export default function QuotationForm2({ route, navigation }) {
     const { user } = useUser();
-    const { quotation, travelerUploads, passengers, leadGuestInfo } = route.params || {};
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
 
     const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
@@ -23,18 +23,22 @@ export default function QuotationForm2({ route, navigation }) {
 
     const currentDateLong = formatLongDate(new Date());
 
-    const [medicalData, setMedicalData] = useState({
-        dietary: '',
-        dietaryDetails: '',
-        medical: '',
-        medicalDetails: '',
-        insurance1: '',
-        insurance2: '',
-    });
+    const [medicalData, setMedicalData] = useState(
+        prevMedicalData || {
+            dietary: '',
+            dietaryDetails: '',
+            medical: '',
+            medicalDetails: '',
+            insurance1: '',
+            insurance2: '',
+        }
+    );
 
-    const [emergency, setEmergency] = useState({
-        title: '', fullName: '', email: '', contact: '', relation: ''
-    });
+    const [emergency, setEmergency] = useState(
+        prevEmergency || {
+            title: '', fullName: '', email: '', contact: '', relation: ''
+        }
+    );
 
     const [activeDropdown, setActiveDropdown] = useState(null);
 
@@ -48,9 +52,12 @@ export default function QuotationForm2({ route, navigation }) {
     const isValidContact = (contact) => {
         if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
-        if (digits.length === 10 && (digits.startsWith("8") || digits.startsWith("9"))) return true;
-        if (digits.length === 11 && digits.startsWith("09")) return true;
-        return false;
+        // If starts with 09: must have 11 digits
+        if (digits.startsWith("09")) {
+            return digits.length === 11;
+        }
+        // If doesn't start with 09: must have 7-8 digits
+        return digits.length >= 7 && digits.length <= 8;
     };
 
     const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
@@ -74,7 +81,7 @@ export default function QuotationForm2({ route, navigation }) {
             return Alert.alert("Invalid Input", "Please enter a valid email address.");
         }
         if (contactHasError) {
-            return Alert.alert("Invalid Input", "Please enter a valid 10 or 11 digit contact number.");
+            return Alert.alert("Invalid Input", "Enter valid contact number (09xxxxxxxxxx or 8xxxxxxx-8xxxxxxxx)");
         }
 
         navigation.navigate("quotationform3", { ...route.params, medicalData, emergency, quotation });
@@ -110,10 +117,10 @@ export default function QuotationForm2({ route, navigation }) {
             return (
                 <>
                     <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => handleDropdownSelect('MR')}>
-                        <Text style={QuotationFormStepStyle.dropdownText}>MR</Text>
+                        <Text style={[QuotationFormStepStyle.dropdownText, { color: emergency.title === 'MR' ? '#305797' : '#000' }]}>MR</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[QuotationFormStepStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('MS')}>
-                        <Text style={QuotationFormStepStyle.dropdownText}>MS</Text>
+                        <Text style={[QuotationFormStepStyle.dropdownText, { color: emergency.title === 'MS' ? '#305797' : '#000' }]}>MS</Text>
                     </TouchableOpacity>
                 </>
             );
@@ -137,7 +144,7 @@ export default function QuotationForm2({ route, navigation }) {
                 style={[QuotationFormStepStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
                 onPress={() => handleDropdownSelect(option)}
             >
-                <Text style={QuotationFormStepStyle.dropdownText}>{option}</Text>
+                <Text style={[QuotationFormStepStyle.dropdownText, { color: emergency.relation === option ? '#305797' : '#000' }]}>{option}</Text>
             </TouchableOpacity>
         ));
     }
@@ -277,7 +284,7 @@ export default function QuotationForm2({ route, navigation }) {
                                     onChangeText={(v) => setEmergency({ ...emergency, contact: v.replace(/[^0-9]/g, '') })}
                                 />
                             </View>
-                            <View style={{ flex: 1, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={{ flex: 1.3, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Relation: </Text>
                                 <TouchableOpacity
                                     style={{ flex: 1, marginLeft: 5 }}
@@ -308,7 +315,7 @@ export default function QuotationForm2({ route, navigation }) {
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={QuotationFormStepStyle.backTextButton} onPress={() => navigation.goBack()}>
+                    <TouchableOpacity style={QuotationFormStepStyle.backTextButton} onPress={() => navigation.navigate("quotationform1", { ...route.params, medicalData, emergency })}>
                         <Text style={QuotationFormStepStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
                 </View>

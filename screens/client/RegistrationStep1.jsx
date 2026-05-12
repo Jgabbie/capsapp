@@ -81,7 +81,7 @@ const assignRooms = (travelers) => {
 
 export default function RegistrationStep1({ route, navigation }) {
     const { user } = useUser();
-    const { setupData, travelerUploads, travelersData } = route.params || {};
+    const { setupData, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
 
     const totalCount = (setupData?.travelerCounts?.adult || 0) +
         (setupData?.travelerCounts?.child || 0) +
@@ -218,7 +218,15 @@ export default function RegistrationStep1({ route, navigation }) {
             }
         }
 
-        navigation.navigate("registrationstep2", { setupData, travelerUploads, passengers, leadGuestInfo });
+        navigation.navigate("registrationstep2", {
+            ...route.params,
+            setupData,
+            travelerUploads,
+            passengers,
+            leadGuestInfo,
+            medicalData: savedMedicalData,
+            emergency: savedEmergency
+        });
     };
 
     return (

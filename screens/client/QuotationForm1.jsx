@@ -67,7 +67,7 @@ const assignRooms = (travelers) => {
 
 export default function QuotationForm1({ route, navigation }) {
     const { user } = useUser();
-    const { quotation, travelerUploads, travelersData } = route.params || {};
+    const { quotation, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
 
     const totalCount = (quotation?.travelerCounts?.adult || 0) +
         (quotation?.travelerCounts?.child || 0) +
@@ -203,7 +203,15 @@ export default function QuotationForm1({ route, navigation }) {
             }
         }
 
-        navigation.navigate("quotationform2", { quotation, travelerUploads, passengers, leadGuestInfo });
+        navigation.navigate("quotationform2", {
+            ...route.params,
+            quotation,
+            travelerUploads,
+            passengers,
+            leadGuestInfo,
+            medicalData: savedMedicalData,
+            emergency: savedEmergency
+        });
     };
 
     return (
@@ -365,7 +373,6 @@ export default function QuotationForm1({ route, navigation }) {
                         <Text style={QuotationFormStepStyle.backText}>Back to Uploads</Text>
                     </TouchableOpacity>
                 </View>
-
                 <Modal visible={showTitleDropdown} transparent animationType="fade">
                     <TouchableOpacity style={QuotationFormStepStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTitleDropdown(false)}>
                         <View style={QuotationFormStepStyle.dropdownBox}>
