@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
@@ -112,8 +112,10 @@ export default function VisaProgress() {
         if (selectedScheduleIndex !== null) setSelectedSuggestedIndex(selectedScheduleIndex);
     }, [selectedScheduleIndex]);
 
-    // derive status text used in several helpers
-    const statusText = application?.status || application?.statusText || '';
+    // derive status text used in several helpers (handle array or string)
+    const statusText = Array.isArray(application?.status) && application.status.length > 0
+        ? application.status[0]
+        : (application?.status || application?.statusText || '');
     const appStatus = statusText || '';
 
     // keep steps derived from process to support legacy variable `steps`
@@ -144,8 +146,14 @@ export default function VisaProgress() {
     const pickProofImage = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
-            if (!result.cancelled) {
-                setProofImage({ uri: result.uri });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const asset = result.assets[0];
+                setProofImage({
+                    uri: asset.uri,
+                    fileName: asset.fileName || 'proof_image.jpg',
+                    mimeType: asset.type || 'image/jpeg',
+                    size: asset.fileSize
+                });
             }
         } catch (e) {
             console.error(e);
@@ -250,7 +258,10 @@ export default function VisaProgress() {
         if (!raw) return [];
         if (Array.isArray(raw)) return raw;
         try {
-            return Object.keys(raw).sort().map(k => raw[k]);
+            return Object.keys(raw).map(k => ({
+                title: k,
+                ...raw[k]
+            }));
         } catch (e) {
             return [];
         }
@@ -329,6 +340,13 @@ export default function VisaProgress() {
 
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
+
+        const stepFromProcess = app?.processSteps?.[title];
+        if (stepFromProcess?.setDate) {
+            const parsed = dayjs(stepFromProcess.setDate);
+            if (parsed.isValid()) return parsed;
+        }
+
         const history = app.statusHistory;
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
@@ -461,21 +479,25 @@ export default function VisaProgress() {
                 const data = res?.data || res;
                 setApplication(data);
                 setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
-                // If the application has a serviceId, fetch the service for requirements
+                // If the application has a serviceId, fetch the service for requirements and price
                 if (data && data.serviceId) {
                     try {
                         const serviceId = data.serviceId._id || data.serviceId;
-                        const serviceResEndpoint = `/services/get-service/${serviceId}`;
+                        const serviceResEndpoint = `/visa-services/get-service/${serviceId}`;
                         const serviceRes = await apiFetch.get(serviceResEndpoint, withUserHeader(user._id));
                         const serviceData = serviceRes?.data || serviceRes;
                         setRequirements(serviceData.visaRequirements || []);
-                        setServicePrice(serviceData.visaPrice || 0);
+                        setServiceAdditionalRequirements(serviceData.additionalRequirements || []);
+                        const price = Number(serviceData.visaPrice) || 0;
+                        setServicePrice(price);
                     } catch (err) {
+                        console.error('Failed to fetch service:', err);
                         setRequirements([]);
-                        setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
+                        setServiceAdditionalRequirements([]);
                     }
                 } else {
                     setRequirements([]);
+                    setServiceAdditionalRequirements([]);
                 }
             } catch (err) {
                 console.error('Failed to fetch application:', err);
@@ -487,6 +509,7 @@ export default function VisaProgress() {
         fetchApplication();
         checkPendingManualPayment();
     }, [id, user]);
+
 
     // FIND CURRENT STEP INDEX BASED ON APPLICATION STATUS
     const statusValue = statusText;
@@ -526,6 +549,8 @@ export default function VisaProgress() {
         }
         return isLt3M || Upload.LIST_IGNORE;
     };
+
+
 
     //SUBMIT DOCUMENTS
     const handleSubmitDocuments = async () => {
@@ -605,6 +630,8 @@ export default function VisaProgress() {
         }
     };
 
+
+
     // DYNAMIC UPLOAD HANDLER FOR REQUIREMENTS
     const handleUploadChange = ({ fileList: newFileList }) => {
         if (newFileList.length > 1) {
@@ -621,15 +648,17 @@ export default function VisaProgress() {
         setFileList(newFileList);
     };
 
+
+
     // HANDLE PAYMENT SUBMISSION
     const handleSubmitPayment = async () => {
-        if (method === 'manual' && fileList.length === 0) {
-            notification.warning({ message: 'Please upload a receipt first.', placement: 'topRight' });
+        if (method === 'manual' && !proofImage) {
+            notification.warning({ message: 'Please upload a receipt first.' });
             return;
         }
 
         if (isDeliveryFeeStage && deliveryFeeAmount <= 0) {
-            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.', placement: 'topRight' });
+            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.' });
             return;
         }
 
@@ -637,17 +666,34 @@ export default function VisaProgress() {
             setPaymentLoading(true);
 
             if (method === 'manual') {
-                const file = fileList[0].originFileObj;
                 const amountToPay = application?.onPenalty ? 1500 : (isDeliveryFeeStage ? deliveryFeeAmount : servicePrice);
 
-                const formData = new FormData();
-                formData.append("file", file);
+                if (!proofImage?.uri) {
+                    console.error('Invalid proof image structure:', proofImage);
+                    notification.error({ message: 'Invalid proof image. Please try again.' });
+                    setPaymentLoading(false);
+                    return;
+                }
 
-                const uploadRes = await apiFetch.post('/upload/upload-receipt', formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
+                const formData = new FormData();
+                formData.append('file', {
+                    uri: proofImage.uri,
+                    type: proofImage.mimeType || 'image/jpeg',
+                    name: proofImage.fileName || 'proof_image.jpg',
                 });
 
-                const imageUrl = uploadRes.url;
+                const uploadRes = await apiFetch.post('/upload/upload-receipt', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    ...withUserHeader(user._id)
+                });
+
+                const imageUrl = uploadRes?.data?.url || uploadRes?.url;
+                if (!imageUrl) {
+                    console.error('No image URL in upload response:', uploadRes);
+                    notification.error({ message: 'Upload failed. No image URL returned.' });
+                    setPaymentLoading(false);
+                    return;
+                }
 
                 const endpoint = isDeliveryFeeStage
                     ? '/payment/manual-delivery-fee'
@@ -659,16 +705,18 @@ export default function VisaProgress() {
                     applicationNumber: application.applicationNumber,
                     amount: amountToPay,
                     proofImage: imageUrl,
-                });
+                }, withUserHeader(user._id));
 
-                navigate(paymentRes.redirectUrl);
-                notification.success({ message: "Manual payment submitted successfully. Awaiting verification.", placement: 'topRight' });
+                if (paymentRes?.data?.redirectUrl) {
+                    await Linking.openURL(paymentRes.data.redirectUrl);
+                }
+                notification.success({ message: 'Manual payment submitted successfully. Awaiting verification.' });
                 setPaymentCompleted(true);
+                setProofImage(null);
 
             } else if (method === 'paymongo') {
-                // Make sure application exists
                 if (!application) {
-                    notification.error({ message: "Application not found.", placement: 'topRight' });
+                    notification.error({ message: 'Application not found.' });
                     return;
                 }
 
@@ -682,27 +730,29 @@ export default function VisaProgress() {
                             : servicePrice,
                 };
 
-                // Send request to create checkout session
                 const endpoint = isDeliveryFeeStage
                     ? '/payment/create-checkout-session-delivery-fee'
                     : application?.onPenalty
                         ? '/payment/create-checkout-session-visa-penalty'
                         : '/payment/create-checkout-session-visa';
-                const paymongoResponse = await apiFetch.post(endpoint, payload);
+                const paymongoResponse = await apiFetch.post(endpoint, payload, withUserHeader(user._id));
                 const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
-                // Redirect user to PayMongo checkout
 
                 if (checkoutUrl) {
-                    try { await Linking.openURL(checkoutUrl); } catch (e) { console.error(e); }
+                    try {
+                        await Linking.openURL(checkoutUrl);
+                    } catch (e) {
+                        console.error('Failed to open PayMongo URL:', e);
+                    }
                 } else {
-                    console.error("PayMongo Response Structure:", paymongoResponse);
-                    throw new Error("Failed to create PayMongo checkout session - URL missing");
+                    console.error('PayMongo Response Structure:', paymongoResponse);
+                    throw new Error('Failed to create PayMongo checkout session - URL missing');
                 }
             }
 
         } catch (err) {
-            console.error(err);
-            notification.error({ message: "Payment failed", placement: 'topRight' });
+            console.error('Payment error:', err);
+            notification.error({ message: err.message || 'Payment failed' });
         } finally {
             setPaymentLoading(false);
         }
@@ -842,32 +892,41 @@ export default function VisaProgress() {
     };
 
     const handleReleaseOption = async () => {
-        if (!releaseOption) {
-            notification.warning({ message: 'Please select a release option first.', placement: 'topRight' });
+        if (!passportReleaseOption) {
+            notification.warning({ message: 'Please select a release option first.' });
             return
         }
 
-        if (releaseOption === 'delivery' && deliveryAddress.trim() === "") {
-            notification.warning({ message: 'Please provide a delivery address in your profile settings before choosing delivery option.', placement: 'topRight' });
+        if (passportReleaseOption === 'delivery' && deliveryAddress.trim() === "") {
+            notification.warning({ message: 'Please provide a delivery address before choosing delivery option.' });
             return;
         }
 
         try {
-            await apiFetch.put(`/visa/applications/${id}/release-option`, {
-                passportReleaseOption: releaseOption,
-                deliveryAddress: releaseOption === 'delivery' ? deliveryAddress : ""
-            });
+            setSavingReleaseOption(true);
+            await apiFetch.put(`/visa/applications/${id}/release-option`,
+                {
+                    passportReleaseOption: passportReleaseOption,
+                    deliveryAddress: passportReleaseOption === 'delivery' ? deliveryAddress : ""
+                },
+                withUserHeader(user._id)
+            );
 
             setDeliveryAddress("")
-            setIsPassportReleaseOptionSelectedModalOpen(true);
+            setShowClaimPreferenceSuccessModal(true);
             try {
-                const refreshed = await apiFetch.get(`/visa/applications/${id}`);
+                const refreshed = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
                 setApplication(refreshed);
             } catch (e) { console.error(e); }
         } catch (error) {
-            notification.error({ message: 'Failed to update release option.', placement: 'topRight' });
+            console.error(error);
+            notification.error({ message: 'Failed to update release option.' });
+        } finally {
+            setSavingReleaseOption(false);
         }
     }
+
+    const savePassportReleaseOption = handleReleaseOption;
 
     const disableDates = (current) => {
         const today = dayjs().startOf('day');
@@ -1112,6 +1171,10 @@ export default function VisaProgress() {
                     </View>
                 )}
 
+
+
+
+                {/* SERVICE FEE */}
                 {appStatus.toLowerCase() === 'application approved' && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
@@ -1226,6 +1289,255 @@ export default function VisaProgress() {
                     </View>
                 )}
 
+
+
+                {/* DELIVERY FEE */}
+                {appStatus.toLowerCase() === 'application approved' && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP ---.</Text>
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('paymongo')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'paymongo' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Paymongo</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'paymongo' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'paymongo' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('manual')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'manual' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'manual' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
+                            </TouchableOpacity>
+                        </View>
+
+
+                        {paymentMethod === 'manual' && (
+                            <View style={{ marginBottom: 14 }}>
+                                <View style={PaymentStyle.manualBankSection}>
+                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={PaymentStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
+                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
+                                                {bank.qr ? (
+                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                )}
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={PaymentStyle.uploadSection}>
+                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                            Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                        </Text>
+
+                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
+                                        </TouchableOpacity>
+
+                                        {proofImage && (
+                                            <View style={PaymentStyle.imagePreviewContainer}>
+                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                                <View style={PaymentStyle.previewImageBox}>
+                                                    <View style={PaymentStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
+                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={handleStartPayment}
+                        >
+                            {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+
+
+                {/* PENALTY FEE */}
+                {appStatus.toLowerCase() === 'application approved' && (
+                    <View style={VisaProgressStyle.card}>
+                        <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('paymongo')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'paymongo' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Paymongo</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'paymongo' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'paymongo' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('manual')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'manual' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'manual' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {paymentMethod === 'manual' && (
+                            <View style={{ marginBottom: 14 }}>
+                                <View style={PaymentStyle.manualBankSection}>
+                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={PaymentStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
+                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
+                                                {bank.qr ? (
+                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                )}
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={PaymentStyle.uploadSection}>
+                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                            Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                        </Text>
+
+                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
+                                        </TouchableOpacity>
+
+                                        {proofImage && (
+                                            <View style={PaymentStyle.imagePreviewContainer}>
+                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                                <View style={PaymentStyle.previewImageBox}>
+                                                    <View style={PaymentStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
+                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={handleStartPayment}
+                        >
+                            {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                {/* UPLOAD REQUIREMENTS */}
                 {appStatus.toLowerCase() === 'payment completed' && serviceRequirements.length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
@@ -1408,12 +1720,11 @@ export default function VisaProgress() {
                             const isLast = index === steps.length - 1;
 
                             const stepSetDate = getStepSetDateForTitle(application, title);
-                            const stepKey = String(title || '').toLowerCase();
-                            const cumulativeDays = Number(cumulativeStepDaysMap?.[title]);
-                            const stepDeadlineDate = Number.isFinite(cumulativeDays) && application?.createdAt
-                                ? dayjs(application.createdAt).startOf('day').add(cumulativeDays, 'day')
-                                : null;
-                            const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs(), 'day') : null;
+                            const stepDeadlineRaw = step?.deadlineDate;
+                            const parsedStepDeadline = stepDeadlineRaw ? dayjs(stepDeadlineRaw) : null;
+                            const hasStepDeadline = Boolean(parsedStepDeadline?.isValid?.());
+                            const stepDeadlineDate = hasStepDeadline ? parsedStepDeadline.startOf('day') : null;
+                            const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs().startOf('day'), 'day') : null;
 
                             return (
                                 <View key={index} style={VisaProgressStyle.stepItem}>
@@ -1435,7 +1746,7 @@ export default function VisaProgress() {
                                         <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
                                             Set on: {stepSetDate ? dayjs(stepSetDate).format('MMM D, YYYY') : '—'}
                                         </Text>
-                                        {stepDeadlineDate && (
+                                        {hasStepDeadline && stepDeadlineDate && (
                                             <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
                                                 Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}{stepDaysLeft !== null ? ` (${stepDaysLeft} days left)` : ''}
                                             </Text>

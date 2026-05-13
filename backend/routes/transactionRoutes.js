@@ -5,7 +5,7 @@ import {
     getAllTransactions,
     updateTransaction,
     deleteTransaction,
-    getTransactionsForApplication
+    getTransactionsForApplication,
 } from "../controllers/transactionController.js";
 import requireUser from "../middleware/requireUser.js"; // Standard ESM Middleware
 

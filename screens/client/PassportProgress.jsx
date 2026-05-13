@@ -1132,7 +1132,12 @@ export default function PassportApplication() {
                     </View>
                 </View>
 
-                {/* Payment Card: show when application is approved */}
+
+
+
+
+
+                {/* SERVICE FEE */}
                 {appStatus.toLowerCase() === 'application approved' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
@@ -1249,6 +1254,132 @@ export default function PassportApplication() {
                     </View>
                 )}
 
+
+
+
+
+                {/* PENALTY FEE */}
+                {appStatus.toLowerCase() === 'application approved' && (
+                    <View style={PassportProgressStyle.card}>
+                        <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('paymongo')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'paymongo' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Paymongo</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'paymongo' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'paymongo' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setPaymentMethod('manual')}
+                                style={{
+                                    flex: 1,
+                                    borderWidth: 1,
+                                    borderColor: paymentMethod === 'manual' ? '#305797' : '#d1d5db',
+                                    backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937' }}>Manual</Text>
+                                    <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: paymentMethod === 'manual' ? '#305797' : '#9ca3af', alignItems: 'center', justifyContent: 'center' }}>
+                                        {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={{ borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, backgroundColor: '#fff' }}>
+                            <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 16 }}>₱ 2,000.00</Text>
+                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>Passport Application Fee</Text>
+                        </View>
+
+                        {paymentMethod === 'manual' && (
+                            <View style={{ marginBottom: 14 }}>
+                                <View style={PaymentStyle.manualBankSection}>
+                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={PaymentStyle.bankGrid}>
+                                        {[
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
+                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
+                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                        ].map((bank, index) => (
+                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
+                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
+                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
+                                                {bank.qr ? (
+                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
+                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                )}
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={PaymentStyle.uploadSection}>
+                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>Our team will manually verify your payment within 1-2 business days.</Text>
+
+                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
+                                        </TouchableOpacity>
+
+                                        {proofImage && (
+                                            <View style={PaymentStyle.imagePreviewContainer}>
+                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                                <View style={PaymentStyle.previewImageBox}>
+                                                    <View style={PaymentStyle.imageWrapper}>
+                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[PassportProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
+                            disabled={creatingPayment || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={handleStartPayment}
+                        >
+                            {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={PassportProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+
+
+
+
+                {/* UPLOAD REQUIREMENTS */}
                 {appStatus.toLowerCase() === 'payment completed' && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Upload Files</Text>
