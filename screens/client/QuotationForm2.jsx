@@ -315,7 +315,7 @@ export default function QuotationForm2({ route, navigation }) {
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={QuotationFormStepStyle.backTextButton} onPress={() => navigation.navigate("quotationform1", { ...route.params, medicalData, emergency })}>
+                    <TouchableOpacity style={QuotationFormStepStyle.backTextButton} onPress={() => navigation.goBack()}>
                         <Text style={QuotationFormStepStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
                 </View>

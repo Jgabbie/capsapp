@@ -7,6 +7,7 @@ import dayjs from 'dayjs'
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Asset } from 'expo-asset';
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -53,6 +54,14 @@ export default function UserTransactions() {
 
     const formatCurrency = (value) => {
         return `₱${Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const getCompactInvoiceNumber = (item) => {
+        const invoice = String(item?.invoiceNumber || '').trim();
+        if (invoice) return invoice.replace(/^INV[-\s]*/i, '');
+
+        const digits = String(item?.reference || '').replace(/\D/g, '');
+        return digits ? digits.slice(-4) : '0000';
     };
 
     const getTransactionItemLabel = (item) => {
@@ -130,106 +139,169 @@ export default function UserTransactions() {
     const handleDownloadReceipt = async () => {
         if (!selectedTransaction) return;
         try {
-            //  FIXED DESCRIPTION IN PDF 
             const safePackageName = getTransactionItemLabel(selectedTransaction);
+            const invoiceNumber = getCompactInvoiceNumber(selectedTransaction);
+            const receiptDate = selectedTransaction.createdAt
+                ? dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY')
+                : '--';
+            const receiptAmount = formatCurrency(selectedTransaction.amount);
+
+            // Load and convert logo image to base64
+            const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
+            if (!logoAsset.localUri) {
+                await logoAsset.downloadAsync();
+            }
+            const logoPath = logoAsset.localUri || logoAsset.uri;
+            const logoBase64 = await FileSystem.readAsStringAsync(logoPath, { encoding: 'base64' });
+            const logoDataUri = `data:image/png;base64,${logoBase64}`;
 
             const htmlContent = `
                 <html>
                     <head>
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
                         <style>
-                            body { font-family: 'Helvetica', sans-serif; padding: 30px; color: #333; }
-                            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #374151; padding-bottom: 20px; margin-bottom: 20px; }
-                            .company-details { font-size: 11px; color: #555; line-height: 1.5; }
-                            .company-name { color: #305797; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
-                            .title { font-size: 28px; color: #333; margin: 0; font-weight: normal; }
-                            .meta-row { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                            .billed-to .label { font-size: 10px; font-weight: bold; color: #305797; text-transform: uppercase; margin-bottom: 5px; display: block; }
-                            .billed-to .name { font-size: 16px; font-weight: bold; margin: 0; color: #333; }
-                            .meta-right { text-align: right; font-size: 12px; }
-                            .meta-right .row { display: flex; justify-content: space-between; width: 180px; margin-bottom: 5px; }
-                            .meta-right .label { font-size: 10px; font-weight: bold; color: #305797; text-transform: uppercase; }
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                            th { background-color: #374151; color: white; padding: 12px; text-align: left; font-size: 11px; font-weight: bold; }
+                            @page { size: A4; margin: 12mm; }
+                            body { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; color: #111827; background: #fff; }
+                            .paper { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 22px; min-height: 273mm; box-sizing: border-box; }
+                            .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid #1f2a44; padding-bottom: 14px; margin-bottom: 18px; }
+                            .header-left { display: flex; gap: 12px; align-items: flex-start; flex: 1; }
+                            .logo { width: 64px; height: 64px; object-fit: contain; }
+                            .company-name { color: #000; font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+                            .company-details { font-size: 11px; color: #555; line-height: 1.35; }
+                            .title { font-size: 30px; color: #000; margin: 0; font-weight: 500; white-space: nowrap; }
+                            .meta-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0; margin-bottom: 18px; }
+                            .billed-to { flex: 1; min-width: 220px; }
+                            .billed-to .label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 5px; display: block; }
+                            .billed-to .name { font-size: 16px; font-weight: 700; margin: 0; color: #000; }
+                            .meta-grid { display: flex; gap: 0; min-width: 330px; }
+                            .meta-box { min-width: 110px; border: 1px solid #d1d5db; padding: 12px 10px; text-align: center; }
+                            .meta-box.primary { background: #1f2a44; color: #fff; border-color: #1f2a44; }
+                            .meta-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: inherit; margin-bottom: 8px; display: block; }
+                            .meta-value { font-size: 13px; font-weight: 700; color: inherit; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            thead tr { border-bottom: 1px solid #000; }
+                            th { background: transparent; color: #000; padding: 6px 0; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+                            tbody tr { border-bottom: 1px solid #000; }
+                            td { padding: 8px 0; font-size: 11px; color: #6b7280; }
                             th.right, td.right { text-align: right; }
-                            td { padding: 15px 12px; border-bottom: 1px solid #e5e7eb; font-size: 12px; color: #333; }
-                            .summary { width: 50%; float: right; margin-top: 10px; }
-                            .summary-row { display: flex; justify-content: space-between; padding: 10px 5px; font-size: 12px; color: #555; }
-                            .summary-row.total { border-top: 1.5px solid #333; border-bottom: 1.5px solid #333; font-weight: bold; font-size: 16px; color: #333; }
-                            .footer { clear: both; padding-top: 50px; font-size: 10px; color: #777; line-height: 1.5; }
+                            .bottom-grid { display: flex; justify-content: space-between; gap: 28px; align-items: flex-start; }
+                            .bank { flex: 1; font-size: 11px; color: #555; line-height: 1.5; }
+                            .bank-title { font-size: 11px; font-weight: 700; color: #1f2a44; text-transform: uppercase; margin-bottom: 4px; }
+                            .bank-section { margin-bottom: 12px; }
+                            .divider { height: 1px; background: #000; width: 72%; margin: 6px 0 10px; }
+                            .summary { min-width: 240px; }
+                            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 12px; color: #6b7280; }
+                            .summary-row .value { font-weight: 700; color: #000; }
+                            .summary-row.total { border-top: 1px solid #000; margin-top: 6px; padding-top: 12px; font-size: 13px; }
                         </style>
                     </head>
                     <body>
-                        <div class="header">
-                            <div>
-                                <div class="company-name">M&RC Travel and Tours</div>
-                                <div class="company-details">
-                                    2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1<br/>
-                                    Parañaque City, Philippines<br/>
-                                    1709 PHL<br/>
-                                    +63 969 055 4806<br/>
-                                    info1@mrctravels.com
+                        <div class="paper">
+                            <div class="header">
+                                <div class="header-left">
+                                    <img class="logo" src="${logoDataUri}" />
+                                    <div>
+                                        <div class="company-name">M&RC Travel and Tours</div>
+                                        <div class="company-details">
+                                            2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1<br/>
+                                            Parañaque City, Philippines<br/>
+                                            1709 PHL<br/>
+                                            +63 969 055 4806<br/>
+                                            info1@mrctravels.com
+                                        </div>
+                                    </div>
+                                </div>
+                                <h1 class="title">INVOICE ${invoiceNumber}</h1>
+                            </div>
+
+                            <div class="meta-row">
+                                <div class="billed-to">
+                                    <span class="label">BILLED TO</span>
+                                    <div class="name">${getCurrentUserFullName()}</div>
+                                </div>
+                                <div class="meta-grid">
+                                    <div class="meta-box">
+                                        <span class="meta-label">DATE</span>
+                                        <div class="meta-value">${receiptDate}</div>
+                                    </div>
+                                    <div class="meta-box primary">
+                                        <span class="meta-label">AMOUNT TO PAY</span>
+                                        <div class="meta-value">${receiptAmount}</div>
+                                    </div>
+                                    <div class="meta-box">
+                                        <span class="meta-label">REFERENCE</span>
+                                        <div class="meta-value">${selectedTransaction.reference}</div>
+                                    </div>
                                 </div>
                             </div>
-                            <h1 class="title">Receipt</h1>
-                        </div>
-                        
-                        <div class="meta-row">
-                            <div class="billed-to">
-                                <span class="label">Billed To</span>
-                                <div class="name">${getCurrentUserFullName()}</div>
-                            </div>
-                            <div class="meta-right">
-                                <div class="row">
-                                    <span class="label">RECEIPT #</span>
-                                    <span>${selectedTransaction.reference}</span>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>QTY</th>
+                                        <th>DESCRIPTION</th>
+                                        <th class="right">UNIT PRICE</th>
+                                        <th class="right">AMOUNT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>${safePackageName}</td>
+                                        <td class="right">${receiptAmount}</td>
+                                        <td class="right">${receiptAmount}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="bottom-grid">
+                                <div class="bank">
+                                    <div class="bank-section">
+                                        <div class="bank-title">Bank Account:</div>
+                                        <div>Bank: BDO UNIBANK</div>
+                                        <div>Account Name: M&amp;RC Travel and Tours</div>
+                                        <div>Account #: 006838032692</div>
+                                    </div>
+
+                                    <div class="bank-section">
+                                        <div class="bank-title">USD Account:</div>
+                                        <div>Bank: BDO UNIBANK</div>
+                                        <div>Account Name: M&amp;RC Travel and Tours</div>
+                                        <div>Account #: 113190015176</div>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="bank-section">
+                                        <div class="bank-title">GCash:</div>
+                                        <div>Rhon Carle - 0968 888 0405</div>
+                                        <div>Maricar Carle - 0969 055 4806</div>
+                                    </div>
                                 </div>
-                                <div class="row">
-                                    <span class="label">RECEIPT DATE</span>
-                                    <span>${dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY')}</span>
+
+                                <div class="summary">
+                                    <div class="summary-row">
+                                        <span>Total</span>
+                                        <span class="value">${receiptAmount}</span>
+                                    </div>
+                                    <div class="summary-row total">
+                                        <span>Total Due</span>
+                                        <span class="value">${receiptAmount}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>QTY</th>
-                                    <th>DESCRIPTION</th>
-                                    <th class="right">UNIT PRICE</th>
-                                    <th class="right">AMOUNT</th>
-                                }</tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>${safePackageName}</td>
-                                    <td class="right">${formatCurrency(selectedTransaction.amount)}</td>
-                                    <td class="right">${formatCurrency(selectedTransaction.amount)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <div class="summary">
-                            <div class="summary-row">
-                                <span>Subtotal</span>
-                                <span>${formatCurrency(selectedTransaction.amount)}</span>
-                            </div>
-                            <div class="summary-row total">
-                                <span>TOTAL</span>
-                                <span>${formatCurrency(selectedTransaction.amount)}</span>
-                            </div>
-                        </div>
-
-                        <div class="footer">
-                            <div>Thank you for your purchase!</div>
-                            <div>For questions or support, contact us at info1@mrctravels.com</div>
                         </div>
                     </body>
                 </html>
             `;
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: `Receipt-${selectedTransaction.reference}.pdf` });
+            
+            // Rename the PDF to use the reference code
+            const fileName = `Receipt-${selectedTransaction.reference}.pdf`;
+            const newPath = `${FileSystem.documentDirectory}${fileName}`;
+            await FileSystem.copyAsync({ from: uri, to: newPath });
+            
+            await Sharing.shareAsync(newPath, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
         } catch (error) {
             console.error("PDF Error:", error);
             Alert.alert("Error", "Failed to download receipt.");
@@ -384,7 +456,7 @@ export default function UserTransactions() {
             </ScrollView>
 
             <Modal transparent visible={isStatusModalVisible} animationType="fade">
-                <TouchableOpacity style={UserTransactionStyle.modalOverlay} onPress={() => setStatusModalVisible(false)} activeOpacity={1}>
+                <TouchableOpacity style={UserTransactionStyle.receiptModalOverlay} onPress={() => setStatusModalVisible(false)} activeOpacity={1}>
                     <View style={UserTransactionStyle.modalContent}>
                         <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
                             Select Status
@@ -414,7 +486,7 @@ export default function UserTransactions() {
             )}
 
             <Modal visible={isProofModalVisible} animationType="fade" transparent={true}>
-                <View style={UserTransactionStyle.modalOverlay}>
+                <View style={UserTransactionStyle.receiptModalOverlay}>
                     <View style={UserTransactionStyle.proofImageContainer}>
                         <View style={UserTransactionStyle.proofHeader}>
                             {/*  FIXED TITLE: Proof of Payment -> Proof of Payment - [Reference]  */}
@@ -447,94 +519,123 @@ export default function UserTransactions() {
                 </View>
             </Modal>
 
-            <Modal visible={isReceiptModalVisible} animationType="slide" transparent={true}>
-                <View style={UserTransactionStyle.modalOverlay}>
-                    <SafeAreaView style={{ flex: 1, width: '100%', padding: 15, justifyContent: 'center' }}>
+            <Modal visible={isReceiptModalVisible} transparent animationType="fade" onRequestClose={() => setReceiptModalVisible(false)}>
+                <View style={UserTransactionStyle.receiptModalOverlay}>
+                    <SafeAreaView style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
                         <View style={UserTransactionStyle.receiptPaper}>
                             <TouchableOpacity style={UserTransactionStyle.receiptCloseBtn} onPress={() => setReceiptModalVisible(false)}>
-                                <Ionicons name="close-circle" size={28} color="#b54747" />
+                                <Ionicons name="close" size={24} color="#1f2a44" />
                             </TouchableOpacity>
 
                             {selectedTransaction && (
-                                <ScrollView showsVerticalScrollIndicator={false}>
-
-                                    <View style={UserTransactionStyle.receiptHeaderRow}>
-                                        <View style={UserTransactionStyle.receiptCompanyBlock}>
-                                            <Image source={require('../../assets/images/Logored.png')} style={UserTransactionStyle.receiptLogo} resizeMode="contain" />
-                                            <View style={UserTransactionStyle.receiptCompanyDetails}>
-                                                <Text style={UserTransactionStyle.receiptCompanyName}>M&RC Travel and Tours</Text>
-                                                <Text style={UserTransactionStyle.receiptMutedText}>2nd Floor #1 Cor Fatima street</Text>
-                                                <Text style={UserTransactionStyle.receiptMutedText}>Parañaque City, Philippines</Text>
-                                                <Text style={UserTransactionStyle.receiptMutedText}>+63 969 055 4806</Text>
-                                                <Text style={UserTransactionStyle.receiptMutedText}>info1@mrctravels.com</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 10 }}>
+                                    <View style={UserTransactionStyle.receiptWideCanvas}>
+                                        {/* Header with logo, company, and invoice number */}
+                                        <View style={UserTransactionStyle.receiptHeaderRow}>
+                                            <View style={UserTransactionStyle.receiptHeaderLeft}>
+                                                <Image source={require('../../assets/images/LastPushLogo.png')} style={UserTransactionStyle.receiptLogo} resizeMode="contain" />
+                                                <View style={UserTransactionStyle.receiptCompanyDetails}>
+                                                    <Text style={UserTransactionStyle.receiptCompanyName}>M&RC Travel and Tours</Text>
+                                                    <Text style={UserTransactionStyle.receiptMutedText}>2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1</Text>
+                                                    <Text style={UserTransactionStyle.receiptMutedText}>Parañaque City, Philippines</Text>
+                                                    <Text style={UserTransactionStyle.receiptMutedText}>1709 PHL </Text>
+                                                    <Text style={UserTransactionStyle.receiptMutedText}>+63 969 055 4806</Text>
+                                                    <Text style={UserTransactionStyle.receiptMutedText}>info1@mrctravels.com</Text>
+                                                </View>
+                                            </View>
+                                            <View style={UserTransactionStyle.receiptInvoiceBlock}>
+                                                <Text style={UserTransactionStyle.receiptInvoiceText}>INVOICE {getCompactInvoiceNumber(selectedTransaction)}</Text>
                                             </View>
                                         </View>
-                                        <Text style={UserTransactionStyle.receiptTitleText}>Receipt</Text>
-                                    </View>
 
-                                    <View style={UserTransactionStyle.receiptMetaRow}>
-                                        <View style={UserTransactionStyle.receiptBilledTo}>
-                                            <Text style={UserTransactionStyle.receiptTinyLabel}>BILLED TO</Text>
-                                            <Text style={UserTransactionStyle.receiptCustomerName}>{getCurrentUserFullName()}</Text>
-                                        </View>
-                                        <View style={UserTransactionStyle.receiptMetaRight}>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 140, marginBottom: 4 }}>
-                                                <Text style={UserTransactionStyle.receiptTinyLabel}>RECEIPT #</Text>
-                                                <Text style={UserTransactionStyle.receiptMetaValue}>{selectedTransaction.reference}</Text>
+                                        {/* Billed To section + Meta boxes (Date, Amount to Pay, Reference) */}
+                                        <View style={UserTransactionStyle.receiptMetaRow}>
+                                            <View style={UserTransactionStyle.receiptBilledTo}>
+                                                <Text style={UserTransactionStyle.receiptTinyLabel}>BILLED TO</Text>
+                                                <Text style={UserTransactionStyle.receiptCustomerName}>{selectedTransaction.bookingId?.bookingDetails?.leadFullName || getCurrentUserFullName()}</Text>
                                             </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 140 }}>
-                                                <Text style={UserTransactionStyle.receiptTinyLabel}>RECEIPT DATE</Text>
-                                                <Text style={UserTransactionStyle.receiptMetaValue}>{dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY')}</Text>
+
+                                            <View style={UserTransactionStyle.receiptMetaGrid}>
+                                                <View style={UserTransactionStyle.receiptMetaBox}>
+                                                    <Text style={UserTransactionStyle.receiptMetaLabel}>DATE</Text>
+                                                    <Text style={UserTransactionStyle.receiptMetaValue}>{selectedTransaction.createdAt ? dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY') : '--'}</Text>
+                                                </View>
+                                                <View style={[UserTransactionStyle.receiptMetaBox, UserTransactionStyle.receiptMetaBoxPrimary]}>
+                                                    <Text style={[UserTransactionStyle.receiptMetaLabel, UserTransactionStyle.receiptMetaLabelLight]}>AMOUNT TO PAY</Text>
+                                                    <Text style={[UserTransactionStyle.receiptMetaValue, UserTransactionStyle.receiptMetaValueLight]}>{formatCurrency(selectedTransaction.amount)}</Text>
+                                                </View>
+                                                <View style={UserTransactionStyle.receiptMetaBox}>
+                                                    <Text style={UserTransactionStyle.receiptMetaLabel}>REFERENCE</Text>
+                                                    <Text style={UserTransactionStyle.receiptMetaValue}>{selectedTransaction.reference}</Text>
+                                                </View>
+                                            </View>
+                                        </View>
+
+                                        {/* Table */}
+                                        <View style={UserTransactionStyle.receiptTable}>
+                                            
+                                            {/* HEADER ROW */}
+                                            <View style={UserTransactionStyle.receiptTableHeader}>
+                                                <Text style={[UserTransactionStyle.receiptTh, { width: 50, textAlign: 'left' }]}>QTY</Text>
+                                                <Text style={[UserTransactionStyle.receiptTh, { width: 70, textAlign: 'center' }]}>DESCRIPTION</Text>
+                                                <Text style={[UserTransactionStyle.receiptTh, { width: 340, textAlign: 'center' }]}>UNIT PRICE</Text>
+                                                <Text style={[UserTransactionStyle.receiptTh, { width: 60, textAlign: 'right' }]}>AMOUNT</Text>
+                                            </View>
+
+                                            {/* DATA ROW */}
+                                            <View style={UserTransactionStyle.receiptTableRow}>
+                                                <Text style={[UserTransactionStyle.receiptTd, { width: 50, textAlign: 'left' }]}>1</Text>
+                                                <Text style={[UserTransactionStyle.receiptTd, { width: 55, textAlign: 'center' }]} numberOfLines={2}>
+                                                    {getTransactionItemLabel(selectedTransaction)}
+                                                </Text>
+                                                <Text style={[UserTransactionStyle.receiptTd, { width: 370, textAlign: 'center' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
+                                                <Text style={[UserTransactionStyle.receiptTd, { width: 50, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
+                                            </View>
+                                            
+                                        </View>
+
+                                        {/* Bottom section: Bank info and Totals */}
+                                        <View style={UserTransactionStyle.receiptBottomGrid}>
+                                            <View style={UserTransactionStyle.receiptBankInfo}>
+                                                <View style={UserTransactionStyle.receiptBankSection}>
+                                                    <Text style={UserTransactionStyle.receiptBankTitle}>BANK ACCOUNT:</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Bank: BDO UNIBANK</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Account Name: M&RC Travel and Tours</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Account #: 006838032692</Text>
+                                                </View>
+
+                                                <View style={UserTransactionStyle.receiptBankSection}>
+                                                    <Text style={UserTransactionStyle.receiptBankTitle}>USD ACCOUNT:</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Bank: BDO UNIBANK</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Account Name: M&RC Travel and Tours</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Account #: 113190015176</Text>
+                                                </View>
+
+                                                <View style={UserTransactionStyle.receiptDivider} />
+
+                                                <View style={UserTransactionStyle.receiptBankSection}>
+                                                    <Text style={UserTransactionStyle.receiptBankTitle}>GCASH:</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Rhon Carle - 0968 888 0405</Text>
+                                                    <Text style={UserTransactionStyle.receiptBankText}>Maricar Carle - 0969 055 4806</Text>
+                                                </View>
+                                            </View>
+
+                                            <View style={UserTransactionStyle.receiptSummaryBlock}>
+                                                <View style={UserTransactionStyle.receiptSummaryRow}>
+                                                    <Text style={UserTransactionStyle.receiptSummaryLabel}>Total</Text>
+                                                    <Text style={UserTransactionStyle.receiptSummaryValue}>{formatCurrency(selectedTransaction.amount)}</Text>
+                                                </View>
+                                                <View style={UserTransactionStyle.receiptTotalRow}>
+                                                    <Text style={UserTransactionStyle.receiptTotalLabel}>Total Due</Text>
+                                                    <Text style={UserTransactionStyle.receiptTotalValue}>{formatCurrency(selectedTransaction.amount)}</Text>
+                                                </View>
+                                                <TouchableOpacity style={UserTransactionStyle.receiptDownloadButton} onPress={handleDownloadReceipt}>
+                                                    <Ionicons name="download-outline" size={14} color="#fff" />
+                                                    <Text style={{ color: '#fff', fontFamily: "Montserrat_600SemiBold", fontSize: 11 }}>Download Receipt</Text>
+                                                </TouchableOpacity>
                                             </View>
                                         </View>
                                     </View>
-
-                                    <View style={UserTransactionStyle.receiptTable}>
-                                        <View style={UserTransactionStyle.receiptTableHeader}>
-                                            <Text style={[UserTransactionStyle.receiptTh, { flex: 1 }]}>QTY</Text>
-                                            <Text style={[UserTransactionStyle.receiptTh, { flex: 3 }]}>Description</Text>
-                                            <Text style={[UserTransactionStyle.receiptTh, { flex: 2, textAlign: 'right' }]}>Unit Price</Text>
-                                            <Text style={[UserTransactionStyle.receiptTh, { flex: 2, textAlign: 'right' }]}>Amount</Text>
-                                        </View>
-                                        <View style={UserTransactionStyle.receiptTableRow}>
-                                            <Text style={[UserTransactionStyle.receiptTd, { flex: 1 }]}>1</Text>
-
-                                            {/*  FIXED DESCRIPTION IN MODAL  */}
-                                            <Text style={[UserTransactionStyle.receiptTd, { flex: 3 }]} numberOfLines={2}>
-                                                {getTransactionItemLabel(selectedTransaction)}
-                                            </Text>
-
-                                            <Text style={[UserTransactionStyle.receiptTd, { flex: 2, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
-                                            <Text style={[UserTransactionStyle.receiptTd, { flex: 2, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={UserTransactionStyle.receiptSummaryBlock}>
-                                        <View style={UserTransactionStyle.receiptSummaryRow}>
-                                            <Text style={UserTransactionStyle.receiptSummaryLabel}>Subtotal</Text>
-                                            <Text style={UserTransactionStyle.receiptSummaryValue}>{formatCurrency(selectedTransaction.amount)}</Text>
-                                        </View>
-                                        <View style={UserTransactionStyle.receiptTotalRow}>
-                                            <Text style={UserTransactionStyle.receiptTotalLabel}>TOTAL</Text>
-                                            <Text style={UserTransactionStyle.receiptTotalValue}>{formatCurrency(selectedTransaction.amount)}</Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={{ marginTop: 20 }}>
-                                        <Text style={UserTransactionStyle.receiptFooterText}>Thank you for your purchase!</Text>
-                                        <Text style={UserTransactionStyle.receiptFooterText}>For questions or support, contact us at info1@mrctravels.com</Text>
-                                    </View>
-
-                                    <View style={{ marginTop: 25, alignItems: 'flex-end' }}>
-                                        <TouchableOpacity
-                                            style={{ backgroundColor: '#305797', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}
-                                            onPress={handleDownloadReceipt}
-                                        >
-                                            <Ionicons name="download-outline" size={16} color="#fff" />
-                                            <Text style={{ color: '#fff', fontFamily: "Montserrat_600SemiBold", fontSize: 12 }}>Download Receipt</Text>
-                                        </TouchableOpacity>
-                                    </View>
-
                                 </ScrollView>
                             )}
                         </View>

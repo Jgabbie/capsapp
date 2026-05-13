@@ -249,163 +249,277 @@ export default StyleSheet.create({
         borderColor: '#e2e8f0',
     },
 
-    // --- RECEIPT MODAL (Matches Web Layout) ---
+    // --- RECEIPT MODAL (Web Mirror Design) ---
+    receiptModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     receiptPaper: {
         backgroundColor: '#fff',
         width: '95%',
-        height: height * 0.8,
+        maxHeight: '70%',
         borderRadius: 8,
         padding: 20,
+        paddingLeft: 30,
+        paddingRight: 30,
+        paddingTop: 40,
         elevation: 10,
+        overflow: 'hidden',
     },
     receiptCloseBtn: {
         position: 'absolute',
-        top: -10,
-        right: -10,
+        top: 10,
+        right: 10,
         zIndex: 10,
-        backgroundColor: '#fff',
-        borderRadius: 15,
+        padding: 5,
+    },
+    // Header - Logo + Company on left, INVOICE on right
+    receiptWideCanvas: {
+        width: 600,
+        height: 700,
+        paddingBottom: 10,
     },
     receiptHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        marginBottom: 20,
         paddingBottom: 15,
-        marginBottom: 15,
+        borderBottomWidth: 2,
+        borderBottomColor: '#1f2a44',
     },
-    receiptCompanyBlock: {
+    receiptHeaderLeft: {
         flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
+        alignItems: 'flex-start',
+        flex: 1.2,
+        paddingRight: 12,
     },
     receiptLogo: {
-        width: 50,
-        height: 40,
-        marginRight: 10,
+        width: 70,
+        height: 70,
+        marginRight: 12,
+        marginTop: 2,
     },
     receiptCompanyDetails: {
-        justifyContent: 'center',
+        flex: 1,
+        justifyContent: 'flex-start',
     },
     receiptCompanyName: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 10,
-        color: '#305797',
-        marginBottom: 2
+        fontSize: 12,
+        color: '#000000',
+        marginBottom: 0,
     },
     receiptMutedText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 7.5,
-        color: '#555',
-        marginTop: 1,
-    },
-    receiptTitleText: {
         fontFamily: "Montserrat_400Regular",
-        fontSize: 18,
-        color: '#333',
+        fontSize: 8,
+        color: '#555',
+        lineHeight: 11,
     },
+    receiptInvoiceBlock: {
+        alignItems: 'flex-end',
+        justifyContent: 'flex-start',
+        minWidth: 220,
+        paddingRight: 0,
+        paddingTop: 8,
+    },
+    receiptInvoiceText: {
+        fontFamily: "Montserrat_semiBold",
+        fontSize: 18,
+        color: '#000000',
+        textAlign: 'right',
+        lineHeight: 22,
+    },
+    receiptInvoiceNumber: {
+        fontFamily: "Montserrat_semiBold",
+        fontSize: 18,
+        color: '#000000',
+        textAlign: 'right',
+        lineHeight: 22,
+    },
+    // BILLED TO section
     receiptMetaRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'flex-start',
         marginBottom: 20,
+        gap: 0,
     },
     receiptBilledTo: {
         flex: 1,
-    },
-    receiptMetaRight: {
-        alignItems: 'flex-end',
+        minWidth: 220,
     },
     receiptTinyLabel: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 7,
-        color: '#305797', // Using blue to match web label-blue
-        marginBottom: 4,
-        textTransform: 'uppercase'
+        fontSize: 8,
+        color: '#6b7280',
+        marginBottom: 3,
+        textTransform: 'uppercase',
     },
     receiptCustomerName: {
         fontFamily: "Montserrat_700Bold",
         fontSize: 11,
-        color: '#333',
+        color: '#000000',
+        marginBottom: 2,
     },
-    receiptMetaValue: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 10,
-        color: '#333',
-    },
-    receiptTable: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    receiptTableHeader: {
+    // Meta boxes (DATE, AMOUNT TO PAY, REFERENCE)
+    receiptMetaGrid: {
         flexDirection: 'row',
-        backgroundColor: '#374151',
-        paddingVertical: 8,
-        paddingHorizontal: 5,
+        gap: 0,
+        flex: 0,
+        minWidth: 330,
     },
-    receiptTh: {
-        fontFamily: "Montserrat_700Bold",
-        fontSize: 8,
+    receiptMetaBox: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    receiptMetaBoxPrimary: {
+        backgroundColor: '#1f2a44',
+        borderColor: '#1f2a44',
+    },
+    receiptMetaLabel: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 7,
+        color: '#6b7280',
+        textTransform: 'uppercase',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    receiptMetaLabelLight: {
         color: '#fff',
     },
-    receiptTableRow: {
-        flexDirection: 'row',
-        paddingVertical: 12,
-        paddingHorizontal: 5,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+    receiptMetaValue: {
+        fontFamily: "Roboto_500Medium",
+        fontSize: 10,
+        color: '#1f2a44',
+        textAlign: 'center',
     },
-    receiptTd: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 9,
-        color: '#333',
+    receiptMetaValueLight: {
+        color: '#fff',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 11,
+    },
+    // Table
+    receiptTable: { 
+        marginBottom: 15,
+        // Removed the outer border so it flows naturally on the white paper
+    },
+    receiptTableHeader: { 
+        flexDirection: 'row', 
+        paddingVertical: 6, 
+        paddingHorizontal: 4,
+        borderBottomWidth: 1,  // 🔥 Line directly UNDER the QTY/Description
+        borderColor: '#000',   
+        // (Removed borderTopWidth so there is nothing above it)
+    },
+    receiptTh: { 
+        fontFamily: "Montserrat_700Bold", 
+        fontSize: 7, 
+        color: '#000',         
+        paddingHorizontal: 0 
+    },
+    receiptTableRow: { 
+        flexDirection: 'row', 
+        paddingVertical: 8, 
+        paddingHorizontal: 4,
+        borderBottomWidth: 1,  // 🔥 Line directly UNDER the "1" and the package data
+        borderColor: '#000',   // Keeps the line pure black
+    },
+    receiptTd: { 
+        fontFamily: "Roboto_400Regular", 
+        fontSize: 8, 
+        color: '#6b7280',      // 🔥 Slightly grey text underneath
+        paddingHorizontal: 2 
+    },
+    // Footer & Totals
+    receiptBottomGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 225,
+    },
+    receiptBankInfo: {
+        flex: 0,
+        paddingRight: 15,
+    },
+    receiptBankSection: {
+        marginBottom: 15,
+    },
+    receiptBankTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 8,
+        color: '#1f2a44',
+        marginBottom: 3,
+        textTransform: 'uppercase',
+    },
+    receiptBankText: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 8,
+        color: '#555',
+        lineHeight: 12,
+    },
+    receiptDivider: {
+        height: 1,
+        backgroundColor: '#000000',
+        marginVertical: 0,
+        marginTop: 0,
+        marginBottom: 10,
     },
     receiptSummaryBlock: {
-        alignItems: 'flex-end',
-        marginTop: 10,
-        paddingRight: 5,
+        flex: 1,
+        minWidth: 220,
     },
     receiptSummaryRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '60%',
-        marginBottom: 10,
+        marginBottom: 20,
+        marginTop: 10,
     },
     receiptSummaryLabel: {
         fontFamily: "Roboto_400Regular",
         fontSize: 10,
-        color: '#555',
+        color: '#6b7280',
     },
     receiptSummaryValue: {
-        fontFamily: "Roboto_500Medium",
-        fontSize: 10,
-        color: '#333',
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#6b7280',
     },
     receiptTotalRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '60%',
+        paddingVertical: 15,
         borderTopWidth: 1,
-        borderTopColor: '#333',
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
-        paddingVertical: 8,
-        marginBottom: 20,
+        borderTopColor: '#000000',
+        marginBottom: 10,
     },
     receiptTotalLabel: {
-        fontFamily: "Montserrat_700Bold",
-        fontSize: 11,
-        color: '#305797',
+        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        color: '#6b7280',
     },
     receiptTotalValue: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 11,
-        color: '#333',
+        fontSize: 12,
+        color: '#000000',
     },
-    receiptFooterText: {
-        fontFamily: "Roboto_400Regular",
-        fontSize: 8,
-        color: '#777',
-        marginTop: 5,
+    receiptDownloadButton: {
+        backgroundColor: '#305797',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        marginTop: 15,
+        alignSelf: 'flex-end',
     }
 });
