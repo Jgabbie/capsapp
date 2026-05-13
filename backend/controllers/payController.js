@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import TokenCheckout from "../models/tokenCheckout.js";
 import TokenCheckoutVisaModel from "../models/tokencheckoutvisa.js";
 import TokenCheckoutPassportModel from "../models/tokencheckoutpassport.js";
-import VisaApplicationModel from "../models/visaApplication.js";
+import VisaModel from "../models/visaApplication.js";
 import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";
@@ -155,7 +155,7 @@ export const createManualPaymentVisa = async (req, res) => {
         });
 
 
-        const visaApp = await VisaApplicationModel.findById(applicationId);
+        const visaApp = await VisaModel.findById(applicationId);
         const user = await User.findById(userId).select('email username');
 
         await Notification.create({
@@ -1274,7 +1274,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             console.log('Created transaction for visa application:', metadata.applicationId);
 
-            const updatedVisa = await VisaApplicationModel.findOneAndUpdate(
+            const updatedVisa = await VisaModel.findOneAndUpdate(
                 { _id: metadata.applicationId }, // filter object
                 {
                     $set: { status: ["Payment Completed"], currentStepIndex: 1 } // replace array & update progress

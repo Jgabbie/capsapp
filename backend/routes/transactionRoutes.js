@@ -1,10 +1,11 @@
 import express from "express";
-import { 
-    createTransaction, 
-    getUserTransactions, 
-    getAllTransactions, 
-    updateTransaction, 
-    deleteTransaction 
+import {
+    createTransaction,
+    getUserTransactions,
+    getAllTransactions,
+    updateTransaction,
+    deleteTransaction,
+    getTransactionsForApplication
 } from "../controllers/transactionController.js";
 import requireUser from "../middleware/requireUser.js"; // Standard ESM Middleware
 
@@ -17,6 +18,7 @@ router.post("/create-transaction", requireUser, createTransaction);
 // --- READ (Client History) ---
 // Mobile expects /my-transactions
 router.get("/my-transactions", requireUser, getUserTransactions);
+router.get('/application/:applicationId', requireUser, getTransactionsForApplication);
 
 // Web expects /user-transactions (Legacy support so Web doesn't break)
 router.get("/user-transactions", requireUser, getUserTransactions);

@@ -5,7 +5,7 @@ const visaServiceSchema = new mongoose.Schema(
     visaName: { type: String, required: true },
     visaPrice: { type: Number, required: true },
     visaDescription: { type: String, required: true },
-    visaRequirements: { type: [Object], required: true }, 
+    visaRequirements: { type: [Object], required: true },
     visaAdditionalRequirements: { type: [Object], required: false, default: [] },
     visaProcessSteps: { type: [String], required: true },
     visaReminders: { type: [String], required: true },
@@ -14,7 +14,7 @@ const visaServiceSchema = new mongoose.Schema(
   { timestamps: true, collection: "services" }
 );
 
-const VisaServiceModel =
+const ServiceModel =
   mongoose.models.services || mongoose.model("services", visaServiceSchema);
 
-export default VisaServiceModel;
+export default ServiceModel;
