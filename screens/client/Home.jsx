@@ -24,7 +24,9 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
         : require('../../assets/images/southkorea_image.png')
 
     return (
+        // 🔥 FIX 4: Changed this from TouchableOpacity to a standard View. The card itself is no longer clickable!
         <View style={HomeStyle.bannerCard}>
+            
             <Image
                 source={imageSource}
                 style={HomeStyle.bannerImage}
@@ -33,30 +35,35 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
             />
 
             {isWishlisted && (
-                <View style={{
-                    position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    borderRadius: 20, padding: 6, elevation: 4, shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2
-                }}>
+                <View style={HomeStyle.wishlistButton}>
                     <Ionicons name="heart" size={22} color="#cf1322" />
                 </View>
             )}
 
             <View style={HomeStyle.bannerFooter}>
-                <Text style={HomeStyle.bannerTitle} numberOfLines={2} ellipsizeMode="tail">
-                    {item.packageName}
-                </Text>
-                <Text style={HomeStyle.bannerSub} numberOfLines={2}>
+                
+                <View style={HomeStyle.titleBanner}>
+                    <Image 
+                        source={require('../../assets/images/destination_icon.png')} 
+                        style={HomeStyle.locationIcon} 
+                        contentFit="contain" 
+                    />
+                    <Text style={HomeStyle.bannerTitle} numberOfLines={2}>
+                        {item.packageName}
+                    </Text>
+                </View>
+
+                {/* Truncated Description */}
+                <Text style={HomeStyle.bannerDesc} numberOfLines={4}>
                     {subText || item.packageDescription}
                 </Text>
+
+                {/* 🔥 FIX 4: Wrapped "View Package" in TouchableOpacity so ONLY THIS acts as the button */}
+                <TouchableOpacity style={HomeStyle.viewPackageBtn} onPress={onPress} activeOpacity={0.6}>
+                    <Text style={HomeStyle.viewPackageText}>View Package</Text>
+                </TouchableOpacity>
+                
             </View>
-            <TouchableOpacity
-                style={HomeStyle.viewAllButton}
-                onPress={onPress}
-            >
-                <Text style={HomeStyle.viewAllText}>View Package</Text>
-                <Image source={require('../../assets/images/arrow_righticon.png')} style={[HomeStyle.arrowIcon, { tintColor: "#fff" }]} contentFit="contain" />
-            </TouchableOpacity>
         </View>
     )
 });
@@ -151,7 +158,7 @@ export default function Home({ route }) {
         const interval = setInterval(() => {
             setActiveCarouselIndex((prevIndex) => {
                 const nextIndex = prevIndex === carouselData.length - 1 ? 0 : prevIndex + 1;
-                carouselRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+                carouselRef.current?.scrollTo({ x: nextIndex * (width - 30), animated: true });
                 return nextIndex;
             });
         }, 5000); // 5 seconds
@@ -162,7 +169,7 @@ export default function Home({ route }) {
     // Keeps the timer in sync if the user swipes manually!
     const handleCarouselScroll = (event) => {
         const scrollPosition = event.nativeEvent.contentOffset.x;
-        const index = Math.round(scrollPosition / width);
+        const index = Math.round(scrollPosition / (width - 30));
         setActiveCarouselIndex(index);
     };
 
@@ -374,22 +381,6 @@ export default function Home({ route }) {
 
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
-    const renderPaginationDots = () => {
-        return (
-            <View style={HomeStyle.dotsContainer}>
-                {carouselData.map((_, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            HomeStyle.dot,
-                            activeCarouselIndex === index ? HomeStyle.dotActive : {}
-                        ]}
-                    />
-                ))}
-            </View>
-        );
-    };
-
     if (!fontsLoaded) return null;
 
     return (
@@ -495,7 +486,7 @@ export default function Home({ route }) {
                                     contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
                                 >
                                     {domesticPackages.map((pkg) => (
-                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 15 }}>
+                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
                                             <BannerCard
                                                 item={pkg}
                                                 isWishlisted={wishlistedIds.has(String(pkg._id))}
@@ -513,7 +504,7 @@ export default function Home({ route }) {
                                 contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
                             >
                                 {internationalPackages.map((pkg) => (
-                                    <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 15 }}>
+                                    <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
                                         <BannerCard
                                             item={pkg}
                                             isWishlisted={wishlistedIds.has(String(pkg._id))}
@@ -546,14 +537,10 @@ export default function Home({ route }) {
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
-                            snapToAlignment="center"
-                            decelerationRate="fast"
                             onMomentumScrollEnd={handleCarouselScroll}
-                            scrollEventThrottle={16}
                         >
                             {carouselData.map((item, index) => (
-                                <View key={index} style={HomeStyle.carouselSlide}>
-
+                                <View key={index} style={[HomeStyle.carouselSlide, { width: width - 30 }]}>
                                     <ImageBackground
                                         source={item.image}
                                         style={HomeStyle.carouselInner}
@@ -561,15 +548,25 @@ export default function Home({ route }) {
                                         resizeMode="cover"
                                     >
                                         <View style={HomeStyle.carouselOverlay} />
-                                        <Text style={HomeStyle.carouselTitle}>{item.title}</Text>
-                                        <Text style={HomeStyle.carouselSubtitle}>{item.subtitle}</Text>
+                                        <Text style={HomeStyle.carouselTitle} numberOfLines={2}>{item.title}</Text>
+                                        <Text style={HomeStyle.carouselSubtitle} numberOfLines={2}>{item.subtitle}</Text>
                                     </ImageBackground>
-
                                 </View>
                             ))}
                         </ScrollView>
-
-                        {renderPaginationDots()}
+                        {carouselData.length > 1 && (
+                            <View style={HomeStyle.carouselDots}>
+                                {carouselData.map((_, idx) => (
+                                    <View
+                                        key={idx}
+                                        style={[
+                                            HomeStyle.dot,
+                                            activeCarouselIndex === idx && HomeStyle.activeDot
+                                        ]}
+                                    />
+                                ))}
+                            </View>
+                        )}
                     </View>
                     {/* --- END CAROUSEL --- */}
 

@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -468,41 +470,52 @@ export default function BookingInvoice({ route, navigation }) {
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
         try {
+            const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
+            await logoAsset.downloadAsync();
+            const logoUri = logoAsset.localUri || logoAsset.uri;
+            const logoBase64 = logoUri
+                ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 })
+                : '';
+            const logoDataUri = logoBase64 ? `data:image/png;base64,${logoBase64}` : '';
+
             const htmlContent = `
                 <html>
                     <head>
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
                         <style>
-                            @page { size: A4 portrait; margin: 15mm 15mm 20mm 15mm; }
-                            body { font-family: 'Helvetica', sans-serif; color: #000; font-size: 11px; margin: 0; padding: 0; }
-                            .page { page-break-after: always; position: relative; }
-                            .header-gold { background-color: #FFD700; border: 1px solid #000; text-align: center; font-weight: bold; padding: 6px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; }
-                            .header-blue { background-color: #ADD8E6; border: 1px solid #000; font-weight: bold; padding: 5px; margin-top: 15px; margin-bottom: 10px; font-size: 11px; text-transform: uppercase; }
+                            @page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }
+                            body { font-family: 'Helvetica', sans-serif; color: #000; font-size: 10px; margin: 0; padding: 0; }
+                            .page { page-break-after: always; break-after: page; position: relative; box-sizing: border-box; min-height: 250mm; }
+                            .page.last-page { page-break-after: auto; break-after: auto; }
+                            .header-gold { background-color: #FFD700; border: 1px solid #000; text-align: center; font-weight: bold; padding: 5px; margin-bottom: 12px; font-size: 12px; text-transform: uppercase; }
+                            .header-blue { background-color: #ADD8E6; border: 1px solid #000; font-weight: bold; padding: 4px 5px; margin-top: 12px; margin-bottom: 8px; font-size: 10px; text-transform: uppercase; }
                             table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-                            th, td { border: 1px solid #000; padding: 5px; text-align: left; font-size: 9px; }
+                            th, td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 8px; }
                             th { background-color: #ADD8E6; text-align: center; font-weight: bold; }
-                            .info-grid { display: table; width: 100%; margin-bottom: 15px; }
+                            .info-grid { display: table; width: 100%; margin-bottom: 12px; }
                             .info-row { display: table-row; }
-                            .info-col { display: table-cell; padding-bottom: 8px; padding-right: 10px;}
-                            .label { font-weight: bold; font-size: 8px; display: block; margin-bottom: 2px; text-transform: uppercase; }
-                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 10px; }
-                            p { text-align: justify; line-height: 1.4; margin-bottom: 8px; font-size: 10px; }
-                            .p-text { text-align: justify; line-height: 1.4; margin-bottom: 12px; font-size: 10px; }
-                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 10px;}
-                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 40px; }
-                            .sig-line { border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 5px; font-weight: bold; font-size: 11px; display: flex; align-items: flex-end; justify-content: center; height: 15px; }
-                            .flex-container { display: flex; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 15px;}
+                            .info-col { display: table-cell; padding-bottom: 6px; padding-right: 8px;}
+                            .label { font-weight: bold; font-size: 7px; display: block; margin-bottom: 2px; text-transform: uppercase; }
+                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 9px; }
+                            p { text-align: justify; line-height: 1.35; margin-bottom: 7px; font-size: 9px; }
+                            .p-text { text-align: justify; line-height: 1.35; margin-bottom: 10px; font-size: 9px; }
+                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 9px;}
+                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 28px; }
+                            .sig-line { border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; font-weight: bold; font-size: 10px; display: flex; align-items: flex-end; justify-content: center; height: 14px; }
+                            .flex-container { display: flex; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 12px;}
                             .flex-col { flex: 1; }
-                            .logo-container { text-align: center; margin-bottom: 15px; }
-                            .logo-container img { height: 60px; object-fit: contain; }
-                            .yes-no-box { display: inline-block; width: 30px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 4px; font-size: 10px;}
-                            .detail-box { border: 1px solid #000; min-height: 35px; width: 100%; padding: 5px; font-size: 10px; margin-top: 5px; margin-bottom: 15px; }
+                            .logo-container { text-align: center; margin-bottom: 10px; }
+                            .logo-container img { height: 42px; object-fit: contain; }
+                            .yes-no-box { display: inline-block; width: 30px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 3px; font-size: 9px;}
+                            .detail-box { border: 1px solid #000; min-height: 32px; width: 100%; padding: 4px; font-size: 9px; margin-top: 5px; margin-bottom: 12px; }
+                            .note-text { font-size: 7px; font-style: italic; color: #555; }
+                            .small-text { font-size: 8px; }
                         </style>
                     </head>
                     <body>
                         <div class="page">
                             <div class="logo-container">
-                                <img src="https://res.cloudinary.com/dcv8v7jjc/image/upload/v1775653130/booking-documents/Logo.png" alt="M&RC Travel and Tours" />
+                                <img src="${logoDataUri}" alt="M&RC Travel and Tours" />
                             </div>
                             <div class="header-gold">BOOKING REGISTRATION FORM</div>
                             
@@ -578,10 +591,10 @@ export default function BookingInvoice({ route, navigation }) {
 
                         <div class="page">
                             <div class="logo-container">
-                                <img src="https://res.cloudinary.com/dcv8v7jjc/image/upload/v1775653130/booking-documents/Logo.png" alt="M&RC Travel and Tours" />
+                                <img src="${logoDataUri}" alt="M&RC Travel and Tours" />
                             </div>
                             <div class="header-gold">TRAVEL REGISTRATION DETAILS</div>
-                            <p style="text-align: center; font-style: italic; font-size: 9px; margin-bottom: 15px;">Instructions: Please fill-up and write your answers inside each box.</p>
+                            <p style="text-align: center; font-style: italic; font-size: 8px; margin-bottom: 10px;">Instructions: Please fill-up and write your answers inside each box.</p>
                             
                             <div style="margin-bottom: 10px;"><strong>TOUR PACKAGE TITLE:</strong> ${packageName}</div>
                             <div style="margin-bottom: 20px;"><strong>PACKAGE TRAVEL DATE:</strong> ${formattedTravelDate}</div>
@@ -614,17 +627,17 @@ export default function BookingInvoice({ route, navigation }) {
                                 <div class="detail-box">${bookingDetails?.medicalDetails || ''}</div>
                             </div>
                             
-                            <div style="border: 1px solid #000; padding: 15px; margin-top: 20px; border-radius: 5px;">
-                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 10px;">TRAVEL INSURANCE</div>
-                                <p style="font-size: 9px; margin-bottom: 15px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
+                            <div style="border: 1px solid #000; padding: 12px; margin-top: 16px; border-radius: 5px;">
+                                <div style="font-weight: bold; font-size: 10px; margin-bottom: 8px;">TRAVEL INSURANCE</div>
+                                <p style="font-size: 8px; margin-bottom: 12px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <div style="width: 80%; font-size: 10px;">Do you agree to purchase a Travel Insurance from us?</div>
-                                    <div style="width: 15%; border: 1px solid #000; text-align: center; padding: 5px; font-weight: bold;">
+                                    <div style="width: 80%; font-size: 9px;">Do you agree to purchase a Travel Insurance from us?</div>
+                                    <div style="width: 15%; border: 1px solid #000; text-align: center; padding: 4px; font-weight: bold;">
                                         ${bookingDetails?.purchaseInsurance === 'Y' ? 'Y' : 'N'}
                                     </div>
                                 </div>
-                                <p style="font-style: italic; font-size: 8px; color: #555; margin-bottom: 15px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
+                                <p style="font-style: italic; font-size: 7px; color: #555; margin-bottom: 12px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
                                 
                                 <table style="margin: 0;">
                                     <tr>
@@ -661,9 +674,9 @@ export default function BookingInvoice({ route, navigation }) {
                             </div>
                         </div>
 
-                        <div class="page" style="page-break-after: auto;">
+                        <div class="page">
                             <div class="logo-container">
-                                <img src="https://res.cloudinary.com/dcv8v7jjc/image/upload/v1775653130/booking-documents/Logo.png" alt="M&RC Travel and Tours" />
+                                <img src="${logoDataUri}" alt="M&RC Travel and Tours" />
                             </div>
                             <div class="header-gold">GENERAL PACKAGE DISCLAIMER, TERMS & CONDITIONS</div>
                             
@@ -700,9 +713,9 @@ export default function BookingInvoice({ route, navigation }) {
                             </div>
                         </div>
 
-                        <div class="page" style="page-break-after: auto;">
+                        <div class="page last-page">
                             <div class="logo-container">
-                                <img src="https://res.cloudinary.com/dcv8v7jjc/image/upload/v1775653130/booking-documents/Logo.png" alt="M&RC Travel and Tours" />
+                                <img src="${logoDataUri}" alt="M&RC Travel and Tours" />
                             </div>
                             
                             <div class="flex-container">
@@ -959,6 +972,18 @@ export default function BookingInvoice({ route, navigation }) {
                                         <Text style={BookingInvoiceStyle.checkoutButtonText}>Confirm & Proceed</Text>
                                     )}
                                 </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
+                    {isPaidStatus && (
+                        <View style={BookingInvoiceStyle.reviewNoticeCard}>
+                            <Text style={BookingInvoiceStyle.reviewNoticeCheckmark}>✓</Text>
+                            <View style={BookingInvoiceStyle.reviewNoticeContent}>
+                                <Text style={BookingInvoiceStyle.reviewNoticeTitle}>YOU CAN NOW SUBMIT A REVIEW</Text>
+                                <Text style={BookingInvoiceStyle.reviewNoticeText}>
+                                    Thank you for your booking! Your feedback helps us improve our services and assists fellow travelers. Share your experience now.
+                                </Text>
                             </View>
                         </View>
                     )}
