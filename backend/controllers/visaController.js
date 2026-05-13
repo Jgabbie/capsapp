@@ -838,7 +838,7 @@ export const getUserVisaApplications = async (req, res) => {
 export const getVisaApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const application = await VisanModel.findById(id)
+    const application = await VisaModel.findById(id)
       .populate("userId", "firstname lastname username")
       .populate("serviceId");
     if (!application) {

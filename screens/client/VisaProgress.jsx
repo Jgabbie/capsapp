@@ -413,8 +413,9 @@ export default function VisaProgress() {
 
     const checkPendingManualPayment = async () => {
         try {
-            const transactionsRes = await apiFetch.get(`/transaction/application/${id}`);
-            const transactions = Array.isArray(transactionsRes) ? transactionsRes : (transactionsRes?.transactions || []);
+            if (!user || !user._id) return;
+            const transactionsRes = await apiFetch.get(`/transaction/application/${id}`, withUserHeader(user._id));
+            const transactions = Array.isArray(transactionsRes?.data) ? transactionsRes.data : (transactionsRes?.data?.transactions || []);
             const hasPendingPenalty = transactions.some(
                 (tx) => tx.status === 'Pending' &&
                     tx.method === 'Manual' &&
@@ -449,41 +450,43 @@ export default function VisaProgress() {
 
     //FETCH APPLICATION DETAILS
     useEffect(() => {
-        if (!id) {
+        if (!id || !user || !user._id) {
             return;
         }
-
 
         const fetchApplication = async () => {
             setLoading(true);
             try {
-                const res = await apiFetch.get(`/visa/applications/${id}`);
-                setApplication(res);
-                setProcess(normalizeVisaProcessSteps(res?.processSteps || {}));
+                const res = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
+                const data = res?.data || res;
+                setApplication(data);
+                setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
                 // If the application has a serviceId, fetch the service for requirements
-                if (res && res.serviceId) {
+                if (data && data.serviceId) {
                     try {
-                        const serviceId = res.serviceId._id || res.serviceId;
+                        const serviceId = data.serviceId._id || data.serviceId;
                         const serviceResEndpoint = `/services/get-service/${serviceId}`;
-                        const serviceRes = await apiFetch.get(serviceResEndpoint);
-                        setRequirements(serviceRes.visaRequirements || []);
-                        setServicePrice(serviceRes.visaPrice || 0);
+                        const serviceRes = await apiFetch.get(serviceResEndpoint, withUserHeader(user._id));
+                        const serviceData = serviceRes?.data || serviceRes;
+                        setRequirements(serviceData.visaRequirements || []);
+                        setServicePrice(serviceData.visaPrice || 0);
                     } catch (err) {
                         setRequirements([]);
-                        setProcess(normalizeVisaProcessSteps(res?.processSteps || {}));
+                        setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
                     }
                 } else {
                     setRequirements([]);
                 }
             } catch (err) {
-                notification.error({ message: 'Failed to load visa application details', placement: 'topRight' });
+                console.error('Failed to fetch application:', err);
+                notification.error({ message: 'Failed to load visa application details' });
             } finally {
                 setLoading(false);
             }
         };
         fetchApplication();
         checkPendingManualPayment();
-    }, [id]);
+    }, [id, user]);
 
     // FIND CURRENT STEP INDEX BASED ON APPLICATION STATUS
     const statusValue = statusText;
