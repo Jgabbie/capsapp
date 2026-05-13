@@ -64,6 +64,20 @@ export const getUserTransactions = async (req, res) => {
     }
 };
 
+//GET TRANSACTIONS FOR APPLICATION (VISA/PASSPORT) --------------------------------------------------------------------------
+export const getTransactionsForApplication = async (req, res) => {
+    const userId = req.userId
+    const { applicationId } = req.params
+    try {
+        const transactions = await Transaction.find({ userId, applicationId }).sort({ createdAt: -1 })
+        res.status(200).json(transactions)
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch transactions", error: error.message })
+    }
+}
+
+
+
 export const getAllTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({})

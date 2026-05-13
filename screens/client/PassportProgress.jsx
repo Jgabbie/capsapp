@@ -16,61 +16,152 @@ import { useUser } from "../../context/UserContext";
 import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
 import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
-const parseCalendarDate = (value) => {
-    if (!value) return null;
 
-    const raw = String(value);
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
-    if (match) {
-        const year = Number(match[1]);
-        const month = Number(match[2]) - 1;
-        const day = Number(match[3]);
-        return dayjs(new Date(year, month, day)).startOf('day');
+// Status color mapping for passport application statuses
+const getStatusColor = (status) => {
+    switch ((status || '').toLowerCase()) {
+        case 'application submitted':
+            return 'blue';
+        case 'application approved':
+            return 'purple';
+        case 'payment completed':
+            return 'cyan';
+        case 'documents uploaded':
+            return 'orange';
+        case 'documents approved':
+            return 'geekblue';
+        case 'documents received':
+            return 'gold';
+        case 'documents submitted':
+            return 'magenta';
+        case 'processing by dfa':
+            return 'volcano';
+        case 'dfa approved':
+            return 'green';
+        case 'passport released':
+            return 'success';
+        default:
+            return 'default';
     }
-
-    const parsed = dayjs(raw);
-    return parsed.isValid() ? parsed.startOf('day') : null;
 };
 
-export default function PassportProgress() {
-    const cs = useNavigation()
-    const route = useRoute()
-    const { user } = useUser()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
+const PASSPORT_STEPS = [
+    { title: 'Application Submitted', description: 'Application Submitted' },
+    { title: 'Application Approved', description: 'Application Approved' },
+    { title: 'Payment Completed', description: 'Payment Completed' },
+    { title: 'Documents Uploaded', description: 'Documents Uploaded' },
+    { title: 'Documents Approved', description: 'Documents Approved' },
+    { title: 'Documents Received', description: 'Documents Received' },
+    { title: 'Documents Submitted', description: 'Documents Submitted' },
+    { title: 'Processing by DFA', description: 'Processing by DFA' },
+    { title: 'DFA Approved', description: 'DFA Approved' },
+    { title: 'Passport Released', description: 'Passport Released' },
+];
 
-    const applicationId = route.params?.applicationId;
+export default function PassportApplication() {
+    const route = useRoute();
+    const navigation = useNavigation();
 
-    const [application, setApplication] = useState(null)
-    const [serviceRequirements, setServiceRequirements] = useState([])
-    const [loading, setLoading] = useState(true)
+    const id = route?.params?.applicationId || null; // Use applicationId from route params
+    const { user } = useUser();
 
+    const [loading, setLoading] = useState(true);
+    const [application, setApplication] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [birthCertList, setBirthCertList] = useState([]);
+    const [govIdList, setGovIdList] = useState([]);
+    const [applicationFormList, setApplicationFormList] = useState([]);
+    const [selectedFiles, setSelectedFiles] = useState({});
+    const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
+    const [uploadingAll, setUploadingAll] = useState(false);
+
+    const [method, setMethod] = useState(null); // default selected payment method  
+    const paymentMethod = method;
+    const normalizePickedDocument = (asset) => ({
+        uri: asset.uri,
+        name: asset.name || asset.fileName || `document-${Date.now()}`,
+        type: asset.mimeType || asset.type || 'application/octet-stream',
+        size: asset.size,
+    });
+
+    const pickDocumentForKey = async (key) => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'image/*'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (result.canceled || !result.assets?.length) {
+                return;
+            }
+
+            const asset = result.assets[0];
+            setSelectedFiles(prev => ({
+                ...prev,
+                [key]: normalizePickedDocument(asset),
+            }));
+        } catch (error) {
+            console.error('Failed to pick document:', error);
+            Alert.alert('Error', 'Could not open the file picker.');
+        }
+    };
+
+    const removeSelectedFile = (key) => {
+        setSelectedFiles(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+    };
+
+    const submitAllSelectedFiles = async () => {
+        await handleSubmit();
+    };
+
+    const setPaymentMethod = setMethod;
+    const [fileList, setFileList] = useState([]);
+    const [proofImage, setProofImage] = useState(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const creatingPayment = paymentLoading;
+
+    const [pendingManualPayment, setPendingManualPayment] = useState(false);
+    const [servicePendingManualPayment, setServicePendingManualPayment] = useState(false);
+
+    const [selectedSuggestedIndex, setSelectedSuggestedIndex] = useState(null);
+    const [customDateTime, setCustomDateTime] = useState({ date: null, time: null });
+    const [confirmingSuggested, setConfirmingSuggested] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedTime, setSelectedTime] = useState(null);
+
+    const [releaseOption, setReleaseOption] = useState(null);
+    const [deliveryAddress, setDeliveryAddress] = useState("");
+
+    const [isConfirmDocumentsOpen, setIsConfirmDocumentsOpen] = useState(false);
+    const [isSelectDateModalOpen, setIsSelectDateModalOpen] = useState(false);
+    const [isDateSelectedModalOpen, setIsDateSelectedModalOpen] = useState(false);
+    const [isDocumentsUploadedModalOpen, setIsDocumentsUploadedModalOpen] = useState(false);
+    const [isPassportReleaseOptionSelectedModalOpen, setIsPassportReleaseOptionSelectedModalOpen] = useState(false);
+    const [showAppointmentSuccessModal, setShowAppointmentSuccessModal] = useState(false);
+    const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
+    const [enlargedQR, setEnlargedQR] = useState(null);
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+    // Schedule selection state (for 'Others' custom date/time option)
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
     const [customPreferredDate, setCustomPreferredDate] = useState(null);
     const [customPreferredTime, setCustomPreferredTime] = useState(null);
     const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('paymongo');
-    const [paymentAmount, setPaymentAmount] = useState('2000');
-    const [proofImage, setProofImage] = useState(null);
-    const [creatingPayment, setCreatingPayment] = useState(false);
-    const [uploadingDocumentKey, setUploadingDocumentKey] = useState(null);
-    const [uploadedDocuments, setUploadedDocuments] = useState({});
-    const [selectedFiles, setSelectedFiles] = useState({});
-    const [uploadingAll, setUploadingAll] = useState(false);
-    const [showAppointmentSuccessModal, setShowAppointmentSuccessModal] = useState(false);
-    const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
-    const [enlargedQR, setEnlargedQR] = useState(null);
 
     const normalizeScheduleSlot = (slot) => {
-        if (!slot || typeof slot !== 'object') {
-            return { date: '', time: '' };
-        }
-
+        if (!slot || typeof slot !== 'object') return { date: '', time: '' };
         const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
         const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
 
-        const parsedDate = rawDate ? parseCalendarDate(rawDate) : null;
+        const parsedDate = rawDate ? dayjs(rawDate) : null;
         const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
 
         let time = '';
@@ -84,33 +175,24 @@ export default function PassportProgress() {
         return { date, time };
     };
 
-    const fetchApplicationDetails = async () => {
-        if (!user?._id || !applicationId) return;
+    const isOthersSelected = selectedScheduleIndex === 'others';
+    const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
+        !isOthersSelected || (customPreferredDate && customPreferredTime)
+    );
 
-        try {
-            setLoading(true);
-            const appRes = await api.get('/passport/applications', withUserHeader(user._id));
-            const appData = appRes.data.find(app => app._id === applicationId);
+    const handleCustomDateChange = (_event, selectedDate) => {
+        if (selectedDate) setCustomPreferredDate(selectedDate);
+        if (Platform.OS !== 'ios') setShowCustomDatePicker(false);
+    };
 
-            if (!appData) throw new Error("Application not found in your list.");
-
-            setApplication(appData);
-            setUploadedDocuments(appData.submittedDocuments || {});
-        } catch (error) {
-            console.log("Error fetching details:", error.message);
-            Alert.alert('Error', 'Unable to load application details.');
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchApplicationDetails();
-    }, [user?._id, applicationId]);
+    const handleCustomTimeChange = (_event, selectedTime) => {
+        if (selectedTime) setCustomPreferredTime(selectedTime);
+        if (Platform.OS !== 'ios') setShowCustomTimePicker(false);
+    };
 
     const handleConfirmSchedule = async () => {
         if (selectedScheduleIndex === null) {
-            Alert.alert("Notice", "Please select an appointment option first.");
+            Alert.alert('Notice', 'Please select an appointment option first.');
             return;
         }
 
@@ -120,10 +202,10 @@ export default function PassportProgress() {
                 date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
                 time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
             }
-            : normalizeScheduleSlot(appointmentOptions[selectedScheduleIndex]);
+            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
 
         if (!selected?.date || !selected?.time) {
-            Alert.alert("Error", "Please provide both date and time.");
+            Alert.alert('Error', 'Please provide both date and time.');
             return;
         }
 
@@ -134,262 +216,131 @@ export default function PassportProgress() {
                 time: selected.time
             }, withUserHeader(user._id));
 
-            setShowAppointmentSuccessModal(true);
+            Alert.alert('Success', 'Appointment schedule confirmed!');
             setSelectedScheduleIndex(null);
             setCustomPreferredDate(null);
             setCustomPreferredTime(null);
             setShowCustomDatePicker(false);
             setShowCustomTimePicker(false);
 
-            await fetchApplicationDetails();
-        } catch (error) {
-            console.log(error);
+            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
+            const refreshed = allApps.data.find(app => app._id === id);
+            setApplication(refreshed);
+            setShowAppointmentSuccessModal(true);
+            setIsDateSelectedModalOpen(true);
+        } catch (err) {
+            console.error(err);
             Alert.alert('Error', 'Failed to confirm appointment schedule.');
         } finally {
             setConfirmingSchedule(false);
         }
     };
 
-    const openDocument = (url) => {
-        if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
-    };
+    useEffect(() => {
+        if (!id || !user?._id) {
+            return
+        }
+        const fetchApplication = async () => {
+            setLoading(true);
+            try {
+                const res = await api.get('/passport/applications', withUserHeader(user._id));
+                const appData = res.data.find(app => app._id === id);
+                if (!appData) throw new Error('Application not found');
+                setApplication(appData);
+            } catch (err) {
+                Alert.alert('Error', 'Failed to load passport application details');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        const checkPendingManualPayment = async () => {
+            try {
+                const transactionsRes = await api.get(`/transaction/application/${id}`, withUserHeader(user._id));
+                const transactions = Array.isArray(transactionsRes.data) ? transactionsRes.data : (transactionsRes.data?.transactions || []);
+                const hasPendingPenalty = transactions.some(
+                    (tx) => tx.status === 'Pending' &&
+                        tx.method === 'Manual' &&
+                        (tx.applicationType === 'Passport Penalty Fee')
+                );
 
-    const isImageSource = (fileOrUrl) => {
-        const value = typeof fileOrUrl === 'string'
-            ? fileOrUrl
-            : fileOrUrl?.uri || fileOrUrl?.name || fileOrUrl?.mimeType || '';
+                const hasPendingRegularPayment = transactions.some(
+                    (tx) => tx.status === 'Pending' &&
+                        tx.method === 'Manual' &&
+                        (tx.applicationType === 'Passport Application')
+                );
 
-        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value)
-            || String(fileOrUrl?.mimeType || '').startsWith('image/')
-            || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
-    };
+                setPendingManualPayment(hasPendingPenalty);
+                setServicePendingManualPayment(hasPendingRegularPayment);
+            } catch (err) {
+                if (err?.response?.status === 404) {
+                    // No transactions found for this application - treat as no pending payments
+                    setPendingManualPayment(false);
+                    setServicePendingManualPayment(false);
+                } else {
+                    console.error('Could not fetch transactions:', err);
+                }
+            }
+        };
+        fetchApplication();
+        checkPendingManualPayment();
+    }, [id, user?._id]);
 
-    const getUploadedDocumentEntries = () => {
-        const docs = application?.submittedDocuments || {};
-        return Object.entries(docs).filter(([, value]) => Boolean(value));
-    };
-
-    const pickProofImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            base64: true,
-            quality: 0.7,
-        });
-
-        if (!result.canceled) {
-            setProofImage(result.assets[0]);
+    const normalizeResubmissionTarget = (target) => {
+        switch (target) {
+            case 'birthCertificate':
+                return 'birthCert';
+            case 'applicationForm':
+            case 'govId':
+                return target;
+            default:
+                return null;
         }
     };
 
-    const uploadFilesToBackend = async (endpoint, formData) => {
-        const response = await api.post(endpoint, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                ...withUserHeader(user?._id).headers,
-            },
-            timeout: 60000 // 60s for file uploads
-        });
+    const requestedResubmissionTargets = (() => {
+        const targets = [];
 
-        return response.data;
-    };
-
-    const pickAndUploadPassportDocument = async (documentKey) => {
-        if (!application?._id) return;
-
-        const picked = await DocumentPicker.getDocumentAsync({
-            type: ['image/*', 'application/pdf'],
-            copyToCacheDirectory: true,
-            multiple: false,
-        });
-
-        if (picked.canceled) return;
-
-        const file = picked.assets?.[0];
-        if (!file?.uri) {
-            Alert.alert('Error', 'No file selected.');
-            return;
-        }
-
-        // keep backward-compat: if invoked directly, upload single file
-        const formData = new FormData();
-        if (Platform.OS === 'web' && file.file) {
-            formData.append('files', file.file, file.name || `${documentKey}-${Date.now()}`);
-        } else {
-            formData.append('files', {
-                uri: file.uri,
-                name: file.name || `${documentKey}-${Date.now()}`,
-                type: file.mimeType || 'application/octet-stream',
+        if (Array.isArray(application?.resubmissionTargets)) {
+            application.resubmissionTargets.forEach((target) => {
+                const normalized = normalizeResubmissionTarget(target);
+                if (normalized) {
+                    targets.push(normalized);
+                }
             });
         }
 
-        try {
-            setUploadingDocumentKey(documentKey);
-
-            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
-            const uploadedUrl = uploadRes?.urls?.[0];
-
-            if (!uploadedUrl) {
-                throw new Error('Failed to upload document');
-            }
-
-            const nextDocuments = {
-                ...uploadedDocuments,
-                [documentKey]: uploadedUrl,
-            };
-
-            await api.put(`/passport/applications/${application._id}/documents`, {
-                submittedDocuments: nextDocuments,
-            }, withUserHeader(user._id));
-
-            setUploadedDocuments(nextDocuments);
-            Alert.alert('Success', 'Document uploaded successfully.');
-            await fetchApplicationDetails();
-        } catch (error) {
-            Alert.alert('Error', error?.response?.data?.message || error.message || 'Unable to upload document.');
-        } finally {
-            setUploadingDocumentKey(null);
-        }
-    };
-
-    const pickDocumentForKey = async (documentKey) => {
-        if (!application?._id) return;
-
-        const picked = await DocumentPicker.getDocumentAsync({
-            type: ['image/*', 'application/pdf'],
-            copyToCacheDirectory: true,
-            multiple: false,
-        });
-
-        if (picked.canceled) return;
-
-        const file = picked.assets?.[0];
-        if (!file?.uri) {
-            Alert.alert('Error', 'No file selected.');
-            return;
+        const legacyTarget = normalizeResubmissionTarget(application?.resubmissionTarget);
+        if (legacyTarget) {
+            targets.push(legacyTarget);
         }
 
-        setSelectedFiles(prev => ({ ...prev, [documentKey]: file }));
-    };
+        return [...new Set(targets)];
+    })();
 
-    const removeSelectedFile = (documentKey) => {
-        setSelectedFiles(prev => {
-            const copy = { ...prev };
-            delete copy[documentKey];
-            return copy;
-        });
-    };
+    const resubmissionRequested = Boolean(
+        application &&
+        (application.status || '').toLowerCase() === 'payment completed' &&
+        requestedResubmissionTargets.length > 0
+    );
 
-    const submitAllSelectedFiles = async () => {
-        const keys = Object.keys(selectedFiles);
-        if (keys.length === 0) {
-            Alert.alert('No files', 'Please select files to upload first.');
-            return;
+    const isRequestedResubmissionTarget = (target) => !resubmissionRequested || requestedResubmissionTargets.includes(target);
+
+    const hasSelectedFileForTarget = (target) => {
+        switch (target) {
+            case 'birthCert':
+                return Boolean(selectedFiles.birthCert);
+            case 'applicationForm':
+                return Boolean(selectedFiles.applicationForm);
+            case 'govId':
+                return Boolean(selectedFiles.govId);
+            default:
+                return false;
         }
-
-        const formData = new FormData();
-        const order = [];
-
-        for (const key of keys) {
-            const file = selectedFiles[key];
-            const filename = file.name || file.uri.split('/').pop() || `${key}-${Date.now()}`;
-            const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
-            const ext = match ? match[1].toLowerCase() : 'pdf';
-            const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
-            order.push(key);
-
-            if (Platform.OS === 'web' && file.file) {
-                formData.append('files', file.file, filename);
-            } else {
-                formData.append('files', {
-                    uri: file.uri,
-                    name: filename,
-                    type: mimeType,
-                });
-            }
-        }
-
-        try {
-            setUploadingAll(true);
-            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
-            const urls = uploadRes?.urls || uploadRes?.data?.urls || [];
-
-            if (!Array.isArray(urls) || urls.length === 0) {
-                throw new Error('No upload URLs returned');
-            }
-
-            const nextDocuments = { ...uploadedDocuments };
-            for (let i = 0; i < urls.length; i++) {
-                const key = order[i];
-                if (key) nextDocuments[key] = urls[i];
-            }
-
-            await api.put(`/passport/applications/${application._id}/documents`, {
-                submittedDocuments: nextDocuments,
-            }, withUserHeader(user._id));
-
-            setUploadedDocuments(nextDocuments);
-            setSelectedFiles({});
-            setShowDocumentsSuccessModal(true);
-            await fetchApplicationDetails();
-        } catch (error) {
-            Alert.alert('Error', error?.response?.data?.message || error.message || 'Failed to upload files');
-        } finally {
-            setUploadingAll(false);
-        }
-    };
-
-    const statusDeadlineDaysMap = {
-        'Application Submitted': 2,
-        'Application Approved': 2,
-        'Payment Completed': 3,
-        'Documents Uploaded': 5,
-        'Documents Approved': 2,
-        'Documents Received': 2,
-        'Documents Submitted': 2,
-        'Processing by DFA': 0,
-        'DFA Approved': 0,
-        'Passport Released': 0,
-    };
-
-    // Deadline policy aligned with backend passport status deadline rules.
-
-    // Prefer `statusDeadlineDates` from backend when available.
-    // This resolver accepts multiple possible shapes: a single date string,
-    // or an object keyed by step title / `current` / application.status.
-    const resolveStatusDeadlineRaw = (app, stepTitle = null) => {
-        const sd = app?.statusDeadlineDates ?? app?.statusDeadlineDate;
-        if (!sd) return null;
-        if (typeof sd === 'string' || typeof sd === 'number') return sd;
-        if (sd && typeof sd === 'object') {
-            if (stepTitle && sd[stepTitle] !== undefined) return sd[stepTitle];
-            if (sd.current !== undefined) return sd.current;
-            if (app?.status && sd[app.status] !== undefined) return sd[app.status];
-        }
-        return null;
-    };
-
-    const getProcessStepData = (app, title) => {
-        if (!app?.processSteps || !title) return null;
-
-        const direct = app.processSteps[title];
-        if (direct && typeof direct === 'object') {
-            return direct;
-        }
-
-        const entry = Object.entries(app.processSteps).find(([key]) => String(key).toLowerCase() === String(title).toLowerCase());
-        return entry?.[1] && typeof entry[1] === 'object' ? entry[1] : null;
     };
 
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
-
-        const stepData = getProcessStepData(app, title);
-        if (stepData?.setDate) {
-            const parsed = parseCalendarDate(stepData.setDate);
-            if (parsed?.isValid()) return parsed;
-        }
-
         const history = app.statusHistory;
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
@@ -402,59 +353,110 @@ export default function PassportProgress() {
         return null;
     };
 
-    const getStepDeadlineDate = (app, stepTitle, providedSetDate = null) => {
-        if (!app || !stepTitle) return null;
+    // Find the current step index based on status
+    const currentStep = application
+        ? Math.max(
+            0,
+            PASSPORT_STEPS.findIndex(
+                s => (s.title || '').toLowerCase() === (application.status || '').toLowerCase()
+            )
+        )
+        : 0;
 
-        const terminalStatuses = ['DFA Approved', 'Passport Released', 'Rejected'];
-        const normalizedStepTitle = Object.keys(statusDeadlineDaysMap).find(
-            (title) => String(title).toLowerCase() === String(stepTitle).toLowerCase()
-        ) || stepTitle;
+    // Build timeline for progress tracker (uses backend-decorated processSteps when available)
+    const stepTimeline = PASSPORT_STEPS.map((s, idx) => {
+        const title = String(s.title || '').trim();
+        const proc = application?.processSteps?.[title] || {};
+        const setDate = proc.setDate ? dayjs(proc.setDate) : getStepSetDateForTitle(application, title);
+        const deadlineDate = proc.deadlineDate ? dayjs(proc.deadlineDate) : null;
+        const daysLeft = deadlineDate ? deadlineDate.diff(dayjs(), 'day') : null;
+        const isCompleted = idx <= currentStep;
+        const isActive = idx === currentStep;
+        const isLast = idx === PASSPORT_STEPS.length - 1;
 
-        if (terminalStatuses.some((title) => title.toLowerCase() === String(normalizedStepTitle).toLowerCase())) return null;
+        return {
+            step: title,
+            index: idx,
+            isCompleted,
+            isActive,
+            isLast,
+            setDate,
+            deadlineDate,
+            daysLeft,
+        };
+    });
 
-        const stepData = getProcessStepData(app, normalizedStepTitle) || getProcessStepData(app, stepTitle);
-        if (stepData?.deadlineDate) {
-            const parsed = parseCalendarDate(stepData.deadlineDate);
-            if (parsed?.isValid()) return parsed.startOf('day');
+    // Get deadline and set date from processSteps object
+    const getProcessStepInfo = (stepTitle) => {
+        if (!application?.processSteps || !application.processSteps[stepTitle]) {
+            return { setDate: null, deadlineDate: null };
         }
-
-        // If backend provided a deadline (prefer statusDeadlineDates), use it
-        const rawBackendDeadline = resolveStatusDeadlineRaw(app, normalizedStepTitle) ?? resolveStatusDeadlineRaw(app, stepTitle);
-        if (String(app.status || '').toLowerCase() === String(normalizedStepTitle).toLowerCase() && rawBackendDeadline) {
-            const parsed = parseCalendarDate(rawBackendDeadline);
-            if (parsed?.isValid()) return parsed.startOf('day');
-        }
-
-        const deadlineDays = statusDeadlineDaysMap[normalizedStepTitle] ?? statusDeadlineDaysMap[stepTitle];
-        if (!Number.isFinite(deadlineDays)) return null;
-
-        const preferredDate = app.preferredDate ? dayjs(app.preferredDate) : null;
-        if (deadlineDays === 0 && preferredDate?.isValid()) {
-            return preferredDate.startOf('day');
-        }
-
-        const setDate = providedSetDate || getStepSetDateForTitle(app, normalizedStepTitle) || getStepSetDateForTitle(app, stepTitle);
-        if (!setDate?.isValid()) return null;
-
-        return setDate.add(deadlineDays, 'day').startOf('day');
+        const step = application.processSteps[stepTitle];
+        return {
+            setDate: step.setDate ? dayjs(step.setDate) : null,
+            deadlineDate: step.deadlineDate ? dayjs(step.deadlineDate) : null,
+        };
     };
 
-    // Return the day the current status was set on the application (startOf day).
-    // Falls back to updatedAt or createdAt when no explicit history entry exists.
+    // Compute status set date and deadline for client view
+    const statusDeadlineDaysMap = {
+        'Payment Completed': 5,
+    };
+
+    const appointmentDate = application?.preferredDate
+        ? dayjs(application.preferredDate)
+        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
+            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
+            : null;
+
+    const appointmentOptions = Array.isArray(application?.suggestedAppointmentSchedules)
+        ? application.suggestedAppointmentSchedules
+        : [];
+
     const getStatusSetDate = (app) => {
         if (!app) return null;
-        const history = Array.isArray(app.statusHistory) ? app.statusHistory : [];
-        for (let i = history.length - 1; i >= 0; i--) {
-            const entry = history[i];
-            if (!entry) continue;
-            if (String(entry.status || '').trim().toLowerCase() === String(app.status || '').trim().toLowerCase() && entry.changedAt) {
-                return dayjs(entry.changedAt).startOf('day');
+        const history = app.statusHistory;
+        if (Array.isArray(history) && history.length > 0) {
+            for (let i = history.length - 1; i >= 0; i--) {
+                const h = history[i];
+                if (String(h.status).toLowerCase() === String(app.status).toLowerCase()) {
+                    return dayjs(h.changedAt);
+                }
             }
         }
-        if (app.updatedAt) return dayjs(app.updatedAt).startOf('day');
-        if (app.createdAt) return dayjs(app.createdAt).startOf('day');
+        if (app.statusUpdatedAt) return dayjs(app.statusUpdatedAt);
+        if (app.updatedAt) return dayjs(app.updatedAt);
+        if (app.createdAt) return dayjs(app.createdAt);
         return null;
     };
+
+    const openDocument = (url) => {
+        if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
+    };
+
+    const isImageSource = (fileOrUrl) => {
+        const value = typeof fileOrUrl === 'string'
+            ? fileOrUrl
+            : fileOrUrl?.uri || fileOrUrl?.name || fileOrUrl?.mimeType || '';
+
+        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value) || String(fileOrUrl?.mimeType || '').startsWith('image/') || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
+    };
+
+    const getUploadedDocumentEntries = () => {
+        const docs = application?.submittedDocuments || {
+            birthCertificate: application?.birthCertificate,
+            applicationForm: application?.applicationForm,
+            govId: application?.govId,
+        } || {};
+        return Object.entries(docs).filter(([, value]) => Boolean(value));
+    };
+
+    const passportRequirements = [
+        { key: 'birthCertificate', label: 'PSA Birth Certificate' },
+        { key: 'birthCert', label: 'PSA Birth Certificate' },
+        { key: 'applicationForm', label: 'Application Form' },
+        { key: 'govId', label: 'Government-issued ID' },
+    ];
 
     // Get the most recent staff/admin who changed the status (if available)
     const getManagerName = (app) => {
@@ -462,17 +464,33 @@ export default function PassportProgress() {
             if (!app) return null;
             const history = app.statusHistory;
             if (Array.isArray(history) && history.length > 0) {
-                const last = history[history.length - 1];
-                // If backend populated changedBy, it may be an object with firstname/lastname
-                if (last.changedBy && typeof last.changedBy === 'object') {
-                    const first = last.changedBy.firstname || last.changedBy.username || '';
-                    const lastn = last.changedBy.lastname || '';
-                    const full = [first, lastn].map(s => (s || '').trim()).filter(Boolean).join(' ');
-                    if (full) return full;
+                const applicantId = String(app.userId?._id || app.userId || '');
+                const applicantName = String(app.username || '').trim().toLowerCase();
+
+                for (let i = history.length - 1; i >= 0; i -= 1) {
+                    const entry = history[i];
+                    const changedById = String(entry?.changedBy?._id || entry?.changedBy || '');
+                    const changedByName = String(entry?.changedByName || '').trim();
+
+                    if (applicantId && changedById && changedById === applicantId) {
+                        continue;
+                    }
+
+                    if (changedByName && applicantName && changedByName.toLowerCase() === applicantName) {
+                        continue;
+                    }
+
+                    if (entry?.changedBy && typeof entry.changedBy === 'object') {
+                        const first = entry.changedBy.firstname || entry.changedBy.username || '';
+                        const lastn = entry.changedBy.lastname || '';
+                        const full = [first, lastn].map(s => (s || '').trim()).filter(Boolean).join(' ');
+                        if (full) return full;
+                    }
+
+                    if (changedByName) return changedByName;
+                    if (entry?.changedBy && typeof entry.changedBy === 'string') return entry.changedBy;
                 }
-                // Fallback to recorded changedByName or plain changedBy (string)
-                if (last.changedByName) return last.changedByName;
-                if (last.changedBy && typeof last.changedBy === 'string') return last.changedBy;
+
                 return null;
             }
             return null;
@@ -482,7 +500,25 @@ export default function PassportProgress() {
     };
 
     const currentStatusSetDate = getStatusSetDate(application);
-    const statusDeadlineDate = getStepDeadlineDate(application, appStatus, currentStatusSetDate);
+    const statusSetDate = currentStatusSetDate; // alias for compatibility with other components
+    const appStatus = (application?.status || '').toString();
+    const deadlineDays = application?.statusDeadlineDays ?? statusDeadlineDaysMap[application?.status] ?? null;
+    let statusDeadlineDate = application?.statusDeadlineDate
+        ? dayjs(application.statusDeadlineDate)
+        : appointmentDate && Number.isFinite(deadlineDays)
+            ? appointmentDate.subtract(deadlineDays, 'day').startOf('day')
+            : null;
+
+    if (String(application?.status || '').toLowerCase() === 'payment completed' && application?.secondChance && application?.secondDeadline) {
+        statusDeadlineDate = dayjs(application.secondDeadline);
+    }
+    const penaltyStateLabel = application?.reachedSecondDeadline
+        ? 'Penalty Expired'
+        : application?.secondChance
+            ? 'Penalty Paid'
+            : application?.onPenalty
+                ? 'On Penalty'
+                : null;
 
     const [hasProcessedRejection, setHasProcessedRejection] = useState(false);
 
@@ -498,16 +534,15 @@ export default function PassportProgress() {
             setHasProcessedRejection(true);
             const updateStatus = async () => {
                 try {
-                    await apiFetch.put(
-                        `/passport/applications/${applicationId}/status`,
+                    await api.put(
+                        `/passport/applications/${id}/status`,
                         { status: 'Rejected' },
-                        { withCredentials: true }
+                        withUserHeader(user?._id)
                     );
-                    notification.warning({
-                        message: 'Application Rejected',
-                        description: 'Your application has been rejected due to missed deadline.',
-                        placement: 'topRight'
-                    });
+                    Alert.alert(
+                        'Application Rejected',
+                        'Your application has been rejected due to missed deadline.'
+                    );
                     setApplication(prev => ({ ...prev, status: 'Rejected' }));
                 } catch (err) {
                     console.error('Failed to auto-reject application:', err);
@@ -515,10 +550,128 @@ export default function PassportProgress() {
             };
             updateStatus();
         }
-    }, [statusDeadlineDate, application, hasProcessedRejection, applicationId]);
+    }, [statusDeadlineDate, application, hasProcessedRejection, id]);
+
+    //for payment
+    const pickProofImage = async () => {
+        try {
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+                Alert.alert('Permission required', 'Please allow photo library access to upload your receipt.');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 0.8,
+            });
+
+            if (result.canceled || !result.assets?.length) {
+                return;
+            }
+
+            const asset = result.assets[0];
+            setProofImage({
+                uri: asset.uri,
+                name: asset.fileName || asset.name || `receipt-${Date.now()}.jpg`,
+                type: asset.mimeType || 'image/jpeg',
+            });
+        } catch (error) {
+            console.error('Failed to pick proof image:', error);
+            Alert.alert('Error', 'Could not open the photo library.');
+        }
+    };
+
+    const handleUploadChange = ({ fileList: newFileList }) => {
+        if (newFileList.length > 1) {
+            newFileList = [newFileList[newFileList.length - 1]];
+        }
+
+        newFileList = newFileList.map(file => {
+            if (!file.preview && file.originFileObj) {
+                file.preview = URL.createObjectURL(file.originFileObj);
+            }
+            return file;
+        });
+
+        setFileList(newFileList);
+    };
 
 
+    //SUBMIT PAYMENT
+    const handleSubmitPayment = async () => {
+        if (method === 'manual' && !proofImage) {
+            Alert.alert('Warning', 'Please upload a receipt first.');
+            return;
+        }
 
+        try {
+            setPaymentLoading(true);
+
+            if (method === 'manual') {
+
+                const formData = new FormData();
+                formData.append('file', proofImage);
+
+                const uploadRes = await api.post('/upload/upload-receipt', formData, withUserHeader(user._id));
+
+                const imageUrl = uploadRes.data.url;
+
+                const amountToPay = application?.onPenalty ? 1500 : 2000;
+                const endpoint = application?.onPenalty ? '/payment/manual-passport-penalty' : '/payment/manual-passport';
+                const paymentRes = await api.post(endpoint, {
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
+                    amount: amountToPay,
+                    proofImage: imageUrl,
+                }, withUserHeader(user._id));
+
+
+                Linking.openURL(paymentRes.data.redirectUrl);
+                Alert.alert('Success', 'Manual payment submitted successfully. Awaiting verification.');
+                setPaymentCompleted(true);
+                setProofImage(null);
+
+            } else if (method === 'paymongo') {
+                // Make sure application exists
+
+
+                if (!application) {
+                    Alert.alert('Error', 'Application not found.');
+                    return;
+                }
+
+
+                const payload = {
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
+                };
+
+
+                // Send request to create checkout session
+                const endpoint = application?.onPenalty ? '/payment/create-checkout-session-passport-penalty' : '/payment/create-checkout-session-passport';
+                const paymongoResponse = await api.post(endpoint, payload, withUserHeader(user._id));
+                const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
+                // Redirect user to PayMongo checkout
+
+                if (checkoutUrl) {
+                    Linking.openURL(checkoutUrl);
+                } else {
+                    console.error("PayMongo Response Structure:", paymongoResponse);
+                    throw new Error("Failed to create PayMongo checkout session - URL missing");
+                }
+            }
+
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Payment failed');
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
+    const handleStartPayment = handleSubmitPayment;
 
 
 
@@ -591,217 +744,273 @@ export default function PassportProgress() {
         );
     };
 
-    const handleStartPayment = async () => {
-        if (!paymentAmount || Number.isNaN(Number(paymentAmount)) || Number(paymentAmount) <= 0) {
-            Alert.alert('Error', 'Please enter a valid payment amount.');
+    //RENDER UPLOAD DOCUMENTS
+    const renderReadOnlyFile = (url, label) => {
+        // Check if the URL contains '.pdf' (case insensitive)
+        const isPdf = typeof url === 'string' && url.toLowerCase().split(/[?#]/)[0].endsWith('.pdf');
+
+        const handleDownload = () => {
+            if (!url) return;
+            const downloadUrl = url.includes('cloudinary.com')
+                ? url.replace('/upload/', '/upload/fl_attachment/')
+                : url;
+            window.location.href = downloadUrl;
+        };
+
+        if (!url) {
+            return <div style={{ fontSize: 13, color: '#6b7280' }}>No file</div>;
+        }
+
+        return (
+            <View style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 320 }}>
+                <TouchableOpacity
+                    onPress={() => handlePreview(url)}
+                >
+                    <Text style={{ color: '#305797', fontSize: 12 }}>Preview File</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={handleDownload}
+                >
+                    <Text style={{ color: '#305797', fontSize: 12 }}>Download {isPdf ? 'PDF' : 'File'}</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+
+    const getRequirementPreviewFile = (key) => {
+        const submittedDocuments = application?.submittedDocuments || application?.documents || {};
+
+        switch (key) {
+            case 'birthCert':
+                return selectedFiles.birthCert || birthCertList[0] || submittedDocuments.birthCertificate || application?.birthCertificate || null;
+            case 'applicationForm':
+                return selectedFiles.applicationForm || applicationFormList[0] || submittedDocuments.applicationForm || application?.applicationForm || null;
+            case 'govId':
+                return selectedFiles.govId || govIdList[0] || submittedDocuments.govId || application?.govId || null;
+            default:
+                return null;
+        }
+    };
+
+    const uploadedDocuments = application?.submittedDocuments || application?.documents || {};
+
+    //HANDLE PREVIEW FOR UPLOADED FILES
+    const handlePreview = (file) => {
+        const src = typeof file === 'string'
+            ? file
+            : file.preview || file.url || (file.originFileObj ? URL.createObjectURL(file.originFileObj) : null);
+        if (src) {
+            window.open(src, '_blank', 'noopener,noreferrer');
+            return;
+        }
+        Alert.alert('Error', 'Preview unavailable');
+    };
+
+    //ADD PREVIEW URL TO FILES FOR UPLOADED DOCUMENTS
+    const withPreview = (newList) =>
+        newList.map((file) => {
+            if (!file.preview && file.originFileObj) {
+                file.preview = URL.createObjectURL(file.originFileObj);
+            }
+            return file;
+        });
+
+    const beforeRequirementUpload = (file) => {
+        const isLt3M = file.size / 1024 / 1024 < 3;
+        if (!isLt3M) {
+            Alert.alert('Error', 'Image/PDF must be smaller than 3MB!');
+        }
+        return isLt3M || Upload.LIST_IGNORE;
+    };
+
+    //HANDLE SUBMISSION OF UPLOADED DOCUMENTS
+    const handleSubmit = async () => {
+        if (uploading || uploadingAll) {
+            Alert.alert('Warning', "Please wait until uploads finish");
             return;
         }
 
-        if (paymentMethod === 'manual' && !proofImage) {
-            Alert.alert('Missing Proof', 'Please upload a photo of your deposit slip.');
+        if (!resubmissionRequested) {
+            if (!selectedFiles.birthCert || !selectedFiles.applicationForm || !selectedFiles.govId) {
+                Alert.alert('Warning', "Please upload the required documents before submitting.");
+                return;
+            }
+        } else {
+            if (requestedResubmissionTargets.length === 0) {
+                Alert.alert('Warning', "No document is currently marked for resubmission.");
+                return;
+            }
+            if (!requestedResubmissionTargets.some(hasSelectedFileForTarget)) {
+                Alert.alert('Warning', "Please upload the requested document before submitting.");
+                return;
+            }
+        }
+        try {
+            setUploading(true);
+            setUploadingAll(true);
+
+            const formData = new FormData();
+
+            const appendedOrder = [];
+            if (selectedFiles.birthCert && isRequestedResubmissionTarget('birthCert')) {
+                formData.append('files', selectedFiles.birthCert);
+                appendedOrder.push('birthCertificate');
+            }
+
+            if (selectedFiles.applicationForm && isRequestedResubmissionTarget('applicationForm')) {
+                formData.append('files', selectedFiles.applicationForm);
+                appendedOrder.push('applicationForm');
+            }
+
+            if (selectedFiles.govId && isRequestedResubmissionTarget('govId')) {
+                formData.append('files', selectedFiles.govId);
+                appendedOrder.push('govId');
+            }
+
+
+
+            if (!formData.has('files')) {
+                Alert.alert('Warning', "Please upload the required documents before submitting.");
+                return;
+            }
+
+            const res = await api.post(
+                '/upload/upload-passport-requirements',
+                formData,
+                withUserHeader(user._id)
+            );
+
+            const uploaded = res.data.urls;
+            // Map uploaded urls back to the fields we appended in order
+            const payload = {};
+            let urlIndex = 0;
+            appendedOrder.forEach((key) => {
+                const url = uploaded[urlIndex];
+                if (!url) return;
+                payload[key] = url;
+                urlIndex += 1;
+            });
+
+            await api.put(`/passport/applications/${id}/documents`, payload, withUserHeader(user._id));
+
+            // reset
+            setBirthCertList([]);
+            setApplicationFormList([]);
+            setGovIdList([]);
+
+            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
+            const refreshed = allApps.data.find(app => app._id === id);
+            setApplication(refreshed);
+
+            setSelectedFiles({});
+            setBirthCertList([]);
+            setApplicationFormList([]);
+            setGovIdList([]);
+            setIsDocumentsUploadedModalOpen(true);
+            setShowDocumentsSuccessModal(true);
+        } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Failed to submit documents');
+        } finally {
+            setUploading(false);
+            setUploadingAll(false);
+        }
+    };
+
+    //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
+    const handleConfirmSuggested = async () => {
+        if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
+            Alert.alert('Notice', 'Please select an appointment option first.');
             return;
+        }
+
+        let dateToSend = null;
+        let timeToSend = null;
+
+        if (selectedSuggestedIndex === 'others') {
+            if (!customDateTime.date || !customDateTime.time) {
+                Alert.alert('Error', 'Please fill in all custom date and time fields.');
+                return;
+            }
+
+            dateToSend = dayjs(customDateTime.date).format('YYYY-MM-DD');
+            timeToSend = customDateTime.time.format('h:mm A');
+
+        } else if (typeof selectedSuggestedIndex === 'number') {
+            const selected = application.suggestedAppointmentSchedules[selectedSuggestedIndex];
+
+            if (!selected?.date || !selected?.time) {
+                Alert.alert('Error', 'Selected option is missing date or time.');
+                return;
+            }
+
+            dateToSend = dayjs(selected.date).format('YYYY-MM-DD');
+            timeToSend = selected.time;
         }
 
         try {
-            setCreatingPayment(true);
+            setConfirmingSuggested(true);
 
-            if (paymentMethod === 'manual') {
-                const receiptFormData = new FormData();
-                const filename = proofImage?.fileName || proofImage?.uri?.split('/').pop() || 'deposit_slip.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = proofImage?.mimeType || (match ? `image/${match[1]}` : 'image/jpeg');
-
-                receiptFormData.append('file', {
-                    uri: proofImage.uri,
-                    name: filename,
-                    type,
-                });
-
-                const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
-                const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
-
-                if (!proofUrl) {
-                    throw new Error('Failed to upload proof of payment');
-                }
-
-                const manualPayload = {
-                    applicationId: application._id,
-                    applicationNumber: application.applicationNumber,
-                    amount: Number(paymentAmount),
-                    proofImage: proofUrl,
-                };
-
-                await api.post('/payment/manual-passport', manualPayload, withUserHeader(user._id));
-                cs.navigate('successfulmanualpaymentpassport');
-                return;
-            }
-
-            // 1) create a short-lived checkout token
-            const tokenRes = await api.post('/payment/create-checkout-token', {
-                totalPrice: Number(paymentAmount),
-                bookingId: application._id
+            await api.put(`/passport/applications/${id}/choose-appointment`, {
+                date: dateToSend,
+                time: timeToSend
             }, withUserHeader(user._id));
 
-            const token = tokenRes.data?.token;
-            if (!token) throw new Error('Failed to create checkout token');
+            // optional: keep state in sync
+            setSelectedDate(dateToSend);
+            setSelectedTime(timeToSend);
 
-            // 2) create checkout session using the token
-            const sessionRes = await api.post('/payment/create-checkout-session-passport', {
-                checkoutToken: token,
-                totalPrice: Number(paymentAmount),
-                packageName: 'Passport Application',
-                applicationId: application._id,
-                applicationNumber: application.applicationNumber,
-                successUrl: '',
-                cancelUrl: ''
-            }, withUserHeader(user._id));
-
-            const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
-
-            console.log('CHECKOUT URL:', hostedUrl);
-
-            if (!hostedUrl) {
-                Alert.alert('Error', 'No checkout URL received');
-                return;
-            }
-
-            const canOpen = await Linking.canOpenURL(hostedUrl);
-
-            if (canOpen) {
-                await Linking.openURL(hostedUrl);
-            } else {
-                Alert.alert('Error', 'Cannot open checkout page');
-            }
-
+            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
+            const refreshed = allApps.data.find(app => app._id === id);
+            setApplication(refreshed);
+            setShowAppointmentSuccessModal(true);
+            setIsDateSelectedModalOpen(true);
         } catch (error) {
-            console.error('Payment start error:', error?.response?.data || error.message || error);
-            Alert.alert('Error', 'Failed to initiate payment.');
+            Alert.alert('Error', 'Failed to confirm appointment schedule.');
         } finally {
-            setCreatingPayment(false);
+            setConfirmingSuggested(false);
         }
     };
+    const disableDates = (current) => {
+        const today = dayjs().startOf('day');
+        const twoWeeksFromNow = today.add(14, 'day');
 
-    const appStatus = useMemo(() => {
-        if (!application?.status) return "Application submitted";
-        return Array.isArray(application.status) ? application.status[0] : application.status;
-    }, [application]);
+        return (
+            current &&
+            (
+                current < twoWeeksFromNow ||
+                current.day() === 0 ||
+                current.day() === 6
+            )
+        );
+    };
+    const disabledHours = () => {
+        const hours = [];
+        for (let i = 0; i < 24; i++) {
+            if (i < 8 || i > 17) {
+                hours.push(i);
+            }
+        }
+        return hours;
+    }
 
-    const passportApplicationId = application?._id || applicationId;
 
-    const steps = [
-        "Application Submitted",
-        "Application Approved",
-        "Payment Completed",
-        "Documents Uploaded",
-        "Documents Approved",
-        "Documents Received",
-        "Documents Submitted",
-        "Processing by DFA",
-        "DFA Approved",
-        "Passport Released"
-    ];
-
-    // Auto-reject application if deadline is passed
+    //IF NO ID IN URL, GO BACK TO USER APPLICATIONS
     useEffect(() => {
-        if (!application || !statusDeadlineDate || hasProcessedRejection) return;
-
-        const terminalStatuses = ['Rejected', 'Passport Released'];
-        if (terminalStatuses.includes(application.status)) return;
-
-        const isDeadlinePassed = statusDeadlineDate.isBefore(dayjs(), 'day');
-        if (isDeadlinePassed) {
-            setHasProcessedRejection(true);
-            const updateStatus = async () => {
-                try {
-                    await api.put(
-                        `/passport/applications/${passportApplicationId}/status`,
-                        { status: 'Rejected' },
-                        withUserHeader(user?._id)
-                    );
-                    setApplication(prev => ({ ...prev, status: 'Rejected' }));
-                } catch (err) {
-                    console.error('Failed to auto-reject application:', err);
-                }
-            };
-            updateStatus();
+        if (!id) {
+            navigation.navigate('Home');
         }
-    }, [statusDeadlineDate, application, hasProcessedRejection, passportApplicationId, user?._id]);
+    }, [id, navigation]);
 
-    const currentStepIndex = useMemo(() => {
-        const index = steps.findIndex(s => s.toLowerCase() === appStatus.toLowerCase());
-        return Math.max(0, index);
-    }, [steps, appStatus]);
 
-    const stepTimeline = useMemo(() => {
-        return steps.map((step, index) => {
-            const stepData = getProcessStepData(application, step);
-            const setDate = stepData?.setDate ? parseCalendarDate(stepData.setDate) : getStepSetDateForTitle(application, step);
-            const deadlineDate = stepData?.deadlineDate
-                ? parseCalendarDate(stepData.deadlineDate)
-                : getStepDeadlineDate(application, step, setDate);
-            const daysLeft = deadlineDate
-                ? deadlineDate.diff(dayjs().startOf('day'), 'day')
-                : null;
+    //UPLOAD DOCUMENTS SECTION STATUS CONDITION
+    const status = application?.status?.toLowerCase();
 
-            return {
-                step,
-                index,
-                setDate,
-                deadlineDate,
-                daysLeft,
-                isCompleted: index <= currentStepIndex,
-                isActive: index === currentStepIndex,
-                isLast: index === steps.length - 1,
-            };
-        });
-    }, [application, currentStepIndex, steps]);
-
-    const appointmentOptions = useMemo(() => {
-        if (Array.isArray(application?.suggestedAppointmentSchedules) && application.suggestedAppointmentSchedules.length > 0) {
-            return application.suggestedAppointmentSchedules;
-        }
-
-        return [];
-    }, [application]);
-
-    const passportRequirements = useMemo(() => {
-        const base = [
-            { key: 'passportPhoto', label: 'Passport Photo' },
-            { key: 'birthCertificate', label: 'Birth Certificate' },
-            { key: 'applicationForm', label: 'Application Form' },
-            { key: 'govId', label: 'Government ID' },
-        ];
-
-        const type = String(application?.applicationType || '').toLowerCase();
-        const isRenewal = /renew/i.test(type) || /renewal/i.test(type);
-
-        if (isRenewal) base.push({ key: 'oldPassport', label: 'Old Passport' });
-
-        return base;
-    }, [application?.applicationType]);
-
-    const isOthersSelected = selectedScheduleIndex === 'others';
-    const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
-        !isOthersSelected || (customPreferredDate && customPreferredTime)
-    );
-
-    const handleCustomDateChange = (_event, selectedDate) => {
-        if (selectedDate) {
-            setCustomPreferredDate(selectedDate);
-        }
-        if (Platform.OS !== 'ios') {
-            setShowCustomDatePicker(false);
-        }
-    };
-
-    const handleCustomTimeChange = (_event, selectedTime) => {
-        if (selectedTime) {
-            setCustomPreferredTime(selectedTime);
-        }
-        if (Platform.OS !== 'ios') {
-            setShowCustomTimePicker(false);
-        }
-    };
+    const shouldShow =
+        status === 'payment completed' ||
+        application?.secondChance === true;
 
     if (loading) {
         return (
@@ -816,7 +1025,7 @@ export default function PassportProgress() {
         return (
             <View style={{ flex: 1, backgroundColor: '#f5f7fa', justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: '#6b7280' }}>Application not found.</Text>
-                <TouchableOpacity onPress={() => cs.goBack()} style={{ marginTop: 20, padding: 10, backgroundColor: '#305797', borderRadius: 8 }}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20, padding: 10, backgroundColor: '#305797', borderRadius: 8 }}>
                     <Text style={{ color: '#fff' }}>Go Back</Text>
                 </TouchableOpacity>
             </View>
@@ -831,7 +1040,7 @@ export default function PassportProgress() {
             <ScrollView contentContainerStyle={PassportProgressStyle.scrollContent} showsVerticalScrollIndicator={false}>
 
                 <View style={PassportProgressStyle.headerContainer}>
-                    <TouchableOpacity onPress={() => cs.goBack()} style={PassportProgressStyle.backButton}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={PassportProgressStyle.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#1f2937" />
                     </TouchableOpacity>
                     <Text style={PassportProgressStyle.title}>Passport Details</Text>

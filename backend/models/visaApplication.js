@@ -36,6 +36,8 @@ const visaApplicationSchema = new mongoose.Schema({
     time: { type: String, default: "" }
   },
   submittedDocuments: { type: Object },
+  resubmissionTarget: { type: String, default: null },
+  resubmissionTargets: [{ type: String }],
   passportReleaseOption: { type: String },
   deliveryAddress: { type: String },
   deliveryFee: { type: Number, default: 0 },
@@ -44,11 +46,28 @@ const visaApplicationSchema = new mongoose.Schema({
     type: [String],
     default: ["Application Submitted"],
   },
+  statusHistory: [{
+    status: { type: String },
+    changedAt: { type: Date },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+    changedByName: { type: String }
+  }],
+  deadlineWarnings: [{
+    status: { type: String },
+    deadlineDate: { type: String },
+    warnedAt: { type: Date }
+  }],
+  processSteps: { type: mongoose.Schema.Types.Mixed, default: {} },
+  onPenalty: { type: Boolean, default: false },
+  penaltyDeadline: { type: String, default: "" },
+  secondDeadline: { type: String, default: "" },
+  secondChance: { type: Boolean, default: false },
+  reachedSecondDeadline: { type: Boolean, default: false },
   currentStepIndex: { type: Number, default: 0 },
 },
   { timestamps: true, collection: "visas", strict: false });
 
-const VisaApplicationModel =
+const VisaModel =
   mongoose.models.visas || mongoose.model("visas", visaApplicationSchema);
 
-export default VisaApplicationModel;
+export default VisaModel;

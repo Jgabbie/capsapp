@@ -68,6 +68,11 @@ const passportSchema = new mongoose.Schema(
     // Stored as an object keyed by status name, e.g.
     // { "Application Submitted": { setDate: '2026-05-10', deadlineDate: '2026-05-12' }, ... }
     processSteps: { type: mongoose.Schema.Types.Mixed, default: {} },
+    onPenalty: { type: Boolean, default: false },
+    penaltyDeadline: { type: String, default: "" },
+    secondChance: { type: Boolean, default: false },
+    secondDeadline: { type: String, default: "" },
+    reachedSecondDeadline: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true, collection: "passports", strict: false });

@@ -1,10 +1,10 @@
-import VisaServiceModel from "../models/visaService.js";
+import ServiceModel from "../models/visaService.js";
 
 
 
 export const getAllServices = async (_req, res) => {
   try {
-    const services = await VisaServiceModel.find({}).sort({ createdAt: -1 });
+    const services = await ServiceModel.find({}).sort({ createdAt: -1 });
 
     const servicesPayload = services.map(service => ({
       visaItem: service._id, // Web uses visaItem for the ID
@@ -27,7 +27,7 @@ export const getAllServices = async (_req, res) => {
 export const getService = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await VisaServiceModel.findById(id);
+    const service = await ServiceModel.findById(id);
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }

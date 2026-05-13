@@ -59,6 +59,170 @@ export default function VisaProgress() {
     const [savingReleaseOption, setSavingReleaseOption] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
 
+    // Additional local state used by helper functions
+    // alias for api used across file
+    const apiFetch = api;
+    // id alias
+    const id = applicationId;
+
+    const [process, setProcess] = useState([]);
+    const [requirements, setRequirements] = useState([]);
+    const [steps, setSteps] = useState([]);
+    const [fileList, setFileList] = useState([]);
+    const [requirementFiles, setRequirementFiles] = useState({});
+    const [uploading, setUploading] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [deliveryFeePendingManualPayment, setDeliveryFeePendingManualPayment] = useState(false);
+    const [deliveryFeePaid, setDeliveryFeePaid] = useState(false);
+    const [pendingManualPayment, setPendingManualPayment] = useState(false);
+    const [servicePendingManualPayment, setServicePendingManualPayment] = useState(false);
+
+    // Modal / UI flags used by functions
+    const [isConfirmDocumentsOpen, setIsConfirmDocumentsOpen] = useState(false);
+    const [isDocumentsUploadedModalOpen, setIsDocumentsUploadedModalOpen] = useState(false);
+    const [isDateSelectedModalOpen, setIsDateSelectedModalOpen] = useState(false);
+    const [isPassportReleaseOptionSelectedModalOpen, setIsPassportReleaseOptionSelectedModalOpen] = useState(false);
+
+    // navigation alias used in some functions
+    const navigate = (path) => {
+        try {
+            const routeName = typeof path === 'string' ? path.replace(/^\//, '') : path;
+            cs.navigate(routeName);
+        } catch (e) {
+            cs.goBack && cs.goBack();
+        }
+    };
+
+    // simple notification shim using Alert
+    const notification = {
+        error: ({ message }) => Alert.alert('Error', String(message || '')),
+        warning: ({ message }) => Alert.alert('Warning', String(message || '')),
+        success: ({ message }) => Alert.alert('Success', String(message || '')),
+    };
+
+    // keep compatibility with some code that uses `method` and `setMethod`
+    const method = paymentMethod;
+    const setMethod = setPaymentMethod;
+
+    // appointment selection state (some parts of the file use a different name)
+    const [selectedSuggestedIndex, setSelectedSuggestedIndex] = useState(null);
+    useEffect(() => {
+        // keep both schedule selection states in sync
+        if (selectedScheduleIndex !== null) setSelectedSuggestedIndex(selectedScheduleIndex);
+    }, [selectedScheduleIndex]);
+
+    // derive status text used in several helpers
+    const statusText = application?.status || application?.statusText || '';
+    const appStatus = statusText || '';
+
+    // keep steps derived from process to support legacy variable `steps`
+    useEffect(() => {
+        setSteps(Array.isArray(process) ? process : []);
+    }, [process]);
+
+    const isOthersSelected = selectedSuggestedIndex === 'others';
+    const canConfirmSchedule = selectedSuggestedIndex !== null && (selectedSuggestedIndex !== 'others' || (customPreferredDate && customPreferredTime));
+    const [confirmingSuggested, setConfirmingSuggested] = useState(false);
+
+    // selected appointment values
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedTime, setSelectedTime] = useState(null);
+
+    const handleConfirmSchedule = handleConfirmSuggested;
+
+    const handleCustomDateChange = (event, date) => {
+        setShowCustomDatePicker(false);
+        if (date) setCustomPreferredDate(date);
+    };
+
+    const handleCustomTimeChange = (event, time) => {
+        setShowCustomTimePicker(false);
+        if (time) setCustomPreferredTime(time);
+    };
+
+    const pickProofImage = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+            if (!result.cancelled) {
+                setProofImage({ uri: result.uri });
+            }
+        } catch (e) {
+            console.error(e);
+            notification.error({ message: 'Could not pick image' });
+        }
+    };
+
+    const handleStartPayment = async () => {
+        // Delegate to existing payment handler
+        await handleSubmitPayment();
+    };
+
+    const pickRequirementFile = async (key) => {
+        try {
+            const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+            if (res.type === 'success') {
+                const fileObj = {
+                    uid: String(Date.now()),
+                    name: res.name,
+                    url: res.uri,
+                    originFileObj: { uri: res.uri, name: res.name, size: res.size, type: res.mimeType }
+                };
+                setRequirementFiles(prev => ({ ...prev, [key]: [fileObj] }));
+                setSelectedFiles(prev => ({ ...prev, [key]: fileObj }));
+                notification.success({ message: 'File selected' });
+            }
+        } catch (e) {
+            console.error(e);
+            notification.error({ message: 'Failed to pick file' });
+        }
+    };
+
+    const renderRequirementItem = (req, idx) => {
+        const key = req.key || req.req || req.label || `requirement-${idx}`;
+        const label = getRequirementLabel(key, idx);
+        const hasFile = Boolean(requirementFiles[key]?.length || selectedFiles[key]);
+
+        return (
+            <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
+                <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{label}</Text>
+                <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                    <TouchableOpacity onPress={() => pickRequirementFile(key)} style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8 }}>
+                        <Text style={{ color: '#305797' }}>{hasFile ? 'Change File' : 'Select File'}</Text>
+                    </TouchableOpacity>
+                    {hasFile && <Text style={{ color: '#6b7280', fontSize: 12 }}>Ready to submit</Text>}
+                </View>
+            </View>
+        );
+    };
+
+    const submitAllSelectedFiles = async () => {
+        if (!selectedFiles || Object.keys(selectedFiles).length === 0) {
+            notification.warning({ message: 'No files selected' });
+            return;
+        }
+        try {
+            setUploadingAll(true);
+        } catch (e) { }
+        try {
+            const formData = new FormData();
+            Object.keys(selectedFiles).forEach(k => {
+                const f = selectedFiles[k];
+                if (f?.originFileObj) formData.append('files', f.originFileObj);
+            });
+            const uploadRes = await apiFetch.post('/upload/upload-visa-requirements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            // minimal: refresh application
+            const refreshed = await apiFetch.get(`/visa/applications/${id}`);
+            setApplication(refreshed);
+            setUploadingAll(false);
+            notification.success({ message: 'Files submitted' });
+        } catch (e) {
+            console.error(e);
+            setUploadingAll(false);
+            notification.error({ message: 'Failed to submit files' });
+        }
+    };
+
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
             return { date: '', time: '' };
@@ -81,314 +245,70 @@ export default function VisaProgress() {
         return { date, time };
     };
 
-    const fetchApplicationDetails = async () => {
-        if (!user?._id || !applicationId) return;
-
+    // Normalize legacy process steps into an array for UI mapping
+    const normalizeVisaProcessSteps = (raw) => {
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
         try {
-            setLoading(true);
-
-            const appRes = await api.get('/visa/applications', withUserHeader(user._id));
-            const appData = appRes.data.find(app => app._id === applicationId);
-
-            if (!appData) throw new Error("Application not found in your list.");
-
-            setApplication(appData);
-            setPassportReleaseOption(String(appData.passportReleaseOption || 'pickup').toLowerCase());
-            setDeliveryAddress(appData.deliveryAddress || '');
-
-            if (appData?.serviceId) {
-                const serviceId = appData.serviceId._id || appData.serviceId;
-                const servRes = await api.get(`/visa-services/get-service/${serviceId}`, withUserHeader(user._id));
-
-                setServicePrice(servRes.data?.visaPrice || 0);
-                setServiceRequirements(Array.isArray(servRes.data?.visaRequirements) ? servRes.data.visaRequirements : []);
-                setServiceAdditionalRequirements(Array.isArray(servRes.data?.visaAdditionalRequirements) ? servRes.data.visaAdditionalRequirements : []);
-
-                if (servRes.data?.visaProcessSteps && servRes.data.visaProcessSteps.length > 0) {
-                    setDynamicSteps(servRes.data.visaProcessSteps);
-                }
-            }
-        } catch (error) {
-            console.log("Error fetching details:", error.message);
-            Alert.alert('Error', 'Unable to load application details.');
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchApplicationDetails();
-    }, [user?._id, applicationId]);
-
-
-    const handleConfirmSchedule = async () => {
-        if (selectedScheduleIndex === null) {
-            Alert.alert("Notice", "Please select an appointment option first.");
-            return;
-        }
-
-        const isOthersOption = selectedScheduleIndex === 'others';
-        const selected = isOthersOption
-            ? {
-                date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
-                time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
-            }
-            : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
-
-        if (!selected?.date || !selected?.time) {
-            Alert.alert("Error", "Please provide both date and time.");
-            return;
-        }
-
-        try {
-            setConfirmingSchedule(true);
-            await api.put(`/visa/applications/${application._id}/choose-appointment`, {
-                date: selected.date,
-                time: selected.time
-            }, withUserHeader(user._id));
-
-            Alert.alert("Success", "Appointment schedule confirmed!");
-            setSelectedScheduleIndex(null);
-            setCustomPreferredDate(null);
-            setCustomPreferredTime(null);
-            setShowCustomDatePicker(false);
-            setShowCustomTimePicker(false);
-
-            await fetchApplicationDetails();
-        } catch (error) {
-            console.log(error);
-            Alert.alert('Error', 'Failed to confirm appointment schedule.');
-        } finally {
-            setConfirmingSchedule(false);
+            return Object.keys(raw).sort().map(k => raw[k]);
+        } catch (e) {
+            return [];
         }
     };
 
-    const appStatus = useMemo(() => {
-        if (!application?.status) return "Pending";
-        if (Array.isArray(application.status)) return String(application.status[application.status.length - 1] || '').trim();
-        return String(application.status || '').trim();
-    }, [application]);
-
-    const openDocument = (url) => {
-        if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
+    const normalizeResubmissionTarget = (target) => {
+        if (!target) return null;
+        return String(target).trim().toLowerCase();
     };
 
-    const isImageSource = (fileOrUrl) => {
-        const value = typeof fileOrUrl === 'string'
-            ? fileOrUrl
-            : fileOrUrl?.uri || fileOrUrl?.name || fileOrUrl?.mimeType || '';
-
-        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value) || String(fileOrUrl?.mimeType || '').startsWith('image/') || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
+    const isImageSource = (val) => {
+        if (!val) return false;
+        return String(val).match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) !== null || String(val).startsWith('data:image');
     };
 
     const getUploadedDocumentEntries = () => {
-        const docs = application?.submittedDocuments || {};
-        return Object.entries(docs).filter(([, value]) => Boolean(value));
+        const docs = application?.submittedDocuments || application?.submitted_documents || {};
+        return Object.entries(docs || {});
     };
 
-    const requirementLabelMap = useMemo(() => {
-        const map = {};
-        const add = (item) => {
-            const text = typeof item === 'object' ? item.req : item;
-            const key = String(text || '')
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '_')
-                .replace(/^_+|_+$/g, '');
-            if (key) map[key] = text;
-        };
-
-        (serviceRequirements || []).forEach(add);
-        (serviceAdditionalRequirements || []).forEach(add);
-
-        return map;
-    }, [serviceRequirements, serviceAdditionalRequirements]);
-
-    const pickProofImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            base64: true,
-            quality: 0.7,
-        });
-
-        if (!result.canceled) {
-            setProofImage(result.assets[0]);
-        }
-    };
-
-    const uploadFilesToBackend = async (endpoint, formData) => {
-        const response = await api.post(endpoint, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                ...withUserHeader(user?._id).headers,
-            },
-        });
-
-        return response.data;
-    };
-
-    const submitAllSelectedFiles = async () => {
-        if (Object.keys(selectedFiles).length === 0) {
-            Alert.alert('Notice', 'Please select at least one document to upload.');
-            return;
-        }
-
+    const openDocument = async (url) => {
+        if (!url) return;
         try {
-            setUploadingAll(true);
+            await Linking.openURL(url);
+        } catch (e) {
+            notification.error({ message: 'Unable to open document' });
+        }
+    };
 
-            // Build FormData with all selected files
-            const formData = new FormData();
-            Object.entries(selectedFiles).forEach(([key, file]) => {
-                const filename = file.name || file.uri.split('/').pop();
-                const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
-                const ext = match ? match[1].toLowerCase() : 'pdf';
-                const mimeType = file.mimeType || (ext === 'pdf' ? 'application/pdf' : `image/${ext}`);
+    const requestedResubmissionTargets = (() => {
+        const targets = [];
 
-                formData.append('files', {
-                    uri: file.uri,
-                    name: filename,
-                    type: mimeType,
-                });
-            });
-
-            // Upload all files
-            const uploadRes = await uploadFilesToBackend('/upload/upload-booking-documents', formData);
-            const uploadedUrls = uploadRes?.uploadedUrls || uploadRes?.urls || [];
-
-            if (!uploadedUrls.length) {
-                throw new Error('Upload failed - no URLs returned');
-            }
-
-            // Map URLs to document keys
-            const documentsPayload = {};
-            const keys = Object.keys(selectedFiles);
-            uploadedUrls.forEach((url, index) => {
-                if (keys[index]) {
-                    documentsPayload[keys[index]] = url;
+        if (Array.isArray(application?.resubmissionTargets)) {
+            application.resubmissionTargets.forEach((target) => {
+                const normalized = normalizeResubmissionTarget(target);
+                if (normalized) {
+                    targets.push(normalized);
                 }
             });
-
-            // Persist to backend
-            await api.put(`/visa/applications/${application._id}/documents`, {
-                submittedDocuments: documentsPayload
-            }, withUserHeader(user?._id));
-
-            // Update local state
-            setUploadedRequirements(prev => ({ ...prev, ...documentsPayload }));
-            setSelectedFiles({});
-            setShowDocumentsSuccessModal(true);
-
-            await fetchApplicationDetails();
-        } catch (error) {
-            console.error('❌ Batch upload error:', error?.response?.data || error.message || error);
-            Alert.alert('Error', 'Failed to upload documents. Please try again.');
-        } finally {
-            setUploadingAll(false);
-        }
-    };
-
-    const handleStartPayment = async () => {
-        if (!servicePrice || Number.isNaN(Number(servicePrice)) || Number(servicePrice) <= 0) {
-            Alert.alert('Error', 'Payment amount is not available yet.');
-            return;
         }
 
-        if (paymentMethod === 'manual' && !proofImage) {
-            Alert.alert('Missing Proof', 'Please upload a photo of your deposit slip.');
-            return;
+        const legacyTarget = normalizeResubmissionTarget(application?.resubmissionTarget);
+        if (legacyTarget) {
+            targets.push(legacyTarget);
         }
 
-        try {
-            setCreatingPayment(true);
+        return [...new Set(targets)];
+    })();
 
-            if (paymentMethod === 'manual') {
-                const receiptFormData = new FormData();
-                const filename = proofImage?.fileName || proofImage?.uri?.split('/').pop() || 'deposit_slip.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = proofImage?.mimeType || (match ? `image/${match[1]}` : 'image/jpeg');
+    const resubmissionRequested = requestedResubmissionTargets.length > 0;
 
-                receiptFormData.append('file', {
-                    uri: proofImage.uri,
-                    name: filename,
-                    type,
-                });
+    const terminalStatuses = new Set(['processing by embassy', 'embassy approved', 'passport released']);
 
-                const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
-                const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
-
-                if (!proofUrl) {
-                    throw new Error('Failed to upload proof of payment');
-                }
-
-                const manualPayload = {
-                    applicationId: application._id,
-                    applicationNumber: application.applicationNumber,
-                    amount: Number(servicePrice),
-                    proofImage: proofUrl,
-                };
-
-                await api.post('/payment/manual-visa', manualPayload, withUserHeader(user._id));
-                cs.navigate('successfulmanualpaymentvisa');
-                return;
-            }
-
-            const sessionRes = await api.post('/payment/create-checkout-session-visa', {
-                totalPrice: Number(servicePrice),
-                applicationId: application._id,
-                applicationNumber: application.applicationNumber
-            }, withUserHeader(user._id));
-
-            const hostedUrl = sessionRes?.data?.data?.attributes?.checkout_url;
-
-            console.log('CHECKOUT URL:', hostedUrl);
-
-            if (!hostedUrl) {
-                Alert.alert('Error', 'No checkout URL received');
-                return;
-            }
-
-            const canOpen = await Linking.canOpenURL(hostedUrl);
-
-            if (canOpen) {
-                await Linking.openURL(hostedUrl);
-            } else {
-                Alert.alert('Error', 'Cannot open checkout page');
-            }
-        } catch (error) {
-            console.error('Payment start error:', error?.response?.data || error.message || error);
-            Alert.alert('Error', 'Failed to initiate payment.');
-        } finally {
-            setCreatingPayment(false);
-        }
-    };
-
-    const steps = useMemo(() => {
-        const source = dynamicSteps.length > 0
-            ? dynamicSteps
-            : [
-                "Application Submitted",
-                "Application Approved",
-                "Payment Completed",
-                "Documents Uploaded",
-                "Documents Approved",
-                "Documents Received",
-                "Documents Submitted",
-                "Processing by Embassy",
-                "Embassy Approved",
-                "Passport Released"
-            ];
-
-        return source
-            .filter(Boolean)
-            .map((step, index) => ({
-                title: String(step?.title || step || `Step ${index + 1}`).trim(),
-                description: typeof step === 'object' && step !== null ? String(step?.description || '') : '',
-                daysToBeCompleted: Number(step?.daysToBeCompleted ?? step?.days ?? 0) || 0,
-            }))
-            .filter(step => Boolean(step.title));
-    }, [dynamicSteps]);
-
-
+    const appointmentDate = application?.preferredDate
+        ? dayjs(application.preferredDate)
+        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
+            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
+            : null;
 
     const getStatusSetDate = (app) => {
         if (!app) return null;
@@ -396,7 +316,7 @@ export default function VisaProgress() {
         if (Array.isArray(history) && history.length > 0) {
             for (let i = history.length - 1; i >= 0; i--) {
                 const h = history[i];
-                if (String(h.status).toLowerCase() === String(appStatus || '').toLowerCase()) {
+                if (String(h.status).toLowerCase() === String(statusText || '').toLowerCase()) {
                     return dayjs(h.changedAt);
                 }
             }
@@ -421,24 +341,54 @@ export default function VisaProgress() {
         return null;
     };
 
-    const getStepDeadlineForTitle = (title) => {
-        if (!title || !application?.createdAt) return null;
+    // Get the most recent staff/admin who changed the status (if available)
+    const getManagerName = (app) => {
+        try {
+            if (!app) return null;
+            const history = app.statusHistory;
+            if (Array.isArray(history) && history.length > 0) {
+                const applicantId = String(app.userId?._id || app.userId || '');
+                const applicantName = String(app.username || '').trim().toLowerCase();
 
-        const cumulativeDays = Number(cumulativeStepDaysMap?.[title]);
-        if (!Number.isFinite(cumulativeDays)) return null;
+                for (let i = history.length - 1; i >= 0; i -= 1) {
+                    const entry = history[i];
+                    const changedById = String(entry?.changedBy?._id || entry?.changedBy || '');
+                    const changedByName = String(entry?.changedByName || '').trim();
 
-        return dayjs(application.createdAt).startOf('day').add(cumulativeDays, 'day');
+                    if (applicantId && changedById && changedById === applicantId) {
+                        continue;
+                    }
+
+                    if (changedByName && applicantName && changedByName.toLowerCase() === applicantName) {
+                        continue;
+                    }
+
+                    if (entry?.changedBy && typeof entry.changedBy === 'object') {
+                        const first = entry.changedBy.firstname || entry.changedBy.username || '';
+                        const lastn = entry.changedBy.lastname || '';
+                        const full = [first, lastn].map(s => (s || '').trim()).filter(Boolean).join(' ');
+                        if (full) return full;
+                    }
+
+                    if (changedByName) return changedByName;
+                    if (entry?.changedBy && typeof entry.changedBy === 'string') return entry.changedBy;
+                }
+
+                return null;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
     };
 
     const statusSetDate = getStatusSetDate(application);
+    const managerName = getManagerName(application);
     const deadlineDays = application?.statusDeadlineDays ?? null;
-    const appointmentDate = application?.preferredDate
-        ? dayjs(application.preferredDate)
-        : application?.suggestedAppointmentScheduleChosen && application.suggestedAppointmentScheduleChosen.date
-            ? dayjs(application.suggestedAppointmentScheduleChosen.date)
-            : null;
-    const cumulativeStepDaysMap = application?.visaStatusTotalDaysMap || {};
-    const statusDeadlineDate = !VISA_TERMINAL_STATUSES.has(String(appStatus || '').toLowerCase())
+    const createdAt = application?.createdAt
+        ? dayjs(application.createdAt).startOf('day')
+        : null;
+    let statusDeadlineDate = !terminalStatuses.has(String(statusText || '').toLowerCase())
         ? (application?.statusDeadlineDate
             ? dayjs(application.statusDeadlineDate)
             : statusSetDate && Number.isFinite(deadlineDays)
@@ -448,184 +398,515 @@ export default function VisaProgress() {
                     : null)
         : null;
 
+    if (String(statusText || '').toLowerCase() === 'payment completed' && application?.secondChance && application?.secondDeadline) {
+        statusDeadlineDate = dayjs(application.secondDeadline);
+    }
+    const penaltyStateLabel = application?.reachedSecondDeadline
+        ? 'Penalty Expired'
+        : application?.secondChance
+            ? 'Penalty Paid'
+            : application?.onPenalty
+                ? 'On Penalty'
+                : null;
 
 
 
+    const checkPendingManualPayment = async () => {
+        try {
+            if (!user || !user._id) return;
+            const transactionsRes = await apiFetch.get(`/transaction/application/${id}`, withUserHeader(user._id));
+            const transactions = Array.isArray(transactionsRes?.data) ? transactionsRes.data : (transactionsRes?.data?.transactions || []);
+            const hasPendingPenalty = transactions.some(
+                (tx) => tx.status === 'Pending' &&
+                    tx.method === 'Manual' &&
+                    (tx.applicationType === 'Visa Penalty Fee')
+            );
 
+            const hasPendingRegularPayment = transactions.some(
+                (tx) => tx.status === 'Pending' &&
+                    tx.method === 'Manual' &&
+                    (tx.applicationType === 'Visa Application')
+            );
 
+            const hasPendingDeliveryFeePayment = transactions.some(
+                (tx) => tx.status === 'Pending' &&
+                    tx.method === 'Manual' &&
+                    (tx.applicationType === 'Delivery Fee')
+            );
 
+            const hasSuccessfulDeliveryFeePayment = transactions.some(
+                (tx) => tx.status === 'Successful' &&
+                    (tx.applicationType === 'Delivery Fee')
+            );
 
+            setDeliveryFeePendingManualPayment(hasPendingDeliveryFeePayment);
+            setDeliveryFeePaid(hasSuccessfulDeliveryFeePayment);
+            setPendingManualPayment(hasPendingPenalty);
+            setServicePendingManualPayment(hasPendingRegularPayment);
+        } catch (err) {
+            console.error('Could not fetch transactions:', err);
+        }
+    };
 
-
-
-
-
-    const currentStepIndex = useMemo(() => {
-        const index = steps.findIndex(step => String(step?.title || '').toLowerCase() === appStatus.toLowerCase());
-        return Math.max(0, index);
-    }, [steps, appStatus]);
-
-    const savePassportReleaseOption = async () => {
-        if (!application?._id) return;
-
-        const normalizedOption = String(passportReleaseOption || '').toLowerCase();
-        if (!normalizedOption) {
-            Alert.alert('Error', 'Please choose Pickup or Delivery.');
+    //FETCH APPLICATION DETAILS
+    useEffect(() => {
+        if (!id || !user || !user._id) {
             return;
         }
 
-        if (normalizedOption === 'delivery' && !deliveryAddress.trim()) {
-            Alert.alert('Error', 'Please enter your delivery address.');
+        const fetchApplication = async () => {
+            setLoading(true);
+            try {
+                const res = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
+                const data = res?.data || res;
+                setApplication(data);
+                setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
+                // If the application has a serviceId, fetch the service for requirements
+                if (data && data.serviceId) {
+                    try {
+                        const serviceId = data.serviceId._id || data.serviceId;
+                        const serviceResEndpoint = `/services/get-service/${serviceId}`;
+                        const serviceRes = await apiFetch.get(serviceResEndpoint, withUserHeader(user._id));
+                        const serviceData = serviceRes?.data || serviceRes;
+                        setRequirements(serviceData.visaRequirements || []);
+                        setServicePrice(serviceData.visaPrice || 0);
+                    } catch (err) {
+                        setRequirements([]);
+                        setProcess(normalizeVisaProcessSteps(data?.processSteps || {}));
+                    }
+                } else {
+                    setRequirements([]);
+                }
+            } catch (err) {
+                console.error('Failed to fetch application:', err);
+                notification.error({ message: 'Failed to load visa application details' });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchApplication();
+        checkPendingManualPayment();
+    }, [id, user]);
+
+    // FIND CURRENT STEP INDEX BASED ON APPLICATION STATUS
+    const statusValue = statusText;
+
+    const currentStep = statusValue
+        ? Math.max(
+            0,
+            process.findIndex(
+                s => String(s.title || '').toLowerCase() === String(statusValue || '').toLowerCase()
+            )
+        )
+        : 0;
+
+    const currentStepIndex = currentStep;
+
+    const isDeliveryFeeStage =
+        String(statusValue || '').toLowerCase() === 'passport released' &&
+        String(application?.passportReleaseOption || '').toLowerCase() === 'delivery';
+
+    const isDeliveryFeeFullyPaidStatus = String(statusValue || '').toLowerCase() === 'delivery fee fully paid';
+    const isDeliveryFeePaid = isDeliveryFeeFullyPaidStatus || deliveryFeePaid;
+
+    const deliveryFeeAmount = Number(application?.deliveryFee || 0);
+    const hasDeliveryDate = Boolean(String(application?.deliveryDate || '').trim()) && String(application?.deliveryDate || '').toLowerCase() !== 'to be announced';
+    const isDeliveryFeeUnavailable = deliveryFeeAmount <= 0 && !hasDeliveryDate;
+
+    useEffect(() => {
+        if (isDeliveryFeeStage && isDeliveryFeeUnavailable && method === 'manual') {
+            setMethod('paymongo');
+        }
+    }, [isDeliveryFeeStage, isDeliveryFeeUnavailable, method]);
+
+    const beforeUpload = (file) => {
+        const isLt3M = file.size / 1024 / 1024 < 3;
+        if (!isLt3M) {
+            notification.error({ message: 'Image/PDF must be smaller than 3MB!', placement: 'topRight' });
+        }
+        return isLt3M || Upload.LIST_IGNORE;
+    };
+
+    //SUBMIT DOCUMENTS
+    const handleSubmitDocuments = async () => {
+        if (uploading) {
+            notification.warning({ message: "Please wait until uploads finish", placement: 'topRight' });
             return;
         }
 
         try {
-            setSavingReleaseOption(true);
-            await api.put(`/visa/applications/${application._id}/passport-release-option`, {
-                option: normalizedOption,
-                deliveryAddress: normalizedOption === 'delivery' ? deliveryAddress.trim() : '',
-            }, withUserHeader(user._id));
+            setUploading(true);
 
-            Alert.alert('Success', 'Passport claim preference saved.');
-            setShowClaimPreferenceSuccessModal(true);
-            await fetchApplicationDetails();
-        } catch (error) {
-            console.error('Release option error:', error?.response?.data || error.message || error);
-            Alert.alert('Error', 'Unable to save passport claim preference.');
+            const formData = new FormData();
+            const orderedRequirements = visibleRequirements.map((req, idx) => ({
+                key: req.key || req.req || `${req.label}-${idx}`,
+                label: req.req || req.label || `Requirement ${idx + 1}`
+            }));
+
+            const missingRequirements = [];
+            orderedRequirements.forEach((req) => {
+                const fileItem = requirementFiles[req.key]?.[0];
+                if (fileItem?.originFileObj) {
+                    formData.append("files", fileItem.originFileObj);
+                } else {
+                    missingRequirements.push(req.label);
+                }
+            });
+
+            if (missingRequirements.length > 0) {
+                notification.warning({ message: "Please upload all required documents before submitting.", placement: 'topRight' });
+                return;
+            }
+
+            if (resubmissionRequested && orderedRequirements.length === 0) {
+                notification.warning({ message: "The requested document is not available for upload.", placement: 'topRight' });
+                return;
+            }
+
+            const uploadRes = await apiFetch.post(
+                '/upload/upload-visa-requirements',
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
+
+            const uploaded = uploadRes.urls || [];
+            const submittedDocuments = {};
+            let uploadIndex = 0;
+
+            orderedRequirements.forEach((req) => {
+                if (requirementFiles[req.key]?.length) {
+                    submittedDocuments[req.key] = uploaded[uploadIndex] || null;
+                    uploadIndex += 1;
+                } else {
+                    submittedDocuments[req.key] = null;
+                }
+            });
+
+            await apiFetch.put(`/visa/applications/${id}/documents`, {
+                submittedDocuments
+            });
+
+            const documentsStatus = process.find(
+                step => String(step.title || '').toLowerCase() === 'documents uploaded'
+            )?.title || 'Documents uploaded';
+
+            await apiFetch.put(`/visa/applications/${id}/status`, {
+                status: documentsStatus
+            });
+
+            const refreshed = await apiFetch.get(`/visa/applications/${id}`);
+            setApplication(refreshed);
+            setIsDocumentsUploadedModalOpen(true);
+        } catch (err) {
+            console.error(err);
+            notification.error({ message: "Failed to submit documents", placement: 'topRight' });
         } finally {
-            setSavingReleaseOption(false);
+            setUploading(false);
         }
     };
 
-    const renderRequirementItem = (item, index) => {
-        const requirementText = typeof item === 'object' ? item.req : item;
-        const requirementDesc = typeof item === 'object' ? item.desc : '';
+    // DYNAMIC UPLOAD HANDLER FOR REQUIREMENTS
+    const handleUploadChange = ({ fileList: newFileList }) => {
+        if (newFileList.length > 1) {
+            newFileList = [newFileList[newFileList.length - 1]];
+        }
 
-        const sanitizeKey = (text) => {
-            return String(text || '')
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '_')
-                .replace(/^_+|_+$/g, '');
-        };
+        newFileList = newFileList.map(file => {
+            if (!file.preview && file.originFileObj) {
+                file.preview = URL.createObjectURL(file.originFileObj);
+            }
+            return file;
+        });
 
-        const reqKey = sanitizeKey(requirementText);
-        const selectedFile = selectedFiles[reqKey];
-        const uploadedUrl = uploadedRequirements[reqKey] || application?.submittedDocuments?.[reqKey];
+        setFileList(newFileList);
+    };
 
-        const pickDocumentForKey = async () => {
-            try {
-                const picked = await DocumentPicker.getDocumentAsync({
-                    type: ['image/*', 'application/pdf'],
-                    copyToCacheDirectory: true,
-                    multiple: false,
+    // HANDLE PAYMENT SUBMISSION
+    const handleSubmitPayment = async () => {
+        if (method === 'manual' && fileList.length === 0) {
+            notification.warning({ message: 'Please upload a receipt first.', placement: 'topRight' });
+            return;
+        }
+
+        if (isDeliveryFeeStage && deliveryFeeAmount <= 0) {
+            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.', placement: 'topRight' });
+            return;
+        }
+
+        try {
+            setPaymentLoading(true);
+
+            if (method === 'manual') {
+                const file = fileList[0].originFileObj;
+                const amountToPay = application?.onPenalty ? 1500 : (isDeliveryFeeStage ? deliveryFeeAmount : servicePrice);
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const uploadRes = await apiFetch.post('/upload/upload-receipt', formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
                 });
 
-                if (!picked.canceled && picked.assets?.[0]) {
-                    setSelectedFiles(prev => ({ ...prev, [reqKey]: picked.assets[0] }));
+                const imageUrl = uploadRes.url;
+
+                const endpoint = isDeliveryFeeStage
+                    ? '/payment/manual-delivery-fee'
+                    : application?.onPenalty
+                        ? '/payment/manual-visa-penalty'
+                        : '/payment/manual-visa';
+                const paymentRes = await apiFetch.post(endpoint, {
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
+                    amount: amountToPay,
+                    proofImage: imageUrl,
+                });
+
+                navigate(paymentRes.redirectUrl);
+                notification.success({ message: "Manual payment submitted successfully. Awaiting verification.", placement: 'topRight' });
+                setPaymentCompleted(true);
+
+            } else if (method === 'paymongo') {
+                // Make sure application exists
+                if (!application) {
+                    notification.error({ message: "Application not found.", placement: 'topRight' });
+                    return;
                 }
-            } catch (error) {
-                console.error('Document picker error:', error);
-                Alert.alert('Error', 'Failed to pick document');
+
+                const payload = {
+                    applicationId: application._id,
+                    applicationNumber: application.applicationNumber,
+                    totalPrice: isDeliveryFeeStage
+                        ? deliveryFeeAmount
+                        : application?.onPenalty
+                            ? 1500
+                            : servicePrice,
+                };
+
+                // Send request to create checkout session
+                const endpoint = isDeliveryFeeStage
+                    ? '/payment/create-checkout-session-delivery-fee'
+                    : application?.onPenalty
+                        ? '/payment/create-checkout-session-visa-penalty'
+                        : '/payment/create-checkout-session-visa';
+                const paymongoResponse = await apiFetch.post(endpoint, payload);
+                const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
+                // Redirect user to PayMongo checkout
+
+                if (checkoutUrl) {
+                    try { await Linking.openURL(checkoutUrl); } catch (e) { console.error(e); }
+                } else {
+                    console.error("PayMongo Response Structure:", paymongoResponse);
+                    throw new Error("Failed to create PayMongo checkout session - URL missing");
+                }
             }
-        };
 
-        const removeSelectedFile = () => {
-            setSelectedFiles(prev => {
-                const updated = { ...prev };
-                delete updated[reqKey];
-                return updated;
+        } catch (err) {
+            console.error(err);
+            notification.error({ message: "Payment failed", placement: 'topRight' });
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
+    // HANDLE FILE PREVIEW (copied from PassportApplication)
+    const handlePreview = async (file) => {
+        const src = typeof file === 'string'
+            ? file
+            : file.preview || file.url || (file.originFileObj ? URL.createObjectURL(file.originFileObj) : null);
+        if (src) {
+            try { await Linking.openURL(src); } catch (e) { console.error(e); }
+            return;
+        }
+        notification.error({ message: 'Preview unavailable', placement: 'topRight' });
+    };
+
+    // CONFIRM DOCUMENT SUBMISSION
+    const confirmSubmitDocuments = () => {
+        setIsConfirmDocumentsOpen(true);
+    };
+
+    // HANDLE REQUIREMENT UPLOAD
+    const handleUpload = (requirementKey) => async ({ file, onSuccess, onError }) => {
+        setUploading(true);
+        try {
+            const originFileObj = file.originFileObj || file;
+            const previewUrl = URL.createObjectURL(originFileObj);
+
+            setRequirementFiles(prev => ({
+                ...prev,
+                [requirementKey]: [{
+                    uid: file.uid,
+                    name: file.name,
+                    url: previewUrl,
+                    originFileObj
+                }],
+            }));
+
+            notification.success({ message: 'File ready for submission', placement: 'topRight' });
+            onSuccess('ok');
+        } catch (err) {
+            console.error(err);
+            notification.error({ message: 'Failed to process file', placement: 'topRight' });
+            onError(err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    // MAP REQUIREMENT KEYS TO LABELS FOR DISPLAY
+    const requirementLabelMap = requirements.reduce((acc, req, idx) => {
+        const mapKey = req.key || req.req || req.label || `Requirement ${idx + 1}`;
+        acc[mapKey] = req.req || req.label || mapKey;
+        return acc;
+    }, {});
+
+    const getRequirementLabel = (key, fallbackIndex) => {
+        if (requirementLabelMap[key]) {
+            return requirementLabelMap[key];
+        }
+
+        const keyMatch = String(key || '').match(/-(\d+)$/);
+        const indexFromKey = keyMatch ? Number(keyMatch[1]) : Number(fallbackIndex);
+        const requirementByIndex = requirements[indexFromKey];
+
+        if (requirementByIndex?.req) {
+            return requirementByIndex.req;
+        }
+
+        if (requirementByIndex?.label) {
+            return requirementByIndex.label;
+        }
+
+        return key;
+    };
+
+    const isRequestedResubmissionTarget = (target) => {
+        if (!resubmissionRequested) return true;
+        return requestedResubmissionTargets.includes(normalizeResubmissionTarget(target));
+    };
+
+    // Always display all requirements; we'll mark which ones were requested for resubmission
+    const visibleRequirements = requirements;
+
+    //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
+    const handleConfirmSuggested = async () => {
+        if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
+            notification.warning({ message: 'Please select an appointment option first.', placement: 'topRight' });
+            return;
+        }
+
+        let dateToSend = null;
+        let timeToSend = null;
+
+        if (selectedSuggestedIndex === 'others') {
+            if (!customDateTime.date || !customDateTime.time) {
+                notification.warning({ message: 'Please fill in all custom date and time fields.', placement: 'topRight' });
+                return;
+            }
+
+            dateToSend = dayjs(customDateTime.date).format('YYYY-MM-DD');
+            timeToSend = customDateTime.time.format('h:mm A');
+
+        } else if (typeof selectedSuggestedIndex === 'number') {
+            const selected = application.suggestedAppointmentSchedules[selectedSuggestedIndex];
+
+            if (!selected?.date || !selected?.time) {
+                notification.error({ message: 'Selected option is missing date or time.', placement: 'topRight' });
+                return;
+            }
+
+            dateToSend = dayjs(selected.date).format('YYYY-MM-DD');
+            timeToSend = selected.time;
+        }
+
+        try {
+            setConfirmingSuggested(true);
+
+            await apiFetch.put(`/visa/applications/${id}/choose-appointment`, {
+                date: dateToSend,
+                time: timeToSend
             });
-        };
 
-        const selectedFileIsImage = isImageSource(selectedFile);
+            // optional: sync UI state after success
+            setSelectedDate(dateToSend);
+            setSelectedTime(timeToSend);
+
+            const refreshed = await apiFetch.get(`/visa/applications/${id}`);
+            setApplication(refreshed);
+            setIsDateSelectedModalOpen(true);
+        } catch (error) {
+            notification.error({ message: 'Failed to confirm appointment schedule.', placement: 'topRight' });
+        } finally {
+            setConfirmingSuggested(false);
+        }
+    };
+
+    const handleReleaseOption = async () => {
+        if (!releaseOption) {
+            notification.warning({ message: 'Please select a release option first.', placement: 'topRight' });
+            return
+        }
+
+        if (releaseOption === 'delivery' && deliveryAddress.trim() === "") {
+            notification.warning({ message: 'Please provide a delivery address in your profile settings before choosing delivery option.', placement: 'topRight' });
+            return;
+        }
+
+        try {
+            await apiFetch.put(`/visa/applications/${id}/release-option`, {
+                passportReleaseOption: releaseOption,
+                deliveryAddress: releaseOption === 'delivery' ? deliveryAddress : ""
+            });
+
+            setDeliveryAddress("")
+            setIsPassportReleaseOptionSelectedModalOpen(true);
+            try {
+                const refreshed = await apiFetch.get(`/visa/applications/${id}`);
+                setApplication(refreshed);
+            } catch (e) { console.error(e); }
+        } catch (error) {
+            notification.error({ message: 'Failed to update release option.', placement: 'topRight' });
+        }
+    }
+
+    const disableDates = (current) => {
+        const today = dayjs().startOf('day');
+        const twoWeeksFromNow = today.add(14, 'day');
 
         return (
-            <View key={index} style={{ paddingVertical: 12, borderBottomWidth: 1, borderColor: '#eef2f7' }}>
-                <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: requirementDesc ? 4 : 0 }}>
-                    {requirementText}
-                </Text>
-                {requirementDesc ? (
-                    <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, lineHeight: 18 }}>
-                        {requirementDesc}
-                    </Text>
-                ) : null}
-
-                {typeof item === 'object' && (item.isReq === 'Required' || String(item.isReq).toLowerCase() === 'required') ? (
-                    <View style={{ marginTop: 10 }}>
-                        <TouchableOpacity
-                            onPress={pickDocumentForKey}
-                            style={{
-                                backgroundColor: '#305797',
-                                borderRadius: 10,
-                                paddingVertical: 10,
-                                alignItems: 'center',
-                                marginTop: 6,
-                            }}
-                        >
-                            <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
-                                {selectedFile ? 'Change File' : 'Select File'}
-                            </Text>
-                        </TouchableOpacity>
-
-                        {selectedFile ? (
-                            <View style={{ marginTop: 8, backgroundColor: '#f0f9ff', borderRadius: 8, padding: 10 }}>
-                                {selectedFileIsImage ? (
-                                    <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
-                                        <Image
-                                            source={{ uri: selectedFile.uri }}
-                                            style={{ width: '100%', height: 160 }}
-                                            resizeMode="cover"
-                                        />
-                                    </View>
-                                ) : null}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>
-                                            {selectedFile.name || 'File selected'}
-                                        </Text>
-                                        <Text style={{ color: '#16a34a', fontSize: 11, marginTop: 2 }}>Ready to upload</Text>
-                                    </View>
-                                    <TouchableOpacity onPress={removeSelectedFile}>
-                                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ) : uploadedUrl ? (
-                            <View style={{ marginTop: 8 }}>
-                                <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
-                                <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
-                                    <Text style={{ color: '#305797', fontSize: 12, marginTop: 6 }}>View Document</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : null}
-                    </View>
-                ) : null}
-            </View>
+            current &&
+            (
+                current < twoWeeksFromNow ||
+                current.day() === 0 ||
+                current.day() === 6
+            )
         );
     };
+    const disabledHours = () => {
+        const hours = [];
+        for (let i = 0; i < 24; i++) {
+            if (i < 8 || i > 17) {
+                hours.push(i);
+            }
+        }
+        return hours;
+    }
 
-    const isOthersSelected = selectedScheduleIndex === 'others';
-    const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
-        !isOthersSelected || (customPreferredDate && customPreferredTime)
-    );
 
-    const handleCustomDateChange = (_event, selectedDate) => {
-        if (selectedDate) {
-            setCustomPreferredDate(selectedDate);
+    //IF NO ID IN URL, GO BACK TO USER APPLICATIONS
+    useEffect(() => {
+        if (!applicationId) {
+            navigate('/home');
         }
-        if (Platform.OS !== 'ios') {
-            setShowCustomDatePicker(false);
-        }
-    };
+    }, [applicationId, navigate]);
 
-    const handleCustomTimeChange = (_event, selectedTime) => {
-        if (selectedTime) {
-            setCustomPreferredTime(selectedTime);
-        }
-        if (Platform.OS !== 'ios') {
-            setShowCustomTimePicker(false);
-        }
-    };
+
+    //UPLOAD DOCUMENTS SECTION STATUS CONDITION
+    const status = application?.status?.toLowerCase();
+
+    const shouldShow =
+        status === 'payment completed' ||
+        application?.secondChance === true;
 
     if (loading) {
         return (
@@ -1128,7 +1409,10 @@ export default function VisaProgress() {
 
                             const stepSetDate = getStepSetDateForTitle(application, title);
                             const stepKey = String(title || '').toLowerCase();
-                            const stepDeadlineDate = getStepDeadlineForTitle(title);
+                            const cumulativeDays = Number(cumulativeStepDaysMap?.[title]);
+                            const stepDeadlineDate = Number.isFinite(cumulativeDays) && application?.createdAt
+                                ? dayjs(application.createdAt).startOf('day').add(cumulativeDays, 'day')
+                                : null;
                             const stepDaysLeft = stepDeadlineDate ? stepDeadlineDate.diff(dayjs(), 'day') : null;
 
                             return (
