@@ -68,6 +68,9 @@ export default function PackageDetails({ route, navigation }) {
     const [activeTab, setActiveTab] = useState("itinerary");
     const [showReviews, setShowReviews] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    // Per-day carousel state and refs
+    const [dayImageIndices, setDayImageIndices] = useState({});
+    const dayCarouselRefs = useRef({});
 
     // Review Form States
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
@@ -204,6 +207,45 @@ export default function PackageDetails({ route, navigation }) {
         }, 5000);
         return () => clearInterval(interval);
     }, [fullPkg?.images]);
+
+    // Initialize per-day indices when package data loads
+    useEffect(() => {
+        if (!fullPkg) return;
+        const itinerary = fullPkg.packageItineraries || {};
+        const init = {};
+        Object.keys(itinerary).forEach(day => { init[day] = 0; });
+        setDayImageIndices(init);
+    }, [fullPkg]);
+
+    // Auto-scroll for each day's itinerary carousel (cycles every 5s)
+    useEffect(() => {
+        if (!fullPkg) return;
+        const itinerary = fullPkg.packageItineraries || {};
+        const imagesByDay = fullPkg.packageItineraryImages || {};
+        const days = Object.keys(itinerary);
+        if (days.length === 0) return;
+
+        const interval = setInterval(() => {
+            days.forEach(day => {
+                const items = itinerary[day] || [];
+                const extracted = items.flatMap(it => Array.isArray(it?.itineraryImages) ? it.itineraryImages : []).filter(Boolean);
+                const dayImages = (Array.isArray(imagesByDay[day]) && imagesByDay[day].length ? imagesByDay[day] : extracted).slice(0, 3);
+                if (!dayImages || dayImages.length <= 1) return;
+
+                setDayImageIndices(prev => {
+                    const prevIdx = Number(prev[day] || 0);
+                    const nextIdx = (prevIdx + 1) % dayImages.length;
+                    const ref = dayCarouselRefs.current?.[day];
+                    try {
+                        ref?.scrollTo?.({ x: nextIdx * (width - 32), animated: true });
+                    } catch (e) { /* ignore */ }
+                    return { ...prev, [day]: nextIdx };
+                });
+            });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [fullPkg]);
 
     // Ratings Logic
     const averageRating = useMemo(() => {
@@ -653,27 +695,66 @@ export default function PackageDetails({ route, navigation }) {
                             </View>
 
                             <View style={DestinationStyles.sectionBody}>
-                                {activeTab === "itinerary" && Object.entries(fullPkg.packageItineraries || {}).map(([day, items], i) => (
-                                    <View key={i} style={{ marginBottom: 15 }}>
-                                        <Text style={DestinationStyles.sectionTitle}>{day.toUpperCase()}</Text>
-                                        {Array.isArray(items) ? items.map((item, j) => (
-                                            <View key={j} style={DestinationStyles.tabItemRow}>
-                                                <Text style={DestinationStyles.tabItemDot}>•</Text>
-                                                <Text style={DestinationStyles.sectionText}>
-                                                    {typeof item === 'object' ? (item.activity || item.optionalActivity) : item}
-                                                    {item.isOptional ? " (Optional)" : ""}
-                                                </Text>
-                                            </View>
-                                        )) : (
-                                            <View style={DestinationStyles.tabItemRow}>
-                                                <Text style={DestinationStyles.tabItemDot}>•</Text>
-                                                <Text style={DestinationStyles.sectionText}>
-                                                    {typeof items === 'object' ? (items.activity || items.optionalActivity) : items}
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                ))}
+                                {activeTab === "itinerary" && Object.entries(fullPkg.packageItineraries || {}).map(([day, items], i) => {
+                                    const itineraryImagesByDay = fullPkg.packageItineraryImages || {};
+                                    const extracted = Array.isArray(items) ? items.flatMap(it => Array.isArray(it?.itineraryImages) ? it.itineraryImages : []).filter(Boolean) : [];
+                                    const dayImages = (Array.isArray(itineraryImagesByDay[day]) && itineraryImagesByDay[day].length ? itineraryImagesByDay[day] : extracted).slice(0, 3);
+
+                                    return (
+                                        <View key={i} style={{ marginBottom: 15 }}>
+                                            {dayImages.length > 0 && (
+                                                <View style={DestinationStyles.carouselContainer}>
+                                                    <ScrollView
+                                                        horizontal
+                                                        pagingEnabled
+                                                        showsHorizontalScrollIndicator={false}
+                                                        ref={ref => (dayCarouselRefs.current[day] = ref)}
+                                                        onMomentumScrollEnd={(e) => {
+                                                            const newIndex = Math.round(e.nativeEvent.contentOffset.x / (width - 32));
+                                                            setDayImageIndices(prev => ({ ...prev, [day]: newIndex }));
+                                                        }}
+                                                    >
+                                                        {dayImages.map((src, idx) => (
+                                                            <Image
+                                                                key={`${day}-img-${idx}`}
+                                                                source={getImageUrl(src)}
+                                                                style={[DestinationStyles.heroImage, { width: width - 32 }]}
+                                                                contentFit="cover"
+                                                                transition={300}
+                                                            />
+                                                        ))}
+                                                    </ScrollView>
+                                                    {dayImages.length > 1 && (
+                                                        <View style={DestinationStyles.carouselDots}>
+                                                            {dayImages.map((_, idx) => (
+                                                                <View key={idx} style={[DestinationStyles.dot, (dayImageIndices[day] || 0) === idx && DestinationStyles.activeDot]} />
+                                                            ))}
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            )}
+
+                                            <Text style={DestinationStyles.sectionTitle}>{day.toUpperCase()}</Text>
+
+                                            {Array.isArray(items) ? items.map((item, j) => (
+                                                <View key={j} style={DestinationStyles.tabItemRow}>
+                                                    <Text style={DestinationStyles.tabItemDot}>•</Text>
+                                                    <Text style={DestinationStyles.sectionText}>
+                                                        {typeof item === 'object' ? (item.activity || item.optionalActivity) : item}
+                                                        {item.isOptional ? " (Optional)" : ""}
+                                                    </Text>
+                                                </View>
+                                            )) : (
+                                                <View style={DestinationStyles.tabItemRow}>
+                                                    <Text style={DestinationStyles.tabItemDot}>•</Text>
+                                                    <Text style={DestinationStyles.sectionText}>
+                                                        {typeof items === 'object' ? (items.activity || items.optionalActivity) : items}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                })}
 
                                 {activeTab === "inclusions" && (
                                     <>

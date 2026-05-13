@@ -337,7 +337,7 @@ export default function RegistrationStep2({ route, navigation }) {
                         <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={RegistrationFormStyle.backTextButton} onPress={() => navigation.navigate("registrationstep1", { ...route.params, medicalData, emergency })}>
+                    <TouchableOpacity style={RegistrationFormStyle.backTextButton} onPress={() => navigation.goBack()}>
                         <Text style={RegistrationFormStyle.backText}>Back to Traveler Info</Text>
                     </TouchableOpacity>
                 </View>

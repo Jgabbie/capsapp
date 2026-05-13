@@ -38,6 +38,7 @@ export default function Profile() {
     })
 
     const [profileImage, setProfileImage] = useState('')
+    const [selectedReviewToDelete, setSelectedReviewToDelete] = useState(null)
     const [userData, setUserData] = useState({
         username: "",
         firstname: "",
@@ -71,6 +72,7 @@ export default function Profile() {
     const [editingPreferences, setEditingPreferences] = useState(false)
     const [savingPreferences, setSavingPreferences] = useState(false)
     const [removedTagWarning, setRemovedTagWarning] = useState(false)
+    const [deleteReviewModalVisible, setDeleteReviewModalVisible] = useState(false)
 
     // --- FETCH USER DATA ---
     useEffect(() => {
@@ -404,6 +406,33 @@ export default function Profile() {
         return { bg: '#e5e7eb', text: '#4b5563' };
     };
 
+    const handleDeleteReviewPress = (review) => {
+        setSelectedReviewToDelete(review)
+        setDeleteReviewModalVisible(true)
+    }
+
+    const confirmDeleteReview = async () => {
+        if (!selectedReviewToDelete?._id && !selectedReviewToDelete?.id) return;
+
+        try {
+            await api.delete(
+                `/rating/${selectedReviewToDelete._id || selectedReviewToDelete.id}`,
+                withUserHeader(user._id)
+            )
+
+            setRecentReviews(prev =>
+                prev.filter(review => String(review._id || review.id) !== String(selectedReviewToDelete._id || selectedReviewToDelete.id))
+            )
+            showMessage('Review deleted successfully.')
+        } catch (error) {
+            console.log('Delete review error:', error.response?.data || error.message)
+            showMessage('Unable to delete review.')
+        } finally {
+            setDeleteReviewModalVisible(false)
+            setSelectedReviewToDelete(null)
+        }
+    }
+
     if (!fontsLoaded) return null;
 
     return (
@@ -639,9 +668,19 @@ export default function Profile() {
                 ) : (
                     recentReviews.slice(0, 3).map((review, index) => (
                         <View key={index} style={[ProfileStyle.emptyStateCard, { alignItems: 'flex-start', padding: 15 }]}>
-                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, marginBottom: 2, textTransform: 'uppercase' }}>
-                                {review.packageId?.packageName || review.package?.packageName || review.packageName || "Tour Package"}
-                            </Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', gap: 10 }}>
+                                <Text style={{ flex: 1, fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 14, marginBottom: 2, textTransform: 'uppercase' }}>
+                                    {review.packageId?.packageName || review.package?.packageName || review.packageName || "Tour Package"}
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => handleDeleteReviewPress(review)}
+                                    style={{ backgroundColor: '#fee2e2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}
+                                >
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#dc2626', fontSize: 11, textTransform: 'uppercase' }}>
+                                        Delete
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                             <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
                                 {dayjs(review.createdAt || review.date).format('MMM D, YYYY')}
                             </Text>
@@ -738,6 +777,23 @@ export default function Profile() {
                             <TouchableOpacity style={ModalStyle.modalButton} onPress={() => { setEditing(false); setSuccessModalVisible(false); }}>
                                 <Text style={ModalStyle.modalButtonText}>OK</Text>
                             </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal transparent animationType='fade' visible={deleteReviewModalVisible} onRequestClose={() => setDeleteReviewModalVisible(false)}>
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+                            <Text style={ModalStyle.modalTitle}>Delete Review</Text>
+                            <Text style={ModalStyle.modalText}>Are you sure you want to delete this review?</Text>
+                            <View style={ModalStyle.modalButtonContainer}>
+                                <TouchableOpacity style={ModalStyle.modalButton} onPress={confirmDeleteReview}>
+                                    <Text style={ModalStyle.modalButtonText}>Delete</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={ModalStyle.modalCancelButton} onPress={() => setDeleteReviewModalVisible(false)}>
+                                    <Text style={ModalStyle.modalButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </Modal>
