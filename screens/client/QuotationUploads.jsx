@@ -97,6 +97,8 @@ export default function QuotationUploads({ route, navigation }) {
     const packageType = quotation?.packageId.packageType || quotation?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
+    const rawVisaValue = quotation?.pkg?.requiresVisa ?? quotation?.pkg?.packageRequiresVisa ?? quotation?.pkg?.visaRequired;
+    const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
     const travelerTypes = useMemo(() => {
         const types = [];
@@ -464,6 +466,19 @@ export default function QuotationUploads({ route, navigation }) {
             }
         }
 
+        if (requiresVisa) {
+            const missingVisaIndex = Object.entries(uploads).findIndex(([, upload]) => {
+                if (!upload) return false;
+                if (upload.visaStatus !== 'yes') return false;
+                return !upload.visa;
+            });
+
+            if (missingVisaIndex !== -1) {
+                Alert.alert('Missing Visa', 'Please upload the visa document for travelers who have a visa.');
+                return;
+            }
+        }
+
         setShowVerifyModal(true);
     };
 
@@ -651,6 +666,115 @@ export default function QuotationUploads({ route, navigation }) {
                                 ) : null}
                             </View>
                         </View>
+
+                        {requiresVisa && (
+                            <View style={{ marginTop: 16, borderWidth: 1, borderColor: '#dbe4f3', borderRadius: 14, backgroundColor: '#f8fbff', padding: 14 }}>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 15, color: '#1f2f52', textAlign: 'center', marginBottom: 10 }}>
+                                    Do you have a visa for this tour package?
+                                </Text>
+
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
+                                    <TouchableOpacity
+                                        onPress={() => setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                visaStatus: 'yes'
+                                            }
+                                        }))}
+                                        style={{
+                                            minWidth: 110,
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 18,
+                                            borderRadius: 8,
+                                            backgroundColor: uploads[index]?.visaStatus === 'yes' ? '#305797' : '#fff',
+                                            borderWidth: 1,
+                                            borderColor: '#d1d5db',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: uploads[index]?.visaStatus === 'yes' ? '#fff' : '#222' }}>Yes</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                visaStatus: 'no',
+                                                visa: null,
+                                                visaType: null,
+                                                visaName: null,
+                                            }
+                                        }))}
+                                        style={{
+                                            minWidth: 110,
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 18,
+                                            borderRadius: 8,
+                                            backgroundColor: uploads[index]?.visaStatus === 'no' ? '#305797' : '#fff',
+                                            borderWidth: 1,
+                                            borderColor: '#d1d5db',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: uploads[index]?.visaStatus === 'no' ? '#fff' : '#222' }}>No</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                {uploads[index]?.visaStatus === 'no' && (
+                                    <Text style={{ marginTop: 12, color: '#d9534f', fontSize: 13, textAlign: 'center', fontFamily: 'Roboto_400Regular' }}>
+                                        This travel package requires a visa, we highly recommend for you to get one first before booking to avoid travel issues.
+                                    </Text>
+                                )}
+
+                                {uploads[index]?.visaStatus === 'yes' && (
+                                    <View style={{ marginTop: 14 }}>
+                                        <TouchableOpacity
+                                            onPress={() => pickImage(index, 'visa')}
+                                            style={{
+                                                alignSelf: 'center',
+                                                backgroundColor: '#a53050',
+                                                paddingVertical: 11,
+                                                paddingHorizontal: 18,
+                                                borderRadius: 10,
+                                                shadowColor: '#000',
+                                                shadowOpacity: 0.12,
+                                                shadowRadius: 3,
+                                                elevation: 2,
+                                            }}
+                                        >
+                                            <Text style={{ color: '#fff', fontFamily: 'Montserrat_700Bold' }}>Upload Visa</Text>
+                                        </TouchableOpacity>
+
+                                        {uploads[index]?.visa ? (
+                                            <View style={[BookingUploadsStyle.fileActionButtons, { alignItems: 'center', marginTop: 12 }]}>
+                                                <View style={[BookingUploadsStyle.dragger, { width: '100%', minHeight: 140, borderStyle: 'dashed' }]}>
+                                                    {uploads[index]?.visaType === 'pdf' ? (
+                                                        <View style={BookingUploadsStyle.pdfPreviewContainer}>
+                                                            <Ionicons name="document-text" size={28} color="#dc2626" />
+                                                            <Text style={BookingUploadsStyle.pdfFileName}>{uploads[index]?.visaName?.substring(0, 15) || 'visa.pdf'}</Text>
+                                                        </View>
+                                                    ) : (
+                                                        <Image source={{ uri: uploads[index].visa }} style={BookingUploadsStyle.previewImage} />
+                                                    )}
+                                                </View>
+
+                                                {uploads[index]?.visaType === 'pdf' && (
+                                                    <TouchableOpacity onPress={() => handleViewPDF(uploads[index].visa)}>
+                                                        <Text style={BookingUploadsStyle.viewPdfText}>View PDF</Text>
+                                                    </TouchableOpacity>
+                                                )}
+
+                                                <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], visa: null, visaType: null, visaName: null } }))}>
+                                                    <Text style={BookingUploadsStyle.removeImageText}>Remove Visa</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ) : null}
+                                    </View>
+                                )}
+                            </View>
+                        )}
                     </View>
                 ))}
 
