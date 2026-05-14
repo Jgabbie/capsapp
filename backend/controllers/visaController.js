@@ -811,6 +811,13 @@ export const applyVisa = async (req, res) => {
       documents: {}
     });
 
+    try {
+      newApplication.processSteps = buildProcessSteps(newApplication, service.visaProcessSteps);
+      await newApplication.save();
+    } catch (processStepsError) {
+      console.error('Failed to build/persist visa processSteps:', processStepsError);
+    }
+
     if (typeof logAction === 'function') {
       logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
     }
@@ -820,6 +827,8 @@ export const applyVisa = async (req, res) => {
     return res.status(500).json({ message: "Error applying for visa", error: error.message });
   }
 };
+
+
 
 export const getUserVisaApplications = async (req, res) => {
   try {
