@@ -944,10 +944,6 @@ export const passportReleaseOption = async (req, res) => {
 
     application.passportReleaseOption = option;
     application.deliveryAddress = deliveryAddress || application.deliveryAddress;
-    if (String(option || "").toLowerCase() === "delivery") {
-      application.deliveryFee = 0;
-      application.deliveryDate = "";
-    }
 
     application.status = "Passport Released"
     await application.save();

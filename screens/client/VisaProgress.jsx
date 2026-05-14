@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -62,6 +63,11 @@ const sanitizeFileName = (value = 'document.pdf') => (
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
         .replace(/\s+/g, '_')
 );
+
+const getSafePdfBaseName = (value = 'document') => {
+    const sanitized = sanitizeFileName(value);
+    return sanitized.replace(/\.pdf$/i, '') || 'document';
+};
 
 export default function VisaProgress() {
     const cs = useNavigation()
@@ -224,29 +230,29 @@ export default function VisaProgress() {
         };
     };
 
-    const prepareLocalPdfForOpen = async (file = {}) => {
+    const prepareLocalPdfForShare = async (file = {}) => {
         const sourceUri = file.uri || file.url;
         if (!sourceUri) return null;
 
-        if (/^https?:\/\//i.test(sourceUri) || sourceUri.startsWith('content://')) {
-            return sourceUri;
-        }
-
-        const safeName = sanitizeFileName(file.name || `preview-${Date.now()}.pdf`);
-        const pdfName = safeName.toLowerCase().endsWith('.pdf') ? safeName : `${safeName}.pdf`;
+        const baseName = getSafePdfBaseName(file.name || 'preview');
+        const pdfName = `${baseName}-${Date.now()}.pdf`;
         const targetUri = `${FileSystem.cacheDirectory}${pdfName}`;
 
         try {
-            const info = await FileSystem.getInfoAsync(targetUri);
-            if (!info.exists) {
-                await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
+            if (/^https?:\/\//i.test(sourceUri)) {
+                const downloaded = await FileSystem.downloadAsync(sourceUri, targetUri);
+                return downloaded?.uri || null;
             }
-            return Platform.OS === 'android'
-                ? await FileSystem.getContentUriAsync(targetUri)
-                : targetUri;
-        } catch (error) {
-            console.error('Could not prepare PDF preview file:', error);
+
+            if (sourceUri.startsWith('content://')) {
+                await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
+                return targetUri;
+            }
+
             return sourceUri;
+        } catch (error) {
+            console.error('Could not prepare PDF share file:', error);
+            return sourceUri.startsWith('file://') ? sourceUri : null;
         }
     };
 
@@ -381,7 +387,6 @@ export default function VisaProgress() {
             setRequirementFiles({});
             setSelectedFiles({});
             setShowDocumentsSuccessModal(true);
-            notification.success({ message: 'Files submitted' });
         } catch (e) {
             console.error(e);
             notification.error({ message: 'Failed to submit files' });
@@ -481,16 +486,33 @@ export default function VisaProgress() {
         });
     };
 
-    const openRequirementPreviewExternally = async () => {
+    const shareRequirementPreviewPdf = async () => {
         if (!requirementPreview?.uri) return;
 
         try {
-            const uri = await prepareLocalPdfForOpen(requirementPreview);
+            const isShareAvailable = await Sharing.isAvailableAsync();
+
+            if (!isShareAvailable) {
+                if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    window.open(requirementPreview.uri, '_blank', 'noopener,noreferrer');
+                    return;
+                }
+
+                await Linking.openURL(requirementPreview.uri);
+                return;
+            }
+
+            const uri = await prepareLocalPdfForShare(requirementPreview);
             if (!uri) throw new Error('PDF URI unavailable');
-            await Linking.openURL(uri);
+
+            await Sharing.shareAsync(uri, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Share PDF document',
+                UTI: 'com.adobe.pdf',
+            });
         } catch (e) {
-            console.error('Unable to open PDF externally:', e);
-            notification.error({ message: 'Unable to open PDF' });
+            console.error('Unable to share PDF:', e);
+            notification.error({ message: 'Unable to share PDF' });
         }
     };
 
@@ -1057,7 +1079,7 @@ export default function VisaProgress() {
     };
 
     // MAP REQUIREMENT KEYS TO LABELS FOR DISPLAY
-    const allUploadRequirements = [...requirements, ...serviceAdditionalRequirements];
+    const allUploadRequirements = [...serviceRequirements, ...serviceAdditionalRequirements];
 
     const requirementLabelMap = allUploadRequirements.reduce((acc, req, idx) => {
         const mapKey = req.key || req.req || req.label || `Requirement ${idx + 1}`;
@@ -1090,8 +1112,50 @@ export default function VisaProgress() {
         return requestedResubmissionTargets.includes(normalizeResubmissionTarget(target));
     };
 
-    // Always display all requirements; we'll mark which ones were requested for resubmission
-    const visibleRequirements = allUploadRequirements;
+    const getResubmissionTargetVariants = (target) => {
+        const normalized = normalizeResubmissionTarget(target);
+        if (!normalized) return [];
+
+        const compact = normalized.replace(/[_\-\s]+/g, '');
+        const kebab = normalized.replace(/[_\s]+/g, '-');
+        const snake = normalized.replace(/[\-\s]+/g, '_');
+
+        return [normalized, compact, kebab, snake];
+    };
+
+    const isRequirementVisibleForResubmission = (req, fallbackIndex) => {
+        if (!resubmissionRequested) return true;
+
+        const fallbackKey = `requirement-${fallbackIndex}`;
+        const candidates = [
+            req?.key,
+            req?.req,
+            req?.label,
+            fallbackKey,
+        ];
+
+        const candidateVariants = new Set();
+        candidates.forEach((candidate) => {
+            getResubmissionTargetVariants(candidate).forEach((variant) => {
+                candidateVariants.add(variant);
+            });
+        });
+
+        return requestedResubmissionTargets.some((target) => {
+            const variants = getResubmissionTargetVariants(target);
+            return variants.some((variant) => candidateVariants.has(variant));
+        });
+    };
+
+    const visibleServiceRequirements = serviceRequirements.filter((req, idx) =>
+        isRequirementVisibleForResubmission(req, idx)
+    );
+
+    const visibleAdditionalRequirements = serviceAdditionalRequirements.filter((req, idx) =>
+        isRequirementVisibleForResubmission(req, serviceRequirements.length + idx)
+    );
+
+    const visibleRequirements = [...visibleServiceRequirements, ...visibleAdditionalRequirements];
 
     //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
     const handleConfirmSuggested = async () => {
@@ -1159,9 +1223,9 @@ export default function VisaProgress() {
 
         try {
             setSavingReleaseOption(true);
-            await apiFetch.put(`/visa/applications/${id}/release-option`,
+            await apiFetch.put(`/visa/applications/${id}/passport-release-option`,
                 {
-                    passportReleaseOption: passportReleaseOption,
+                    option: passportReleaseOption,
                     deliveryAddress: passportReleaseOption === 'delivery' ? deliveryAddress : ""
                 },
                 withUserHeader(user._id)
@@ -1216,10 +1280,12 @@ export default function VisaProgress() {
 
 
     //UPLOAD DOCUMENTS SECTION STATUS CONDITION
-    const status = application?.status?.toLowerCase();
+    const normalizedStatus = Array.isArray(application?.status)
+        ? String(application.status[application.status.length - 1] || '').toLowerCase()
+        : String(application?.status || application?.statusText || '').toLowerCase();
 
     const shouldShow =
-        status === 'payment completed' ||
+        normalizedStatus === 'payment completed' ||
         application?.secondChance === true;
 
     if (loading) {
@@ -1820,27 +1886,27 @@ export default function VisaProgress() {
 
 
                 {/* UPLOAD REQUIREMENTS */}
-                {appStatus.toLowerCase() === 'payment completed' && visibleRequirements.length > 0 && (
+                {appStatus.toLowerCase() === 'payment completed' && resubmissionRequested && visibleRequirements.length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
                             Please prepare and upload the following requirements for your visa application.
                         </Text>
 
-                        {serviceRequirements.length > 0 && (
-                            <View style={{ marginBottom: serviceAdditionalRequirements.length > 0 ? 18 : 0 }}>
+                        {visibleServiceRequirements.length > 0 && (
+                            <View style={{ marginBottom: visibleAdditionalRequirements.length > 0 ? 18 : 0 }}>
                                 <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Required Documents</Text>
                                 <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                                    {serviceRequirements.map(renderRequirementItem)}
+                                    {visibleServiceRequirements.map(renderRequirementItem)}
                                 </View>
                             </View>
                         )}
 
-                        {serviceAdditionalRequirements.length > 0 && (
+                        {visibleAdditionalRequirements.length > 0 && (
                             <View>
                                 <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Additional Documents</Text>
                                 <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                                    {serviceAdditionalRequirements.map((req, idx) => renderRequirementItem(req, serviceRequirements.length + idx))}
+                                    {visibleAdditionalRequirements.map((req, idx) => renderRequirementItem(req, visibleServiceRequirements.length + idx))}
                                 </View>
                             </View>
                         )}
@@ -2105,10 +2171,10 @@ export default function VisaProgress() {
                                     <Ionicons name="checkmark" size={32} color="#059669" />
                                 </View>
                                 <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
-                                    Claim Preference Submitted!
+                                    Files Successfully Uploaded
                                 </Text>
                                 <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
-                                    Your claim preference has been submitted. Our team will review it shortly.
+                                    Your files has been submitted. Our team will review it shortly.
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setShowClaimPreferenceSuccessModal(false)}
@@ -2136,7 +2202,7 @@ export default function VisaProgress() {
                 </Modal>
 
                 <Modal visible={!!requirementPreview} transparent animationType="fade" onRequestClose={() => setRequirementPreview(null)}>
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
                         <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
                                 <Text numberOfLines={1} style={{ flex: 1, fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginRight: 12 }}>
@@ -2156,15 +2222,15 @@ export default function VisaProgress() {
                                     <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                                         <Ionicons name="document-text-outline" size={38} color="#305797" />
                                     </View>
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>PDF Selected</Text>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>PDF Ready to Preview</Text>
                                     <Text style={{ color: '#6b7280', fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: 18 }}>
-                                        This PDF is selected and ready to submit. PDF page preview requires a PDF renderer package, so this opens the file with your device PDF viewer.
+                                        PDF preview currently uses your device share sheet so you can open it in your preferred PDF app.
                                     </Text>
                                     <TouchableOpacity
-                                        onPress={openRequirementPreviewExternally}
+                                        onPress={shareRequirementPreviewPdf}
                                         style={{ backgroundColor: '#305797', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18 }}
                                     >
-                                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>Open PDF</Text>
+                                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>Share PDF</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
