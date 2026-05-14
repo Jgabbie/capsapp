@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -24,6 +25,43 @@ const VISA_TERMINAL_STATUSES = new Set([
     'passport released',
     'rejected',
 ]);
+
+const getFileExtension = (value = '') => {
+    const cleanValue = String(value).split('?')[0];
+    const match = /\.([a-zA-Z0-9]+)$/.exec(cleanValue);
+    return match ? match[1].toLowerCase() : '';
+};
+
+const getImageMimeType = (asset = {}) => {
+    if (asset.mimeType && String(asset.mimeType).includes('/')) {
+        return asset.mimeType;
+    }
+
+    const extension = getFileExtension(asset.fileName || asset.uri);
+    if (extension === 'png') return 'image/png';
+    if (extension === 'webp') return 'image/webp';
+    if (extension === 'heic') return 'image/heic';
+    if (extension === 'heif') return 'image/heif';
+    return 'image/jpeg';
+};
+
+const getImageFileName = (asset = {}) => {
+    if (asset.fileName) return asset.fileName;
+
+    const uriName = String(asset.uri || '').split('/').pop();
+    if (uriName && getFileExtension(uriName)) return uriName;
+
+    const extension = getImageMimeType(asset).split('/')[1] || 'jpg';
+    return `proof_image.${extension === 'jpeg' ? 'jpg' : extension}`;
+};
+
+const MAX_REQUIREMENT_FILE_SIZE = 3 * 1024 * 1024;
+
+const sanitizeFileName = (value = 'document.pdf') => (
+    String(value || 'document.pdf')
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+        .replace(/\s+/g, '_')
+);
 
 export default function VisaProgress() {
     const cs = useNavigation()
@@ -58,6 +96,7 @@ export default function VisaProgress() {
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [savingReleaseOption, setSavingReleaseOption] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
+    const [requirementPreview, setRequirementPreview] = useState(null);
 
     // Additional local state used by helper functions
     // alias for api used across file
@@ -101,6 +140,15 @@ export default function VisaProgress() {
         success: ({ message }) => Alert.alert('Success', String(message || '')),
     };
 
+    const showToast = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(String(message || ''), ToastAndroid.SHORT);
+            return;
+        }
+
+        notification.success({ message });
+    };
+
     // keep compatibility with some code that uses `method` and `setMethod`
     const method = paymentMethod;
     const setMethod = setPaymentMethod;
@@ -114,7 +162,7 @@ export default function VisaProgress() {
 
     // derive status text used in several helpers (handle array or string)
     const statusText = Array.isArray(application?.status) && application.status.length > 0
-        ? application.status[0]
+        ? application.status[application.status.length - 1]
         : (application?.status || application?.statusText || '');
     const appStatus = statusText || '';
 
@@ -150,8 +198,8 @@ export default function VisaProgress() {
                 const asset = result.assets[0];
                 setProofImage({
                     uri: asset.uri,
-                    fileName: asset.fileName || 'proof_image.jpg',
-                    mimeType: asset.type || 'image/jpeg',
+                    fileName: getImageFileName(asset),
+                    mimeType: getImageMimeType(asset),
                     size: asset.fileSize
                 });
             }
@@ -161,25 +209,81 @@ export default function VisaProgress() {
         }
     };
 
-    const handleStartPayment = async () => {
+    const handleStartPayment = async (paymentPurpose = 'visa') => {
         // Delegate to existing payment handler
-        await handleSubmitPayment();
+        await handleSubmitPayment(paymentPurpose);
+    };
+
+    const normalizePickedDocument = (asset = {}) => {
+        const name = asset.name || asset.fileName || String(asset.uri || '').split('/').pop() || `document-${Date.now()}`;
+        return {
+            uri: asset.uri,
+            name,
+            type: asset.mimeType || asset.type || 'application/octet-stream',
+            size: asset.size,
+        };
+    };
+
+    const prepareLocalPdfForOpen = async (file = {}) => {
+        const sourceUri = file.uri || file.url;
+        if (!sourceUri) return null;
+
+        if (/^https?:\/\//i.test(sourceUri) || sourceUri.startsWith('content://')) {
+            return sourceUri;
+        }
+
+        const safeName = sanitizeFileName(file.name || `preview-${Date.now()}.pdf`);
+        const pdfName = safeName.toLowerCase().endsWith('.pdf') ? safeName : `${safeName}.pdf`;
+        const targetUri = `${FileSystem.cacheDirectory}${pdfName}`;
+
+        try {
+            const info = await FileSystem.getInfoAsync(targetUri);
+            if (!info.exists) {
+                await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
+            }
+            return Platform.OS === 'android'
+                ? await FileSystem.getContentUriAsync(targetUri)
+                : targetUri;
+        } catch (error) {
+            console.error('Could not prepare PDF preview file:', error);
+            return sourceUri;
+        }
     };
 
     const pickRequirementFile = async (key) => {
         try {
-            const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
-            if (res.type === 'success') {
-                const fileObj = {
-                    uid: String(Date.now()),
-                    name: res.name,
-                    url: res.uri,
-                    originFileObj: { uri: res.uri, name: res.name, size: res.size, type: res.mimeType }
-                };
-                setRequirementFiles(prev => ({ ...prev, [key]: [fileObj] }));
-                setSelectedFiles(prev => ({ ...prev, [key]: fileObj }));
-                notification.success({ message: 'File selected' });
+            const res = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'image/*'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (res.canceled || res.type === 'cancel') {
+                return;
             }
+
+            const asset = res.assets?.[0] || res;
+            if (!asset?.uri) {
+                notification.error({ message: 'Could not read selected file. Please try again.' });
+                return;
+            }
+
+            const pickedFile = normalizePickedDocument(asset);
+            if (pickedFile.size && pickedFile.size > MAX_REQUIREMENT_FILE_SIZE) {
+                notification.warning({ message: 'File must be 3 MB or smaller.' });
+                return;
+            }
+
+            const fileObj = {
+                uid: String(Date.now()),
+                name: pickedFile.name,
+                url: pickedFile.uri,
+                originFileObj: pickedFile,
+            };
+
+            setRequirementFiles(prev => ({ ...prev, [key]: [fileObj] }));
+            setSelectedFiles(prev => ({ ...prev, [key]: pickedFile }));
+            showToast('File selected');
         } catch (e) {
             console.error(e);
             notification.error({ message: 'Failed to pick file' });
@@ -189,17 +293,31 @@ export default function VisaProgress() {
     const renderRequirementItem = (req, idx) => {
         const key = req.key || req.req || req.label || `requirement-${idx}`;
         const label = getRequirementLabel(key, idx);
-        const hasFile = Boolean(requirementFiles[key]?.length || selectedFiles[key]);
+        const selectedFile = selectedFiles[key];
+        const hasFile = Boolean(requirementFiles[key]?.length || selectedFile);
 
         return (
             <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
                 <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{label}</Text>
-                <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>PDF, JPG, or PNG. Max 3 MB.</Text>
+                <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <TouchableOpacity onPress={() => pickRequirementFile(key)} style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8 }}>
                         <Text style={{ color: '#305797' }}>{hasFile ? 'Change File' : 'Select File'}</Text>
                     </TouchableOpacity>
-                    {hasFile && <Text style={{ color: '#6b7280', fontSize: 12 }}>Ready to submit</Text>}
+                    {hasFile && (
+                        <TouchableOpacity
+                            onPress={() => previewSelectedRequirementFile(selectedFile || requirementFiles[key]?.[0])}
+                            style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
+                        >
+                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
+                {hasFile && (
+                    <Text numberOfLines={1} style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
+                        {selectedFile?.name || requirementFiles[key]?.[0]?.name || 'Ready to submit'}
+                    </Text>
+                )}
             </View>
         );
     };
@@ -209,25 +327,66 @@ export default function VisaProgress() {
             notification.warning({ message: 'No files selected' });
             return;
         }
+
+        const orderedRequirements = visibleRequirements.map((req, idx) => ({
+            key: req.key || req.req || req.label || `requirement-${idx}`,
+            label: req.req || req.label || `Requirement ${idx + 1}`,
+        }));
+        const missingRequirements = orderedRequirements.filter(req => !selectedFiles[req.key]);
+
+        if (missingRequirements.length > 0) {
+            notification.warning({ message: 'Please upload all required documents before submitting.' });
+            return;
+        }
+
+        const oversizedFile = orderedRequirements
+            .map(req => selectedFiles[req.key])
+            .find(file => file?.size && file.size > MAX_REQUIREMENT_FILE_SIZE);
+
+        if (oversizedFile) {
+            notification.warning({ message: `${oversizedFile.name || 'Selected file'} must be 3 MB or smaller.` });
+            return;
+        }
+
         try {
             setUploadingAll(true);
-        } catch (e) { }
-        try {
             const formData = new FormData();
-            Object.keys(selectedFiles).forEach(k => {
-                const f = selectedFiles[k];
-                if (f?.originFileObj) formData.append('files', f.originFileObj);
+            orderedRequirements.forEach(req => {
+                const file = selectedFiles[req.key];
+                if (file?.uri) {
+                    formData.append('files', file);
+                }
             });
-            const uploadRes = await apiFetch.post('/upload/upload-visa-requirements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            // minimal: refresh application
-            const refreshed = await apiFetch.get(`/visa/applications/${id}`);
-            setApplication(refreshed);
-            setUploadingAll(false);
+
+            const uploadRes = await apiFetch.post('/upload/upload-booking-documents', formData, {
+                headers: {
+                    ...withUserHeader(user._id).headers,
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            const uploadedUrls = Array.isArray(uploadRes?.data?.urls) ? uploadRes.data.urls : [];
+
+            if (uploadedUrls.length !== orderedRequirements.length) {
+                throw new Error('Failed to upload all selected files.');
+            }
+
+            const submittedDocuments = {};
+            orderedRequirements.forEach((req, index) => {
+                submittedDocuments[req.key] = uploadedUrls[index];
+            });
+
+            await apiFetch.put(`/visa/applications/${id}/documents`, { submittedDocuments }, withUserHeader(user._id));
+            const refreshed = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
+            setApplication(refreshed?.data || refreshed);
+            setRequirementFiles({});
+            setSelectedFiles({});
+            setShowDocumentsSuccessModal(true);
             notification.success({ message: 'Files submitted' });
         } catch (e) {
             console.error(e);
-            setUploadingAll(false);
             notification.error({ message: 'Failed to submit files' });
+        } finally {
+            setUploadingAll(false);
         }
     };
 
@@ -277,6 +436,11 @@ export default function VisaProgress() {
         return String(val).match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) !== null || String(val).startsWith('data:image');
     };
 
+    const isImageFile = (file = {}) => {
+        const type = String(file.type || file.mimeType || '').toLowerCase();
+        return type.startsWith('image/') || isImageSource(file.uri || file.url || file.name);
+    };
+
     const getUploadedDocumentEntries = () => {
         const docs = application?.submittedDocuments || application?.submitted_documents || {};
         return Object.entries(docs || {});
@@ -288,6 +452,45 @@ export default function VisaProgress() {
             await Linking.openURL(url);
         } catch (e) {
             notification.error({ message: 'Unable to open document' });
+        }
+    };
+
+    const previewSelectedRequirementFile = async (fileOrUrl) => {
+        const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
+        const uri = file?.uri || file?.url;
+        if (!uri) {
+            notification.error({ message: 'Preview unavailable' });
+            return;
+        }
+
+        if (isImageFile(file)) {
+            setRequirementPreview({
+                uri,
+                name: file.name || 'Image preview',
+                type: file.type || 'image',
+                kind: 'image',
+            });
+            return;
+        }
+
+        setRequirementPreview({
+            uri,
+            name: file.name || 'PDF document',
+            type: file.type || 'application/pdf',
+            kind: 'document',
+        });
+    };
+
+    const openRequirementPreviewExternally = async () => {
+        if (!requirementPreview?.uri) return;
+
+        try {
+            const uri = await prepareLocalPdfForOpen(requirementPreview);
+            if (!uri) throw new Error('PDF URI unavailable');
+            await Linking.openURL(uri);
+        } catch (e) {
+            console.error('Unable to open PDF externally:', e);
+            notification.error({ message: 'Unable to open PDF' });
         }
     };
 
@@ -486,17 +689,22 @@ export default function VisaProgress() {
                         const serviceResEndpoint = `/visa-services/get-service/${serviceId}`;
                         const serviceRes = await apiFetch.get(serviceResEndpoint, withUserHeader(user._id));
                         const serviceData = serviceRes?.data || serviceRes;
-                        setRequirements(serviceData.visaRequirements || []);
-                        setServiceAdditionalRequirements(serviceData.additionalRequirements || []);
+                        const visaRequirements = serviceData.visaRequirements || [];
+                        const additionalRequirements = serviceData.visaAdditionalRequirements || serviceData.additionalRequirements || [];
+                        setRequirements(visaRequirements);
+                        setServiceRequirements(visaRequirements);
+                        setServiceAdditionalRequirements(additionalRequirements);
                         const price = Number(serviceData.visaPrice) || 0;
                         setServicePrice(price);
                     } catch (err) {
                         console.error('Failed to fetch service:', err);
                         setRequirements([]);
+                        setServiceRequirements([]);
                         setServiceAdditionalRequirements([]);
                     }
                 } else {
                     setRequirements([]);
+                    setServiceRequirements([]);
                     setServiceAdditionalRequirements([]);
                 }
             } catch (err) {
@@ -535,6 +743,9 @@ export default function VisaProgress() {
     const deliveryFeeAmount = Number(application?.deliveryFee || 0);
     const hasDeliveryDate = Boolean(String(application?.deliveryDate || '').trim()) && String(application?.deliveryDate || '').toLowerCase() !== 'to be announced';
     const isDeliveryFeeUnavailable = deliveryFeeAmount <= 0 && !hasDeliveryDate;
+    const isApplicationPaymentDisabled = servicePendingManualPayment;
+    const isDeliveryPaymentDisabled = deliveryFeePendingManualPayment;
+    const isPenaltyPaymentDisabled = pendingManualPayment;
 
     useEffect(() => {
         if (isDeliveryFeeStage && isDeliveryFeeUnavailable && method === 'manual') {
@@ -651,66 +862,103 @@ export default function VisaProgress() {
 
 
     // HANDLE PAYMENT SUBMISSION
-    const handleSubmitPayment = async () => {
+    const handleSubmitPayment = async (paymentPurpose = 'visa') => {
+        const isDeliveryPayment = paymentPurpose === 'delivery';
+        const isPenaltyPayment = paymentPurpose === 'penalty';
+        const hasPendingPayment = isDeliveryPayment
+            ? deliveryFeePendingManualPayment
+            : isPenaltyPayment
+                ? pendingManualPayment
+                : servicePendingManualPayment;
+
+        if (hasPendingPayment) {
+            notification.warning({ message: 'You already have a pending manual payment for this application. Please wait for verification.' });
+            return;
+        }
+
+        if (isDeliveryPayment && deliveryFeeAmount <= 0) {
+            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.' });
+            return;
+        }
+
         if (method === 'manual' && !proofImage) {
             notification.warning({ message: 'Please upload a receipt first.' });
             return;
         }
 
-        if (isDeliveryFeeStage && deliveryFeeAmount <= 0) {
-            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.' });
-            return;
-        }
-
         try {
             setPaymentLoading(true);
+            setCreatingPayment(true);
 
             if (method === 'manual') {
-                const amountToPay = application?.onPenalty ? 1500 : (isDeliveryFeeStage ? deliveryFeeAmount : servicePrice);
+                const amountToPay = isPenaltyPayment ? 1500 : (isDeliveryPayment ? deliveryFeeAmount : servicePrice);
 
                 if (!proofImage?.uri) {
                     console.error('Invalid proof image structure:', proofImage);
                     notification.error({ message: 'Invalid proof image. Please try again.' });
                     setPaymentLoading(false);
+                    setCreatingPayment(false);
                     return;
                 }
 
                 const formData = new FormData();
-                formData.append('file', {
+
+                const receiptFile = {
                     uri: proofImage.uri,
-                    type: proofImage.mimeType || 'image/jpeg',
-                    name: proofImage.fileName || 'proof_image.jpg',
-                });
+                    name: proofImage.fileName || getImageFileName(proofImage),
+                    type: getImageMimeType(proofImage),
+                };
 
-                const uploadRes = await apiFetch.post('/upload/upload-receipt', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    ...withUserHeader(user._id)
-                });
+                formData.append('file', receiptFile);
 
-                const imageUrl = uploadRes?.data?.url || uploadRes?.url;
+                const uploadRes = await apiFetch.post(
+                    '/upload/upload-receipt',
+                    formData,
+                    {
+                        headers: {
+                            ...withUserHeader(user._id).headers,
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                const imageUrl = uploadRes?.data?.url || uploadRes?.data?.data?.url;
+
                 if (!imageUrl) {
-                    console.error('No image URL in upload response:', uploadRes);
-                    notification.error({ message: 'Upload failed. No image URL returned.' });
-                    setPaymentLoading(false);
-                    return;
+                    throw new Error('No uploaded image URL returned');
                 }
 
-                const endpoint = isDeliveryFeeStage
+                const manualPaymentEndpoint = isDeliveryPayment
                     ? '/payment/manual-delivery-fee'
-                    : application?.onPenalty
+                    : isPenaltyPayment
                         ? '/payment/manual-visa-penalty'
                         : '/payment/manual-visa';
-                const paymentRes = await apiFetch.post(endpoint, {
-                    applicationId: application._id,
-                    applicationNumber: application.applicationNumber,
-                    amount: amountToPay,
-                    proofImage: imageUrl,
-                }, withUserHeader(user._id));
 
-                if (paymentRes?.data?.redirectUrl) {
-                    await Linking.openURL(paymentRes.data.redirectUrl);
+                const paymentRes = await apiFetch.post(
+                    manualPaymentEndpoint,
+                    {
+                        applicationId: application._id,
+                        applicationNumber: application.applicationNumber,
+                        amount: amountToPay,
+                        proofImage: imageUrl,
+                    },
+                    withUserHeader(user._id)
+                );
+
+                const redirectUrl = paymentRes?.data?.redirectUrl;
+                if (redirectUrl && /^https?:\/\//i.test(redirectUrl)) {
+                    await Linking.openURL(redirectUrl);
+                } else {
+                    cs.navigate('successfulmanualpaymentvisa');
                 }
                 notification.success({ message: 'Manual payment submitted successfully. Awaiting verification.' });
+                if (isDeliveryPayment) {
+                    setDeliveryFeePendingManualPayment(true);
+                } else if (isPenaltyPayment) {
+                    setPendingManualPayment(true);
+                } else {
+                    setServicePendingManualPayment(true);
+                }
                 setPaymentCompleted(true);
                 setProofImage(null);
 
@@ -723,16 +971,16 @@ export default function VisaProgress() {
                 const payload = {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
-                    totalPrice: isDeliveryFeeStage
+                    totalPrice: isDeliveryPayment
                         ? deliveryFeeAmount
-                        : application?.onPenalty
+                        : isPenaltyPayment
                             ? 1500
                             : servicePrice,
                 };
 
-                const endpoint = isDeliveryFeeStage
+                const endpoint = isDeliveryPayment
                     ? '/payment/create-checkout-session-delivery-fee'
-                    : application?.onPenalty
+                    : isPenaltyPayment
                         ? '/payment/create-checkout-session-visa-penalty'
                         : '/payment/create-checkout-session-visa';
                 const paymongoResponse = await apiFetch.post(endpoint, payload, withUserHeader(user._id));
@@ -751,10 +999,15 @@ export default function VisaProgress() {
             }
 
         } catch (err) {
-            console.error('Payment error:', err);
-            notification.error({ message: err.message || 'Payment failed' });
+            console.error('Payment error:', {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+            });
+            notification.error({ message: err.response?.data?.message || err.response?.data?.error || err.message || 'Payment failed' });
         } finally {
             setPaymentLoading(false);
+            setCreatingPayment(false);
         }
     };
 
@@ -804,7 +1057,9 @@ export default function VisaProgress() {
     };
 
     // MAP REQUIREMENT KEYS TO LABELS FOR DISPLAY
-    const requirementLabelMap = requirements.reduce((acc, req, idx) => {
+    const allUploadRequirements = [...requirements, ...serviceAdditionalRequirements];
+
+    const requirementLabelMap = allUploadRequirements.reduce((acc, req, idx) => {
         const mapKey = req.key || req.req || req.label || `Requirement ${idx + 1}`;
         acc[mapKey] = req.req || req.label || mapKey;
         return acc;
@@ -817,7 +1072,7 @@ export default function VisaProgress() {
 
         const keyMatch = String(key || '').match(/-(\d+)$/);
         const indexFromKey = keyMatch ? Number(keyMatch[1]) : Number(fallbackIndex);
-        const requirementByIndex = requirements[indexFromKey];
+        const requirementByIndex = allUploadRequirements[indexFromKey];
 
         if (requirementByIndex?.req) {
             return requirementByIndex.req;
@@ -836,7 +1091,7 @@ export default function VisaProgress() {
     };
 
     // Always display all requirements; we'll mark which ones were requested for resubmission
-    const visibleRequirements = requirements;
+    const visibleRequirements = allUploadRequirements;
 
     //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
     const handleConfirmSuggested = async () => {
@@ -1179,9 +1434,15 @@ export default function VisaProgress() {
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your visa application to proceed.</Text>
+                        {isApplicationPaymentDisabled && (
+                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
+                                A manual payment is already pending verification for this application.
+                            </Text>
+                        )}
 
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity
+                                disabled={isApplicationPaymentDisabled}
                                 onPress={() => setPaymentMethod('paymongo')}
                                 style={{
                                     flex: 1,
@@ -1190,6 +1451,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isApplicationPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1202,6 +1464,7 @@ export default function VisaProgress() {
                             </TouchableOpacity>
 
                             <TouchableOpacity
+                                disabled={isApplicationPaymentDisabled}
                                 onPress={() => setPaymentMethod('manual')}
                                 style={{
                                     flex: 1,
@@ -1210,6 +1473,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isApplicationPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1256,7 +1520,7 @@ export default function VisaProgress() {
                                             Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
                                         </Text>
 
-                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                        <TouchableOpacity disabled={isApplicationPaymentDisabled} style={[PaymentStyle.selectImageBtn, isApplicationPaymentDisabled && { opacity: 0.45 }]} onPress={pickProofImage}>
                                             <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                             <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
                                         </TouchableOpacity>
@@ -1280,9 +1544,9 @@ export default function VisaProgress() {
                         )}
 
                         <TouchableOpacity
-                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
-                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
-                            onPress={handleStartPayment}
+                            style={[VisaProgressStyle.submitBtn, (creatingPayment || isApplicationPaymentDisabled) && { opacity: 0.7 }]}
+                            disabled={creatingPayment || isApplicationPaymentDisabled || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={() => handleStartPayment('visa')}
                         >
                             {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
                         </TouchableOpacity>
@@ -1292,13 +1556,19 @@ export default function VisaProgress() {
 
 
                 {/* DELIVERY FEE */}
-                {appStatus.toLowerCase() === 'application approved' && (
+                {isDeliveryFeeStage && !isDeliveryFeePaid && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP ---.</Text>
+                        {isDeliveryPaymentDisabled && (
+                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
+                                A manual delivery fee payment is already pending verification.
+                            </Text>
+                        )}
 
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity
+                                disabled={isDeliveryPaymentDisabled}
                                 onPress={() => setPaymentMethod('paymongo')}
                                 style={{
                                     flex: 1,
@@ -1307,6 +1577,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isDeliveryPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1319,6 +1590,7 @@ export default function VisaProgress() {
                             </TouchableOpacity>
 
                             <TouchableOpacity
+                                disabled={isDeliveryPaymentDisabled}
                                 onPress={() => setPaymentMethod('manual')}
                                 style={{
                                     flex: 1,
@@ -1327,6 +1599,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isDeliveryPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1373,7 +1646,7 @@ export default function VisaProgress() {
                                             Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
                                         </Text>
 
-                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                        <TouchableOpacity disabled={isDeliveryPaymentDisabled} style={[PaymentStyle.selectImageBtn, isDeliveryPaymentDisabled && { opacity: 0.45 }]} onPress={pickProofImage}>
                                             <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                             <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
                                         </TouchableOpacity>
@@ -1397,9 +1670,9 @@ export default function VisaProgress() {
                         )}
 
                         <TouchableOpacity
-                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
-                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
-                            onPress={handleStartPayment}
+                            style={[VisaProgressStyle.submitBtn, (creatingPayment || isDeliveryPaymentDisabled) && { opacity: 0.7 }]}
+                            disabled={creatingPayment || isDeliveryPaymentDisabled || deliveryFeeAmount <= 0 || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={() => handleStartPayment('delivery')}
                         >
                             {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
                         </TouchableOpacity>
@@ -1409,13 +1682,19 @@ export default function VisaProgress() {
 
 
                 {/* PENALTY FEE */}
-                {appStatus.toLowerCase() === 'application approved' && (
+                {appStatus.toLowerCase() === 'application approved' && application.penaltyOn === true && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
+                        {isPenaltyPaymentDisabled && (
+                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
+                                A manual penalty payment is already pending verification.
+                            </Text>
+                        )}
 
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity
+                                disabled={isPenaltyPaymentDisabled}
                                 onPress={() => setPaymentMethod('paymongo')}
                                 style={{
                                     flex: 1,
@@ -1424,6 +1703,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isPenaltyPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1436,6 +1716,7 @@ export default function VisaProgress() {
                             </TouchableOpacity>
 
                             <TouchableOpacity
+                                disabled={isPenaltyPaymentDisabled}
                                 onPress={() => setPaymentMethod('manual')}
                                 style={{
                                     flex: 1,
@@ -1444,6 +1725,7 @@ export default function VisaProgress() {
                                     backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isPenaltyPaymentDisabled ? 0.45 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1489,7 +1771,7 @@ export default function VisaProgress() {
                                             Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
                                         </Text>
 
-                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                        <TouchableOpacity disabled={isPenaltyPaymentDisabled} style={[PaymentStyle.selectImageBtn, isPenaltyPaymentDisabled && { opacity: 0.45 }]} onPress={pickProofImage}>
                                             <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                             <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
                                         </TouchableOpacity>
@@ -1513,9 +1795,9 @@ export default function VisaProgress() {
                         )}
 
                         <TouchableOpacity
-                            style={[VisaProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
-                            disabled={creatingPayment || !servicePrice || (paymentMethod === 'manual' && !proofImage)}
-                            onPress={handleStartPayment}
+                            style={[VisaProgressStyle.submitBtn, (creatingPayment || isPenaltyPaymentDisabled) && { opacity: 0.7 }]}
+                            disabled={creatingPayment || isPenaltyPaymentDisabled || (paymentMethod === 'manual' && !proofImage)}
+                            onPress={() => handleStartPayment('penalty')}
                         >
                             {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
                         </TouchableOpacity>
@@ -1538,7 +1820,7 @@ export default function VisaProgress() {
 
 
                 {/* UPLOAD REQUIREMENTS */}
-                {appStatus.toLowerCase() === 'payment completed' && serviceRequirements.length > 0 && (
+                {appStatus.toLowerCase() === 'payment completed' && visibleRequirements.length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1558,7 +1840,7 @@ export default function VisaProgress() {
                             <View>
                                 <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>Additional Documents</Text>
                                 <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                                    {serviceAdditionalRequirements.map(renderRequirementItem)}
+                                    {serviceAdditionalRequirements.map((req, idx) => renderRequirementItem(req, serviceRequirements.length + idx))}
                                 </View>
                             </View>
                         )}
@@ -1851,6 +2133,43 @@ export default function VisaProgress() {
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={!!requirementPreview} transparent animationType="fade" onRequestClose={() => setRequirementPreview(null)}>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                        <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
+                                <Text numberOfLines={1} style={{ flex: 1, fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginRight: 12 }}>
+                                    {requirementPreview?.name || 'Preview'}
+                                </Text>
+                                <TouchableOpacity onPress={() => setRequirementPreview(null)}>
+                                    <Ionicons name="close" size={24} color="#6b7280" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {requirementPreview?.kind === 'image' ? (
+                                <View style={{ width: '100%', aspectRatio: 1, backgroundColor: '#111827' }}>
+                                    <Image source={{ uri: requirementPreview.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                                </View>
+                            ) : (
+                                <View style={{ padding: 24, alignItems: 'center' }}>
+                                    <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                                        <Ionicons name="document-text-outline" size={38} color="#305797" />
+                                    </View>
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>PDF Selected</Text>
+                                    <Text style={{ color: '#6b7280', fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: 18 }}>
+                                        This PDF is selected and ready to submit. PDF page preview requires a PDF renderer package, so this opens the file with your device PDF viewer.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={openRequirementPreviewExternally}
+                                        style={{ backgroundColor: '#305797', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18 }}
+                                    >
+                                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>Open PDF</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
                 </Modal>
 
             </ScrollView>
