@@ -205,6 +205,20 @@ export default function BookingInvoice({ route, navigation }) {
 
     const handleViewInvoice = () => setShowInvoiceModal(true);
 
+    const openDocumentInBrowser = async (url) => {
+        if (!url) {
+            Alert.alert('Unavailable', 'No document link is available for this traveler.');
+            return;
+        }
+
+        try {
+            await Linking.openURL(url);
+        } catch (error) {
+            console.error('Error opening document URL:', error);
+            Alert.alert('Error', 'Unable to open the document preview.');
+        }
+    };
+
     const issueDate = booking?.createdAt ? dayjs(booking.createdAt) : dayjs();
     const travelDateObj = booking?.travelDate?.startDate ? dayjs(booking.travelDate.startDate) : dayjs().add(1, 'month');
     const fallbackDueDateDisplay = travelDateObj.isValid() ? travelDateObj.subtract(25, 'day') : issueDate.add(14, 'day');
@@ -1056,7 +1070,14 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.passportFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)} activeOpacity={0.85}>
+                                                    <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
+                                                    <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                        View Passport / ID
+                                                    </Text>
+                                                </TouchableOpacity>
                                             </View>
                                         ) : (
                                             <View style={BookingInvoiceStyle.docCol}>
@@ -1067,7 +1088,14 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.photoFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
-                                                <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)} activeOpacity={0.85}>
+                                                    <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
+                                                    <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                        View Photo
+                                                    </Text>
+                                                </TouchableOpacity>
                                             </View>
                                         ) : (
                                             <View style={BookingInvoiceStyle.docCol}>

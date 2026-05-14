@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { launchImageLibraryAsync, MediaTypeOptions } from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Linking from 'expo-linking';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
@@ -12,6 +14,7 @@ import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
 import { useUser } from '../../context/UserContext';
+import { api, withUserHeader } from '../../utils/api';
 
 const formatDate = (date) => {
     if (!date) return "";
@@ -185,29 +188,215 @@ export default function QuotationUploads({ route, navigation }) {
         setTravelersData(newData);
     };
 
+    const uploadDocumentToCloudinary = async (uri, name, type, userId) => {
+        const formData = new FormData();
+        formData.append('files', {
+            uri,
+            name,
+            type,
+        });
+
+        const response = await api.post('/upload/upload-booking-documents', formData, {
+            ...withUserHeader(userId),
+            headers: {
+                ...(withUserHeader(userId)?.headers || {}),
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        const uploadedUrls = response?.data?.urls || [];
+        return uploadedUrls[0] || null;
+    };
+
     const pickImage = async (index, type) => {
-        const options = {
-            mediaTypes: MediaTypeOptions.Images,
-            quality: type === 'photo' ? 0.8 : 0.7,
-        };
+        try {
+            // For 2x2 photo, allow image or PDF (image will be square-cropped)
+            if (type === 'photo') {
+                Alert.alert(
+                    'Select File Type',
+                    'Choose how you want to upload the 2x2 photo',
+                    [
+                        {
+                            text: 'Upload Image (JPG/PNG)',
+                            onPress: async () => {
+                                try {
+                                    const options = {
+                                        mediaTypes: MediaTypeOptions.Images,
+                                        quality: 0.8,
+                                        allowsEditing: true,
+                                        aspect: [1, 1],
+                                    };
 
-        if (type === 'photo') {
-            options.allowsEditing = true;
-            options.aspect = [1, 1];
-        } else {
-            options.allowsEditing = false;
-        }
+                                    const result = await launchImageLibraryAsync(options);
+                                    if (!result.canceled) {
+                                        const asset = result.assets[0];
+                                        const fileName = asset.fileName || asset.name || `traveler-${index + 1}-photo.jpg`;
+                                        const mimeType = asset.mimeType || 'image/jpeg';
+                                        const uploadedUrl = await uploadDocumentToCloudinary(asset.uri, fileName, mimeType, user?._id);
 
-        const result = await launchImageLibraryAsync(options);
+                                        if (!uploadedUrl) {
+                                            throw new Error('Upload failed');
+                                        }
 
-        if (!result.canceled) {
-            setUploads(prev => ({
-                ...prev,
-                [index]: {
-                    ...prev[index],
-                    [type]: result.assets[0].uri
-                }
-            }));
+                                        setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                [type]: uploadedUrl,
+                                                [`${type}Type`]: 'image'
+                                            }
+                                        }));
+                                    }
+                                } catch (imageError) {
+                                    console.error('Image picker error:', imageError);
+                                    Alert.alert('Error', 'Failed to pick image. Please try again.');
+                                }
+                            }
+                        },
+                        {
+                            text: 'Upload PDF',
+                            onPress: async () => {
+                                try {
+                                    const pdfResult = await DocumentPicker.getDocumentAsync({
+                                        type: 'application/pdf',
+                                        copyToCacheDirectory: true,
+                                    });
+
+                                    console.log('PDF Result:', pdfResult);
+
+                                    if (pdfResult && pdfResult.assets && pdfResult.assets.length > 0) {
+                                        const pdfFile = pdfResult.assets[0];
+                                        const uploadedUrl = await uploadDocumentToCloudinary(
+                                            pdfFile.uri,
+                                            pdfFile.name || `traveler-${index + 1}-photo.pdf`,
+                                            pdfFile.mimeType || 'application/pdf',
+                                            user?._id
+                                        );
+
+                                        if (!uploadedUrl) {
+                                            throw new Error('Upload failed');
+                                        }
+
+                                        setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                [type]: uploadedUrl,
+                                                [`${type}Type`]: 'pdf',
+                                                [`${type}Name`]: pdfFile.name
+                                            }
+                                        }));
+                                    } else if (pdfResult && pdfResult.canceled) {
+                                        console.log('PDF selection cancelled');
+                                    }
+                                } catch (pdfError) {
+                                    console.error('PDF picker error:', pdfError);
+                                    Alert.alert('Error', 'Failed to pick PDF. Please try again.');
+                                }
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            onPress: () => {},
+                            style: 'cancel'
+                        }
+                    ]
+                );
+            } else {
+                // For passport/ID, allow both images and PDFs
+                Alert.alert(
+                    'Select File Type',
+                    'Choose how you want to upload your document',
+                    [
+                        {
+                            text: 'Upload Image (JPG/PNG)',
+                            onPress: async () => {
+                                try {
+                                    const result = await launchImageLibraryAsync({
+                                        mediaTypes: MediaTypeOptions.Images,
+                                        quality: 0.7,
+                                        allowsEditing: true,
+                                    });
+
+                                    if (!result.canceled) {
+                                        const asset = result.assets[0];
+                                        const fileName = asset.fileName || asset.name || `traveler-${index + 1}-document.jpg`;
+                                        const mimeType = asset.mimeType || 'image/jpeg';
+                                        const uploadedUrl = await uploadDocumentToCloudinary(asset.uri, fileName, mimeType, user?._id);
+
+                                        if (!uploadedUrl) {
+                                            throw new Error('Upload failed');
+                                        }
+
+                                        setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                [type]: uploadedUrl,
+                                                [`${type}Type`]: 'image'
+                                            }
+                                        }));
+                                    }
+                                } catch (imageError) {
+                                    console.error('Image picker error:', imageError);
+                                    Alert.alert('Error', 'Failed to pick image. Please try again.');
+                                }
+                            }
+                        },
+                        {
+                            text: 'Upload PDF',
+                            onPress: async () => {
+                                try {
+                                    const pdfResult = await DocumentPicker.getDocumentAsync({
+                                        type: 'application/pdf',
+                                        copyToCacheDirectory: true,
+                                    });
+
+                                    console.log('PDF Result:', pdfResult);
+
+                                    if (pdfResult && pdfResult.assets && pdfResult.assets.length > 0) {
+                                        const pdfFile = pdfResult.assets[0];
+                                        const uploadedUrl = await uploadDocumentToCloudinary(
+                                            pdfFile.uri,
+                                            pdfFile.name || `traveler-${index + 1}-document.pdf`,
+                                            pdfFile.mimeType || 'application/pdf',
+                                            user?._id
+                                        );
+
+                                        if (!uploadedUrl) {
+                                            throw new Error('Upload failed');
+                                        }
+
+                                        setUploads(prev => ({
+                                            ...prev,
+                                            [index]: {
+                                                ...prev[index],
+                                                [type]: uploadedUrl,
+                                                [`${type}Type`]: 'pdf',
+                                                [`${type}Name`]: pdfFile.name
+                                            }
+                                        }));
+                                    } else if (pdfResult && pdfResult.canceled) {
+                                        // User cancelled, do nothing
+                                        console.log('PDF selection cancelled');
+                                    }
+                                } catch (pdfError) {
+                                    console.error('PDF picker error:', pdfError);
+                                    Alert.alert('Error', 'Failed to pick PDF. Please try again.');
+                                }
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            onPress: () => {},
+                            style: 'cancel'
+                        }
+                    ]
+                );
+            }
+        } catch (error) {
+            console.error('Error in pickImage:', error);
+            Alert.alert('Error', 'An error occurred. Please try again.');
         }
     };
 
@@ -245,6 +434,15 @@ export default function QuotationUploads({ route, navigation }) {
     };
 
     const isValidPassportNumber = (passportNo) => /^P\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
+
+    const handleViewPDF = async (pdfUri) => {
+        try {
+            await Linking.openURL(pdfUri);
+        } catch (error) {
+            console.error('Error opening PDF:', error);
+            Alert.alert('Error', 'Failed to open PDF. Please try again.');
+        }
+    };
 
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
@@ -394,15 +592,29 @@ export default function QuotationUploads({ route, navigation }) {
                                     onPress={() => pickImage(index, 'passport')}
                                 >
                                     {uploads[index]?.passport ? (
-                                        <Image source={{ uri: uploads[index].passport }} style={BookingUploadsStyle.previewImage} />
+                                        uploads[index]?.passportType === 'pdf' ? (
+                                            <View style={BookingUploadsStyle.pdfPreviewContainer}>
+                                                <Ionicons name="document-text" size={28} color="#dc2626" />
+                                                <Text style={BookingUploadsStyle.pdfFileName}>{uploads[index]?.passportName?.substring(0, 15) || 'document.pdf'}</Text>
+                                            </View>
+                                        ) : (
+                                            <Image source={{ uri: uploads[index].passport }} style={BookingUploadsStyle.previewImage} />
+                                        )
                                     ) : (
                                         <Ionicons name={isDomestic ? "id-card-outline" : "book-outline"} size={24} color="#305797" />
                                     )}
                                 </TouchableOpacity>
                                 {uploads[index]?.passport ? (
-                                    <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], passport: null } }))}>
-                                        <Text style={QuotationUploadsStyle.removeImageText}>Remove Image</Text>
-                                    </TouchableOpacity>
+                                    <View style={BookingUploadsStyle.fileActionButtons}>
+                                        {uploads[index]?.passportType === 'pdf' && (
+                                            <TouchableOpacity onPress={() => handleViewPDF(uploads[index].passport)}>
+                                                <Text style={BookingUploadsStyle.viewPdfText}>View PDF</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], passport: null, passportType: null, passportName: null } }))}>
+                                            <Text style={QuotationUploadsStyle.removeImageText}>Remove</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 ) : null}
                             </View>
 
@@ -413,15 +625,29 @@ export default function QuotationUploads({ route, navigation }) {
                                     onPress={() => pickImage(index, 'photo')}
                                 >
                                     {uploads[index]?.photo ? (
-                                        <Image source={{ uri: uploads[index].photo }} style={BookingUploadsStyle.previewImage} />
+                                        uploads[index]?.photoType === 'pdf' ? (
+                                            <View style={BookingUploadsStyle.pdfPreviewContainer}>
+                                                <Ionicons name="document-text" size={28} color="#dc2626" />
+                                                <Text style={BookingUploadsStyle.pdfFileName}>{uploads[index]?.photoName?.substring(0, 15) || 'document.pdf'}</Text>
+                                            </View>
+                                        ) : (
+                                            <Image source={{ uri: uploads[index].photo }} style={BookingUploadsStyle.previewImage} />
+                                        )
                                     ) : (
                                         <Ionicons name="person-outline" size={24} color="#305797" />
                                     )}
                                 </TouchableOpacity>
                                 {uploads[index]?.photo ? (
-                                    <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], photo: null } }))}>
-                                        <Text style={QuotationUploadsStyle.removeImageText}>Remove Image</Text>
-                                    </TouchableOpacity>
+                                    <View style={BookingUploadsStyle.fileActionButtons}>
+                                        {uploads[index]?.photoType === 'pdf' && (
+                                            <TouchableOpacity onPress={() => handleViewPDF(uploads[index].photo)}>
+                                                <Text style={BookingUploadsStyle.viewPdfText}>View PDF</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], photo: null, photoType: null, photoName: null } }))}>
+                                            <Text style={QuotationUploadsStyle.removeImageText}>{uploads[index]?.photoType === 'pdf' ? 'Remove' : 'Remove Image'}</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 ) : null}
                             </View>
                         </View>
@@ -440,10 +666,10 @@ export default function QuotationUploads({ route, navigation }) {
                     <View style={BookingUploadsStyle.bulletRow}>
                         <Text style={BookingUploadsStyle.bullet}>•</Text>
                         <Text style={BookingUploadsStyle.notesText}>
-                            {isDomestic ? 'Upload a clear image of the valid ID' : 'Upload a clear image of the passport bio page'}
+                            {isDomestic ? 'Upload a clear image or PDF of the valid ID' : 'Upload a clear image or PDF of the passport bio page'}
                         </Text>
                     </View>
-                    <View style={BookingUploadsStyle.bulletRow}><Text style={BookingUploadsStyle.bullet}>•</Text><Text style={BookingUploadsStyle.notesText}>Accepted formats: JPG, PNG</Text></View>
+                    <View style={BookingUploadsStyle.bulletRow}><Text style={BookingUploadsStyle.bullet}>•</Text><Text style={BookingUploadsStyle.notesText}>Accepted formats: JPG, PNG, PDF</Text></View>
                     <View style={BookingUploadsStyle.bulletRow}><Text style={BookingUploadsStyle.bullet}>•</Text><Text style={BookingUploadsStyle.notesText}>Maximum file size: 5MB</Text></View>
                     <View style={BookingUploadsStyle.bulletRow}><Text style={BookingUploadsStyle.bullet}>•</Text><Text style={BookingUploadsStyle.notesText}>Blurry or cropped images may delay booking confirmation</Text></View>
 

@@ -265,6 +265,34 @@ const BookingUploadsStyle = StyleSheet.create({
         textAlign: 'center',
         marginTop: 8,
         textDecorationLine: 'underline',
+    },
+    // 🔥 PDF Preview Container
+    pdfPreviewContainer: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+    },
+    pdfFileName: {
+        fontSize: 10,
+        fontFamily: 'Roboto_400Regular',
+        color: '#dc2626',
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    // 🔥 View PDF Button
+    viewPdfText: {
+        color: '#305797',
+        fontSize: 12,
+        fontFamily: 'Montserrat_600SemiBold',
+        textAlign: 'center',
+        textDecorationLine: 'underline',
+    },
+    // 🔥 File Action Buttons Container
+    fileActionButtons: {
+        marginTop: 8,
+        gap: 8,
     }
 });
 
