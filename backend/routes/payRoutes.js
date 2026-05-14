@@ -9,7 +9,7 @@ import {
     createCheckoutSessionVisa,
     createCheckoutSessionPassportPenalty,
     createCheckoutSessionVisaPenalty,
-    createManualPaymentDeliveryFee,
+    createCheckoutSessionDeliveryFee,
     createManualPaymentDeposit,
     createManualPayment,
     createManualPaymentPassport,
