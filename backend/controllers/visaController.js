@@ -118,6 +118,66 @@ const getVisaProcessStepsFromService = (application) => {
   return [];
 };
 
+const normalizeVisaProcessStep = (step, index = 0) => {
+  if (typeof step === 'string') {
+    const title = step.trim();
+    return {
+      title,
+      daysToBeCompleted: null,
+      cumulativeDays: Number.isFinite(VISA_STATUS_TOTAL_DAYS_MAP[title])
+        ? VISA_STATUS_TOTAL_DAYS_MAP[title]
+        : null,
+      index,
+    };
+  }
+
+  const title = String(step?.title || step?.status || step?.name || '').trim();
+  const days = Number(step?.daysToBeCompleted ?? step?.days ?? 0);
+
+  return {
+    title,
+    daysToBeCompleted: Number.isFinite(days) && days > 0 ? days : null,
+    cumulativeDays: Number.isFinite(step?.cumulativeDays)
+      ? Number(step.cumulativeDays)
+      : null,
+    index,
+  };
+};
+
+const resolveVisaStepDays = (step, previousCumulativeDays = 0) => {
+  const normalizedStep = normalizeVisaProcessStep(step);
+
+  if (!normalizedStep.title) {
+    return {
+      ...normalizedStep,
+      daysToBeCompleted: 0,
+      cumulativeDays: previousCumulativeDays,
+    };
+  }
+
+  if (normalizedStep.daysToBeCompleted) {
+    return {
+      ...normalizedStep,
+      cumulativeDays: previousCumulativeDays + normalizedStep.daysToBeCompleted,
+    };
+  }
+
+  const staticTotalDays = VISA_STATUS_TOTAL_DAYS_MAP[normalizedStep.title];
+  if (Number.isFinite(staticTotalDays)) {
+    return {
+      ...normalizedStep,
+      daysToBeCompleted: Math.max(staticTotalDays - previousCumulativeDays, 0),
+      cumulativeDays: staticTotalDays,
+    };
+  }
+
+  return {
+    ...normalizedStep,
+    daysToBeCompleted: 0,
+    cumulativeDays: previousCumulativeDays,
+  };
+};
+
 export const buildProcessSteps = (application, serviceProcessSteps = []) => {
   const out = {};
   if (!application) return out;
@@ -127,13 +187,15 @@ export const buildProcessSteps = (application, serviceProcessSteps = []) => {
   const steps = Array.isArray(serviceProcessSteps) ? serviceProcessSteps : [];
 
   let prevDeadline = null;
+  let previousCumulativeDays = 0;
 
   for (const step of steps) {
-    const stepTitle = String(step?.title || '').trim();
+    const resolvedStep = resolveVisaStepDays(step, previousCumulativeDays);
+    const stepTitle = resolvedStep.title;
     if (!stepTitle) continue;
 
     const setDate = getVisaStatusSetDate(application, stepTitle) || (stepTitle === 'Application Submitted' ? createdAt : null);
-    const deadlineDays = Number(step?.daysToBeCompleted ?? 0);
+    const deadlineDays = resolvedStep.daysToBeCompleted || 0;
 
     let deadline = null;
 
@@ -150,6 +212,7 @@ export const buildProcessSteps = (application, serviceProcessSteps = []) => {
     }
 
     if (deadline) prevDeadline = deadline;
+    previousCumulativeDays = resolvedStep.cumulativeDays || previousCumulativeDays + deadlineDays;
 
     out[stepTitle] = {
       setDate: setDate ? setDate.format('YYYY-MM-DD') : null,
@@ -812,7 +875,8 @@ export const applyVisa = async (req, res) => {
     });
 
     try {
-      newApplication.processSteps = buildProcessSteps(newApplication, service.visaProcessSteps);
+      const serviceDoc = await ServiceModel.findById(serviceId).select('visaProcessSteps');
+      newApplication.processSteps = buildProcessSteps(newApplication, serviceDoc?.visaProcessSteps || []);
       await newApplication.save();
     } catch (processStepsError) {
       console.error('Failed to build/persist visa processSteps:', processStepsError);
