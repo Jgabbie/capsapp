@@ -437,26 +437,33 @@ export const createManualPaymentVisa = async (req, res) => {
             userId,
             title: "Manual Payment Submitted",
             message: `Your manual payment for visa application ${visaApp.applicationNumber} has been submitted and is pending review.`,
-            link: `/ user - transactions`,
+            link: `/user-transactions`,
         });
 
         try {
             await transporter.sendMail({
-                from: `"M&RC Travel and Tours" < ${process.env.SENDER_EMAIL}> `,
+                from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
                 to: user.email,
                 subject: `Visa Payment Submitted`,
                 html: buildBrandedEmail({
                     title: 'Visa Payment Submitted',
-                    introHtml: `Hello < b > ${user.username}</b >, your visa payment has been successfully submitted and is currently pending verification by our team.`,
+                    introHtml: `Hello <b>${user.username}</b>, your visa payment has been successfully submitted and is currently pending verification by our team.`,
                     bodyHtml: `
-            < p style = "margin:0 0 12px;" > We will notify you once the verification is complete.This will take 1 - 2 business days.</p >
+                        <p style="margin:0 0 12px;">We will notify you once the verification is complete. This will take 1-2 business days.</p>
                         <div style="background:#f8fafc; border:1px solid #dbe4f0; border-radius:14px; padding:14px 16px; margin:18px 0;">
                             <p style="margin:0 0 8px;"><strong>Transaction Reference:</strong> ${reference}</p>
                             <p style="margin:0 0 8px;"><strong>Application Number:</strong> ${applicationNumber}</p>
                             <p style="margin:0;"><strong>Total Paid:</strong> ₱${amount.toFixed(2)}</p>
                         </div>
                         <p style="margin:0;">Enjoy your trip and thank you for choosing M&RC Travel and Tours!</p>
-        `,
+                        <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
+                        <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
+                            <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
+                            <p>M&RC Travel and Tours</p>
+                            <p>info1@mrctravels.com</p>
+                            <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
+                        </div>
+                    `,
                 })
             });
         } catch (emailError) {
@@ -466,7 +473,7 @@ export const createManualPaymentVisa = async (req, res) => {
         logAction('MANUAL_PAYMENT', userId, { "Manual Payment Submitted": `Transaction Reference: ${transaction.reference} | Amount: ₱${amount.toFixed(2)} | Payment Purpose: Visa Application` });
 
         return res.status(200).json({
-            redirectUrl: `/ user - applications / success / visa ? token = ${token} `
+            redirectUrl: `/user-applications/success/visa?token=${token}`
         });
     } catch (error) {
         console.error('Manual payment for visa application error:', error.message);

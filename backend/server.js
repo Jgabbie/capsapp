@@ -20,10 +20,9 @@ import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import uploadRoutes from './routes/uploadRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
-// 🔥 NEW: Import the log routes we just created 🔥
+
 import logRoutes from "./routes/logRoutes.js";
 
-// 🔥 NEW: Import the preferences routes 🔥
 import preferenceRoutes from "./routes/preferencesRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,10 +56,10 @@ app.use("/api/email", sendEmailRoutes);
 app.use("/api/rating", ratingRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use('/api/chatbot', chatbotRoutes);
-// 🔥 NEW: Mount the log routes so the frontend can access them! 🔥
+
 app.use("/api/logs", logRoutes);
 
-// 🔥 NEW: Mount the preferences routes! 🔥
+
 app.use("/api/preferences", preferenceRoutes);
 
 app.get("/", (req, res) => {

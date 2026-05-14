@@ -736,7 +736,7 @@ export default function VisaProgress() {
                         ? '/payment/create-checkout-session-visa-penalty'
                         : '/payment/create-checkout-session-visa';
                 const paymongoResponse = await apiFetch.post(endpoint, payload, withUserHeader(user._id));
-                const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
+                const checkoutUrl = paymongoResponse?.data?.data?.attributes?.checkout_url;
 
                 if (checkoutUrl) {
                     try {
