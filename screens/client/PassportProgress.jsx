@@ -930,13 +930,13 @@ export default function PassportApplication() {
         let timeToSend = null;
 
         if (selectedSuggestedIndex === 'others') {
-            if (!customDateTime.date || !customDateTime.time) {
+            if (!customPreferredDate || !customPreferredTime) {
                 Alert.alert('Error', 'Please fill in all custom date and time fields.');
                 return;
             }
 
-            dateToSend = dayjs(customDateTime.date).format('YYYY-MM-DD');
-            timeToSend = customDateTime.time.format('h:mm A');
+            dateToSend = dayjs(customPreferredDate).format('YYYY-MM-DD');
+            timeToSend = customPreferredTime;
 
         } else if (typeof selectedSuggestedIndex === 'number') {
             const selected = application.suggestedAppointmentSchedules[selectedSuggestedIndex];
@@ -973,6 +973,8 @@ export default function PassportApplication() {
             setConfirmingSuggested(false);
         }
     };
+
+
     const disableDates = (current) => {
         const today = dayjs().startOf('day');
         const twoWeeksFromNow = today.add(14, 'day');
@@ -994,7 +996,14 @@ export default function PassportApplication() {
             }
         }
         return hours;
-    }
+    };
+
+    const timeSlots = [
+        "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
+        "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+        "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+        "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"
+    ];
 
 
     //IF NO ID IN URL, GO BACK TO USER APPLICATIONS
@@ -1577,7 +1586,7 @@ export default function PassportApplication() {
                                                 }}
                                             >
                                                 <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
-                                                    {customPreferredTime ? dayjs(customPreferredTime).format('hh:mm A') : 'Select Preferred Time'}
+                                                    {customPreferredTime || 'Select Preferred Time'}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>
@@ -1603,9 +1612,10 @@ export default function PassportApplication() {
                         <TouchableWithoutFeedback>
                             <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
                                 <DateTimePicker
-                                    value={customPreferredDate || new Date()}
+                                    value={customPreferredDate || dayjs().add(14, 'days').toDate()}
                                     mode="date"
                                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    minimumDate={dayjs().add(14, 'days').toDate()}
                                     onChange={handleCustomDateChange}
                                 />
                             </View>
@@ -1616,13 +1626,18 @@ export default function PassportApplication() {
                 <Modal visible={showCustomTimePicker} transparent animationType="fade" onRequestClose={() => setShowCustomTimePicker(false)}>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomTimePicker(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                                <DateTimePicker
-                                    value={customPreferredTime || new Date()}
-                                    mode="time"
-                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                    onChange={handleCustomTimeChange}
-                                />
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', maxHeight: '60%' }}>
+                                <View style={{ padding: 20, borderBottomWidth: 1, borderColor: '#e5e7eb', width: '100%', backgroundColor: '#f9fafb' }}>
+                                    <Text style={{ fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#1f2937', textAlign: 'center' }}>Select Time</Text>
+                                </View>
+                                <ScrollView style={{ width: '100%' }}>
+                                    {timeSlots.map((slot, i) => (
+                                        <TouchableOpacity key={i} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: '#f3f4f6', alignItems: 'center' }}
+                                            onPress={() => { setCustomPreferredTime(slot); setShowCustomTimePicker(false); }}>
+                                            <Text style={{ fontSize: 16, fontFamily: customPreferredTime === slot ? "Montserrat_700Bold" : "Roboto_500Medium", color: customPreferredTime === slot ? '#305797' : '#374151' }}>{slot}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
                             </View>
                         </TouchableWithoutFeedback>
                     </TouchableOpacity>
