@@ -788,7 +788,7 @@ export const applyVisa = async (req, res) => {
 
   try {
     const user = await UserModel.findById(userId).select("firstname lastname username");
-    const service = await ServiceModel.findById(serviceId).select("visaName");
+    const service = await ServiceModel.findById(serviceId).select("visaName visaProcessSteps");
 
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
@@ -812,7 +812,7 @@ export const applyVisa = async (req, res) => {
     });
 
     try {
-      newApplication.processSteps = buildProcessSteps(newApplication, serviceDoc.visaProcessSteps);
+      newApplication.processSteps = buildProcessSteps(newApplication, service.visaProcessSteps);
       await newApplication.save();
     } catch (processStepsError) {
       console.error('Failed to build/persist visa processSteps:', processStepsError);
