@@ -1403,7 +1403,7 @@ export default function VisaProgress() {
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Managed By</Text>
-                        <Text style={VisaProgressStyle.infoValue}>{application.managedBy || 'N/A'}</Text>
+                        <Text style={VisaProgressStyle.infoValue}>{managerName || 'N/A'}</Text>
                     </View>
 
                     <View style={VisaProgressStyle.infoRow}>
@@ -1528,6 +1528,14 @@ export default function VisaProgress() {
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your visa application to proceed.</Text>
+
+                        <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>
+                            <Text style={{ color: '#6b7280', fontSize: 12 }}>Application Fee</Text>
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 18, marginTop: 6 }}>
+                                ₱{servicePrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </Text>
+                        </View>
+
                         {isApplicationPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
                                 A manual payment is already pending verification for this application.
@@ -1587,11 +1595,11 @@ export default function VisaProgress() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
@@ -1713,11 +1721,11 @@ export default function VisaProgress() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
@@ -1776,7 +1784,7 @@ export default function VisaProgress() {
 
 
                 {/* PENALTY FEE */}
-                {normalizedAppStatus === 'application approved' && application.penaltyOn === true && (
+                {normalizedAppStatus !== 'application approved' && application.penaltyOn === true && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
@@ -1838,11 +1846,11 @@ export default function VisaProgress() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>

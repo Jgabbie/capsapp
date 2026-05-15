@@ -175,6 +175,17 @@ export default function PassportApplication() {
         return { date, time };
     };
 
+    const formatTimeForDisplay = (time) => {
+        if (!time) return 'No time provided';
+
+        const parsedTime = dayjs(String(time), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
+        if (parsedTime.isValid()) {
+            return parsedTime.format('hh:mm A');
+        }
+
+        return String(time);
+    };
+
     const isOthersSelected = selectedScheduleIndex === 'others';
     const canConfirmSchedule = selectedScheduleIndex !== null && !confirmingSchedule && (
         !isOthersSelected || (customPreferredDate && customPreferredTime)
@@ -200,7 +211,7 @@ export default function PassportApplication() {
         const selected = isOthersOption
             ? {
                 date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
-                time: customPreferredTime ? dayjs(customPreferredTime).format('HH:mm') : ''
+                time: customPreferredTime || ''
             }
             : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
 
@@ -216,7 +227,6 @@ export default function PassportApplication() {
                 time: selected.time
             }, withUserHeader(user._id));
 
-            Alert.alert('Success', 'Appointment schedule confirmed!');
             setSelectedScheduleIndex(null);
             setCustomPreferredDate(null);
             setCustomPreferredTime(null);
@@ -502,6 +512,8 @@ export default function PassportApplication() {
     const currentStatusSetDate = getStatusSetDate(application);
     const statusSetDate = currentStatusSetDate; // alias for compatibility with other components
     const appStatus = (application?.status || '').toString();
+    const hasSuggestedAppointmentScheduleChosen = Boolean(application?.suggestedAppointmentScheduleChosen);
+    const passportApplicationFee = 2000;
     const deadlineDays = application?.statusDeadlineDays ?? statusDeadlineDaysMap[application?.status] ?? null;
     let statusDeadlineDate = application?.statusDeadlineDate
         ? dayjs(application.statusDeadlineDate)
@@ -612,9 +624,19 @@ export default function PassportApplication() {
             if (method === 'manual') {
 
                 const formData = new FormData();
-                formData.append('file', proofImage);
+                formData.append('file', {
+                    uri: proofImage.uri,
+                    type: proofImage.type || 'image/jpeg',
+                    name: proofImage.name || `receipt-${Date.now()}.jpg`,
+                });
 
-                const uploadRes = await api.post('/upload/upload-receipt', formData, withUserHeader(user._id));
+                const uploadRes = await api.post('/upload/upload-receipt', formData, {
+                    ...withUserHeader(user._id),
+                    headers: {
+                        ...withUserHeader(user._id).headers,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
 
                 const imageUrl = uploadRes.data.url;
 
@@ -664,8 +686,12 @@ export default function PassportApplication() {
             }
 
         } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'Payment failed');
+            console.error('Payment Error Details:', {
+                message: err.message,
+                status: err.response?.status,
+                data: err.response?.data,
+            });
+            Alert.alert('Error', err.response?.data?.error || err.message || 'Payment failed');
         } finally {
             setPaymentLoading(false);
         }
@@ -1126,6 +1152,13 @@ export default function PassportApplication() {
                         <Text style={PassportProgressStyle.infoValue}>{application.preferredTime}</Text>
                     </View>
 
+                    <View style={PassportProgressStyle.infoRow}>
+                        <Text style={PassportProgressStyle.infoLabel}>Application Fee</Text>
+                        <Text style={PassportProgressStyle.infoValue}>
+                            ₱ {passportApplicationFee.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Text>
+                    </View>
+
                     {statusDeadlineDate?.isValid() && (
                         <View style={PassportProgressStyle.infoRow}>
                             <Text style={PassportProgressStyle.infoLabel}>Deadline</Text>
@@ -1205,11 +1238,11 @@ export default function PassportApplication() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
@@ -1268,7 +1301,7 @@ export default function PassportApplication() {
 
 
                 {/* PENALTY FEE */}
-                {appStatus.toLowerCase() === 'application approved' && (
+                {appStatus.toLowerCase() !== 'application approved' && application.penaltyOn === true && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
@@ -1326,11 +1359,11 @@ export default function PassportApplication() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
@@ -1511,7 +1544,7 @@ export default function PassportApplication() {
                 )}
 
 
-                {appStatus.toLowerCase() === 'application submitted' && (
+                {appStatus.toLowerCase() === 'application submitted' && !hasSuggestedAppointmentScheduleChosen && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
@@ -1537,7 +1570,7 @@ export default function PassportApplication() {
                                                 <Text style={PassportProgressStyle.optionDate}>
                                                     {normalizedSlot.date ? dayjs(normalizedSlot.date).format("MMM DD, YYYY") : 'No date provided'}
                                                 </Text>
-                                                <Text style={PassportProgressStyle.optionTime}>{normalizedSlot.time || 'No time provided'}</Text>
+                                                <Text style={PassportProgressStyle.optionTime}>{formatTimeForDisplay(normalizedSlot.time)} </Text>
                                             </TouchableOpacity>
                                         );
                                     })()
@@ -1739,26 +1772,26 @@ export default function PassportApplication() {
             {/* Appointment Success Modal */}
             <Modal visible={showAppointmentSuccessModal} transparent animationType="fade" onRequestClose={() => setShowAppointmentSuccessModal(false)}>
                 <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
                     activeOpacity={1}
                     onPress={() => setShowAppointmentSuccessModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', maxWidth: 400 }}>
-                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                <Ionicons name="checkmark-circle" size={40} color="#10b981" />
+                        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
+                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={{ fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
-                                Appointment Confirmed!
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                Appointment Date has been selected
                             </Text>
-                            <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 20, textAlign: 'center', lineHeight: 20 }}>
-                                Your appointment schedule has been successfully confirmed. You will receive a notification with further details.
+                            <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                Your appointment schedule has been confirmed. Please check your email for further instructions.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowAppointmentSuccessModal(false)}
-                                style={{ backgroundColor: '#305797', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}
+                                style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
                             >
-                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Done</Text>
+                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
