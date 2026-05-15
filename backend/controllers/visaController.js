@@ -788,7 +788,7 @@ export const applyVisa = async (req, res) => {
 
   try {
     const user = await UserModel.findById(userId).select("firstname lastname username");
-    const service = await ServiceModel.findById(serviceId).select("visaName");
+    const service = await ServiceModel.findById(serviceId).select("visaName visaProcessSteps");
 
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
@@ -811,6 +811,13 @@ export const applyVisa = async (req, res) => {
       documents: {}
     });
 
+    try {
+      newApplication.processSteps = buildProcessSteps(newApplication, service.visaProcessSteps);
+      await newApplication.save();
+    } catch (processStepsError) {
+      console.error('Failed to build/persist visa processSteps:', processStepsError);
+    }
+
     if (typeof logAction === 'function') {
       logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
     }
@@ -820,6 +827,8 @@ export const applyVisa = async (req, res) => {
     return res.status(500).json({ message: "Error applying for visa", error: error.message });
   }
 };
+
+
 
 export const getUserVisaApplications = async (req, res) => {
   try {
@@ -912,6 +921,15 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
     };
     application.status = ["Documents Uploaded"];
     application.currentStepIndex = Math.max(application.currentStepIndex || 0, 3);
+
+
+    try {
+      const serviceDoc = await ServiceModel.findById(application.serviceId).select('visaProcessSteps');
+      application.processSteps = buildProcessSteps(application, serviceDoc.visaProcessSteps);
+      await application.save();
+    } catch (processStepsError) {
+      console.error('Failed to build/persist visa processSteps:', processStepsError);
+    }
 
     await application.save();
 
