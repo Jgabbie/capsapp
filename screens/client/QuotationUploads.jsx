@@ -90,15 +90,28 @@ export default function QuotationUploads({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation } = route.params || {};
 
-    const counts = quotation?.travelerCounts || { adult: 1, child: 0, infant: 0 };
-    const totalTravelers = counts.adult + counts.child + counts.infant;
-    const bookingType = quotation?.bookingType || 'Solo Booking';
+    // Use fullQuotation if available, otherwise fall back to passed quotation
+    const activeQuotation = fullQuotation || quotation;
 
-    const packageType = quotation?.packageId.packageType || quotation?.pkg?.packageType || '';
+    const counts = activeQuotation?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+    const totalTravelers = counts.adult + counts.child + counts.infant;
+    const bookingType = activeQuotation?.bookingType || 'Solo Booking';
+
+    const packageType = activeQuotation?.packageId?.packageType || activeQuotation?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
-    const rawVisaValue = quotation?.pkg?.requiresVisa ?? quotation?.pkg?.packageRequiresVisa ?? quotation?.pkg?.visaRequired;
+    
+    // Check visa requirement from multiple sources - packageId is the populated package from API
+    const rawVisaValue = activeQuotation?.packageId?.packageRequiresVisa ?? activeQuotation?.packageId?.requiresVisa ?? activeQuotation?.pkg?.requiresVisa ?? activeQuotation?.pkg?.packageRequiresVisa ?? activeQuotation?.pkg?.visaRequired;
     const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
+    
+    console.log("🛂 QuotationUploads - Visa Check:", { 
+        rawVisaValue, 
+        requiresVisa, 
+        packageType,
+        hasPackageId: !!activeQuotation?.packageId,
+        packageIdFields: activeQuotation?.packageId ? Object.keys(activeQuotation.packageId).slice(0, 5) : 'N/A'
+    });
 
     const travelerTypes = useMemo(() => {
         const types = [];
@@ -152,6 +165,26 @@ export default function QuotationUploads({ route, navigation }) {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
     const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [fullQuotation, setFullQuotation] = useState(quotation);
+
+    // Fetch full quotation data from API to ensure packageRequiresVisa is included
+    useEffect(() => {
+        if (quotation?._id && user) {
+            const fetchFullQuotation = async () => {
+                try {
+                    const response = await api.get(`/api/quotations/get-quotation/${quotation._id}`, withUserHeader(user._id));
+                    if (response.data) {
+                        setFullQuotation(response.data);
+                        console.log("✅ Fetched full quotation with packageRequiresVisa:", response.data?.packageId?.packageRequiresVisa);
+                    }
+                } catch (err) {
+                    console.log("⚠️ Could not fetch full quotation, using passed data:", err.message);
+                    setFullQuotation(quotation);
+                }
+            };
+            fetchFullQuotation();
+        }
+    }, [quotation?._id, user]);
 
     useEffect(() => {
         // Only apply adjustments if necessary to avoid unnecessary re-renders or loops
@@ -484,7 +517,7 @@ export default function QuotationUploads({ route, navigation }) {
 
     const handleConfirmContinue = () => {
         setShowVerifyModal(false);
-        navigation.navigate("quotationform1", { quotation, travelerUploads: uploads, travelersData });
+        navigation.navigate("quotationform1", { quotation: activeQuotation, travelerUploads: uploads, travelersData });
     };
 
     return (

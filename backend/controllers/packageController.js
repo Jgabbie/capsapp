@@ -120,3 +120,48 @@ export const addSampleItineraryImages = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// Admin: Mark packages as requiring visa (for testing)
+export const setPackageVisaRequirement = async (req, res) => {
+    try {
+        const { packageName, requiresVisa } = req.body;
+
+        if (typeof requiresVisa !== 'boolean') {
+            return res.status(400).json({ message: 'requiresVisa must be a boolean' });
+        }
+
+        let query = {};
+        if (packageName) {
+            query = { packageName: { $regex: packageName, $options: 'i' } };
+        }
+
+        // If no query, find first package
+        if (Object.keys(query).length === 0) {
+            const pkg = await PackageModel.findOne().limit(1);
+            if (!pkg) {
+                return res.status(404).json({ message: 'No packages found' });
+            }
+            query = { _id: pkg._id };
+        }
+
+        const updatedPackage = await PackageModel.findOneAndUpdate(
+            query,
+            { packageRequiresVisa: requiresVisa },
+            { new: true }
+        );
+
+        if (!updatedPackage) {
+            return res.status(404).json({ message: 'Package not found' });
+        }
+
+        res.status(200).json({
+            message: `Package visa requirement updated to ${requiresVisa}`,
+            packageName: updatedPackage.packageName,
+            packageId: updatedPackage._id,
+            packageRequiresVisa: updatedPackage.packageRequiresVisa
+        });
+    } catch (err) {
+        console.error("setPackageVisaRequirement error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
