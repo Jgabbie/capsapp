@@ -27,6 +27,13 @@ const VISA_TERMINAL_STATUSES = new Set([
     'rejected',
 ]);
 
+const timeSlots = [
+    "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
+    "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+    "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"
+];
+
 const getFileExtension = (value = '') => {
     const cleanValue = String(value).split('?')[0];
     const match = /\.([a-zA-Z0-9]+)$/.exec(cleanValue);
@@ -89,7 +96,6 @@ export default function VisaProgress() {
     const [customPreferredTime, setCustomPreferredTime] = useState(null);
     const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
-    const [confirmingSchedule, setConfirmingSchedule] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('paymongo');
     const [creatingPayment, setCreatingPayment] = useState(false);
     const [proofImage, setProofImage] = useState(null);
@@ -171,6 +177,7 @@ export default function VisaProgress() {
         ? application.status[application.status.length - 1]
         : (application?.status || application?.statusText || '');
     const appStatus = statusText || '';
+    const normalizedAppStatus = String(appStatus || '').toLowerCase();
 
     // keep steps derived from process to support legacy variable `steps`
     useEffect(() => {
@@ -179,13 +186,14 @@ export default function VisaProgress() {
 
     const isOthersSelected = selectedSuggestedIndex === 'others';
     const canConfirmSchedule = selectedSuggestedIndex !== null && (selectedSuggestedIndex !== 'others' || (customPreferredDate && customPreferredTime));
+
     const [confirmingSuggested, setConfirmingSuggested] = useState(false);
 
     // selected appointment values
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
 
-    const handleConfirmSchedule = handleConfirmSuggested;
+
 
     const handleCustomDateChange = (event, date) => {
         setShowCustomDatePicker(false);
@@ -973,7 +981,6 @@ export default function VisaProgress() {
                 } else {
                     cs.navigate('successfulmanualpaymentvisa');
                 }
-                notification.success({ message: 'Manual payment submitted successfully. Awaiting verification.' });
                 if (isDeliveryPayment) {
                     setDeliveryFeePendingManualPayment(true);
                 } else if (isPenaltyPayment) {
@@ -1159,8 +1166,11 @@ export default function VisaProgress() {
 
     //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
     const handleConfirmSuggested = async () => {
+        console.log('Confirming appointment with selected index:', selectedSuggestedIndex);
+
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
             notification.warning({ message: 'Please select an appointment option first.', placement: 'topRight' });
+            console.log(selectedSuggestedIndex);
             return;
         }
 
@@ -1168,16 +1178,16 @@ export default function VisaProgress() {
         let timeToSend = null;
 
         if (selectedSuggestedIndex === 'others') {
-            if (!customDateTime.date || !customDateTime.time) {
+            if (!customPreferredDate || !customPreferredTime) {
                 notification.warning({ message: 'Please fill in all custom date and time fields.', placement: 'topRight' });
                 return;
             }
 
-            dateToSend = dayjs(customDateTime.date).format('YYYY-MM-DD');
-            timeToSend = customDateTime.time.format('h:mm A');
+            dateToSend = dayjs(customPreferredDate).format('YYYY-MM-DD');
+            timeToSend = customPreferredTime;
 
         } else if (typeof selectedSuggestedIndex === 'number') {
-            const selected = application.suggestedAppointmentSchedules[selectedSuggestedIndex];
+            const selected = normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedSuggestedIndex]);
 
             if (!selected?.date || !selected?.time) {
                 notification.error({ message: 'Selected option is missing date or time.', placement: 'topRight' });
@@ -1194,14 +1204,14 @@ export default function VisaProgress() {
             await apiFetch.put(`/visa/applications/${id}/choose-appointment`, {
                 date: dateToSend,
                 time: timeToSend
-            });
+            }, withUserHeader(user._id));
 
             // optional: sync UI state after success
             setSelectedDate(dateToSend);
             setSelectedTime(timeToSend);
 
-            const refreshed = await apiFetch.get(`/visa/applications/${id}`);
-            setApplication(refreshed);
+            const refreshed = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
+            setApplication(refreshed?.data || refreshed);
             setIsDateSelectedModalOpen(true);
         } catch (error) {
             notification.error({ message: 'Failed to confirm appointment schedule.', placement: 'topRight' });
@@ -1209,6 +1219,8 @@ export default function VisaProgress() {
             setConfirmingSuggested(false);
         }
     };
+
+
 
     const handleReleaseOption = async () => {
         if (!passportReleaseOption) {
@@ -1326,26 +1338,42 @@ export default function VisaProgress() {
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
 
-                    {appStatus.toLowerCase() === 'passport released' && application.deliveryFee !== "" && (
+                    {normalizedAppStatus === 'passport released' && application.deliveryFee !== "" && application.passportReleaseOption === 'delivery' && (
                         <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>The delivery details are {application.deliveryFee} pesos and the date is {dayjs(application.deliveryDate).format('MMM D, YYYY')}</Text>
+                            {application.deliveryFee === 0 ? (
+                                <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
+                                    The delivery details are not yet provided.
+                                </Text>
+                            ) : (
+                                <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
+                                    The delivery details are {application.deliveryFee} pesos and the date is {dayjs(application.deliveryDate).format('MMM D, YYYY')}
+                                </Text>
+                            )}
                         </View>
                     )}
 
-                    {appStatus.toLowerCase() === 'documents approved' && (
+                    {normalizedAppStatus === 'passport released' && application.passportReleaseOption === 'pickup' && (
+                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
+                                Kindly pickup your passport from the M&RC office. We will email you once it's ready for pickup.
+                            </Text>
+                        </View>
+                    )}
+
+                    {normalizedAppStatus === 'documents approved' && (
                         <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                             <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Documents Approved</Text>
                         </View>
                     )}
 
-                    {appStatus.toLowerCase() === 'rejected' && (
+                    {normalizedAppStatus === 'rejected' && (
                         <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                             <Text style={{ color: '#96050c', fontFamily: 'Montserrat_600SemiBold' }}>Documents Rejected</Text>
                         </View>
                     )}
 
-                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment completed' && appStatus.toLowerCase() !== 'documents uploaded' &&
-                        appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'embassy approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
+                    {normalizedAppStatus !== 'application submitted' && normalizedAppStatus !== 'application approved' && normalizedAppStatus !== 'payment completed' && normalizedAppStatus !== 'documents uploaded' &&
+                        normalizedAppStatus !== 'documents approved' && normalizedAppStatus !== 'embassy approved' && normalizedAppStatus !== 'passport released' && normalizedAppStatus !== 'rejected' && (
                             <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                                 <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
                             </View>
@@ -1403,7 +1431,7 @@ export default function VisaProgress() {
                     </View>
                 </View>
 
-                {appStatus.toLowerCase() === 'embassy approved' && (
+                {normalizedAppStatus === 'embassy approved' && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Choose how to claim your passport</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1496,7 +1524,7 @@ export default function VisaProgress() {
 
 
                 {/* SERVICE FEE */}
-                {appStatus.toLowerCase() === 'application approved' && (
+                {normalizedAppStatus === 'application approved' && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your visa application to proceed.</Text>
@@ -1748,7 +1776,7 @@ export default function VisaProgress() {
 
 
                 {/* PENALTY FEE */}
-                {appStatus.toLowerCase() === 'application approved' && application.penaltyOn === true && (
+                {normalizedAppStatus === 'application approved' && application.penaltyOn === true && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
@@ -1886,7 +1914,7 @@ export default function VisaProgress() {
 
 
                 {/* UPLOAD REQUIREMENTS */}
-                {appStatus.toLowerCase() === 'payment completed' && resubmissionRequested && visibleRequirements.length > 0 && (
+                {normalizedAppStatus === 'payment completed' && visibleRequirements.length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1921,7 +1949,7 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === 'documents uploaded' && getUploadedDocumentEntries().length > 0 && (
+                {normalizedAppStatus === 'documents uploaded' && getUploadedDocumentEntries().length > 0 && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1952,7 +1980,7 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === 'application submitted' && (
+                {normalizedAppStatus === 'application submitted' && !application?.suggestedAppointmentScheduleChosen && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
@@ -2027,7 +2055,7 @@ export default function VisaProgress() {
                                                 }}
                                             >
                                                 <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
-                                                    {customPreferredTime ? dayjs(customPreferredTime).format('hh:mm A') : 'Select Preferred Time'}
+                                                    {customPreferredTime || 'Select Preferred Time'}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>
@@ -2037,9 +2065,9 @@ export default function VisaProgress() {
                                 <TouchableOpacity
                                     style={[VisaProgressStyle.submitBtn, !canConfirmSchedule && { opacity: 0.5 }]}
                                     disabled={!canConfirmSchedule}
-                                    onPress={handleConfirmSchedule}
+                                    onPress={handleConfirmSuggested}
                                 >
-                                    {confirmingSchedule ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>Confirm Selected Date</Text>}
+                                    {confirmingSuggested ? <ActivityIndicator color="#fff" /> : <Text style={VisaProgressStyle.submitBtnText}>Confirm Selected Date</Text>}
                                 </TouchableOpacity>
                             </>
                         ) : (
@@ -2114,9 +2142,10 @@ export default function VisaProgress() {
                         <TouchableWithoutFeedback>
                             <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
                                 <DateTimePicker
-                                    value={customPreferredDate || new Date()}
+                                    value={customPreferredDate || dayjs().add(14, 'days').toDate()}
                                     mode="date"
                                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    minimumDate={dayjs().add(14, 'days').toDate()}
                                     onChange={handleCustomDateChange}
                                 />
                             </View>
@@ -2127,13 +2156,18 @@ export default function VisaProgress() {
                 <Modal visible={showCustomTimePicker} transparent animationType="fade" onRequestClose={() => setShowCustomTimePicker(false)}>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomTimePicker(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                                <DateTimePicker
-                                    value={customPreferredTime || new Date()}
-                                    mode="time"
-                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                    onChange={handleCustomTimeChange}
-                                />
+                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', maxHeight: '60%' }}>
+                                <View style={{ padding: 20, borderBottomWidth: 1, borderColor: '#e5e7eb', width: '100%', backgroundColor: '#f9fafb' }}>
+                                    <Text style={{ fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#1f2937', textAlign: 'center' }}>Select Time</Text>
+                                </View>
+                                <ScrollView style={{ width: '100%' }}>
+                                    {timeSlots.map((slot, i) => (
+                                        <TouchableOpacity key={i} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: '#f3f4f6', alignItems: 'center' }}
+                                            onPress={() => { setCustomPreferredTime(slot); setShowCustomTimePicker(false); }}>
+                                            <Text style={{ fontSize: 16, fontFamily: customPreferredTime === slot ? "Montserrat_700Bold" : "Roboto_500Medium", color: customPreferredTime === slot ? '#305797' : '#374151' }}>{slot}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
                             </View>
                         </TouchableWithoutFeedback>
                     </TouchableOpacity>
@@ -2153,7 +2187,7 @@ export default function VisaProgress() {
                                     Your documents have been submitted. Our team will review them shortly.
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setShowDocumentsSuccessModal(false)}
+                                    onPress={() => setShowClaimPreferenceSuccessModal(false)}
                                     style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
                                 >
                                     <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
@@ -2177,7 +2211,7 @@ export default function VisaProgress() {
                                     Your files has been submitted. Our team will review it shortly.
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setShowClaimPreferenceSuccessModal(false)}
+                                    onPress={() => setShowDocumentsSuccessModal(false)}
                                     style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
                                 >
                                     <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
@@ -2236,6 +2270,30 @@ export default function VisaProgress() {
                             )}
                         </View>
                     </View>
+                </Modal>
+
+                <Modal visible={isDateSelectedModalOpen} transparent animationType="fade" onRequestClose={() => setIsDateSelectedModalOpen(false)}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
+                                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                    <Ionicons name="checkmark" size={32} color="#059669" />
+                                </View>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                    Appointment Date has been selected
+                                </Text>
+                                <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                    Your appointment schedule has been confirmed. Please check your email for further instructions.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setIsDateSelectedModalOpen(false)}
+                                    style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                >
+                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
                 </Modal>
 
             </ScrollView>

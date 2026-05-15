@@ -849,10 +849,13 @@ export const getVisaApplicationById = async (req, res) => {
     const { id } = req.params;
     const application = await VisaModel.findById(id)
       .populate("userId", "firstname lastname username")
-      .populate("serviceId");
+      .populate("serviceId")
+      .populate('statusHistory.changedBy', 'firstname lastname username');
     if (!application) {
       return res.status(404).json({ message: "Visa application not found" });
     }
+
+
     // Decorate with deadline info
     const decorated = await decorateVisaApplication(application);
     res.status(200).json(decorated);
