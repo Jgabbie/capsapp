@@ -20,6 +20,7 @@ import sendEmailRoutes from "./routes/sendEmailRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import uploadRoutes from './routes/uploadRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
+import recommendationsRoutes from './routes/recommendationsRoutes.js';
 
 import logRoutes from "./routes/logRoutes.js";
 
@@ -61,6 +62,8 @@ app.use("/api/logs", logRoutes);
 
 
 app.use("/api/preferences", preferenceRoutes);
+
+app.use("/api/recommendations", recommendationsRoutes);
 
 app.get("/", (req, res) => {
     res.send("TRAVEX API Running");

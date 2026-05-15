@@ -19,6 +19,8 @@ const PackageSchema = new mongoose.Schema({
     packageExclusions: { type: Array, default: [] },
     packageTermsConditions: { type: Array, default: [] },
     packageItineraries: { type: Object, default: {} },
+    packageItineraryImages: { type: Object, default: {} },
+    packageRequiresVisa: { type: Boolean, default: false },
     packageTags: { type: Array, default: [] },
     packageDiscountPercent: { type: Number, default: 0 },
     images: { type: Array, default: [] },

@@ -41,7 +41,7 @@ export const createQuotation = async (req, res) => {
 export const getUserQuotations = async (req, res) => {
   try {
     const quotations = await Quotation.find({ userId: req.userId })
-      .populate('packageId', 'packageName packageType')
+      .populate('packageId', 'packageName packageType packageInclusions packageExclusions packageItineraries packageItineraryImages packageRequiresVisa')
       .sort({ createdAt: -1 });
     return res.status(200).json(quotations);
   } catch (error) {
@@ -53,7 +53,7 @@ export const getUserQuotations = async (req, res) => {
 export const getQuotation = async (req, res) => {
   try {
     const quotation = await Quotation.findById(req.params.id)
-      .populate('packageId', 'packageName packageType');
+      .populate('packageId', 'packageName packageType packageInclusions packageExclusions packageItineraries packageItineraryImages packageRequiresVisa');
 
     if (!quotation) return res.status(404).json({ message: "Quotation not found" });
 

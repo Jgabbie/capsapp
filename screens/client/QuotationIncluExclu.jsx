@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { Image } from 'expo-image';
 import QuotationIncluExcluStyle from '../../styles/clientstyles/QuotationIncluExcluStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
@@ -24,6 +25,61 @@ export default function QuotationIncluExclu({ route, navigation }) {
     const itineraryEntries = Array.isArray(itinerarySource)
         ? itinerarySource.map((items, index) => [`Day ${index + 1}`, items])
         : Object.entries(itinerarySource);
+
+    // Extract itinerary images
+    const itineraryImages = pkg?.packageItineraryImages || {};
+    
+    console.log("🖼️ QuotationIncluExclu - packageItineraryImages:", itineraryImages);
+    console.log("📦 Available image keys:", Object.keys(itineraryImages));
+
+    // Helper function to get image URL for a day
+    const getImageForDay = (dayLabel) => {
+        if (!dayLabel || !itineraryImages) {
+            console.log("🔍 getImageForDay - Missing dayLabel or itineraryImages:", { dayLabel, hasImages: !!itineraryImages, imageKeys: Object.keys(itineraryImages || {}) });
+            return null;
+        }
+        // Try exact match first
+        if (itineraryImages[dayLabel]) {
+            console.log(`✅ Found image for "${dayLabel}" (exact match)`);
+            return itineraryImages[dayLabel];
+        }
+        // Try lowercase
+        const lowercase = dayLabel.toLowerCase();
+        if (itineraryImages[lowercase]) {
+            console.log(`✅ Found image for "${dayLabel}" (lowercase: ${lowercase})`);
+            return itineraryImages[lowercase];
+        }
+        // Try removing spaces
+        const noSpaces = dayLabel.replace(/\s+/g, '');
+        if (itineraryImages[noSpaces]) {
+            console.log(`✅ Found image for "${dayLabel}" (noSpaces: ${noSpaces})`);
+            return itineraryImages[noSpaces];
+        }
+        // Try lowercase no spaces
+        if (itineraryImages[noSpaces.toLowerCase()]) {
+            console.log(`✅ Found image for "${dayLabel}" (lowercase noSpaces: ${noSpaces.toLowerCase()})`);
+            return itineraryImages[noSpaces.toLowerCase()];
+        }
+        // Try numeric day (Day 1 -> 1)
+        const dayMatch = dayLabel.match(/\d+/);
+        if (dayMatch) {
+            const dayNum = dayMatch[0];
+            if (itineraryImages[dayNum]) {
+                console.log(`✅ Found image for "${dayLabel}" (numeric: ${dayNum})`);
+                return itineraryImages[dayNum];
+            }
+            if (itineraryImages[`day${dayNum}`]) {
+                console.log(`✅ Found image for "${dayLabel}" (day${dayNum})`);
+                return itineraryImages[`day${dayNum}`];
+            }
+            if (itineraryImages[`Day${dayNum}`]) {
+                console.log(`✅ Found image for "${dayLabel}" (Day${dayNum})`);
+                return itineraryImages[`Day${dayNum}`];
+            }
+        }
+        console.log(`❌ No image found for "${dayLabel}". Available keys:`, Object.keys(itineraryImages));
+        return null;
+    };
 
     console.log(inclusions)
     console.log(exclusions)
@@ -54,20 +110,31 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         </View>
                     </View>
 
-                    {itineraryEntries.map(([day, items], i) => (
-                        <View key={i} style={QuotationIncluExcluStyle.itineraryDayBox}>
-                            <Text style={QuotationIncluExcluStyle.dayLabel}>{day.toUpperCase()}</Text>
-                            {(Array.isArray(items) ? items : [items]).map((item, j) => (
-                                <View key={j} style={QuotationIncluExcluStyle.activityRow}>
-                                    <View style={QuotationIncluExcluStyle.activityBullet} />
-                                    <Text style={QuotationIncluExcluStyle.activityText}>
-                                        {typeof item === 'object' ? (item?.activity || item?.optionalActivity || item?.title || '') : item}
-                                        {typeof item === 'object' && item?.isOptional ? " (Optional)" : ""}
-                                    </Text>
-                                </View>
-                            ))}
-                        </View>
-                    ))}
+                    {itineraryEntries.map(([day, items], i) => {
+                        const imageUrl = getImageForDay(day);
+                        return (
+                            <View key={i} style={QuotationIncluExcluStyle.itineraryDayBox}>
+                                {imageUrl && (
+                                    <Image
+                                        source={imageUrl}
+                                        style={{ width: '100%', height: 180, borderRadius: 8, marginBottom: 12 }}
+                                        contentFit="cover"
+                                        transition={300}
+                                    />
+                                )}
+                                <Text style={QuotationIncluExcluStyle.dayLabel}>{day.toUpperCase()}</Text>
+                                {(Array.isArray(items) ? items : [items]).map((item, j) => (
+                                    <View key={j} style={QuotationIncluExcluStyle.activityRow}>
+                                        <View style={QuotationIncluExcluStyle.activityBullet} />
+                                        <Text style={QuotationIncluExcluStyle.activityText}>
+                                            {typeof item === 'object' ? (item?.activity || item?.optionalActivity || item?.title || '') : item}
+                                            {typeof item === 'object' && item?.isOptional ? " (Optional)" : ""}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        );
+                    })}
                 </View>
 
                 {/* --- INCLUSIONS & EXCLUSIONS SECTION --- */}

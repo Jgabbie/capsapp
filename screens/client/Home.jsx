@@ -95,8 +95,10 @@ export default function Home({ route }) {
     ];
 
     const [packages, setPackages] = useState([])
+    const [forYouPackages, setForYouPackages] = useState([])
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
+    const [forYouLoading, setForYouLoading] = useState(false)
 
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
@@ -262,6 +264,30 @@ export default function Home({ route }) {
             }
         }
         fetchData()
+    }, [user?._id])
+
+    // Fetch personalized recommendations
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            try {
+                setForYouLoading(true)
+                    const response = await api.get('/recommendations', withUserHeader(user._id))
+                if (response.data?.packages) {
+                    setForYouPackages(response.data.packages)
+                } else {
+                    setForYouPackages([])
+                }
+            } catch (error) {
+                console.log("Failed to fetch recommendations:", error.message)
+                setForYouPackages([])
+            } finally {
+                setForYouLoading(false)
+            }
+        }
+        
+        if (user?._id) {
+            fetchRecommendations()
+        }
     }, [user?._id])
 
     const domesticPackages = packages.filter(
@@ -478,14 +504,14 @@ export default function Home({ route }) {
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                     ) : (
                         <>
-                            <Text style={HomeStyle.title}>Local Packages</Text>
-                            {domesticPackages.length > 0 && (
+                            <Text style={HomeStyle.title}>FOR YOU</Text>
+                            {forYouPackages.length > 0 && (
                                 <ScrollView
                                     horizontal
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
                                 >
-                                    {domesticPackages.map((pkg) => (
+                                    {forYouPackages.map((pkg) => (
                                         <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
                                             <BannerCard
                                                 item={pkg}

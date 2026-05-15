@@ -1,5 +1,6 @@
 import Preferrences from "../models/preferrences.js";
 import logAction from "../utils/logger.js"; //  Tracking added!
+import { scheduleRetrain } from "../utils/recommendationRetrainQueue.js";
 
 export const savePreferrences = async (req, res) => {
     try {
@@ -21,6 +22,9 @@ export const savePreferrences = async (req, res) => {
         if (typeof logAction === 'function') {
             logAction('UPDATE_PREFERENCES', userId, { "Preferences": "User updated their travel moodboard" });
         }
+
+        // Trigger AI model retraining after preference updates
+        scheduleRetrain('preferences-updated');
 
         res.status(200).json({ success: true, preferrences: updated });
     } catch (e) {

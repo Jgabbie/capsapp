@@ -270,13 +270,13 @@ export const getBookingByReference = async (req, res) => {
         const isAdmin = user?.role === 'Admin' || user?.role === 'Employee';
 
         const booking = await Booking.findOne(isAdmin ? { reference } : { reference, userId })
-            .populate('packageId', 'packageName packageType');
+            .populate('packageId', 'packageName packageType packageInclusions packageExclusions packageItineraries packageItineraryImages packageRequiresVisa');
 
         if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
         const transactions = await Transaction.find({ bookingId: booking._id })
             .sort({ createdAt: -1 })
-            .populate('packageId', 'packageName');
+            .populate('packageId', 'packageName packageType packageItineraryImages');
 
         return res.status(200).json({ booking, transactions });
     } catch (error) {
