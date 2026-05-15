@@ -624,9 +624,19 @@ export default function PassportApplication() {
             if (method === 'manual') {
 
                 const formData = new FormData();
-                formData.append('file', proofImage);
+                formData.append('file', {
+                    uri: proofImage.uri,
+                    type: proofImage.type || 'image/jpeg',
+                    name: proofImage.name || `receipt-${Date.now()}.jpg`,
+                });
 
-                const uploadRes = await api.post('/upload/upload-receipt', formData, withUserHeader(user._id));
+                const uploadRes = await api.post('/upload/upload-receipt', formData, {
+                    ...withUserHeader(user._id),
+                    headers: {
+                        ...withUserHeader(user._id).headers,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
 
                 const imageUrl = uploadRes.data.url;
 
@@ -676,8 +686,12 @@ export default function PassportApplication() {
             }
 
         } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'Payment failed');
+            console.error('Payment Error Details:', {
+                message: err.message,
+                status: err.response?.status,
+                data: err.response?.data,
+            });
+            Alert.alert('Error', err.response?.data?.error || err.message || 'Payment failed');
         } finally {
             setPaymentLoading(false);
         }
@@ -1224,11 +1238,11 @@ export default function PassportApplication() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
@@ -1287,7 +1301,7 @@ export default function PassportApplication() {
 
 
                 {/* PENALTY FEE */}
-                {appStatus.toLowerCase() === 'application approved' && (
+                {appStatus.toLowerCase() !== 'application approved' && application.penaltyOn === true && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
@@ -1345,11 +1359,11 @@ export default function PassportApplication() {
                                     <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                                     <View style={PaymentStyle.bankGrid}>
                                         {[
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                             { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
                                             { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
+                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
                                         ].map((bank, index) => (
-                                            <View key={index} style={PaymentStyle.bankGridCard}>
+                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
                                                 <Text style={PaymentStyle.bankName}>{bank.name}</Text>
                                                 <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
                                                 <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>

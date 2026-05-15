@@ -74,7 +74,7 @@ export const createManualPaymentDeliveryFee = async (req, res) => {
         });
 
         const passportApp = await PassportModel.findById(applicationId);
-        const userDoc = await UserModel.findById(userId).select('email username');
+        const userDoc = await User.findById(userId).select('email username');
 
         await Notification.create({
             userId,
@@ -163,7 +163,7 @@ export const createManualPaymentPassportPenalty = async (req, res) => {
         });
 
         const passportApp = await PassportModel.findById(applicationId);
-        const userDoc = await UserModel.findById(userId).select('email username');
+        const userDoc = await User.findById(userId).select('email username');
 
         await Notification.create({
             userId,
@@ -208,8 +208,9 @@ export const createManualPaymentPassportPenalty = async (req, res) => {
             redirectUrl: `/user-applications/success/passport?token=${token}`
         });
     } catch (error) {
-        console.error('Manual payment for passport application error:', error.message);
-        return res.status(500).json({ error: 'Failed to submit manual payment for passport penalty fee.' });
+        console.error('Manual payment for passport penalty error:', error.message);
+        console.error('Full error details:', error);
+        return res.status(500).json({ error: 'Failed to submit manual payment for passport penalty fee.', details: error.message });
     }
 };
 
@@ -253,7 +254,7 @@ export const createManualPaymentVisaPenalty = async (req, res) => {
         });
 
         const visaApp = await VisaModel.findById(applicationId);
-        const userDoc = await UserModel.findById(userId).select('email username');
+        const userDoc = await User.findById(userId).select('email username');
 
         await Notification.create({
             userId,
@@ -341,7 +342,7 @@ export const createManualPaymentPassport = async (req, res) => {
         });
 
         const passportApp = await PassportModel.findById(applicationId);
-        const userDoc = await UserModel.findById(userId).select('email username');
+        const userDoc = await User.findById(userId).select('email username');
 
         await Notification.create({
             userId,
@@ -387,7 +388,8 @@ export const createManualPaymentPassport = async (req, res) => {
         });
     } catch (error) {
         console.error('Manual payment for passport application error:', error.message);
-        return res.status(500).json({ error: 'Failed to submit manual payment for passport application.' });
+        console.error('Full error details:', error);
+        return res.status(500).json({ error: 'Failed to submit manual payment for passport application.', details: error.message });
     }
 };
 
