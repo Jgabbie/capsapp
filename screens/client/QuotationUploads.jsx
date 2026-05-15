@@ -101,16 +101,18 @@ export default function QuotationUploads({ route, navigation }) {
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
     
-    // Check visa requirement from multiple sources - packageId is the populated package from API
+    // Check visa requirement: either from packageRequiresVisa field OR if packageType is 'international'
     const rawVisaValue = activeQuotation?.packageId?.packageRequiresVisa ?? activeQuotation?.packageId?.requiresVisa ?? activeQuotation?.pkg?.requiresVisa ?? activeQuotation?.pkg?.packageRequiresVisa ?? activeQuotation?.pkg?.visaRequired;
-    const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
+    const isInternationalPackage = String(packageType).toLowerCase() === 'international';
+    const requiresVisa = isInternationalPackage || rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
     
     console.log("🛂 QuotationUploads - Visa Check:", { 
         rawVisaValue, 
-        requiresVisa, 
         packageType,
-        hasPackageId: !!activeQuotation?.packageId,
-        packageIdFields: activeQuotation?.packageId ? Object.keys(activeQuotation.packageId).slice(0, 5) : 'N/A'
+        isInternationalPackage,
+        requiresVisa, 
+        packageName: activeQuotation?.packageId?.packageName,
+        message: requiresVisa ? "✅ Visa required - will show form" : "❌ Visa not required - will NOT show form"
     });
 
     const travelerTypes = useMemo(() => {
@@ -166,25 +168,6 @@ export default function QuotationUploads({ route, navigation }) {
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [fullQuotation, setFullQuotation] = useState(quotation);
-
-    // Fetch full quotation data from API to ensure packageRequiresVisa is included
-    useEffect(() => {
-        if (quotation?._id && user) {
-            const fetchFullQuotation = async () => {
-                try {
-                    const response = await api.get(`/api/quotations/get-quotation/${quotation._id}`, withUserHeader(user._id));
-                    if (response.data) {
-                        setFullQuotation(response.data);
-                        console.log("✅ Fetched full quotation with packageRequiresVisa:", response.data?.packageId?.packageRequiresVisa);
-                    }
-                } catch (err) {
-                    console.log("⚠️ Could not fetch full quotation, using passed data:", err.message);
-                    setFullQuotation(quotation);
-                }
-            };
-            fetchFullQuotation();
-        }
-    }, [quotation?._id, user]);
 
     useEffect(() => {
         // Only apply adjustments if necessary to avoid unnecessary re-renders or loops

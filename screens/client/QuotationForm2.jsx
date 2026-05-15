@@ -125,6 +125,21 @@ export default function QuotationForm2({ route, navigation }) {
                 </>
             );
         }
+        if (activeDropdown === 'relation') {
+            return (
+                <>
+                    {relationOptions.map((option, index) => (
+                        <TouchableOpacity
+                            key={option}
+                            style={[QuotationFormStepStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
+                            onPress={() => handleDropdownSelect(option)}
+                        >
+                            <Text style={[QuotationFormStepStyle.dropdownText, { color: emergency.relation === option ? '#305797' : '#000' }]}>{option}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </>
+            );
+        }
         return (
             <>
                 <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => handleDropdownSelect('Y')}>
@@ -136,18 +151,6 @@ export default function QuotationForm2({ route, navigation }) {
             </>
         );
     };
-
-    if (activeDropdown === 'relation') {
-        return relationOptions.map((option, index) => (
-            <TouchableOpacity
-                key={option}
-                style={[QuotationFormStepStyle.dropdownItem, index === relationOptions.length - 1 && { borderBottomWidth: 0 }]}
-                onPress={() => handleDropdownSelect(option)}
-            >
-                <Text style={[QuotationFormStepStyle.dropdownText, { color: emergency.relation === option ? '#305797' : '#000' }]}>{option}</Text>
-            </TouchableOpacity>
-        ));
-    }
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>
@@ -327,9 +330,13 @@ export default function QuotationForm2({ route, navigation }) {
                     activeOpacity={1}
                     onPress={() => setActiveDropdown(null)}
                 >
-                    <View style={QuotationFormStepStyle.dropdownBox}>
-                        {renderDropdownOptions()}
-                    </View>
+                    <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+                        <View style={QuotationFormStepStyle.dropdownBox}>
+                            <ScrollView scrollEnabled={activeDropdown === 'relation'} nestedScrollEnabled={true}>
+                                {renderDropdownOptions()}
+                            </ScrollView>
+                        </View>
+                    </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
         </SafeAreaView>
