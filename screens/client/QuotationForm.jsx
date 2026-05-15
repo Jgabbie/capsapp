@@ -88,6 +88,12 @@ export default function QuotationForm({ route, navigation }) {
     const [itineraryNotes, setItineraryNotes] = useState(itineraryLabels.map(() => ""));
     const [additionalComments, setAdditionalComments] = useState("");
 
+    // Custom airline and hotel inputs
+    const [customAirline, setCustomAirline] = useState("");
+    const [showCustomAirlineInput, setShowCustomAirlineInput] = useState(false);
+    const [customHotel, setCustomHotel] = useState("");
+    const [showCustomHotelInput, setShowCustomHotelInput] = useState(false);
+
     const [travelerType, setTravelerType] = useState('solo');
     const [adultCount, setAdultCount] = useState(2);
     const [childCount, setChildCount] = useState(0);
@@ -175,10 +181,22 @@ export default function QuotationForm({ route, navigation }) {
         if (totalTravelers > maxAllowed) newErrors.travelers = `Total travelers exceed allowed maximum (${maxAllowed}).`;
 
         if (packageCategory !== 'Land Arrangement') {
-            if (!preferredAirlines.trim() && airlines.length > 0) newErrors.preferredAirlines = "Please provide your preferred airlines";
+            if (!preferredAirlines.trim() && airlines.length > 0) {
+                if (showCustomAirlineInput && !customAirline.trim()) {
+                    newErrors.customAirline = "Please enter your preferred airline";
+                } else if (!showCustomAirlineInput) {
+                    newErrors.preferredAirlines = "Please provide your preferred airlines";
+                }
+            }
         }
 
-        if (!preferredHotels.trim()) newErrors.preferredHotels = "Please provide your preferred hotels";
+        if (!preferredHotels.trim()) {
+            if (showCustomHotelInput && !customHotel.trim()) {
+                newErrors.customHotel = "Please enter your preferred hotel";
+            } else if (!showCustomHotelInput) {
+                newErrors.preferredHotels = "Please provide your preferred hotels";
+            }
+        }
         if (!preferredDate) newErrors.preferredDate = "Please select your preferred date";
 
         if (packageCategory === 'Land Arrangement') {
@@ -224,12 +242,17 @@ export default function QuotationForm({ route, navigation }) {
                 (Number(travelersPayload.child) || 0) +
                 (Number(travelersPayload.infant) || 0);
 
+            // Use custom airline if provided, otherwise use selected airline
+            const finalPreferredAirlines = showCustomAirlineInput ? customAirline : preferredAirlines;
+            // Use custom hotel if provided, otherwise use selected hotel
+            const finalPreferredHotels = showCustomHotelInput ? customHotel : preferredHotels;
+
             // The core data object - synced with the backend quotation form fields
             const detailsObject = {
                 travelers: travelersPayload,
                 travelersCount: totalTravelers,
-                preferredAirlines,
-                preferredHotels,
+                preferredAirlines: finalPreferredAirlines,
+                preferredHotels: finalPreferredHotels,
                 preferredDate,
                 budgetRange,
                 itineraryNotes,
@@ -469,6 +492,17 @@ export default function QuotationForm({ route, navigation }) {
                                 <Ionicons name="chevron-down" size={16} color="#bfbfbf" />
                             </TouchableOpacity>
                             {errors.preferredAirlines && <Text style={QuotationFormStyle.errorText}>{errors.preferredAirlines}</Text>}
+                            {showCustomAirlineInput && (
+                                <View style={{ marginTop: 10 }}>
+                                    <TextInput
+                                        style={[QuotationFormStyle.textInput, errors.customAirline && QuotationFormStyle.inputErrorBorder]}
+                                        placeholder="Enter preferred airline"
+                                        value={customAirline}
+                                        onChangeText={setCustomAirline}
+                                    />
+                                    {errors.customAirline && <Text style={QuotationFormStyle.errorText}>{errors.customAirline}</Text>}
+                                </View>
+                            )}
                             <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444' }]}>Note: Airfare may increase from the usual inclusion in the package, if you choose an airline other than the fixed one.</Text>
                         </View>
                     )}
@@ -485,6 +519,17 @@ export default function QuotationForm({ route, navigation }) {
                             <Ionicons name="chevron-down" size={16} color="#bfbfbf" />
                         </TouchableOpacity>
                         {errors.preferredHotels && <Text style={QuotationFormStyle.errorText}>{errors.preferredHotels}</Text>}
+                        {showCustomHotelInput && (
+                            <View style={{ marginTop: 10 }}>
+                                <TextInput
+                                    style={[QuotationFormStyle.textInput, errors.customHotel && QuotationFormStyle.inputErrorBorder]}
+                                    placeholder="Enter preferred hotel"
+                                    value={customHotel}
+                                    onChangeText={setCustomHotel}
+                                />
+                                {errors.customHotel && <Text style={QuotationFormStyle.errorText}>{errors.customHotel}</Text>}
+                            </View>
+                        )}
                         <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444' }]}>Note: Hotel rates may increase if you choose a hotel other than the fixed one. Rates may also increase or decrease depending on the stars of the chosen hotel.</Text>
                     </View>
 
@@ -665,11 +710,16 @@ export default function QuotationForm({ route, navigation }) {
                     <TouchableWithoutFeedback>
                         <View style={[ModalStyle.modalBox, { width: '85%', padding: 0 }]}>
                             <Text style={{ textAlign: 'center', fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>Select Airline</Text>
-                            {airlines.map((a, i) => (
-                                <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredAirlines(a.name); setAirlineModalOpen(false); }}>
-                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{a.name}</Text>
+                            <ScrollView>
+                                {airlines.map((a, i) => (
+                                    <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredAirlines(a.name); setShowCustomAirlineInput(false); setCustomAirline(""); setAirlineModalOpen(false); }}>
+                                        <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredAirlines === a.name ? '#305797' : '#333', textAlign: 'center' }}>{a.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                                <TouchableOpacity style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredAirlines("Other"); setShowCustomAirlineInput(true); setAirlineModalOpen(false); }}>
+                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredAirlines === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
                                 </TouchableOpacity>
-                            ))}
+                            </ScrollView>
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
@@ -683,10 +733,13 @@ export default function QuotationForm({ route, navigation }) {
                             <Text style={{ textAlign: 'center', fontSize: 16, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>Select Hotel</Text>
                             <ScrollView>
                                 {hotels.map((h, i) => (
-                                    <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredHotels(h.name); setHotelModalOpen(false); }}>
-                                        <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{h.name} ({h.stars} Star)</Text>
+                                    <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredHotels(h.name); setShowCustomHotelInput(false); setCustomHotel(""); setHotelModalOpen(false); }}>
+                                        <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredHotels === h.name ? '#305797' : '#333', textAlign: 'center' }}>{h.name} ({h.stars} Star)</Text>
                                     </TouchableOpacity>
                                 ))}
+                                <TouchableOpacity style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredHotels("Other"); setShowCustomHotelInput(true); setHotelModalOpen(false); }}>
+                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredHotels === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
+                                </TouchableOpacity>
                             </ScrollView>
                         </View>
                     </TouchableWithoutFeedback>
