@@ -812,8 +812,7 @@ export const applyVisa = async (req, res) => {
     });
 
     try {
-      const serviceDoc = await ServiceModel.findById(serviceId).select('visaProcessSteps');
-      newApplication.processSteps = buildProcessSteps(newApplication, serviceDoc?.visaProcessSteps || []);
+      newApplication.processSteps = buildProcessSteps(newApplication, serviceDoc.visaProcessSteps);
       await newApplication.save();
     } catch (processStepsError) {
       console.error('Failed to build/persist visa processSteps:', processStepsError);
@@ -922,6 +921,15 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
     };
     application.status = ["Documents Uploaded"];
     application.currentStepIndex = Math.max(application.currentStepIndex || 0, 3);
+
+
+    try {
+      const serviceDoc = await ServiceModel.findById(application.serviceId).select('visaProcessSteps');
+      application.processSteps = buildProcessSteps(application, serviceDoc.visaProcessSteps);
+      await application.save();
+    } catch (processStepsError) {
+      console.error('Failed to build/persist visa processSteps:', processStepsError);
+    }
 
     await application.save();
 
