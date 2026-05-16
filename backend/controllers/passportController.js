@@ -766,6 +766,19 @@ export const updatePassportApplicationWithDocs = async (req, res) => {
 
     application.status = "Documents Uploaded";
 
+    try {
+      const userWho = await User.findById(userId).select('username firstname lastname');
+      application.statusHistory = application.statusHistory || [];
+      application.statusHistory.push({
+        status: application.status,
+        changedAt: new Date(),
+        changedBy: userId,
+        changedByName: userWho ? (userWho.firstname || userWho.username) : ''
+      });
+    } catch (e) {
+      console.error('Failed to record status history:', e);
+    }
+
     await application.save();
 
     if (typeof logAction === 'function') {

@@ -132,8 +132,8 @@ export default function UserTransactions() {
     };
 
     const canViewReceipt = (status) => {
-        const normalized = String(status || '').trim().toLowerCase();
-        return normalized !== 'pending' && normalized !== 'failed';
+        // Always allow viewing receipts, even when status is Pending or Failed
+        return true;
     };
 
     const handleDownloadReceipt = async () => {
@@ -145,6 +145,12 @@ export default function UserTransactions() {
                 ? dayjs(selectedTransaction.createdAt).format('DD-MM-YYYY')
                 : '--';
             const receiptAmount = formatCurrency(selectedTransaction.amount);
+
+            // compute status label/color for watermark in PDF
+            const rawStatus = (selectedTransaction?.status || '').toString().toLowerCase();
+            const isPaid = rawStatus === 'successful';
+            const statusLabel = isPaid ? 'PAID' : (rawStatus === 'pending' || rawStatus === 'failed' ? 'NOT PAID' : (selectedTransaction?.status || '').toString().toUpperCase());
+            const statusColor = isPaid ? '#389e0d' : '#cf1322';
 
             // Load and convert logo image to base64
             const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
@@ -160,9 +166,9 @@ export default function UserTransactions() {
                     <head>
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
                         <style>
-                            @page { size: A4; margin: 12mm; }
+                            @page { size: A4; margin: 12mm 4mm; }
                             body { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; color: #111827; background: #fff; }
-                            .paper { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 22px; min-height: 273mm; box-sizing: border-box; }
+                            .paper { background: #fff; border: none; border-radius: 6px; padding: 22px 12px; min-height: 273mm; box-sizing: border-box; }
                             .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid #1f2a44; padding-bottom: 14px; margin-bottom: 18px; }
                             .header-left { display: flex; gap: 12px; align-items: flex-start; flex: 1; }
                             .logo { width: 64px; height: 64px; object-fit: contain; }
@@ -196,7 +202,11 @@ export default function UserTransactions() {
                         </style>
                     </head>
                     <body>
-                        <div class="paper">
+                        <div class="paper" style="position:relative;">
+                            <div style="position:absolute; top:45%; left:0; right:0; text-align:center; z-index:1; pointer-events:none;">
+                                <div style="font-size:84px; color: ${statusColor}; opacity:0.08; font-weight:800; transform: rotate(-20deg);">${statusLabel}</div>
+                            </div>
+                            <div style="position:relative; z-index:2;">
                             <div class="header">
                                 <div class="header-left">
                                     <img class="logo" src="${logoDataUri}" />
@@ -213,6 +223,7 @@ export default function UserTransactions() {
                                 </div>
                                 <h1 class="title">INVOICE ${invoiceNumber}</h1>
                             </div>
+                        </div>
 
                             <div class="meta-row">
                                 <div class="billed-to">
@@ -295,12 +306,12 @@ export default function UserTransactions() {
                 </html>
             `;
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
-            
+
             // Rename the PDF to use the reference code
             const fileName = `Receipt-${selectedTransaction.reference}.pdf`;
             const newPath = `${FileSystem.documentDirectory}${fileName}`;
             await FileSystem.copyAsync({ from: uri, to: newPath });
-            
+
             await Sharing.shareAsync(newPath, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
         } catch (error) {
             console.error("PDF Error:", error);
@@ -529,7 +540,23 @@ export default function UserTransactions() {
 
                             {selectedTransaction && (
                                 <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 10 }}>
-                                    <View style={UserTransactionStyle.receiptWideCanvas}>
+                                    <View style={[UserTransactionStyle.receiptWideCanvas, { position: 'relative' }]}>
+                                        {/* Watermark showing transaction status */}
+                                        <View pointerEvents="none" style={{ position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center', zIndex: 10 }}>
+                                            {
+                                                (() => {
+                                                    const raw = (selectedTransaction?.status || '').toString().toLowerCase();
+                                                    const isPaid = raw === 'successful';
+                                                    const label = isPaid ? 'PAID' : (raw === 'pending' || raw === 'failed' ? 'NOT PAID' : raw.toUpperCase());
+                                                    const color = isPaid ? '#389e0d' : '#cf1322';
+                                                    return (
+                                                        <Text style={{ fontSize: 84, color, opacity: 0.08, fontWeight: '800', transform: [{ rotate: '-20deg' }] }}>
+                                                            {label}
+                                                        </Text>
+                                                    )
+                                                })()
+                                            }
+                                        </View>
                                         {/* Header with logo, company, and invoice number */}
                                         <View style={UserTransactionStyle.receiptHeaderRow}>
                                             <View style={UserTransactionStyle.receiptHeaderLeft}>
@@ -573,7 +600,7 @@ export default function UserTransactions() {
 
                                         {/* Table */}
                                         <View style={UserTransactionStyle.receiptTable}>
-                                            
+
                                             {/* HEADER ROW */}
                                             <View style={UserTransactionStyle.receiptTableHeader}>
                                                 <Text style={[UserTransactionStyle.receiptTh, { width: 50, textAlign: 'left' }]}>QTY</Text>
@@ -591,7 +618,7 @@ export default function UserTransactions() {
                                                 <Text style={[UserTransactionStyle.receiptTd, { width: 370, textAlign: 'center' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
                                                 <Text style={[UserTransactionStyle.receiptTd, { width: 50, textAlign: 'right' }]}>{formatCurrency(selectedTransaction.amount)}</Text>
                                             </View>
-                                            
+
                                         </View>
 
                                         {/* Bottom section: Bank info and Totals */}

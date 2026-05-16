@@ -28,7 +28,24 @@ const generateTransactionReference = () => {
     return `TX-${timestamp}${random}`;
 };
 
+const generateTransactionInvoiceNumber = async (date = new Date()) => {
+    const invoiceDate = dayjs(date);
+    const startOfMonth = invoiceDate.startOf('month').toDate();
+    const endOfMonth = invoiceDate.endOf('month').toDate();
 
+    const transactionCount = await TransactionModel.countDocuments({
+        createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+
+    const sequence = transactionCount + 1;
+    const monthKey = invoiceDate.format('MM');
+
+    return {
+        invoiceNumber: `${monthKey}${String(sequence).padStart(2, '0')}`,
+        sequence,
+        month: monthKey
+    };
+};
 
 
 
@@ -61,11 +78,14 @@ export const createManualPaymentDeliveryFee = async (req, res) => {
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
+
         const reference = generateTransactionReference();
         const transaction = await TransactionModel.create({
             applicationId,
             applicationType: "Delivery Fee",
             userId,
+            invoiceNumber,
             reference,
             amount: Number(amount),
             method: 'Manual',
@@ -150,11 +170,13 @@ export const createManualPaymentPassportPenalty = async (req, res) => {
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const reference = generateTransactionReference();
         const transaction = await TransactionModel.create({
             applicationId,
             applicationType: "Passport Penalty Fee",
             userId,
+            invoiceNumber,
             reference,
             amount: Number(amount),
             method: 'Manual',
@@ -242,10 +264,12 @@ export const createManualPaymentVisaPenalty = async (req, res) => {
         });
 
         const reference = generateTransactionReference();
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             applicationId,
             applicationType: "Visa Penalty Fee",
             userId,
+            invoiceNumber,
             reference,
             amount: Number(amount),
             method: 'Manual',
@@ -330,10 +354,12 @@ export const createManualPaymentPassport = async (req, res) => {
         });
 
         const reference = generateTransactionReference();
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             applicationId,
             applicationType: "Passport Application",
             userId,
+            invoiceNumber,
             reference,
             amount: Number(amount),
             method: 'Manual',
@@ -420,10 +446,12 @@ export const createManualPaymentVisa = async (req, res) => {
 
 
         const reference = generateTransactionReference();
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             applicationId,
             applicationType: "Visa Application",
             userId,
+            invoiceNumber,
             reference,
             amount,
             method: 'Manual',
@@ -529,11 +557,13 @@ export const createManualPayment = async (req, res) => {
             expiresAt: dayjs().add(5, 'minutes').toDate()
         });
 
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             bookingId: finalBookingId,
             packageId,
             userId,
             reference: generateTransactionReference(),
+            invoiceNumber,
             amount: Number(amount),
             method: 'Manual',
             paymentType: paymentType || 'Full Payment',
@@ -665,11 +695,13 @@ export const createManualPaymentDeposit = async (req, res) => {
             return res.status(400).json({ error: "Proof of payment image is required." });
         }
 
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             bookingId,
             packageId,
             userId,
             reference,
+            invoiceNumber,
             amount: Number(amount?.amount ?? amount),
             method: 'Manual',
             status: 'Pending',
@@ -787,11 +819,13 @@ export const createManualPaymentQuotation = async (req, res) => {
             return res.status(400).json({ error: "Proof of payment image is required." });
         }
 
+        const { invoiceNumber } = await generateTransactionInvoiceNumber();
         const transaction = await TransactionModel.create({
             bookingId,
             packageId,
             userId,
             reference,
+            invoiceNumber,
             amount,
             method: 'Manual',
             status: 'Pending',
@@ -1823,11 +1857,13 @@ export const handlePayMongoWebhook = async (req, res) => {
             const amount = Math.round(net / 100) * 100;
 
             const transactionReference = generateTransactionReference();
+            const { invoiceNumber } = await generateTransactionInvoiceNumber();
 
             await TransactionModel.create({
                 userId: user._id,
                 applicationId: metadata.applicationId,
                 applicationType: "Visa Application",
+                invoiceNumber,
                 reference: transactionReference,
                 amount: Math.round(metadata.baseAmountCents / 100),
                 method: 'Paymongo',
@@ -1927,11 +1963,13 @@ export const handlePayMongoWebhook = async (req, res) => {
             const amount = Math.round(net / 100) * 100;
 
             const transactionReference = generateTransactionReference();
+            const { invoiceNumber } = await generateTransactionInvoiceNumber();
 
             const transaction = await TransactionModel.create({
                 userId: user._id,
                 applicationId: metadata.applicationId,
                 applicationType: "Passport Application",
+                invoiceNumber,
                 reference: transactionReference,
                 amount: Math.round(metadata.baseAmountCents / 100),
                 method: 'Paymongo',
@@ -2040,11 +2078,13 @@ export const handlePayMongoWebhook = async (req, res) => {
                 );
 
             const transactionReference = generateTransactionReference();
+            const { invoiceNumber } = await generateTransactionInvoiceNumber();
 
             await TransactionModel.create({
                 bookingId: metadata.bookingId,
                 packageId: metadata.packageId,
                 userId: user._id,
+                invoiceNumber,
                 reference: transactionReference,
                 amount,
                 method: 'Paymongo',
@@ -2173,10 +2213,12 @@ export const handlePayMongoWebhook = async (req, res) => {
                     Number(sessionAttributes?.amount_total || 0) / 100
                 );
 
+            const { invoiceNumber } = await generateTransactionInvoiceNumber();
             await TransactionModel.create({
                 bookingId: booking._id,
                 packageId: booking.packageId,
                 userId: user._id,
+                invoiceNumber,
                 reference: generateTransactionReference(),
                 amount,
                 method: 'Paymongo',
@@ -2291,10 +2333,12 @@ export const handlePayMongoWebhook = async (req, res) => {
                     Number(sessionAttributes?.amount_total || 0) / 100
                 );
 
+            const { invoiceNumber } = await generateTransactionInvoiceNumber();
             await TransactionModel.create({
                 bookingId: booking._id,
                 packageId: booking.packageId,
                 userId: user._id,
+                invoiceNumber,
                 reference: generateTransactionReference(),
                 amount,
                 method: 'Paymongo',

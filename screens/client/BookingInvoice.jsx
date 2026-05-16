@@ -1085,11 +1085,6 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.passportFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                {isImageFile(traveler.passportFile) && (
-                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)} activeOpacity={0.85}>
-                                                        <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                                    </TouchableOpacity>
-                                                )}
                                                 <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
                                                     <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
                                                         View Passport / ID
@@ -1105,11 +1100,6 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.photoFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
-                                                {isImageFile(traveler.photoFile) && (
-                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)} activeOpacity={0.85}>
-                                                        <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                                    </TouchableOpacity>
-                                                )}
                                                 <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
                                                     <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
                                                         View Photo
@@ -1126,11 +1116,6 @@ export default function BookingInvoice({ route, navigation }) {
                                     {traveler.visaFile && (
                                         <View style={{ marginTop: 16 }}>
                                             <Text style={BookingInvoiceStyle.docLabel}>Visa File</Text>
-                                            {isImageFile(traveler.visaFile) && (
-                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)} activeOpacity={0.85}>
-                                                    <Image source={{ uri: traveler.visaFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                                </TouchableOpacity>
-                                            )}
                                             <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)}>
                                                 <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
                                                     View Visa

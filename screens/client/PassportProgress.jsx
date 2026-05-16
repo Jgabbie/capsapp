@@ -669,7 +669,9 @@ export default function PassportApplication() {
 
     //SUBMIT PAYMENT
     const handleSubmitPayment = async () => {
-        if ((application?.onPenalty && isPenaltyPaymentDisabled) || (!application?.onPenalty && isApplicationPaymentDisabled)) {
+        const isPenalty = application?.onPenalty === true || application?.penaltyOn === true;
+
+        if ((isPenalty && isPenaltyPaymentDisabled) || (!isPenalty && isApplicationPaymentDisabled)) {
             Alert.alert('Notice', 'A pending payment transaction already exists for this application. Please wait for verification.');
             return;
         }
@@ -683,6 +685,9 @@ export default function PassportApplication() {
             setPaymentLoading(true);
 
             if (method === 'manual') {
+                if (!proofImage?.uri) {
+                    throw new Error('Invalid proof image: missing URI');
+                }
 
                 const formData = new FormData();
                 formData.append('file', {
@@ -692,13 +697,19 @@ export default function PassportApplication() {
                 });
 
                 const uploadRes = await api.post('/upload/upload-receipt', formData, {
-                    ...withUserHeader(user._id),
+                    headers: {
+                        "x-user-id": String(user._id),
+                        "Content-Type": "multipart/form-data",
+                    },
+                    transformRequest: [(data) => data],
+                    timeout: 60000,
                 });
 
                 const imageUrl = uploadRes.data.url;
 
-                const amountToPay = application?.onPenalty ? 1500 : 2000;
-                const endpoint = application?.onPenalty ? '/payment/manual-passport-penalty' : '/payment/manual-passport';
+                const amountToPay = isPenalty ? 1500 : 2000;
+                const endpoint = isPenalty ? '/payment/manual-passport-penalty' : '/payment/manual-passport';
+
                 const paymentRes = await api.post(endpoint, {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
@@ -724,12 +735,14 @@ export default function PassportApplication() {
                 const payload = {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
+                    totalPrice: isPenalty ? 1500 : 2000,
+                    packageName: isPenalty ? 'Passport Penalty Fee' : 'Passport Application',
                 };
 
                 // Send request to create checkout session
-                const endpoint = application?.onPenalty ? '/payment/create-checkout-session-passport-penalty' : '/payment/create-checkout-session-passport';
+                const endpoint = isPenalty ? '/payment/create-checkout-session-passport-penalty' : '/payment/create-checkout-session-passport';
                 const paymongoResponse = await api.post(endpoint, payload, withUserHeader(user._id));
-                const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
+                const checkoutUrl = paymongoResponse?.data?.data?.attributes?.checkout_url || paymongoResponse?.data?.attributes?.checkout_url;
 
                 if (checkoutUrl) {
                     Linking.openURL(checkoutUrl).catch(err => {
@@ -743,12 +756,18 @@ export default function PassportApplication() {
             }
 
         } catch (err) {
-            console.error('Payment Error Details:', {
-                message: err.message,
-                status: err.response?.status,
-                data: err.response?.data,
-            });
-            Alert.alert('Error', err.response?.data?.error || err.message || 'Payment failed');
+            console.error('Payment Error:', err.message, err.response?.status);
+
+            let errorMessage = 'Payment failed';
+            if (!err.response) {
+                errorMessage = 'Network error - Could not reach the server. Please check your internet connection and try again.';
+            } else if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            Alert.alert('Error', errorMessage);
         } finally {
             setPaymentLoading(false);
         }
@@ -931,19 +950,37 @@ export default function PassportApplication() {
 
             const formData = new FormData();
 
+            const appendSelectedFile = (file) => ({
+                uri: file.uri,
+                type: file.type || 'application/octet-stream',
+                name: file.name || `document-${Date.now()}`,
+            });
+
             const appendedOrder = [];
             if (selectedFiles.birthCert && isRequestedResubmissionTarget('birthCert')) {
-                formData.append('files', selectedFiles.birthCert);
+                if (!selectedFiles.birthCert?.uri) {
+                    Alert.alert('Error', 'PSA Birth Certificate file is invalid. Please reselect the file.');
+                    return;
+                }
+                formData.append('files', appendSelectedFile(selectedFiles.birthCert));
                 appendedOrder.push('birthCertificate');
             }
 
             if (selectedFiles.applicationForm && isRequestedResubmissionTarget('applicationForm')) {
-                formData.append('files', selectedFiles.applicationForm);
+                if (!selectedFiles.applicationForm?.uri) {
+                    Alert.alert('Error', 'Application Form file is invalid. Please reselect the file.');
+                    return;
+                }
+                formData.append('files', appendSelectedFile(selectedFiles.applicationForm));
                 appendedOrder.push('applicationForm');
             }
 
             if (selectedFiles.govId && isRequestedResubmissionTarget('govId')) {
-                formData.append('files', selectedFiles.govId);
+                if (!selectedFiles.govId?.uri) {
+                    Alert.alert('Error', 'Government-issued ID file is invalid. Please reselect the file.');
+                    return;
+                }
+                formData.append('files', appendSelectedFile(selectedFiles.govId));
                 appendedOrder.push('govId');
             }
 
@@ -958,11 +995,14 @@ export default function PassportApplication() {
                 '/upload/upload-passport-requirements',
                 formData,
                 {
-                    ...withUserHeader(user._id),
+                    headers: {
+                        ...(withUserHeader(user._id)?.headers || {}),
+                        'Content-Type': 'multipart/form-data',
+                    },
                 }
             );
 
-            const uploaded = res.data.urls;
+            const uploaded = res?.data?.urls || res?.data?.data?.urls || [];
             // Map uploaded urls back to the fields we appended in order
             const payload = {};
             let urlIndex = 0;
@@ -973,7 +1013,11 @@ export default function PassportApplication() {
                 urlIndex += 1;
             });
 
-            await api.put(`/passport/applications/${id}/documents`, payload, withUserHeader(user._id));
+            await api.put(
+                `/passport/applications/${id}/documents`,
+                { submittedDocuments: payload },
+                withUserHeader(user._id)
+            );
 
             // reset
             setBirthCertList([]);
@@ -1096,6 +1140,9 @@ export default function PassportApplication() {
 
     //UPLOAD DOCUMENTS SECTION STATUS CONDITION
     const status = application?.status?.toLowerCase();
+    const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
+    const hasSecondChance = application?.secondChance === true;
+    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance;
 
     const shouldShow =
         status === 'payment completed' ||
@@ -1138,6 +1185,12 @@ export default function PassportApplication() {
                 {/* Application Info Card */}
                 <View style={PassportProgressStyle.card}>
                     <Text style={PassportProgressStyle.cardTitle}>Application Info</Text>
+
+                    {showPenaltyPaymentSection && (
+                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#b91c1c', fontFamily: 'Montserrat_600SemiBold' }}>You are currently on Penalty, kindly pay the penalty fee to continue with your application.</Text>
+                        </View>
+                    )}
 
                     {appStatus.toLowerCase() === 'documents approved' && (
                         <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
@@ -1317,7 +1370,7 @@ export default function PassportApplication() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -1367,10 +1420,17 @@ export default function PassportApplication() {
 
 
                 {/* PENALTY FEE */}
-                {appStatus.toLowerCase() !== 'application approved' && application.penaltyOn === true && (
+                {showPenaltyPaymentSection && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
+
+                        <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>
+                            <Text style={{ color: '#6b7280', fontSize: 12 }}>Penalty Fee</Text>
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 18, marginTop: 6 }}>
+                                ₱ 1,500.00
+                            </Text>
+                        </View>
 
                         {isPenaltyPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
@@ -1424,11 +1484,6 @@ export default function PassportApplication() {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={{ borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, backgroundColor: '#fff' }}>
-                            <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 16 }}>₱ 2,000.00</Text>
-                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>Passport Application Fee</Text>
-                        </View>
-
                         {paymentMethod === 'manual' && (
                             <View style={{ marginBottom: 14 }}>
                                 <View style={PaymentStyle.manualBankSection}>
@@ -1448,7 +1503,7 @@ export default function PassportApplication() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -1498,7 +1553,7 @@ export default function PassportApplication() {
 
 
                 {/* UPLOAD REQUIREMENTS */}
-                {appStatus.toLowerCase() === 'payment completed' && (
+                {appStatus.toLowerCase() === 'payment completed' && (!isOnPenalty || hasSecondChance) && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1506,36 +1561,47 @@ export default function PassportApplication() {
                         </Text>
 
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                            {passportRequirements.map((doc, idx) => {
+                            {passportRequirements.filter((doc) => doc.key !== 'birthCertificate').map((doc, idx, filteredDocs) => {
                                 const selectedFile = selectedFiles[doc.key];
-                                const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
+                                const uploadedUrl = uploadedDocuments[doc.key]
+                                    || application?.submittedDocuments?.[doc.key]
+                                    || (doc.key === 'birthCert' ? (uploadedDocuments.birthCertificate || application?.submittedDocuments?.birthCertificate) : null);
                                 const hasFile = Boolean(uploadedUrl || selectedFile);
+                                const isValidRequirement = !isRequestedResubmissionTarget(doc.key);
 
                                 return (
-                                    <View key={doc.key} style={{ paddingVertical: 12, borderBottomWidth: idx === passportRequirements.length - 1 ? 0 : 1, borderBottomColor: '#eef2f7' }}>
+                                    <View key={doc.key} style={{ paddingVertical: 12, borderBottomWidth: idx === filteredDocs.length - 1 ? 0 : 1, borderBottomColor: '#eef2f7' }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{doc.label}</Text>
+                                        {isValidRequirement && (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, backgroundColor: '#ecfdf3', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                                                <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                                                <Text style={{ color: '#059669', fontSize: 11, fontFamily: 'Montserrat_600SemiBold' }}>Valid Requirement</Text>
+                                            </View>
+                                        )}
                                         <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>PDF, JPG, or PNG. Max 3 MB.</Text>
-                                        <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                                            <TouchableOpacity
-                                                onPress={() => pickDocumentForKey(doc.key)}
-                                                disabled={uploadingDocumentKey === doc.key || uploadingAll}
-                                                style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8, opacity: uploadingDocumentKey === doc.key ? 0.7 : 1 }}
-                                            >
-                                                {uploadingDocumentKey === doc.key ? (
-                                                    <ActivityIndicator color="#305797" size="small" />
-                                                ) : (
-                                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>{hasFile ? 'Change File' : 'Select File'}</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                            {hasFile && (
+                                        {!isValidRequirement && (
+                                            <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                                                 <TouchableOpacity
-                                                    onPress={() => previewFile(selectedFile || uploadedUrl)}
-                                                    style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
+                                                    onPress={() => pickDocumentForKey(doc.key)}
+                                                    disabled={uploadingDocumentKey === doc.key || uploadingAll}
+                                                    style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8, opacity: uploadingDocumentKey === doc.key ? 0.7 : 1 }}
                                                 >
-                                                    <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                    {uploadingDocumentKey === doc.key ? (
+                                                        <ActivityIndicator color="#305797" size="small" />
+                                                    ) : (
+                                                        <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>{hasFile ? 'Change File' : 'Select File'}</Text>
+                                                    )}
                                                 </TouchableOpacity>
-                                            )}
-                                        </View>
+                                                {hasFile && (
+                                                    <TouchableOpacity
+                                                        onPress={() => previewFile(selectedFile || uploadedUrl)}
+                                                        style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
+                                                    >
+                                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
+                                        )}
                                         {hasFile && (
                                             <Text numberOfLines={1} style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
                                                 {selectedFile?.name || uploadedUrl?.split('/').pop() || 'Ready to submit'}
@@ -1556,7 +1622,9 @@ export default function PassportApplication() {
                     </View>
                 )}
 
-                {appStatus.toLowerCase() === "payment completed" && getUploadedDocumentEntries().length > 0 && (
+
+                {/* UPLOADED DOCUMENTS */}
+                {appStatus.toLowerCase() === "payment completed" && (!isOnPenalty || hasSecondChance) && getUploadedDocumentEntries().length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
@@ -1763,7 +1831,12 @@ export default function PassportApplication() {
 
                                         {deadlineDate && (
                                             <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-                                                Deadline: {deadlineDate.format('MMM D, YYYY')}{typeof daysLeft === 'number' ? ` (${daysLeft < 0 ? `${Math.abs(daysLeft)} day${Math.abs(daysLeft) === 1 ? '' : 's'} overdue` : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`})` : ''}
+                                                Deadline: {deadlineDate.format('MMM D, YYYY')}
+                                                {typeof daysLeft === 'number' && (
+                                                    <Text style={{ color: daysLeft < 0 ? '#dc2626' : '#6b7280' }}>
+                                                        {` (${daysLeft < 0 ? `${Math.abs(daysLeft)} day${Math.abs(daysLeft) === 1 ? '' : 's'} overdue` : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`})`}
+                                                    </Text>
+                                                )}
                                             </Text>
                                         )}
 

@@ -308,28 +308,39 @@ export default function VisaProgress() {
         const key = req.key || req.req || req.label || `requirement-${idx}`;
         const label = getRequirementLabel(key, idx);
         const selectedFile = selectedFiles[key];
-        const hasFile = Boolean(requirementFiles[key]?.length || selectedFile);
+        const existingUploadedUrl = application?.submittedDocuments?.[key] || null;
+        const hasFile = Boolean(requirementFiles[key]?.length || selectedFile || existingUploadedUrl);
+        const isRequestedRequirement = isRequirementVisibleForResubmission(req, idx);
+        const isValidRequirement = resubmissionRequested && !isRequestedRequirement;
 
         return (
             <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
                 <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{label}</Text>
+                {isValidRequirement && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, backgroundColor: '#ecfdf3', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                        <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                        <Text style={{ color: '#059669', fontSize: 11, fontFamily: 'Montserrat_600SemiBold' }}>Valid Requirement</Text>
+                    </View>
+                )}
                 <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>PDF, JPG, or PNG. Max 3 MB.</Text>
-                <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <TouchableOpacity onPress={() => pickRequirementFile(key)} style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8 }}>
-                        <Text style={{ color: '#305797' }}>{hasFile ? 'Change File' : 'Select File'}</Text>
-                    </TouchableOpacity>
-                    {hasFile && (
-                        <TouchableOpacity
-                            onPress={() => previewSelectedRequirementFile(selectedFile || requirementFiles[key]?.[0])}
-                            style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
-                        >
-                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview</Text>
+                {!isValidRequirement && (
+                    <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <TouchableOpacity onPress={() => pickRequirementFile(key)} style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8 }}>
+                            <Text style={{ color: '#305797' }}>{hasFile ? 'Change File' : 'Select File'}</Text>
                         </TouchableOpacity>
-                    )}
-                </View>
+                        {hasFile && (
+                            <TouchableOpacity
+                                onPress={() => previewSelectedRequirementFile(selectedFile || requirementFiles[key]?.[0] || existingUploadedUrl)}
+                                style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
+                            >
+                                <Text style={{ color: '#305797', fontSize: 12 }}>Preview</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
                 {hasFile && (
                     <Text numberOfLines={1} style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
-                        {selectedFile?.name || requirementFiles[key]?.[0]?.name || 'Ready to submit'}
+                        {selectedFile?.name || requirementFiles[key]?.[0]?.name || String(existingUploadedUrl || '').split('/').pop() || 'Ready to submit'}
                     </Text>
                 )}
             </View>
@@ -346,14 +357,23 @@ export default function VisaProgress() {
             key: req.key || req.req || req.label || `requirement-${idx}`,
             label: req.req || req.label || `Requirement ${idx + 1}`,
         }));
-        const missingRequirements = orderedRequirements.filter(req => !selectedFiles[req.key]);
 
+        const requiredRequirements = resubmissionRequested
+            ? orderedRequirements.filter((req, idx) => isRequirementVisibleForResubmission(visibleRequirements[idx], idx))
+            : orderedRequirements;
+
+        if (resubmissionRequested && requiredRequirements.length === 0) {
+            notification.warning({ message: 'No document is currently marked for resubmission.' });
+            return;
+        }
+
+        const missingRequirements = requiredRequirements.filter(req => !selectedFiles[req.key]);
         if (missingRequirements.length > 0) {
             notification.warning({ message: 'Please upload all required documents before submitting.' });
             return;
         }
 
-        const oversizedFile = orderedRequirements
+        const oversizedFile = requiredRequirements
             .map(req => selectedFiles[req.key])
             .find(file => file?.size && file.size > MAX_REQUIREMENT_FILE_SIZE);
 
@@ -365,10 +385,12 @@ export default function VisaProgress() {
         try {
             setUploadingAll(true);
             const formData = new FormData();
-            orderedRequirements.forEach(req => {
+            const appendedOrder = [];
+            requiredRequirements.forEach(req => {
                 const file = selectedFiles[req.key];
                 if (file?.uri) {
                     formData.append('files', file);
+                    appendedOrder.push(req.key);
                 }
             });
 
@@ -380,13 +402,13 @@ export default function VisaProgress() {
             });
             const uploadedUrls = Array.isArray(uploadRes?.data?.urls) ? uploadRes.data.urls : [];
 
-            if (uploadedUrls.length !== orderedRequirements.length) {
+            if (uploadedUrls.length !== appendedOrder.length) {
                 throw new Error('Failed to upload all selected files.');
             }
 
             const submittedDocuments = {};
-            orderedRequirements.forEach((req, index) => {
-                submittedDocuments[req.key] = uploadedUrls[index];
+            appendedOrder.forEach((key, index) => {
+                submittedDocuments[key] = uploadedUrls[index];
             });
 
             await apiFetch.put(`/visa/applications/${id}/documents`, { submittedDocuments }, withUserHeader(user._id));
@@ -1154,13 +1176,9 @@ export default function VisaProgress() {
         });
     };
 
-    const visibleServiceRequirements = serviceRequirements.filter((req, idx) =>
-        isRequirementVisibleForResubmission(req, idx)
-    );
+    const visibleServiceRequirements = serviceRequirements;
 
-    const visibleAdditionalRequirements = serviceAdditionalRequirements.filter((req, idx) =>
-        isRequirementVisibleForResubmission(req, serviceRequirements.length + idx)
-    );
+    const visibleAdditionalRequirements = serviceAdditionalRequirements;
 
     const visibleRequirements = [...visibleServiceRequirements, ...visibleAdditionalRequirements];
 
@@ -1295,6 +1313,7 @@ export default function VisaProgress() {
     const normalizedStatus = Array.isArray(application?.status)
         ? String(application.status[application.status.length - 1] || '').toLowerCase()
         : String(application?.status || application?.statusText || '').toLowerCase();
+    const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
 
     const shouldShow =
         normalizedStatus === 'payment completed' ||
@@ -1337,6 +1356,12 @@ export default function VisaProgress() {
                 {/* Application Info Card */}
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
+
+                    {isOnPenalty && (
+                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
+                            <Text style={{ color: '#b91c1c', fontFamily: 'Montserrat_600SemiBold' }}>You are currently on Penalty, kindly pay the penalty fee to continue with your application.</Text>
+                        </View>
+                    )}
 
                     {normalizedAppStatus === 'passport released' && application.deliveryFee !== "" && application.passportReleaseOption === 'delivery' && (
                         <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
@@ -1608,7 +1633,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -1734,7 +1759,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -1784,7 +1809,7 @@ export default function VisaProgress() {
 
 
                 {/* PENALTY FEE */}
-                {normalizedAppStatus !== 'application approved' && application.penaltyOn === true && (
+                {normalizedAppStatus !== 'application approved' && isOnPenalty && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
@@ -1859,7 +1884,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}>No QR Code</Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -2132,7 +2157,14 @@ export default function VisaProgress() {
                                         </Text>
                                         {hasStepDeadline && stepDeadlineDate && (
                                             <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-                                                Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}{stepDaysLeft !== null ? ` (${stepDaysLeft} days left)` : ''}
+                                                Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}
+                                                {stepDaysLeft !== null && (
+                                                    <Text style={{ color: stepDaysLeft < 0 ? '#dc2626' : '#6b7280' }}>
+                                                        {` (${stepDaysLeft < 0
+                                                            ? `${Math.abs(stepDaysLeft)} Day${Math.abs(stepDaysLeft) === 1 ? '' : 's'} overdue`
+                                                            : `${stepDaysLeft} day${stepDaysLeft === 1 ? '' : 's'} left`})`}
+                                                    </Text>
+                                                )}
                                             </Text>
                                         )}
                                         {isActive && (
