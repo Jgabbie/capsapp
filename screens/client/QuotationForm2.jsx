@@ -44,6 +44,10 @@ export default function QuotationForm2({ route, navigation }) {
 
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
 
+    React.useEffect(() => {
+        console.log('medicalData state updated:', medicalData);
+    }, [medicalData]);
+
     const isValidEmail = (email) => {
         if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
@@ -87,27 +91,29 @@ export default function QuotationForm2({ route, navigation }) {
         navigation.navigate("quotationform3", { ...route.params, medicalData, emergency, quotation });
     };
 
-    const handleDropdownSelect = (value) => {
-        if (activeDropdown === 'dietary') {
-            setMedicalData({
-                ...medicalData,
+    const handleDropdownSelect = (value, field) => {
+        const target = field || activeDropdown;
+        console.log('handleDropdownSelect called', { target, value });
+        if (target === 'dietary') {
+            setMedicalData((prev) => ({
+                ...prev,
                 dietary: value,
-                dietaryDetails: value === 'N' ? 'N/A' : (medicalData.dietaryDetails === 'N/A' ? '' : medicalData.dietaryDetails)
-            });
-        } else if (activeDropdown === 'medical') {
-            setMedicalData({
-                ...medicalData,
+                dietaryDetails: value === 'N' ? 'N/A' : (prev.dietaryDetails === 'N/A' ? '' : prev.dietaryDetails)
+            }));
+        } else if (target === 'medical') {
+            setMedicalData((prev) => ({
+                ...prev,
                 medical: value,
-                medicalDetails: value === 'N' ? 'N/A' : (medicalData.medicalDetails === 'N/A' ? '' : medicalData.medicalDetails)
-            });
-        } else if (activeDropdown === 'insurance1') {
-            setMedicalData({ ...medicalData, insurance1: value });
-        } else if (activeDropdown === 'insurance2') {
-            setMedicalData({ ...medicalData, insurance2: value });
-        } else if (activeDropdown === 'emergencyTitle') {
-            setEmergency({ ...emergency, title: value });
-        } else if (activeDropdown === 'relation') {
-            setEmergency({ ...emergency, relation: value });
+                medicalDetails: value === 'N' ? 'N/A' : (prev.medicalDetails === 'N/A' ? '' : prev.medicalDetails)
+            }));
+        } else if (target === 'insurance1') {
+            setMedicalData((prev) => ({ ...prev, insurance1: value }));
+        } else if (target === 'insurance2') {
+            setMedicalData((prev) => ({ ...prev, insurance2: value }));
+        } else if (target === 'emergencyTitle') {
+            setEmergency((prev) => ({ ...prev, title: value }));
+        } else if (target === 'relation') {
+            setEmergency((prev) => ({ ...prev, relation: value }));
         }
         setActiveDropdown(null);
     };
@@ -142,10 +148,10 @@ export default function QuotationForm2({ route, navigation }) {
         }
         return (
             <>
-                <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => handleDropdownSelect('Y')}>
+                <TouchableOpacity style={QuotationFormStepStyle.dropdownItem} onPress={() => handleDropdownSelect('Y', activeDropdown)}>
                     <Text style={QuotationFormStepStyle.dropdownText}>Y</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[QuotationFormStepStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('N')}>
+                <TouchableOpacity style={[QuotationFormStepStyle.dropdownItem, { borderBottomWidth: 0 }]} onPress={() => handleDropdownSelect('N', activeDropdown)}>
                     <Text style={QuotationFormStepStyle.dropdownText}>N</Text>
                 </TouchableOpacity>
             </>

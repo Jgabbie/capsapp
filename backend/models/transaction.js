@@ -6,6 +6,7 @@ const transactionSchema = new mongoose.Schema({
   applicationType: { type: String, required: false },
   packageId: { type: mongoose.Schema.Types.ObjectId, ref: "packages", required: false },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
+  invoiceNumber: { type: String, required: true },
   reference: { type: String, required: true, unique: true },
   amount: { type: Number, required: true },
   method: { type: String, required: true },

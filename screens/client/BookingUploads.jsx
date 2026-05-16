@@ -210,189 +210,78 @@ export default function BookingUploads({ route, navigation }) {
 
     const pickImage = async (index, type) => {
         try {
-            // For 2x2 photo, allow image or PDF (image will be square-cropped)
             if (type === 'photo') {
-                Alert.alert(
-                    'Select File Type',
-                    'Choose how you want to upload the 2x2 photo',
-                    [
-                        {
-                            text: 'Upload Image (JPG/PNG)',
-                            onPress: async () => {
-                                try {
-                                    const options = {
-                                        mediaTypes: MediaTypeOptions.Images,
-                                        quality: 0.8,
-                                        allowsEditing: true,
-                                        aspect: [1, 1],
-                                    };
+                try {
+                    const result = await DocumentPicker.getDocumentAsync({
+                        type: ['image/*', 'application/pdf'],
+                        copyToCacheDirectory: true,
+                        multiple: false,
+                    });
 
-                                    const result = await launchImageLibraryAsync(options);
-                                    if (!result.canceled) {
-                                        const asset = result.assets[0];
-                                        const fileName = asset.fileName || asset.name || `traveler-${index + 1}-photo.jpg`;
-                                        const mimeType = asset.mimeType || 'image/jpeg';
-                                        const uploadedUrl = await uploadDocumentToCloudinary(asset.uri, fileName, mimeType, user?._id);
+                    if (result.canceled || !result.assets?.length) {
+                        return;
+                    }
 
-                                        if (!uploadedUrl) {
-                                            throw new Error('Upload failed');
-                                        }
+                    const file = result.assets[0];
+                    const fileName = file.name || file.fileName || `traveler-${index + 1}-photo`;
+                    const mimeType = file.mimeType || file.type || 'application/octet-stream';
+                    const uploadedUrl = await uploadDocumentToCloudinary(file.uri, fileName, mimeType, user?._id);
 
-                                        setUploads(prev => ({
-                                            ...prev,
-                                            [index]: {
-                                                ...prev[index],
-                                                [type]: uploadedUrl,
-                                                [`${type}Type`]: 'image'
-                                            }
-                                        }));
-                                    }
-                                } catch (imageError) {
-                                    console.error('Image picker error:', imageError);
-                                    Alert.alert('Error', 'Failed to pick image. Please try again.');
-                                }
-                            }
-                        },
-                        {
-                            text: 'Upload PDF',
-                            onPress: async () => {
-                                try {
-                                    const pdfResult = await DocumentPicker.getDocumentAsync({
-                                        type: 'application/pdf',
-                                        copyToCacheDirectory: true,
-                                    });
+                    if (!uploadedUrl) {
+                        throw new Error('Upload failed');
+                    }
 
-                                    console.log('PDF Result:', pdfResult);
+                    const isPdf = String(mimeType).toLowerCase().includes('pdf') || String(fileName).toLowerCase().endsWith('.pdf');
 
-                                    if (pdfResult && pdfResult.assets && pdfResult.assets.length > 0) {
-                                        const pdfFile = pdfResult.assets[0];
-                                        const uploadedUrl = await uploadDocumentToCloudinary(
-                                            pdfFile.uri,
-                                            pdfFile.name || `traveler-${index + 1}-photo.pdf`,
-                                            pdfFile.mimeType || 'application/pdf',
-                                            user?._id
-                                        );
-
-                                        if (!uploadedUrl) {
-                                            throw new Error('Upload failed');
-                                        }
-
-                                        setUploads(prev => ({
-                                            ...prev,
-                                            [index]: {
-                                                ...prev[index],
-                                                [type]: uploadedUrl,
-                                                [`${type}Type`]: 'pdf',
-                                                [`${type}Name`]: pdfFile.name
-                                            }
-                                        }));
-                                    } else if (pdfResult && pdfResult.canceled) {
-                                        console.log('PDF selection cancelled');
-                                    }
-                                } catch (pdfError) {
-                                    console.error('PDF picker error:', pdfError);
-                                    Alert.alert('Error', 'Failed to pick PDF. Please try again.');
-                                }
-                            }
-                        },
-                        {
-                            text: 'Cancel',
-                            onPress: () => {},
-                            style: 'cancel'
+                    setUploads(prev => ({
+                        ...prev,
+                        [index]: {
+                            ...prev[index],
+                            [type]: uploadedUrl,
+                            [`${type}Type`]: isPdf ? 'pdf' : 'image',
+                            [`${type}Name`]: isPdf ? fileName : null
                         }
-                    ]
-                );
+                    }));
+                } catch (fileError) {
+                    console.error('Document picker error:', fileError);
+                    Alert.alert('Error', 'Failed to pick file. Please try again.');
+                }
             } else {
-                // For passport/ID, allow both images and PDFs
-                Alert.alert(
-                    'Select File Type',
-                    'Choose how you want to upload your document',
-                    [
-                        {
-                            text: 'Upload Image (JPG/PNG)',
-                                    onPress: async () => {
-                                try {
-                                    const result = await launchImageLibraryAsync({
-                                        mediaTypes: MediaTypeOptions.Images,
-                                        quality: 0.7,
-                                        allowsEditing: true,
-                                    });
+                try {
+                    const result = await DocumentPicker.getDocumentAsync({
+                        type: ['image/*', 'application/pdf'],
+                        copyToCacheDirectory: true,
+                        multiple: false,
+                    });
 
-                                    if (!result.canceled) {
-                                        const asset = result.assets[0];
-                                        const fileName = asset.fileName || asset.name || `traveler-${index + 1}-document.jpg`;
-                                        const mimeType = asset.mimeType || 'image/jpeg';
-                                        const uploadedUrl = await uploadDocumentToCloudinary(asset.uri, fileName, mimeType, user?._id);
+                    if (result.canceled || !result.assets?.length) {
+                        return;
+                    }
 
-                                        if (!uploadedUrl) {
-                                            throw new Error('Upload failed');
-                                        }
+                    const file = result.assets[0];
+                    const fileName = file.name || file.fileName || `traveler-${index + 1}-document`;
+                    const mimeType = file.mimeType || file.type || 'application/octet-stream';
+                    const uploadedUrl = await uploadDocumentToCloudinary(file.uri, fileName, mimeType, user?._id);
 
-                                        setUploads(prev => ({
-                                            ...prev,
-                                            [index]: {
-                                                ...prev[index],
-                                                [type]: uploadedUrl,
-                                                [`${type}Type`]: 'image'
-                                            }
-                                        }));
-                                    }
-                                } catch (imageError) {
-                                    console.error('Image picker error:', imageError);
-                                    Alert.alert('Error', 'Failed to pick image. Please try again.');
-                                }
-                            }
-                        },
-                        {
-                            text: 'Upload PDF',
-                            onPress: async () => {
-                                try {
-                                    const pdfResult = await DocumentPicker.getDocumentAsync({
-                                        type: 'application/pdf',
-                                        copyToCacheDirectory: true,
-                                    });
+                    if (!uploadedUrl) {
+                        throw new Error('Upload failed');
+                    }
 
-                                    console.log('PDF Result:', pdfResult);
+                    const isPdf = String(mimeType).toLowerCase().includes('pdf') || String(fileName).toLowerCase().endsWith('.pdf');
 
-                                    if (pdfResult && pdfResult.assets && pdfResult.assets.length > 0) {
-                                        const pdfFile = pdfResult.assets[0];
-                                        const uploadedUrl = await uploadDocumentToCloudinary(
-                                            pdfFile.uri,
-                                            pdfFile.name || `traveler-${index + 1}-document.pdf`,
-                                            pdfFile.mimeType || 'application/pdf',
-                                            user?._id
-                                        );
-
-                                        if (!uploadedUrl) {
-                                            throw new Error('Upload failed');
-                                        }
-
-                                        setUploads(prev => ({
-                                            ...prev,
-                                            [index]: {
-                                                ...prev[index],
-                                                [type]: uploadedUrl,
-                                                [`${type}Type`]: 'pdf',
-                                                [`${type}Name`]: pdfFile.name
-                                            }
-                                        }));
-                                    } else if (pdfResult && pdfResult.canceled) {
-                                        // User cancelled, do nothing
-                                        console.log('PDF selection cancelled');
-                                    }
-                                } catch (pdfError) {
-                                    console.error('PDF picker error:', pdfError);
-                                    Alert.alert('Error', 'Failed to pick PDF. Please try again.');
-                                }
-                            }
-                        },
-                        {
-                            text: 'Cancel',
-                            onPress: () => {},
-                            style: 'cancel'
+                    setUploads(prev => ({
+                        ...prev,
+                        [index]: {
+                            ...prev[index],
+                            [type]: uploadedUrl,
+                            [`${type}Type`]: isPdf ? 'pdf' : 'image',
+                            [`${type}Name`]: isPdf ? fileName : null
                         }
-                    ]
-                );
+                    }));
+                } catch (fileError) {
+                    console.error('Document picker error:', fileError);
+                    Alert.alert('Error', 'Failed to pick file. Please try again.');
+                }
             }
         } catch (error) {
             console.error('Error in pickImage:', error);

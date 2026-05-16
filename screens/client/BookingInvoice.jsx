@@ -481,8 +481,14 @@ export default function BookingInvoice({ route, navigation }) {
                 name: image.fileName || 'document.jpg'
             });
 
-            const response = await api.post('/upload/upload-booking-documents', formData, withUserHeader(user?._id));
-            return response?.urls?.[0] || null;
+            const response = await api.post('/upload/upload-booking-documents', formData, {
+                ...withUserHeader(user?._id),
+                headers: {
+                    ...(withUserHeader(user?._id)?.headers || {}),
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response?.data?.urls?.[0] || null;
         } catch (error) {
             console.error('Error uploading document:', error);
             return null;
