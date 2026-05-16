@@ -134,7 +134,7 @@ const QuotationFormStepStyle = StyleSheet.create({
     signatureBlock: { marginTop: 30, flexDirection: 'row', justifyContent: 'space-between', gap: 20 },
     sigLine: { flex: 1, alignItems: 'center' },
     sigText: { fontSize: 9, fontFamily: 'Montserrat_700Bold', marginTop: 5 },
-    modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20 },
     verifyModalCard: {
         width: '92%',
         backgroundColor: '#fff',
@@ -219,7 +219,7 @@ const QuotationFormStepStyle = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Montserrat_700Bold',
     },
-    dropdownBox: { backgroundColor: '#fff', width: 250, borderRadius: 12, padding: 10, elevation: 5 },
+    dropdownBox: { backgroundColor: '#fff', width: 280, maxHeight: 350, borderRadius: 12, padding: 10, elevation: 5, alignSelf: 'center' },
     dropdownItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
     dropdownText: { fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#305797' },
     errorText: { color: '#d32f2f', fontFamily: 'Montserrat_600SemiBold', fontSize: 10, marginTop: 5, marginLeft: 5 },

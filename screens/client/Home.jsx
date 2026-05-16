@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated, RefreshControl } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -22,6 +22,8 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     const imageSource = item.images && item.images.length > 0
         ? item.images[0]
         : require('../../assets/images/southkorea_image.png')
+    const packageTypeLabel = String(item.packageType || 'domestic').toLowerCase() === 'domestic' ? 'Domestic' : 'International'
+    const discountPercent = Number(item.packageDiscountPercent || 0)
 
     return (
         // 🔥 FIX 4: Changed this from TouchableOpacity to a standard View. The card itself is no longer clickable!
@@ -33,6 +35,18 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
                 contentFit="cover"
                 transition={300}
             />
+
+            <View style={HomeStyle.bannerTagContainer}>
+                {discountPercent > 0 && (
+                    <View style={HomeStyle.discountBannerTag}>
+                        <Text style={HomeStyle.discountBannerTagText}>{`-${Math.round(discountPercent)}% OFF`}</Text>
+                    </View>
+                )}
+
+                <View style={HomeStyle.typeBannerTag}>
+                    <Text style={HomeStyle.typeBannerTagText}>{packageTypeLabel}</Text>
+                </View>
+            </View>
 
             {isWishlisted && (
                 <View style={HomeStyle.wishlistButton}>
@@ -99,6 +113,10 @@ export default function Home({ route }) {
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
     const [forYouLoading, setForYouLoading] = useState(false)
+    const [refreshing, setRefreshing] = useState(false)
+    const [popularPackages, setPopularPackages] = useState([])
+    const [fallbackPopularPackages, setFallbackPopularPackages] = useState([])
+    const [popularLoading, setPopularLoading] = useState(false)
 
     const [wishlistedIds, setWishlistedIds] = useState(new Set())
 
@@ -173,6 +191,75 @@ export default function Home({ route }) {
         const scrollPosition = event.nativeEvent.contentOffset.x;
         const index = Math.round(scrollPosition / (width - 30));
         setActiveCarouselIndex(index);
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        try {
+            // Fetch packages and ratings concurrently
+            const [pkgResponse, ratingResponse] = await Promise.all([
+                api.get('/package/get-packages'),
+                api.get('/rating/average-ratings').catch(() => ({ data: { averagesPayload: [] } }))
+            ]);
+
+            // Build rating map
+            const ratingMap = new Map();
+            if (ratingResponse.data?.averagesPayload) {
+                ratingResponse.data.averagesPayload.forEach(r => {
+                    ratingMap.set(String(r.id), Number(r.averageRating));
+                });
+            }
+
+            // Transform packages with correct field names
+            const transformedPackages = pkgResponse.data.map(item => {
+                const rating = ratingMap.get(String(item._id)) || Number(item.averageRating) || 0;
+                let calculatedSlots = 0;
+                if (item.packageSpecificDate && Array.isArray(item.packageSpecificDate)) {
+                    calculatedSlots = item.packageSpecificDate.reduce((sum, dateObj) => {
+                        return sum + (Number(dateObj.slots) || Number(dateObj.availableSlots) || 0);
+                    }, 0);
+                }
+                const availableSlots = item.packageAvailableSlots ?? item.slots ?? calculatedSlots;
+
+                // Calculate discounts
+                const discountPercent = Number(item.packageDiscountPercent || 0);
+                const originalPrice = Number(item.packagePricePerPax || 0);
+                const discountedPrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
+
+                return {
+                    ...item,
+                    _id: item._id,
+                    packageName: item.packageName,
+                    packagePricePerPax: originalPrice,
+                    packageDiscountPercent: discountPercent,
+                    discountedPrice: discountedPrice,
+                    packageDuration: item.packageDuration || 0,
+                    availableSlots: availableSlots,
+                    rating: Number(rating.toFixed(1)),
+                    packageTags: item.packageTags || [],
+                    packageType: item.packageType || 'domestic'
+                };
+            });
+            setPackages(transformedPackages);
+
+            // Fetch recommendations and popular packages
+            if (user?._id) {
+                try {
+                    const recResponse = await api.get('/recommendations', withUserHeader(user._id));
+                    if (recResponse.data?.packages) {
+                        setForYouPackages(recResponse.data.packages);
+                    }
+                } catch (error) {
+                    console.log("Failed to fetch recommendations on refresh:", error.message);
+                }
+            }
+            
+            await fetchPopularPackages();
+        } catch (error) {
+            console.log("Failed to refresh packages:", error.message);
+        } finally {
+            setRefreshing(false);
+        }
     };
 
 
@@ -289,6 +376,41 @@ export default function Home({ route }) {
             fetchRecommendations()
         }
     }, [user?._id])
+
+    const fetchPopularPackages = async () => {
+        setPopularLoading(true);
+        try {
+            const response = await api.get('/package/popular-packages', { params: { limit: 5 } });
+            const transformedPackages = (response.data || []).map((pkg) => ({
+                ...pkg,
+                _id: pkg._id || pkg.packageItem,
+            }));
+            const trimmed = transformedPackages.slice(0, 5);
+            setPopularPackages(trimmed);
+            if (trimmed.length === 0) {
+                const fallbackResponse = await api.get('/package/get-packages');
+                setFallbackPopularPackages((fallbackResponse.data || []).slice(0, 5));
+            } else {
+                setFallbackPopularPackages([]);
+            }
+        } catch (error) {
+            console.log('Failed to fetch popular packages:', error.message);
+            setPopularPackages([]);
+            try {
+                const fallbackResponse = await api.get('/package/get-packages');
+                setFallbackPopularPackages((fallbackResponse.data || []).slice(0, 5));
+            } catch (fallbackError) {
+                console.log('Failed to fetch fallback packages:', fallbackError.message);
+                setFallbackPopularPackages([]);
+            }
+        } finally {
+            setPopularLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPopularPackages();
+    }, [])
 
     const domesticPackages = packages.filter(
         (pkg) => String(pkg.packageType).toLowerCase() === 'domestic'
@@ -458,6 +580,9 @@ export default function Home({ route }) {
                     contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 80 : 100 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#305797"]} />
+                    }
                 >
 
                     <View style={HomeStyle.mainTitleContainer}>
@@ -505,6 +630,7 @@ export default function Home({ route }) {
                     ) : (
                         <>
                             <Text style={HomeStyle.title}>FOR YOU</Text>
+                            <Text style={HomeStyle.forYouNote}>These are the recommended packages based on the packages you have rated.</Text>
                             {forYouPackages.length > 0 && (
                                 <ScrollView
                                     horizontal
@@ -523,22 +649,26 @@ export default function Home({ route }) {
                                 </ScrollView>
                             )}
 
-                            <Text style={[HomeStyle.title, { marginTop: 10 }]}>Packages For You</Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
-                            >
-                                {internationalPackages.map((pkg) => (
-                                    <View key={`foryou-${pkg._id}`} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
-                                        <BannerCard
-                                            item={pkg}
-                                            isWishlisted={wishlistedIds.has(String(pkg._id))}
-                                            onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
-                                        />
-                                    </View>
-                                ))}
-                            </ScrollView>
+                            <Text style={[HomeStyle.title, { marginTop: 10 }]}>Popular Packages</Text>
+                            {popularLoading ? (
+                                <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
+                            ) : (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                                >
+                                    {(popularPackages.length > 0 ? popularPackages : fallbackPopularPackages).map((pkg) => (
+                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
+                                            <BannerCard
+                                                item={pkg}
+                                                isWishlisted={wishlistedIds.has(String(pkg._id))}
+                                                onPress={() => cs.navigate("packagedetails", { id: pkg._id, pkg })}
+                                            />
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            )}
                         </>
                     )}
 

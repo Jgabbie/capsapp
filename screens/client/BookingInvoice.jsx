@@ -219,6 +219,18 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+    const isImageFile = (url) => {
+        if (!url) return false;
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+        const lowerUrl = url.toLowerCase();
+        return imageExtensions.some(ext => lowerUrl.includes(ext));
+    };
+
+    const isPdfFile = (url) => {
+        if (!url) return false;
+        return url.toLowerCase().includes('.pdf');
+    };
+
     const issueDate = booking?.createdAt ? dayjs(booking.createdAt) : dayjs();
     const travelDateObj = booking?.travelDate?.startDate ? dayjs(booking.travelDate.startDate) : dayjs().add(1, 'month');
     const fallbackDueDateDisplay = travelDateObj.isValid() ? travelDateObj.subtract(25, 'day') : issueDate.add(14, 'day');
@@ -230,10 +242,12 @@ export default function BookingInvoice({ route, navigation }) {
     const baseTravelers = Array.isArray(bookingDetails?.travelers) ? bookingDetails.travelers : Array.isArray(bookingDetails?.passengers) ? bookingDetails.passengers : [];
     const fallbackPassports = bookingDetails?.passportFiles || booking?.passportFiles || [];
     const fallbackPhotos = bookingDetails?.photoFiles || booking?.photoFiles || [];
+    const fallbackVisas = bookingDetails?.visaFiles || booking?.visaFiles || [];
 
     const travelersWithDocs = baseTravelers.map((t, i) => {
         const rawPassport = t.passportFile || fallbackPassports[i] || null;
         const rawPhoto = t.photoFile || fallbackPhotos[i] || null;
+        const rawVisa = t.visaFile || fallbackVisas[i] || null;
         const normalizedAge = Number(t?.age);
         const fallbackPassengerType = Number.isFinite(normalizedAge)
             ? (normalizedAge <= 2 ? "INFANT" : normalizedAge <= 11 ? "CHILD" : "ADULT")
@@ -254,6 +268,7 @@ export default function BookingInvoice({ route, navigation }) {
             passportExpiry: t.passportExpiry || t.expiry || null,
             passportFile: typeof rawPassport === 'string' ? rawPassport : rawPassport?.uri || null,
             photoFile: typeof rawPhoto === 'string' ? rawPhoto : rawPhoto?.uri || null,
+            visaFile: typeof rawVisa === 'string' ? rawVisa : rawVisa?.uri || null,
         };
     });
 
@@ -1070,9 +1085,11 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.passportFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)} activeOpacity={0.85}>
-                                                    <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                                </TouchableOpacity>
+                                                {isImageFile(traveler.passportFile) && (
+                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)} activeOpacity={0.85}>
+                                                        <Image source={{ uri: traveler.passportFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                    </TouchableOpacity>
+                                                )}
                                                 <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
                                                     <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
                                                         View Passport / ID
@@ -1088,9 +1105,11 @@ export default function BookingInvoice({ route, navigation }) {
                                         {traveler.photoFile ? (
                                             <View style={BookingInvoiceStyle.docCol}>
                                                 <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
-                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)} activeOpacity={0.85}>
-                                                    <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
-                                                </TouchableOpacity>
+                                                {isImageFile(traveler.photoFile) && (
+                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)} activeOpacity={0.85}>
+                                                        <Image source={{ uri: traveler.photoFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                    </TouchableOpacity>
+                                                )}
                                                 <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
                                                     <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
                                                         View Photo
@@ -1103,6 +1122,22 @@ export default function BookingInvoice({ route, navigation }) {
                                             </View>
                                         )}
                                     </View>
+
+                                    {traveler.visaFile && (
+                                        <View style={{ marginTop: 16 }}>
+                                            <Text style={BookingInvoiceStyle.docLabel}>Visa File</Text>
+                                            {isImageFile(traveler.visaFile) && (
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)} activeOpacity={0.85}>
+                                                    <Image source={{ uri: traveler.visaFile }} style={BookingInvoiceStyle.docImage} resizeMode="cover" />
+                                                </TouchableOpacity>
+                                            )}
+                                            <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)}>
+                                                <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                    View Visa
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </View>
                             ))
                         )}
