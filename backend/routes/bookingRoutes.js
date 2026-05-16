@@ -11,6 +11,7 @@ import {
   verifyTokenCheckout,
   getBookingsTotalBaseOnMonth,
   getInvoiceNumber,
+  resubmitBookingDocuments
 } from "../controllers/bookingController.js";
 
 const router = express.Router();
@@ -22,7 +23,7 @@ router.get('/bookings-total-month', requireUser, getBookingsTotalBaseOnMonth);
 router.get('/invoice-number/:reference', requireUser, getInvoiceNumber);
 router.post("/verify-payment", requireUser, verifyTokenCheckout);
 router.get("/all-bookings", requireUser, requireAdmin, getAllBookings);
-
+router.post('/:id/resubmit-documents', requireUser, resubmitBookingDocuments);
 
 
 export default router;

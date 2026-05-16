@@ -259,6 +259,89 @@ export const cancelBooking = async (req, res) => {
     }
 };
 
+
+
+export const resubmitBookingDocuments = async (req, res) => {
+    const { id } = req.params
+    const userId = req.userId
+    const { passportFiles = [], photoFiles = [], visaFiles = [], travelers = [], travelerIndex } = req.body
+
+    try {
+        const booking = await BookingModel.findById(id)
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' })
+        }
+
+        if (String(booking.userId) !== String(userId)) {
+            return res.status(403).json({ message: 'Unauthorized to update this booking' })
+        }
+
+        if (Array.isArray(passportFiles) && passportFiles.length) {
+            booking.passportFiles = passportFiles
+        }
+        if (Array.isArray(photoFiles) && photoFiles.length) {
+            booking.photoFiles = photoFiles
+        }
+        if (Array.isArray(visaFiles) && visaFiles.length) {
+            booking.visaFiles = visaFiles
+        }
+
+        if (Array.isArray(travelers) && travelers.length) {
+            if (!booking.bookingDetails) {
+                booking.bookingDetails = {}
+            }
+            booking.bookingDetails.travelers = travelers
+            booking.markModified('bookingDetails')
+        }
+
+        const travelersSource = Array.isArray(travelers) && travelers.length
+            ? travelers
+            : booking.bookingDetails?.travelers || []
+
+        if (Number.isInteger(travelerIndex)) {
+            const existingIndexes = Array.isArray(booking.documentsResubmissionTravelerIndexes)
+                ? booking.documentsResubmissionTravelerIndexes
+                : []
+            booking.documentsResubmissionTravelerIndexes = existingIndexes.filter(
+                (index) => index !== travelerIndex
+            )
+        }
+
+        const anyResubmissionPending = travelersSource.some(
+            (traveler) => traveler?.documentsResubmissionRequired
+        ) || (Array.isArray(booking.documentsResubmissionTravelerIndexes)
+            && booking.documentsResubmissionTravelerIndexes.length > 0)
+
+        booking.documentsResubmissionRequired = anyResubmissionPending
+        if (!anyResubmissionPending) {
+            booking.documentsResubmissionRequestedAt = null
+        }
+
+        await booking.save()
+
+        await NotificationModel.create({
+            userId: booking.userId,
+            title: 'Documents Resubmitted',
+            message: `Documents for booking ${booking.reference} were resubmitted.`,
+            type: 'booking',
+            link: '/user-bookings'
+        })
+
+        logAction('DOCUMENTS_RESUBMITTED', userId, {
+            'Documents Resubmitted': `Booking Reference: ${booking.reference}`
+        })
+
+        return res.status(200).json({ message: 'Documents resubmitted', booking })
+    } catch (error) {
+        return res.status(500).json({ message: 'Error resubmitting documents', error })
+    }
+}
+
+
+
+
+
 export const getBookingByReference = async (req, res) => {
     const userId = req.userId;
     const { reference } = req.params;
