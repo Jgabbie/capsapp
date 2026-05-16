@@ -51,6 +51,7 @@ export default function BookingInvoice({ route, navigation }) {
     const [photoUploadLists, setPhotoUploadLists] = useState({});
     const [visaUploadLists, setVisaUploadLists] = useState({});
     const [submittingTravelerIndex, setSubmittingTravelerIndex] = useState(null);
+    const [documentPreview, setDocumentPreview] = useState(null);
 
     const bookingDetails = booking?.bookingDetails || {};
     const reference = booking?.reference || booking?.ref || booking?._id || "--";
@@ -461,6 +462,14 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+    const previewDocument = (file) => {
+        if (!file?.uri) return;
+        setDocumentPreview({
+            uri: file.uri,
+            name: file.fileName || file.name || 'Selected file'
+        });
+    };
+
     const uploadDocument = async (image) => {
         if (!image) return null;
 
@@ -503,8 +512,10 @@ export default function BookingInvoice({ route, navigation }) {
                 visaImage ? uploadDocument(visaImage) : Promise.resolve(null)
             ]);
 
-            const travelersWithDocs = bookingDetails?.travelers || [];
-            const updatedTravelers = travelersWithDocs.map((traveler, idx) => {
+            console.log('Uploaded document URLs:', { passportUrl, photoUrl, visaUrl });
+
+            const travelersArray = bookingDetails?.travelers || [];
+            const updatedTravelers = travelersArray.map((traveler, idx) => {
                 if (idx !== travelerIndex) return traveler;
                 return {
                     ...traveler,
@@ -515,26 +526,34 @@ export default function BookingInvoice({ route, navigation }) {
                 };
             });
 
-            const updatePayload = {
-                travelers: updatedTravelers,
-                travelerIndex,
-                passportFiles: booking?.passportFiles || [],
-                photoFiles: booking?.photoFiles || [],
-                visaFiles: booking?.visaFiles || []
-            };
+            const updatedPassportFiles = [...(booking?.passportFiles || [])];
+            const updatedPhotoFiles = [...(booking?.photoFiles || [])];
+            const updatedVisaFiles = [...(booking?.visaFiles || [])];
 
             if (passportUrl) {
-                updatePayload.passportFiles[travelerIndex] = passportUrl;
+                updatedPassportFiles[travelerIndex] = passportUrl;
             }
             if (photoUrl) {
-                updatePayload.photoFiles[travelerIndex] = photoUrl;
+                updatedPhotoFiles[travelerIndex] = photoUrl;
             }
             if (visaUrl) {
-                updatePayload.visaFiles[travelerIndex] = visaUrl;
+                updatedVisaFiles[travelerIndex] = visaUrl;
             }
 
+            const updatePayload = {
+                passportFiles: updatedPassportFiles,
+                photoFiles: updatedPhotoFiles,
+                visaFiles: updatedVisaFiles,
+                travelers: updatedTravelers,
+                travelerIndex: Number(travelerIndex)
+            };
+
+            console.log('Sending resubmit payload:', JSON.stringify(updatePayload));
+
             const response = await api.post(`/booking/${booking._id}/resubmit-documents`, updatePayload, withUserHeader(user?._id));
-            const updatedBooking = response?.booking || booking;
+            console.log('Resubmit response:', response);
+
+            const updatedBooking = response?.data?.booking || response?.booking || booking;
             setBooking(updatedBooking);
 
             setPassportUploadLists(prev => ({
@@ -552,8 +571,11 @@ export default function BookingInvoice({ route, navigation }) {
 
             Alert.alert('Success', 'Documents submitted successfully.');
         } catch (error) {
-            console.error('Error submitting documents:', error);
-            Alert.alert('Error', 'Unable to submit documents. Please try again.');
+            console.error('Error submitting documents - Full error:', error);
+            console.error('Response data:', error.response?.data);
+            console.error('Response status:', error.response?.status);
+            const errorMessage = error.response?.data?.message || error.message || 'Unable to submit documents. Please try again.';
+            Alert.alert('Error', errorMessage);
         } finally {
             setSubmittingTravelerIndex(null);
         }
@@ -1269,72 +1291,89 @@ export default function BookingInvoice({ route, navigation }) {
                                             <View style={{ gap: 12 }}>
                                                 <View>
                                                     <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Passport / ID</Text>
-                                                    {passportUploadLists[index] ? (
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                                                            <Ionicons name="document-text" size={18} color="#305797" />
-                                                            <Text style={{ flex: 1, fontSize: 12, color: '#305797', fontFamily: 'Roboto_400Regular' }}>
-                                                                {passportUploadLists[index].fileName || 'passport.jpg'}
-                                                            </Text>
-                                                            <TouchableOpacity onPress={() => setPassportUploadLists(prev => ({ ...prev, [index]: null }))}>
-                                                                <Ionicons name="close-circle" size={20} color="#ef4444" />
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    ) : (
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                                                         <TouchableOpacity
-                                                            style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#f3f4f6', borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', gap: 8, flexDirection: 'row', justifyContent: 'center' }}
                                                             onPress={() => pickDocumentImage(index, 'passport')}
+                                                            disabled={submittingTravelerIndex === index}
+                                                            style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
                                                         >
-                                                            <Ionicons name="cloud-upload-outline" size={18} color="#6b7280" />
-                                                            <Text style={{ fontSize: 13, color: '#6b7280', fontFamily: 'Montserrat_600SemiBold' }}>Upload Passport / ID</Text>
+                                                            <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
+                                                                {passportUploadLists[index] ? 'Change File' : 'Select File'}
+                                                            </Text>
                                                         </TouchableOpacity>
+                                                        {passportUploadLists[index] && (
+                                                            <TouchableOpacity
+                                                                onPress={() => previewDocument(passportUploadLists[index])}
+                                                                style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
+                                                            >
+                                                                <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                            </TouchableOpacity>
+                                                        )}
+                                                    </View>
+                                                    {passportUploadLists[index] && (
+                                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
+                                                            {passportUploadLists[index].fileName || 'passport.jpg'}
+                                                        </Text>
                                                     )}
                                                 </View>
 
                                                 <View>
                                                     <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>2x2 Photo</Text>
-                                                    {photoUploadLists[index] ? (
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                                                            <Ionicons name="document-text" size={18} color="#305797" />
-                                                            <Text style={{ flex: 1, fontSize: 12, color: '#305797', fontFamily: 'Roboto_400Regular' }}>
-                                                                {photoUploadLists[index].fileName || 'photo.jpg'}
-                                                            </Text>
-                                                            <TouchableOpacity onPress={() => setPhotoUploadLists(prev => ({ ...prev, [index]: null }))}>
-                                                                <Ionicons name="close-circle" size={20} color="#ef4444" />
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    ) : (
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                                                         <TouchableOpacity
-                                                            style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#f3f4f6', borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', gap: 8, flexDirection: 'row', justifyContent: 'center' }}
                                                             onPress={() => pickDocumentImage(index, 'photo')}
+                                                            disabled={submittingTravelerIndex === index}
+                                                            style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
                                                         >
-                                                            <Ionicons name="cloud-upload-outline" size={18} color="#6b7280" />
-                                                            <Text style={{ fontSize: 13, color: '#6b7280', fontFamily: 'Montserrat_600SemiBold' }}>Upload 2x2 Photo</Text>
+                                                            <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
+                                                                {photoUploadLists[index] ? 'Change File' : 'Select File'}
+                                                            </Text>
                                                         </TouchableOpacity>
+                                                        {photoUploadLists[index] && (
+                                                            <TouchableOpacity
+                                                                onPress={() => previewDocument(photoUploadLists[index])}
+                                                                style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
+                                                            >
+                                                                <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                            </TouchableOpacity>
+                                                        )}
+                                                    </View>
+                                                    {photoUploadLists[index] && (
+                                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
+                                                            {photoUploadLists[index].fileName || 'photo.jpg'}
+                                                        </Text>
                                                     )}
                                                 </View>
 
-                                                <View>
-                                                    <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Visa File</Text>
-                                                    {visaUploadLists[index] ? (
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                                                            <Ionicons name="document-text" size={18} color="#305797" />
-                                                            <Text style={{ flex: 1, fontSize: 12, color: '#305797', fontFamily: 'Roboto_400Regular' }}>
+                                                {Boolean(traveler.visaFile || fallbackVisas[index]) && (
+                                                    <View>
+                                                        <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Visa File</Text>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                                                            <TouchableOpacity
+                                                                onPress={() => pickDocumentImage(index, 'visa')}
+                                                                disabled={submittingTravelerIndex === index}
+                                                                style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
+                                                            >
+                                                                <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
+                                                                    {visaUploadLists[index] ? 'Change File' : 'Select File'}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                            {visaUploadLists[index] && (
+                                                                <TouchableOpacity
+                                                                    onPress={() => previewDocument(visaUploadLists[index])}
+                                                                    style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
+                                                                >
+                                                                    <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                                </TouchableOpacity>
+                                                            )}
+                                                        </View>
+                                                        {visaUploadLists[index] && (
+                                                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
                                                                 {visaUploadLists[index].fileName || 'visa.jpg'}
                                                             </Text>
-                                                            <TouchableOpacity onPress={() => setVisaUploadLists(prev => ({ ...prev, [index]: null }))}>
-                                                                <Ionicons name="close-circle" size={20} color="#ef4444" />
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    ) : (
-                                                        <TouchableOpacity
-                                                            style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: '#f3f4f6', borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', gap: 8, flexDirection: 'row', justifyContent: 'center' }}
-                                                            onPress={() => pickDocumentImage(index, 'visa')}
-                                                        >
-                                                            <Ionicons name="cloud-upload-outline" size={18} color="#6b7280" />
-                                                            <Text style={{ fontSize: 13, color: '#6b7280', fontFamily: 'Montserrat_600SemiBold' }}>Upload Visa File</Text>
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </View>
+                                                        )}
+                                                    </View>
+                                                )}
                                             </View>
 
                                             <TouchableOpacity
@@ -1377,6 +1416,32 @@ export default function BookingInvoice({ route, navigation }) {
 
                 </ScrollView>
             )}
+
+            <Modal visible={!!documentPreview} transparent animationType="fade" onRequestClose={() => setDocumentPreview(null)}>
+                <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 }}
+                    activeOpacity={1}
+                    onPress={() => setDocumentPreview(null)}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={() => { }}
+                        style={{ width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden' }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
+                            <Text numberOfLines={1} style={{ flex: 1, marginRight: 12, fontFamily: 'Montserrat_700Bold', fontSize: 14, color: '#1f2937' }}>
+                                {documentPreview?.name || 'Selected file'}
+                            </Text>
+                            <TouchableOpacity onPress={() => setDocumentPreview(null)}>
+                                <Ionicons name="close" size={24} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ width: '100%', aspectRatio: 1, backgroundColor: '#111827' }}>
+                            <Image source={{ uri: documentPreview?.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                        </View>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
 
             <Modal visible={isProceedModalOpen} transparent animationType="fade">
                 <View style={BookingInvoiceStyle.modalOverlay}>

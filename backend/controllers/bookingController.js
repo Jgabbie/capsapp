@@ -267,7 +267,7 @@ export const resubmitBookingDocuments = async (req, res) => {
     const { passportFiles = [], photoFiles = [], visaFiles = [], travelers = [], travelerIndex } = req.body
 
     try {
-        const booking = await BookingModel.findById(id)
+        const booking = await Booking.findById(id)
 
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' })
