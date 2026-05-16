@@ -288,7 +288,7 @@ const PassportGuidanceStyle = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#e0f2fe',
+        backgroundColor: '#d1fae5',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
@@ -312,16 +312,16 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     modalButton: {
         backgroundColor: "#305797",
-        paddingVertical: 14,
-        borderRadius: 8,
-        width: '80%',
+        paddingVertical: 12,
+        borderRadius: 12,
+        width: '40%',
         alignItems: 'center',
         marginBottom: 20
     },
     modalButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 16
+        fontSize: 14
     }
 });
 

@@ -462,15 +462,15 @@ export default function VisaDetailsGuidance() {
             <Modal visible={showSuccessModal} transparent animationType="fade">
                 <View style={VisaDetailsGuidanceStyle.modalOverlay}>
                     <View style={[VisaDetailsGuidanceStyle.modalCard, { padding: 0 }]}>
-                        <TouchableOpacity style={{ alignSelf: 'flex-end', padding: 16 }} onPress={handleContinue}>
+                        <TouchableOpacity style={{ alignSelf: 'flex-end', padding: 12 }} onPress={handleContinue}>
                             <Ionicons name="close" size={24} color="#9ca3af" />
                         </TouchableOpacity>
 
                         <View style={VisaDetailsGuidanceStyle.modalIconContainer}>
-                            <Ionicons name="checkmark" size={32} color="#0ea5e9" />
+                            <Ionicons name="checkmark" size={32} color="#059669" />
                         </View>
 
-                        <Text style={VisaDetailsGuidanceStyle.modalTitle}>Application submitted</Text>
+                        <Text style={VisaDetailsGuidanceStyle.modalTitle}>Application Submitted</Text>
                         <Text style={VisaDetailsGuidanceStyle.modalDesc}>
                             Your visa application has been submitted successfully. Kindly wait for your application to be approved.
                         </Text>
