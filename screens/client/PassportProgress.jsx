@@ -1883,29 +1883,24 @@ export default function PassportApplication() {
                 </TouchableOpacity>
             </Modal>
 
-            {/* Documents Upload Success Modal */}
             <Modal visible={showDocumentsSuccessModal} transparent animationType="fade" onRequestClose={() => setShowDocumentsSuccessModal(false)}>
-                <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
-                    activeOpacity={1}
-                    onPress={() => setShowDocumentsSuccessModal(false)}
-                >
+                <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
                     <TouchableWithoutFeedback>
-                        <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', maxWidth: 400 }}>
-                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                <Ionicons name="checkmark-circle" size={40} color="#10b981" />
+                        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
+                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={{ fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
-                                Files Uploaded Successfully!
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                Files Successfully Uploaded
                             </Text>
-                            <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 20, textAlign: 'center', lineHeight: 20 }}>
-                                All your passport documents have been uploaded. Our team will review them shortly.
+                            <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                Your files has been submitted. Our team will review it shortly.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowDocumentsSuccessModal(false)}
-                                style={{ backgroundColor: '#305797', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 }}
+                                style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
                             >
-                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Done</Text>
+                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
