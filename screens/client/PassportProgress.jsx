@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -128,6 +129,8 @@ export default function PassportApplication() {
 
     const [pendingManualPayment, setPendingManualPayment] = useState(false);
     const [servicePendingManualPayment, setServicePendingManualPayment] = useState(false);
+    const isApplicationPaymentDisabled = servicePendingManualPayment;
+    const isPenaltyPaymentDisabled = pendingManualPayment;
 
     const [selectedSuggestedIndex, setSelectedSuggestedIndex] = useState(null);
     const [customDateTime, setCustomDateTime] = useState({ date: null, time: null });
@@ -146,6 +149,7 @@ export default function PassportApplication() {
     const [showAppointmentSuccessModal, setShowAppointmentSuccessModal] = useState(false);
     const [showDocumentsSuccessModal, setShowDocumentsSuccessModal] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
+    const [requirementPreview, setRequirementPreview] = useState(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     // Schedule selection state (for 'Others' custom date/time option)
@@ -264,19 +268,19 @@ export default function PassportApplication() {
                 setLoading(false);
             }
         };
+
+        //PENDING MANUAL PAYEMENTS
         const checkPendingManualPayment = async () => {
             try {
                 const transactionsRes = await api.get(`/transaction/application/${id}`, withUserHeader(user._id));
                 const transactions = Array.isArray(transactionsRes.data) ? transactionsRes.data : (transactionsRes.data?.transactions || []);
                 const hasPendingPenalty = transactions.some(
                     (tx) => tx.status === 'Pending' &&
-                        tx.method === 'Manual' &&
                         (tx.applicationType === 'Passport Penalty Fee')
                 );
 
                 const hasPendingRegularPayment = transactions.some(
                     (tx) => tx.status === 'Pending' &&
-                        tx.method === 'Manual' &&
                         (tx.applicationType === 'Passport Application')
                 );
 
@@ -442,6 +446,58 @@ export default function PassportApplication() {
 
     const openDocument = (url) => {
         if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
+    };
+
+    const shareRequirementPreviewPdf = async () => {
+        if (!requirementPreview?.uri) return;
+
+        try {
+            const isShareAvailable = await Sharing.isAvailableAsync();
+
+            if (!isShareAvailable) {
+                if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    window.open(requirementPreview.uri, '_blank', 'noopener,noreferrer');
+                    return;
+                }
+
+                await Linking.openURL(requirementPreview.uri);
+                return;
+            }
+
+            // prepare local file if needed
+            const uri = requirementPreview.uri;
+            await Sharing.shareAsync(uri, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Share PDF document',
+                UTI: 'com.adobe.pdf',
+            });
+        } catch (e) {
+            console.error('Unable to share PDF:', e);
+            Alert.alert('Unable to share PDF');
+        }
+    };
+
+    const previewFile = (fileOrUrl) => {
+        const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
+        const uri = file?.uri || file?.url;
+        if (!uri) {
+            Alert.alert('Preview unavailable', 'Could not preview this file');
+            return;
+        }
+
+        if (isImageSource(file)) {
+            setRequirementPreview({
+                uri,
+                name: file.name || 'Image preview',
+                kind: 'image',
+            });
+        } else {
+            setRequirementPreview({
+                uri,
+                name: file.name || (typeof fileOrUrl === 'string' ? fileOrUrl.split('/').pop() : 'Document'),
+                kind: 'document',
+            });
+        }
     };
 
     const isImageSource = (fileOrUrl) => {
@@ -613,6 +669,11 @@ export default function PassportApplication() {
 
     //SUBMIT PAYMENT
     const handleSubmitPayment = async () => {
+        if ((application?.onPenalty && isPenaltyPaymentDisabled) || (!application?.onPenalty && isApplicationPaymentDisabled)) {
+            Alert.alert('Notice', 'A pending payment transaction already exists for this application. Please wait for verification.');
+            return;
+        }
+
         if (method === 'manual' && !proofImage) {
             Alert.alert('Warning', 'Please upload a receipt first.');
             return;
@@ -632,10 +693,6 @@ export default function PassportApplication() {
 
                 const uploadRes = await api.post('/upload/upload-receipt', formData, {
                     ...withUserHeader(user._id),
-                    headers: {
-                        ...withUserHeader(user._id).headers,
-                        'Content-Type': 'multipart/form-data',
-                    },
                 });
 
                 const imageUrl = uploadRes.data.url;
@@ -649,36 +706,36 @@ export default function PassportApplication() {
                     proofImage: imageUrl,
                 }, withUserHeader(user._id));
 
-
-                Linking.openURL(paymentRes.data.redirectUrl);
-                Alert.alert('Success', 'Manual payment submitted successfully. Awaiting verification.');
                 setPaymentCompleted(true);
                 setProofImage(null);
 
+                setTimeout(() => {
+                    navigation.navigate('successfulmanualpaymentpassport');
+                }, 500);
+
             } else if (method === 'paymongo') {
                 // Make sure application exists
-
 
                 if (!application) {
                     Alert.alert('Error', 'Application not found.');
                     return;
                 }
 
-
                 const payload = {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
                 };
 
-
                 // Send request to create checkout session
                 const endpoint = application?.onPenalty ? '/payment/create-checkout-session-passport-penalty' : '/payment/create-checkout-session-passport';
                 const paymongoResponse = await api.post(endpoint, payload, withUserHeader(user._id));
                 const checkoutUrl = paymongoResponse?.data?.attributes?.checkout_url;
-                // Redirect user to PayMongo checkout
 
                 if (checkoutUrl) {
-                    Linking.openURL(checkoutUrl);
+                    Linking.openURL(checkoutUrl).catch(err => {
+                        console.error('Failed to open PayMongo URL:', err);
+                        Alert.alert('Error', 'Could not open payment page. Please try again.');
+                    });
                 } else {
                     console.error("PayMongo Response Structure:", paymongoResponse);
                     throw new Error("Failed to create PayMongo checkout session - URL missing");
@@ -698,11 +755,6 @@ export default function PassportApplication() {
     };
 
     const handleStartPayment = handleSubmitPayment;
-
-
-
-
-
 
     const renderRequirementUploadCard = (doc) => {
         const selectedFile = selectedFiles[doc.key];
@@ -905,7 +957,9 @@ export default function PassportApplication() {
             const res = await api.post(
                 '/upload/upload-passport-requirements',
                 formData,
-                withUserHeader(user._id)
+                {
+                    ...withUserHeader(user._id),
+                }
             );
 
             const uploaded = res.data.urls;
@@ -1185,9 +1239,23 @@ export default function PassportApplication() {
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your passport application to proceed.</Text>
 
+                        <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>
+                            <Text style={{ color: '#6b7280', fontSize: 12 }}>Application Fee</Text>
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 18, marginTop: 6 }}>
+                                ₱ 2,000.00
+                            </Text>
+                        </View>
+
+                        {isApplicationPaymentDisabled && (
+                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
+                                A pending payment transaction already exists for this application.
+                            </Text>
+                        )}
+
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity
                                 onPress={() => setPaymentMethod('paymongo')}
+                                disabled={isApplicationPaymentDisabled}
                                 style={{
                                     flex: 1,
                                     borderWidth: 1,
@@ -1195,6 +1263,7 @@ export default function PassportApplication() {
                                     backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isApplicationPaymentDisabled ? 0.55 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1208,6 +1277,7 @@ export default function PassportApplication() {
 
                             <TouchableOpacity
                                 onPress={() => setPaymentMethod('manual')}
+                                disabled={isApplicationPaymentDisabled}
                                 style={{
                                     flex: 1,
                                     borderWidth: 1,
@@ -1215,6 +1285,7 @@ export default function PassportApplication() {
                                     backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isApplicationPaymentDisabled ? 0.55 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1225,11 +1296,6 @@ export default function PassportApplication() {
                                 </View>
                                 <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
                             </TouchableOpacity>
-                        </View>
-
-                        <View style={{ borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, backgroundColor: '#fff' }}>
-                            <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 16 }}>₱ 2,000.00</Text>
-                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>Passport Application Fee</Text>
                         </View>
 
                         {paymentMethod === 'manual' && (
@@ -1288,7 +1354,7 @@ export default function PassportApplication() {
 
                         <TouchableOpacity
                             style={[PassportProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
-                            disabled={creatingPayment || (paymentMethod === 'manual' && !proofImage)}
+                            disabled={creatingPayment || isApplicationPaymentDisabled || (paymentMethod === 'manual' && !proofImage)}
                             onPress={handleStartPayment}
                         >
                             {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={PassportProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
@@ -1306,9 +1372,16 @@ export default function PassportApplication() {
                         <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
 
+                        {isPenaltyPaymentDisabled && (
+                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
+                                A pending payment transaction already exists for this application.
+                            </Text>
+                        )}
+
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity
                                 onPress={() => setPaymentMethod('paymongo')}
+                                disabled={isPenaltyPaymentDisabled}
                                 style={{
                                     flex: 1,
                                     borderWidth: 1,
@@ -1316,6 +1389,7 @@ export default function PassportApplication() {
                                     backgroundColor: paymentMethod === 'paymongo' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isPenaltyPaymentDisabled ? 0.55 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1329,6 +1403,7 @@ export default function PassportApplication() {
 
                             <TouchableOpacity
                                 onPress={() => setPaymentMethod('manual')}
+                                disabled={isPenaltyPaymentDisabled}
                                 style={{
                                     flex: 1,
                                     borderWidth: 1,
@@ -1336,6 +1411,7 @@ export default function PassportApplication() {
                                     backgroundColor: paymentMethod === 'manual' ? '#eaf1ff' : '#fff',
                                     borderRadius: 12,
                                     padding: 14,
+                                    opacity: isPenaltyPaymentDisabled ? 0.55 : 1,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1409,7 +1485,7 @@ export default function PassportApplication() {
 
                         <TouchableOpacity
                             style={[PassportProgressStyle.submitBtn, creatingPayment && { opacity: 0.7 }]}
-                            disabled={creatingPayment || (paymentMethod === 'manual' && !proofImage)}
+                            disabled={creatingPayment || isPenaltyPaymentDisabled || (paymentMethod === 'manual' && !proofImage)}
                             onPress={handleStartPayment}
                         >
                             {creatingPayment ? <ActivityIndicator color="#fff" /> : <Text style={PassportProgressStyle.submitBtnText}>{paymentMethod === 'manual' ? 'Submit Manual Payment' : 'Pay with Paymongo'}</Text>}
@@ -1424,84 +1500,59 @@ export default function PassportApplication() {
                 {/* UPLOAD REQUIREMENTS */}
                 {appStatus.toLowerCase() === 'payment completed' && (
                     <View style={PassportProgressStyle.card}>
-                        <Text style={PassportProgressStyle.cardTitle}>Upload Files</Text>
-                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Upload the required passport documents below.</Text>
+                        <Text style={PassportProgressStyle.cardTitle}>Upload Requirements</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            Please prepare and upload the following requirements for your passport application.
+                        </Text>
 
-                        <View style={{ gap: 12 }}>
-                            {passportRequirements.map((doc) => {
+                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
+                            {passportRequirements.map((doc, idx) => {
+                                const selectedFile = selectedFiles[doc.key];
                                 const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
+                                const hasFile = Boolean(uploadedUrl || selectedFile);
 
                                 return (
-                                    <View key={doc.key} style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 14, backgroundColor: '#fff' }}>
-                                        <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', marginBottom: 6 }}>{doc.label}</Text>
-                                        <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>PDF, JPG, or PNG</Text>
-
-                                        <TouchableOpacity
-                                            onPress={() => pickDocumentForKey(doc.key)}
-                                            style={{
-                                                backgroundColor: '#305797',
-                                                borderRadius: 10,
-                                                paddingVertical: 12,
-                                                alignItems: 'center',
-                                                opacity: uploadingDocumentKey === doc.key ? 0.7 : 1,
-                                            }}
-                                            disabled={uploadingDocumentKey === doc.key || uploadingAll}
-                                        >
-                                            {uploadingDocumentKey === doc.key ? (
-                                                <ActivityIndicator color="#fff" />
-                                            ) : (
-                                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>
-                                                    {uploadedUrl ? 'Replace File' : (selectedFiles[doc.key] ? 'Change Selected' : 'Select File')}
-                                                </Text>
-                                            )}
-                                        </TouchableOpacity>
-
-                                        {selectedFiles[doc.key] ? (
-                                            <View style={{ marginTop: 8, backgroundColor: '#f0f9ff', borderRadius: 8, padding: 10 }}>
-                                                {isImageSource(selectedFiles[doc.key]) ? (
-                                                    <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
-                                                        <Image
-                                                            source={{ uri: selectedFiles[doc.key].uri }}
-                                                            style={{ width: '100%', height: 160 }}
-                                                            resizeMode="cover"
-                                                        />
-                                                    </View>
-                                                ) : null}
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <View style={{ flex: 1 }}>
-                                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>
-                                                            {selectedFiles[doc.key].name || 'File selected'}
-                                                        </Text>
-                                                        <Text style={{ color: '#16a34a', fontSize: 11, marginTop: 2 }}>Ready to upload</Text>
-                                                    </View>
-                                                    <TouchableOpacity onPress={() => removeSelectedFile(doc.key)}>
-                                                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        ) : uploadedUrl ? (
-                                            <View style={{ marginTop: 8 }}>
-                                                <Text style={{ color: '#16a34a', fontSize: 12 }}>File uploaded</Text>
-                                                <TouchableOpacity onPress={() => openDocument(uploadedUrl)}>
-                                                    <Text style={{ color: '#305797', fontSize: 12, marginTop: 6 }}>Preview</Text>
+                                    <View key={doc.key} style={{ paddingVertical: 12, borderBottomWidth: idx === passportRequirements.length - 1 ? 0 : 1, borderBottomColor: '#eef2f7' }}>
+                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{doc.label}</Text>
+                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>PDF, JPG, or PNG. Max 3 MB.</Text>
+                                        <View style={{ flexDirection: 'row', marginTop: 8, alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                                            <TouchableOpacity
+                                                onPress={() => pickDocumentForKey(doc.key)}
+                                                disabled={uploadingDocumentKey === doc.key || uploadingAll}
+                                                style={{ padding: 8, backgroundColor: '#eef2ff', borderRadius: 8, opacity: uploadingDocumentKey === doc.key ? 0.7 : 1 }}
+                                            >
+                                                {uploadingDocumentKey === doc.key ? (
+                                                    <ActivityIndicator color="#305797" size="small" />
+                                                ) : (
+                                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>{hasFile ? 'Change File' : 'Select File'}</Text>
+                                                )}
+                                            </TouchableOpacity>
+                                            {hasFile && (
+                                                <TouchableOpacity
+                                                    onPress={() => previewFile(selectedFile || uploadedUrl)}
+                                                    style={{ padding: 8, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0' }}
+                                                >
+                                                    <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
                                                 </TouchableOpacity>
-                                            </View>
-                                        ) : null}
+                                            )}
+                                        </View>
+                                        {hasFile && (
+                                            <Text numberOfLines={1} style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
+                                                {selectedFile?.name || uploadedUrl?.split('/').pop() || 'Ready to submit'}
+                                            </Text>
+                                        )}
                                     </View>
                                 );
                             })}
-                            {Object.keys(selectedFiles).length > 0 && (
-                                <View style={{ marginTop: 12, alignItems: 'center' }}>
-                                    <TouchableOpacity
-                                        onPress={submitAllSelectedFiles}
-                                        style={{ backgroundColor: '#10b981', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10 }}
-                                        disabled={uploadingAll}
-                                    >
-                                        {uploadingAll ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold' }}>Submit All Files</Text>}
-                                    </TouchableOpacity>
-                                </View>
-                            )}
                         </View>
+
+                        <TouchableOpacity
+                            style={[PassportProgressStyle.submitBtn, uploadingAll && { opacity: 0.7 }, { marginTop: 16 }]}
+                            disabled={uploadingAll || Object.keys(selectedFiles).length === 0}
+                            onPress={submitAllSelectedFiles}
+                        >
+                            {uploadingAll ? <ActivityIndicator color="#fff" /> : <Text style={PassportProgressStyle.submitBtnText}>Submit All Documents</Text>}
+                        </TouchableOpacity>
                     </View>
                 )}
 
@@ -1514,24 +1565,13 @@ export default function PassportApplication() {
 
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
                             {getUploadedDocumentEntries().map(([key, value]) => {
-                                const entryIsImage = isImageSource(value);
                                 const requirementLabel = passportRequirements.find((doc) => doc.key === key)?.label || key.replace(/_/g, ' ');
 
                                 return (
                                     <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
-                                            {requirementLabel.toUpperCase()}
+                                            {String(requirementLabel).toUpperCase()}
                                         </Text>
-
-                                        {entryIsImage ? (
-                                            <View style={{ marginBottom: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#e5eefc' }}>
-                                                <Image
-                                                    source={{ uri: value }}
-                                                    style={{ width: '100%', height: 180 }}
-                                                    resizeMode="cover"
-                                                />
-                                            </View>
-                                        ) : null}
 
                                         <TouchableOpacity onPress={() => openDocument(value)}>
                                             <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
@@ -1676,34 +1716,6 @@ export default function PassportApplication() {
                     </TouchableOpacity>
                 </Modal>
 
-                {/* Submitted Documents Display */}
-                {appStatus.toLowerCase() === "documents uploaded" && getUploadedDocumentEntries().length > 0 && (
-                    <View style={PassportProgressStyle.card}>
-                        <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
-                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
-                            These are the documents currently saved on your passport application.
-                        </Text>
-
-                        <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                            {getUploadedDocumentEntries().map(([key, value]) => {
-                                const requirementLabel = passportRequirements.find((doc) => doc.key === key)?.label || key.replace(/_/g, ' ');
-
-                                return (
-                                    <View key={key} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eef2f7' }}>
-                                        <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14, marginBottom: 8 }}>
-                                            {String(requirementLabel).toUpperCase()}
-                                        </Text>
-
-                                        <TouchableOpacity onPress={() => openDocument(value)}>
-                                            <Text style={{ color: '#305797', fontSize: 12 }}>Preview / Open Document</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                );
-                            })}
-                        </View>
-                    </View>
-                )}
-
                 {/* Progress Tracker Card */}
                 <View style={PassportProgressStyle.card}>
                     <Text style={PassportProgressStyle.cardTitle}>Progress Tracker</Text>
@@ -1839,6 +1851,43 @@ export default function PassportApplication() {
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
+            </Modal>
+
+            <Modal visible={!!requirementPreview} transparent animationType="fade" onRequestClose={() => setRequirementPreview(null)}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                    <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
+                            <Text numberOfLines={1} style={{ flex: 1, fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginRight: 12 }}>
+                                {requirementPreview?.name || 'Preview'}
+                            </Text>
+                            <TouchableOpacity onPress={() => setRequirementPreview(null)}>
+                                <Ionicons name="close" size={24} color="#6b7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {requirementPreview?.kind === 'image' ? (
+                            <View style={{ width: '100%', aspectRatio: 1, backgroundColor: '#111827' }}>
+                                <Image source={{ uri: requirementPreview.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                            </View>
+                        ) : (
+                            <View style={{ padding: 24, alignItems: 'center' }}>
+                                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                                    <Ionicons name="document-text-outline" size={38} color="#305797" />
+                                </View>
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>PDF Ready to Preview</Text>
+                                <Text style={{ color: '#6b7280', fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: 18 }}>
+                                    PDF preview currently uses your device share sheet so you can open it in your preferred PDF app.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={shareRequirementPreviewPdf}
+                                    style={{ backgroundColor: '#305797', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18 }}
+                                >
+                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>Share PDF</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
             </Modal>
 
         </View>
