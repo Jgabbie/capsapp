@@ -87,47 +87,50 @@ export default function Login() {
                 password: normalizedPassword
             });
 
-            if (response.data.success) {
-                const role = response.data.role
-                const normalizedRole = normalizeRole(role)
+            if (response.data?.otpRequired) {
+                const role = response.data.role;
+                const normalizedRole = normalizeRole(role);
 
-                // Only allow Customer/Users
                 if (normalizedRole !== "users" && normalizedRole !== "customer") {
-                    setError("Unauthorized role. Only Customers can sign in to the mobile app.")
-                    return
+                    setError("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    return;
                 }
 
-                const canonicalRole = "Customer"
+                setUnverifiedEmail(response.data.email || normalizedUsername);
+                setOtp("");
+                setErrorOtp("");
+                setTimer(60);
+                setIsOTPModalOpen(true);
+                showMessage(response.data.message || "OTP sent to your email address");
+                return;
+            }
 
-                //  UPDATE: Added loginOnce to the context payload
+            if (response.data.success) {
+                const role = response.data.role;
+                const normalizedRole = normalizeRole(role);
+
+                if (normalizedRole !== "users" && normalizedRole !== "customer") {
+                    setError("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    return;
+                }
+
                 setUser({
                     _id: response.data.userId,
                     username: response.data.username,
-                    role: canonicalRole,
+                    role: "Customer",
                     loginOnce: response.data.loginOnce
-                })
+                });
 
                 showMessage("Welcome!");
-                //  Manual navigation removed! App.jsx handles the redirect automatically now.
-
             } else {
                 setError(response.data.message || "Invalid username or password");
             }
-
         } catch (err) {
             const status = err.response?.status;
             const data = err.response?.data;
 
-            if (status === 403 && data?.email) {
-                try {
-                    const email = data.email;
-                    await api.post('/users/auth/send-verify-otp', { email: email });
-                    setUnverifiedEmail(email);
-                    setTimer(60);
-                    setIsOTPModalOpen(true);
-                } catch (otpErr) {
-                    setError(otpErr.response?.data?.message || "Failed to send verification email.");
-                }
+            if (status === 403) {
+                setError(data?.message || "Please verify your account before logging in.");
             } else {
                 setError(data?.message || err.message || "Network error");
             }
@@ -144,16 +147,31 @@ export default function Login() {
 
         setLoading(true);
         try {
-            const response = await api.post('/users/auth/verify-account', {
-                otp: otp,
+            const response = await api.post('/users/auth/verify-login-otp', {
+                otp,
                 email: unverifiedEmail
             });
 
             if (response.data.success || response.status === 200) {
+                const role = response.data.role;
+                const normalizedRole = normalizeRole(role);
+
+                if (normalizedRole !== "users" && normalizedRole !== "customer") {
+                    setErrorOtp("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    return;
+                }
+
                 setIsOTPModalOpen(false);
                 setOtp("");
-                showMessage("Account verified successfully!");
-                handleLogin();
+                setTimer(0);
+                setUnverifiedEmail("");
+                setUser({
+                    _id: response.data.userId,
+                    username: response.data.username,
+                    role: "Customer",
+                    loginOnce: response.data.loginOnce
+                });
+                showMessage("Welcome!");
             }
         } catch (err) {
             setErrorOtp(err.response?.data?.message || "Verification failed");
@@ -163,12 +181,30 @@ export default function Login() {
     }
 
     const resendOTP = async () => {
+        if (!unverifiedEmail) {
+            setErrorOtp("No login session found to resend the OTP.");
+            return;
+        }
+
+        setLoading(true);
         try {
-            await api.post('/users/auth/send-verify-otp', { email: unverifiedEmail })
-            showMessage("OTP sent!");
-            setTimer(60);
+            const response = await api.post('/users/auth/send-login-otp', {
+                email: unverifiedEmail
+            });
+
+            if (response.data?.success) {
+                setTimer(60);
+                setOtp("");
+                setErrorOtp("");
+                showMessage(response.data.message || "OTP sent!");
+                return;
+            }
+
+            setErrorOtp(response.data?.message || "Failed to resend OTP.");
         } catch (err) {
-            showMessage(err.response?.data?.message || "Verification failed");
+            setErrorOtp(err.response?.data?.message || "Failed to resend OTP.");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -273,8 +309,8 @@ export default function Login() {
                 <Modal transparent animationType='fade' visible={isOTPModalOpen}>
                     <View style={ModalStyle.modalOverlay}>
                         <View style={ModalStyle.modalBox}>
-                            <Text style={ModalStyle.modalTitle}>Verify OTP</Text>
-                            <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We've sent a verification code to your Email</Text>
+                            <Text style={ModalStyle.modalTitle}>Login OTP</Text>
+                            <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>We've sent a one-time code to your email address.</Text>
 
                             <TextInput
                                 style={LoginStyle.otpInput}
@@ -303,7 +339,7 @@ export default function Login() {
                             ) : null}
 
                             <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
-                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Verify</Text>}
                             </TouchableOpacity>
 
                             {timer > 0 ? (

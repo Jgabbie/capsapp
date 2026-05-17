@@ -67,6 +67,14 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    emailVerifyToken: {
+        type: String,
+        default: ""
+    },
+    emailVerifyTokenExpireAt: {
+        type: Number,
+        default: 0
+    },
     isAccountVerified: {
         type: Boolean,
         default: false
@@ -86,6 +94,22 @@ const userSchema = new mongoose.Schema({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    loginOtp: {
+        type: String,
+        default: ""
+    },
+    loginOtpExpireAt: {
+        type: Number,
+        default: 0
+    },
+    loginOtpAttempts: {
+        type: Number,
+        default: 0
+    },
+    loginOtpBlockedUntil: {
+        type: Number,
+        default: 0
     },
     // NEW: Explicitly added loginOnce so every new user defaults to false!
     loginOnce: {

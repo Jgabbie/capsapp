@@ -6,6 +6,8 @@ import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const getBackendBaseUrl = () => String(process.env.BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
+const getFrontendLoginUrl = () => String(process.env.FRONTEND_URL || "http://localhost:3000/login").replace(/\/$/, "");
 const normalizeRole = (value) => String(value || "").trim().toLowerCase();
 const canonicalRole = (value) => {
     const normalized = normalizeRole(value);
@@ -14,14 +16,39 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
+const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
+    return buildBrandedEmail({
+        title: 'Verify Your Account',
+        introHtml: `Hello <b>${username}</b>, your account is ready.`,
+        bodyHtml: `
+            <p style="margin:0 0 14px;">Tap <strong>Verify in App</strong> to open the Travex app and complete verification. If that doesn't work, use the "Verify in Browser" button below.</p>
+            <div style="display:flex; gap:10px; margin-top:18px;">
+                <a href="${appDeepLink}"
+                    style="display:inline-block; padding:12px 20px; background:#305797; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:700;">Verify in App</a>
+                <a href="${webVerifyLink}"
+                    style="display:inline-block; padding:12px 20px; background:#e6eef9; color:#305797; text-decoration:none; border-radius:8px; font-weight:700;">Verify in Browser</a>
+            </div>
+            <p style="margin:12px 0 0; color:#64748b;">If you did not create this account, you can safely ignore this email.</p>
+        `,
+        footerHtml: `
+            <p style="font-size:10px; margin:0 0 8px; color:#94a3b8;">This is an automated message, please do not reply.</p>
+            <p style="margin:3px 0; font-weight:700; color:#334155;">M&amp;RC Travel and Tours</p>
+            <p style="margin:3px 0; color:#64748b;">info1@mrctravels.com</p>
+            <p style="margin:3px 0; color:#64748b;">&copy; ${new Date().getFullYear()} M&amp;RC Travel and Tours. All rights reserved.</p>
+        `,
+    });
+};
+
 // --- HELPER FUNCTION: Modern HTML Email Template (OTP) ---
 const generateOTPEmailTemplate = (otp, type) => {
     const messageText = type === 'reset'
         ? "Reset your password using the OTP below"
-        : "Verify your account using the OTP below";
+        : type === 'login'
+            ? "Use the OTP below to complete your login"
+            : "Verify your account using the OTP below";
 
     return buildBrandedEmail({
-        title: type === 'reset' ? 'Password Reset Code' : 'Account Verification Code',
+        title: type === 'reset' ? 'Password Reset Code' : type === 'login' ? 'Login Verification Code' : 'Account Verification Code',
         introHtml: messageText,
         bodyHtml: `
             <div style="display:flex; justify-content:center; margin:18px 0 22px;">
@@ -42,26 +69,71 @@ const generateOTPEmailTemplate = (otp, type) => {
     });
 };
 
-// --- HELPER FUNCTION: Welcome Email Template with Deep Link ---
-const generateWelcomeEmailTemplate = (username) => {
-    const deepLink = "travex://home";
+const createVerificationLink = async (user) => {
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(rawToken, 10);
 
-    return buildBrandedEmail({
-        title: 'Welcome to M&RC Travel and Tours',
-        introHtml: `Hello <b>${username}</b>, your account has been successfully created.`,
-        bodyHtml: `
-            <p style="margin:0 0 14px;">Use the button below to open the app and continue with your account setup.</p>
-            <p style="margin:0; color:#64748b;">If you did not create this account, please ignore this email.</p>
-        `,
-        ctaText: 'Open App',
-        ctaUrl: deepLink,
-        footerHtml: `
-            <p style="font-size:10px; margin:0 0 8px; color:#94a3b8;">This is an automated message, please do not reply.</p>
-            <p style="margin:3px 0; font-weight:700; color:#334155;">M&amp;RC Travel and Tours</p>
-            <p style="margin:3px 0; color:#64748b;">info1@mrctravels.com</p>
-            <p style="margin:3px 0; color:#64748b;">&copy; ${new Date().getFullYear()} M&amp;RC Travel and Tours. All rights reserved.</p>
-        `,
+    user.emailVerifyToken = hashedToken;
+    user.emailVerifyTokenExpireAt = Date.now() + 10 * 60 * 1000;
+    user.isVerified = false;
+    user.isAccountVerified = false;
+    await user.save();
+
+    const webVerifyLink = `${getBackendBaseUrl()}/api/users/auth/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+    const appDeepLink = `travex://verify?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
     });
+
+    const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: 'Welcome to M&RC Travel and Tours',
+        html: generateVerificationEmailTemplate(user.username, appDeepLink, webVerifyLink)
+    };
+
+    await transporter.sendMail(mailOptions);
+    return verifyLink;
+};
+
+const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUrl()) => `
+    <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>${title}</title>
+        </head>
+        <body style="text-align:center; padding-top:50px; font-family:sans-serif; color:#305797;">
+            <h2>${title}</h2>
+            <p>${message}</p>
+            <script>
+                window.location.href = "travex://login";
+                setTimeout(() => {
+                    window.location.href = ${JSON.stringify(fallbackUrl)};
+                }, 2500);
+            </script>
+        </body>
+    </html>
+`;
+
+const sendLoginOtpEmail = async (user, rawOtp) => {
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    });
+
+    const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: 'M&RC Travel and Tours - Login OTP',
+        html: generateOTPEmailTemplate(rawOtp, 'login')
+    };
+
+    await transporter.sendMail(mailOptions);
 };
 
 // CREATE USER
@@ -107,27 +179,13 @@ export const createUser = async (req, res) => {
         const savedUser = await user.save();
 
         try {
-            const transporter = nodemailer.createTransport({
-                host: 'smtp-relay.brevo.com',
-                port: 587,
-                secure: false,
-                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-            });
-
-            const mailOptions = {
-                from: process.env.SENDER_EMAIL,
-                to: email,
-                subject: 'Welcome to M&RC Travel and Tours',
-                html: generateWelcomeEmailTemplate(username)
-            };
-
-            await transporter.sendMail(mailOptions);
+            await createVerificationLink(savedUser);
             console.log("Welcome email sent to:", email);
         } catch (emailError) {
             console.error("Failed to send welcome email:", emailError);
         }
 
-        res.status(201).json({ success: true, userId: savedUser._id });
+        res.status(201).json({ success: true, userId: savedUser._id, verificationEmailSent: true });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -169,8 +227,33 @@ export const loginUser = async (req, res) => {
         }
 
         if (!user.isAccountVerified && !user.isVerified) {
+            await createVerificationLink(user);
             return res.status(403).json({ success: false, message: "Please verify your account", email: user.email });
         }
+
+        const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+        const hashedOtp = await bcrypt.hash(rawOtp, 10);
+
+        user.loginOtp = hashedOtp;
+        user.loginOtpExpireAt = Date.now() + 1 * 60 * 1000;
+        user.loginOtpAttempts = 0;
+        user.loginOtpBlockedUntil = 0;
+        await user.save();
+
+        await sendLoginOtpEmail(user, rawOtp);
+
+        logAction('LOGIN_OTP_SENT', user._id, { "Login OTP": `OTP sent to ${user.email}` });
+
+        return res.status(200).json({
+            success: true,
+            otpRequired: true,
+            message: "OTP sent to your email address",
+            email: user.email,
+            userId: user._id,
+            username: user.username,
+            role: canonicalRole(user.role),
+            loginOnce: user.loginOnce
+        });
 
         logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
 
@@ -188,7 +271,7 @@ export const loginUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken");
+        const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -197,7 +280,7 @@ export const getUsers = async (req, res) => {
 
 export const getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp");
+        const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -227,6 +310,10 @@ export const updateUser = async (req, res) => {
         delete updateData.hashedPassword;
         delete updateData.verifyOtp;
         delete updateData.resetOtp;
+        delete updateData.emailVerifyToken;
+        delete updateData.loginOtp;
+        delete updateData.loginOtpAttempts;
+        delete updateData.loginOtpBlockedUntil;
 
         if (req.body.phonenum) updateData.phone = req.body.phonenum;
 
@@ -310,6 +397,42 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+export const verifyEmailLink = async (req, res) => {
+    const { email, token } = req.query;
+
+    try {
+        if (!email || !token) {
+            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "The verification link is incomplete."));
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send(buildLoginRedirectHtml("Verification Failed", "We could not find this account."));
+        }
+
+        if (!user.emailVerifyToken || !user.emailVerifyTokenExpireAt || user.emailVerifyTokenExpireAt < Date.now()) {
+            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "This verification link has expired. Please request a new one."));
+        }
+
+        const tokenMatches = await bcrypt.compare(String(token), String(user.emailVerifyToken));
+        if (!tokenMatches) {
+            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "This verification link is invalid."));
+        }
+
+        user.isVerified = true;
+        user.isAccountVerified = true;
+        user.emailVerifyToken = "";
+        user.emailVerifyTokenExpireAt = 0;
+        await user.save();
+
+        logAction('VERIFY_ACCOUNT', user._id, { "Account Verified": `Email: ${user.email}` });
+
+        return res.status(200).send(buildLoginRedirectHtml("Account Verified", "Your account has been verified. Redirecting you to the login screen."));
+    } catch (error) {
+        return res.status(500).send(buildLoginRedirectHtml("Verification Failed", error.message));
+    }
+};
+
 export const sendVerifyOtp = async (req, res) => {
     const { email } = req.body;
     try {
@@ -342,6 +465,83 @@ export const sendVerifyOtp = async (req, res) => {
     }
 };
 
+export const sendLoginOtp = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        if (!user.isAccountVerified && !user.isVerified) {
+            return res.status(403).json({ success: false, message: "Please verify your account", email: user.email });
+        }
+
+        const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+        const hashedOtp = await bcrypt.hash(rawOtp, 10);
+
+        user.loginOtp = hashedOtp;
+        user.loginOtpExpireAt = Date.now() + 1 * 60 * 1000;
+        user.loginOtpAttempts = 0;
+        user.loginOtpBlockedUntil = 0;
+        await user.save();
+
+        await sendLoginOtpEmail(user, rawOtp);
+
+        res.status(200).json({ success: true, message: "OTP sent to your email address", email: user.email });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to send email." });
+    }
+};
+
+export const verifyLoginOtp = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        if (user.loginOtpBlockedUntil && user.loginOtpBlockedUntil > Date.now()) {
+            return res.status(429).json({ success: false, message: "Too many attempts. Try again in 5 minutes." });
+        }
+
+        if (!user.loginOtp || !user.loginOtpExpireAt || user.loginOtpExpireAt < Date.now()) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        }
+
+        const otpMatches = await bcrypt.compare(String(otp), String(user.loginOtp));
+        if (!otpMatches) {
+            user.loginOtpAttempts = (user.loginOtpAttempts || 0) + 1;
+
+            if (user.loginOtpAttempts >= 5) {
+                user.loginOtpBlockedUntil = Date.now() + 5 * 60 * 1000;
+                user.loginOtpAttempts = 0;
+            }
+
+            await user.save();
+            return res.status(400).json({ success: false, message: "Invalid OTP" });
+        }
+
+        user.loginOtp = "";
+        user.loginOtpExpireAt = 0;
+        user.loginOtpAttempts = 0;
+        user.loginOtpBlockedUntil = 0;
+        await user.save();
+
+        logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            userId: user._id,
+            username: user.username,
+            role: canonicalRole(user.role),
+            loginOnce: user.loginOnce
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const verifyAccount = async (req, res) => {
     const { email, otp } = req.body;
     try {
@@ -366,24 +566,7 @@ export const verifyAccount = async (req, res) => {
 };
 
 export const redirectToApp = (req, res) => {
-    res.send(`
-        <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Opening Travex...</title>
-            </head>
-            <body style="text-align: center; padding-top: 50px; font-family: sans-serif; color: #305797;">
-                <h2>Opening Travex App...</h2>
-                <p>Please wait while we redirect you to the Login screen.</p>
-                <script>
-                    window.location.href = "travex://login";
-                    setTimeout(() => {
-                        window.location.href = "http://localhost:3000/login"; 
-                    }, 2500);
-                </script>
-            </body>
-        </html>
-    `);
+    res.send(buildLoginRedirectHtml("Opening Travex...", "Please wait while we redirect you to the Login screen."));
 };
 
 export const updateLoginOnce = async (req, res) => {
@@ -410,8 +593,8 @@ export const checkPhoneNumberExists = async (req, res) => {
             return res.status(400).json({ success: false, message: "Phone number is required" });
         }
 
-        const existingUser = await User.findOne({ 
-            $or: [{ phonenum }, { phone: phonenum }] 
+        const existingUser = await User.findOne({
+            $or: [{ phonenum }, { phone: phonenum }]
         });
 
         if (existingUser) {

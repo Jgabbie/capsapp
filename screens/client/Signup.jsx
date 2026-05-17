@@ -372,8 +372,8 @@ export default function Signup() {
             >
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Account Created</Text>
-                        <Text style={ModalStyle.modalText}>Your Account has been successfully created</Text>
+                        <Text style={ModalStyle.modalTitle}>Check Your Email</Text>
+                        <Text style={ModalStyle.modalText}>Your account was created. Open the verification link we sent to your email, then return to the login screen.</Text>
 
                         <TouchableOpacity
                             style={ModalStyle.modalButton}

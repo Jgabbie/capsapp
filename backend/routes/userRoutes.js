@@ -2,7 +2,7 @@ import express from "express";
 import {
     createUser, deleteUser, getUsers, loginUser, updateUser, getUserById,
     sendResetOtp, checkResetOtp, resetPassword,
-    sendVerifyOtp, verifyAccount, redirectToApp,
+    sendVerifyOtp, verifyAccount, verifyEmailLink, sendLoginOtp, verifyLoginOtp, redirectToApp,
     updateLoginOnce, // <-- ADDED THIS
     checkPhoneNumberExists // <-- ADDED THIS
 } from "../controllers/userController.js";
@@ -34,6 +34,11 @@ router.post("/auth/reset-password", resetPassword);
 // Account Verification Routes
 router.post("/auth/send-verify-otp", sendVerifyOtp);
 router.post("/auth/verify-account", verifyAccount);
+router.get("/auth/verify-email", verifyEmailLink);
+
+// Login OTP Routes
+router.post("/auth/send-login-otp", sendLoginOtp);
+router.post("/auth/verify-login-otp", verifyLoginOtp);
 
 // Deep Link Redirect Route
 router.get("/redirect-to-app", redirectToApp);
