@@ -96,7 +96,7 @@ const createVerificationLink = async (user) => {
     };
 
     await transporter.sendMail(mailOptions);
-    return verifyLink;
+    return { appDeepLink, webVerifyLink };
 };
 
 const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUrl()) => `

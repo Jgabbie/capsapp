@@ -9,6 +9,7 @@ import Signup from './screens/client/Signup';
 import Login from './screens/client/Login';
 import PasswordReset from './screens/client/PasswordReset';
 import ResetPassConfirm from './screens/client/ResetPassConfirm';
+import VerifyEmail from './screens/client/VerifyEmail';
 
 import Home from './screens/client/Home';
 import Profile from './screens/client/Profile';
@@ -78,9 +79,10 @@ function AppNavigator() {
   const initialRoute = user ? (user.loginOnce ? "home" : "userpreference") : "splash";
 
   const linking = {
-    prefixes: [prefix, 'capsapp://'],
+    prefixes: [prefix, 'capsapp://', 'travex://'],
     config: {
       screens: {
+        verify: 'verify',
         resetpassconfirm: 'resetpassconfirm',
         paymentmethod: 'paymentmethod',
         paymentsuccess: 'paymentsuccess',
@@ -111,6 +113,7 @@ function AppNavigator() {
             <MyScreen.Screen name="signup" component={Signup} />
             <MyScreen.Screen name="passwordreset" component={PasswordReset} />
             <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
+            <MyScreen.Screen name="verify" component={VerifyEmail} />
           </>
         ) : (
           <>
