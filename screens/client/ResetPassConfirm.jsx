@@ -110,6 +110,7 @@ export default function ResetPassConfirm() {
                     <TextInput
                         style={[ResetPassConfirmStyle.input, errorPassword ? ResetPassConfirmStyle.inputErrorBorder : null]}
                         placeholder="Enter new password"
+                        placeholderTextColor="#6b7280"
                         secureTextEntry={!showPassword}
                         maxLength={20}
                         value={password}
@@ -135,6 +136,7 @@ export default function ResetPassConfirm() {
                     <TextInput
                         style={[ResetPassConfirmStyle.input, errorConfirm ? ResetPassConfirmStyle.inputErrorBorder : null]}
                         placeholder="Confirm new password"
+                        placeholderTextColor="#6b7280"
                         secureTextEntry={!showConfirmPassword}
                         maxLength={20}
                         value={confirmPassword}

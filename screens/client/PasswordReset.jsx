@@ -115,6 +115,7 @@ export default function PasswordReset() {
                 <TextInput
                     style={[PasswordResetStyle.input, errorEmail && PasswordResetStyle.inputErrorBorder]}
                     placeholder="Enter your email"
+                    placeholderTextColor="#6b7280"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
