@@ -16,27 +16,59 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
-const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
-    return buildBrandedEmail({
-        title: 'Verify Your Account',
-        introHtml: `Hello <b>${username}</b>, your account is ready.`,
-        bodyHtml: `
-            <p style="margin:0 0 14px;">Tap <strong>Verify in App</strong> to open the Travex app and complete verification. If that doesn't work, use the "Verify in Browser" button below.</p>
-            <div style="display:flex; gap:10px; margin-top:18px;">
-                <a href="${appDeepLink}"
-                    style="display:inline-block; padding:12px 20px; background:#305797; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:700;">Verify in App</a>
+const generateVerificationEmailTemplate = (username, webVerifyLink) => {
+    return `
+        <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
+            <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+
+                <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
+
+                <h2 style="color:#305797; margin-bottom:10px;">
+                    Welcome to M&amp;RC Travel and Tours
+                </h2>
+
+                <p style="color:#555; font-size:16px;">
+                    Hello <b>${username}</b>,
+                </p>
+
+                <p style="color:#555; font-size:15px; line-height:1.6;">
+                    Your account has been successfully created!
+                </p>
+
+                <p style="color:#555; font-size:15px; line-height:1.6;">
+                    Kindly click the button below to verify your email address and activate your account.
+                </p>
+
                 <a href="${webVerifyLink}"
-                    style="display:inline-block; padding:12px 20px; background:#e6eef9; color:#305797; text-decoration:none; border-radius:8px; font-weight:700;">Verify in Browser</a>
+                    style="
+                        display:inline-block;
+                        margin-top:25px;
+                        padding:12px 28px;
+                        background:#305797;
+                        color:#ffffff;
+                        text-decoration:none;
+                        border-radius:6px;
+                        font-weight:bold;
+                        font-size:14px;
+                    ">
+                    Verify Account
+                </a>
+
+                <p style="color:#777; font-size:13px; margin-top:30px;">
+                    If you did not create this account, please ignore this email.
+                </p>
+
+                <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
+
+                <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
+                    <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
+                    <p>M&amp;RC Travel and Tours</p>
+                    <p>info1@mrctravels.com</p>
+                    <p>&copy; ${new Date().getFullYear()} M&amp;RC Travel and Tours. All rights reserved.</p>
+                </div>
             </div>
-            <p style="margin:12px 0 0; color:#64748b;">If you did not create this account, you can safely ignore this email.</p>
-        `,
-        footerHtml: `
-            <p style="font-size:10px; margin:0 0 8px; color:#94a3b8;">This is an automated message, please do not reply.</p>
-            <p style="margin:3px 0; font-weight:700; color:#334155;">M&amp;RC Travel and Tours</p>
-            <p style="margin:3px 0; color:#64748b;">info1@mrctravels.com</p>
-            <p style="margin:3px 0; color:#64748b;">&copy; ${new Date().getFullYear()} M&amp;RC Travel and Tours. All rights reserved.</p>
-        `,
-    });
+        </div>
+    `;
 };
 
 // --- HELPER FUNCTION: Modern HTML Email Template (OTP) ---
@@ -92,7 +124,7 @@ const createVerificationLink = async (user) => {
         from: process.env.SENDER_EMAIL,
         to: user.email,
         subject: 'Welcome to M&RC Travel and Tours',
-        html: generateVerificationEmailTemplate(user.username, appDeepLink, webVerifyLink)
+        html: generateVerificationEmailTemplate(user.username, webVerifyLink)
     };
 
     await transporter.sendMail(mailOptions);
