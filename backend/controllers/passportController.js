@@ -835,7 +835,9 @@ const buildProcessSteps = (application) => {
 
     let deadline = null;
 
-    if (Number.isFinite(deadlineDays) && deadlineDays > 0) {
+    if (step === 'Processing by DFA' && preferredDate) {
+      deadline = preferredDate.startOf('day');
+    } else if (Number.isFinite(deadlineDays) && deadlineDays > 0) {
       if (step === 'Application Submitted') {
         if (setDate) deadline = setDate.add(deadlineDays, 'day').startOf('day');
       } else if (prevDeadline) {
