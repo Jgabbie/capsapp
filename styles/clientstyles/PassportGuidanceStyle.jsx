@@ -9,7 +9,7 @@ const PassportGuidanceStyle = StyleSheet.create({
         padding: 20,
         paddingBottom: 180
     },
-    // 🔥 NEW HERO BANNER STYLES (Added without changing anything else)
+    // NEW HERO BANNER STYLES (Added without changing anything else)
     heroSection: {
         height: 200,
         marginHorizontal: -20, // Stretches it to the edges ignoring the 20px padding
@@ -110,8 +110,8 @@ const PassportGuidanceStyle = StyleSheet.create({
         color: "#305797",
         marginBottom: 16
     },
-    
-    // 🔥 NEW: Passport Fee Badge Styling
+
+    // NEW: Passport Fee Badge Styling
     feeBadge: {
         alignSelf: 'flex-start',
         flexDirection: 'row',

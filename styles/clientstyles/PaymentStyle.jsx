@@ -202,21 +202,21 @@ const PaymentStyle = StyleSheet.create({
     scheduleItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center', // 🔥 NEW: Keeps them vertically centered
+        alignItems: 'center', //NEW: Keeps them vertically centered
         paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#f1f5f9',
     },
-    // 🔥 NEW: This stops the text from getting squished
+    // NEW: This stops the text from getting squished
     scheduleInfoContainer: {
-        flex: 1, 
+        flex: 1,
         paddingRight: 10,
     },
     scheduleLabel: {
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 13,
         color: '#1f2a44',
-        flexShrink: 1, // 🔥 NEW: Ensures text can wrap if needed
+        flexShrink: 1, // NEW: Ensures text can wrap if needed
     },
     scheduleDate: {
         fontFamily: "Roboto_400Regular",
@@ -228,7 +228,7 @@ const PaymentStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         fontSize: 13,
         color: '#305797',
-        textAlign: 'right', // 🔥 NEW: Pushes amount cleanly to the right
+        textAlign: 'right', // NEW: Pushes amount cleanly to the right
     },
     scheduleNote: {
         fontSize: 11,
@@ -475,14 +475,14 @@ const PaymentStyle = StyleSheet.create({
     methodGridCardSelected: {
         borderColor: '#305797',
         borderWidth: 2,
-        backgroundColor: '#f4f8ff', 
+        backgroundColor: '#f4f8ff',
     },
     methodRadioHeader: {
         alignItems: 'center', // Centers the radio button like the web version
         marginBottom: 12,
         paddingTop: 5,
     },
-    
+
     // --- BANK GRID STYLES ---
     manualBankSection: {
         marginTop: 10,

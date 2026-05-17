@@ -68,7 +68,7 @@ const BookingUploadsStyle = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
         paddingBottom: 10,
     },
-    
+
     // --- FORM STYLES ---
     formSection: {
         marginBottom: 16,
@@ -217,7 +217,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     smallProceedButton: {
         backgroundColor: '#305797',
-        paddingVertical: 14, 
+        paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
         marginBottom: 15,
@@ -229,19 +229,19 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     smallProceedButtonText: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 15, 
+        fontSize: 15,
         color: "#ffffff",
     },
     backTextButton: {
         alignItems: 'center',
-        paddingVertical: 12, 
+        paddingVertical: 12,
     },
     backText: {
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 15, 
+        fontSize: 15,
         color: "#6b7486",
     },
-    // 🔥 NEW: Black, uppercase labels for the input boxes
+    //  NEW: Black, uppercase labels for the input boxes
     inputLabel: {
         fontSize: 12,
         fontFamily: "Montserrat_700Bold",
@@ -251,13 +251,13 @@ const BookingUploadsStyle = StyleSheet.create({
         textTransform: 'uppercase'
     }
     ,
-    // 🔥 NEW: greyed disabled input style
+    //  NEW: greyed disabled input style
     disabledInput: {
         backgroundColor: '#e2e8f0',
         color: '#94a3b8',
     }
     ,
-    // 🔥 NEW: Remove Image Text Button Style
+    //  NEW: Remove Image Text Button Style
     removeImageText: {
         color: '#dc2626',
         fontSize: 12,
@@ -266,7 +266,7 @@ const BookingUploadsStyle = StyleSheet.create({
         marginTop: 8,
         textDecorationLine: 'underline',
     },
-    // 🔥 PDF Preview Container
+    //  PDF Preview Container
     pdfPreviewContainer: {
         flexDirection: 'column',
         justifyContent: 'center',
@@ -281,7 +281,7 @@ const BookingUploadsStyle = StyleSheet.create({
         marginTop: 6,
         textAlign: 'center',
     },
-    // 🔥 View PDF Button
+    //  View PDF Button
     viewPdfText: {
         color: '#305797',
         fontSize: 12,
@@ -289,7 +289,7 @@ const BookingUploadsStyle = StyleSheet.create({
         textAlign: 'center',
         textDecorationLine: 'underline',
     },
-    // 🔥 File Action Buttons Container
+    //  File Action Buttons Container
     fileActionButtons: {
         marginTop: 8,
         gap: 8,

@@ -130,7 +130,7 @@ export default function PasswordReset() {
                 </View>
 
                 {/*  2. MOVED LINK TEXT: Now sitting perfectly on top of the Send OTP button */}
-                <View style={[PasswordResetStyle.linksContainer, { marginTop: 5, marginBottom: 15 }]}>
+                <View style={[PasswordResetStyle.linksContainer]}>
                     <TouchableOpacity onPress={() => cs.navigate("login")}>
                         <Text style={PasswordResetStyle.linkText}>Remember password? Login</Text>
                     </TouchableOpacity>

@@ -115,7 +115,7 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         marginBottom: 5,
     },
     policyCard: {
-        backgroundColor: '#f9fafc', 
+        backgroundColor: '#f9fafc',
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,
@@ -133,8 +133,8 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         color: "#3c465a",
         lineHeight: 18,
     },
-    
-    // 🔥 NEW BOTTOM BUTTON STYLES 🔥
+
+    //  NEW BOTTOM BUTTON STYLES 
     actionContainer: {
         marginTop: 30,
         gap: 12,

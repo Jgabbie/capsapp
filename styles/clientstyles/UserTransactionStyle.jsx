@@ -407,36 +407,36 @@ export default StyleSheet.create({
         fontSize: 11,
     },
     // Table
-    receiptTable: { 
+    receiptTable: {
         marginBottom: 15,
         // Removed the outer border so it flows naturally on the white paper
     },
-    receiptTableHeader: { 
-        flexDirection: 'row', 
-        paddingVertical: 6, 
+    receiptTableHeader: {
+        flexDirection: 'row',
+        paddingVertical: 6,
         paddingHorizontal: 4,
-        borderBottomWidth: 1,  // 🔥 Line directly UNDER the QTY/Description
-        borderColor: '#000',   
+        borderBottomWidth: 1,  //  Line directly UNDER the QTY/Description
+        borderColor: '#000',
         // (Removed borderTopWidth so there is nothing above it)
     },
-    receiptTh: { 
-        fontFamily: "Montserrat_700Bold", 
-        fontSize: 7, 
-        color: '#000',         
-        paddingHorizontal: 0 
+    receiptTh: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 7,
+        color: '#000',
+        paddingHorizontal: 0
     },
-    receiptTableRow: { 
-        flexDirection: 'row', 
-        paddingVertical: 8, 
+    receiptTableRow: {
+        flexDirection: 'row',
+        paddingVertical: 8,
         paddingHorizontal: 4,
-        borderBottomWidth: 1,  // 🔥 Line directly UNDER the "1" and the package data
+        borderBottomWidth: 1,  //  Line directly UNDER the "1" and the package data
         borderColor: '#000',   // Keeps the line pure black
     },
-    receiptTd: { 
-        fontFamily: "Roboto_400Regular", 
-        fontSize: 8, 
-        color: '#6b7280',      // 🔥 Slightly grey text underneath
-        paddingHorizontal: 2 
+    receiptTd: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 8,
+        color: '#6b7280',      //  Slightly grey text underneath
+        paddingHorizontal: 2
     },
     // Footer & Totals
     receiptBottomGrid: {

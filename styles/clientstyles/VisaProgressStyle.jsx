@@ -78,7 +78,7 @@ const VisaProgressStyle = StyleSheet.create({
         color: '#b45309',
         textTransform: 'uppercase'
     },
-    // 🔥 NEW STYLES FOR SUBMITTED DOCUMENTS 🔥
+    //  NEW STYLES FOR SUBMITTED DOCUMENTS 
     docRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -164,7 +164,7 @@ const VisaProgressStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         color: "#6b7280",
     },
-    // 🔥 NEW STYLES FOR APPOINTMENT OPTIONS 🔥
+    //  NEW STYLES FOR APPOINTMENT OPTIONS 
     optionCard: {
         borderWidth: 1,
         borderColor: '#e5e7eb',

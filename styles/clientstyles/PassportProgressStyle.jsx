@@ -78,7 +78,7 @@ const PassportProgressStyle = StyleSheet.create({
         color: '#b45309',
         textTransform: 'uppercase'
     },
-    // 🔥 NEW STYLES FOR APPOINTMENT OPTIONS 🔥
+
     optionCard: {
         borderWidth: 1,
         borderColor: '#e5e7eb',

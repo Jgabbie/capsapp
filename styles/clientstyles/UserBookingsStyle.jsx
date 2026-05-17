@@ -157,7 +157,7 @@ const UserBookingsStyle = StyleSheet.create({
         borderRadius: 8,
         alignItems: "center",
     },
-    // 🔥 FIXED: Bloody red background
+
     cancelButton: {
         flex: 1,
         backgroundColor: "#8B0000",

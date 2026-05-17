@@ -118,9 +118,9 @@ const BookingReviewStyle = StyleSheet.create({
         marginBottom: 5,
     },
 
-    // --- 🔥 NEW POLICY CARD STYLES 🔥 ---
+
     policyCard: {
-        backgroundColor: '#f9fafc', 
+        backgroundColor: '#f9fafc',
         borderRadius: 16,
         padding: 16,
         borderWidth: 1,
@@ -142,12 +142,12 @@ const BookingReviewStyle = StyleSheet.create({
     // --- FOOTER BUTTON STYLES ---
     footerContainer: {
         marginTop: 10,
-        paddingBottom: 50, 
+        paddingBottom: 50,
         paddingHorizontal: 10,
     },
     smallProceedButton: {
         backgroundColor: '#305797',
-        paddingVertical: 14, 
+        paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
         marginBottom: 15,
@@ -159,16 +159,16 @@ const BookingReviewStyle = StyleSheet.create({
     },
     smallProceedButtonText: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 15, 
+        fontSize: 15,
         color: "#ffffff",
     },
     backTextButton: {
         alignItems: 'center',
-        paddingVertical: 12, 
+        paddingVertical: 12,
     },
     backText: {
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 15, 
+        fontSize: 15,
         color: "#6b7486",
     }
 });

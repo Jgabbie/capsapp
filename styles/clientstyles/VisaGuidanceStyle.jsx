@@ -3,13 +3,13 @@ import { StyleSheet, Platform } from "react-native";
 const VisaGuidanceStyle = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f5f7fa" 
+        backgroundColor: "#f5f7fa"
     },
     contentContainer: {
         padding: 20,
         paddingBottom: 40
     },
-    // 🔥 NEW HERO BANNER STYLES (Added without changing anything else)
+    // NEW HERO BANNER STYLES (Added without changing anything else)
     heroSection: {
         height: 200,
         marginHorizontal: -20, // Stretches it to the edges ignoring the 20px padding
@@ -44,9 +44,9 @@ const VisaGuidanceStyle = StyleSheet.create({
         marginTop: 10,
     },
     title: {
-        fontSize: 22, 
+        fontSize: 22,
         fontFamily: "Montserrat_700Bold",
-        color: "#305797", 
+        color: "#305797",
         marginBottom: 6
     },
     subtitle: {

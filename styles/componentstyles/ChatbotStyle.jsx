@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const ChatbotStyle = StyleSheet.create({
     chatbotButton: {
         position: "absolute",
-        bottom: 120, // 🔥 Moved up to sit next to "Local Packages"
+        bottom: 120, //  Moved up to sit next to "Local Packages"
         right: 20,
         width: 60,
         height: 60,
@@ -59,13 +59,13 @@ const ChatbotStyle = StyleSheet.create({
     messageWrapper: {
         marginBottom: 15,
         width: '100%',
-        // 🔥 REMOVED flexDirection: 'row' so it defaults to a vertical column
+        //  REMOVED flexDirection: 'row' so it defaults to a vertical column
     },
     messageWrapperUser: {
-        alignItems: 'flex-end', // 🔥 CHANGED from justifyContent to alignItems
+        alignItems: 'flex-end', //  CHANGED from justifyContent to alignItems
     },
     messageWrapperBot: {
-        alignItems: 'flex-start', // 🔥 CHANGED from justifyContent to alignItems
+        alignItems: 'flex-start', //  CHANGED from justifyContent to alignItems
     },
     messageBubble: {
         maxWidth: '80%',
@@ -111,8 +111,8 @@ const ChatbotStyle = StyleSheet.create({
         alignItems: "flex-end",
         borderTopWidth: 1,
         borderTopColor: "#e5e7eb",
-        paddingTop: 10,        // 🔥 Keep the top padding at 10
-        paddingBottom: 80,     // 🔥 ADD THIS (Increase this number if you need it even higher)
+        paddingTop: 10,        //  Keep the top padding at 10
+        paddingBottom: 80,     //  ADD THIS (Increase this number if you need it even higher)
         paddingHorizontal: 15,
         backgroundColor: "#fff",
         gap: 10

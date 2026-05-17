@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "Customer" // 🔥 CHANGED FROM "Users" TO "Customer"
+        default: "Customer" // CHANGED FROM "Users" TO "Customer"
     },
     verifyOtp: {
         type: String,
@@ -87,7 +87,7 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // 🔥 NEW: Explicitly added loginOnce so every new user defaults to false!
+    // NEW: Explicitly added loginOnce so every new user defaults to false!
     loginOnce: {
         type: Boolean,
         default: false

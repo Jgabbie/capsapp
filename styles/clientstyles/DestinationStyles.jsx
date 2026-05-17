@@ -239,7 +239,7 @@ const DestinationStyles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: '95%',
-    height: '85%', // 🔥 CHANGED: Fixed height instead of maxHeight so it NEVER shrinks!
+    height: '85%', //  CHANGED: Fixed height instead of maxHeight so it NEVER shrinks!
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -279,126 +279,126 @@ const DestinationStyles = StyleSheet.create({
   breakdownBarFill: { height: '100%', backgroundColor: '#facc15', borderRadius: 4 },
   breakdownCountLabel: { width: 20, fontSize: 12, color: '#777', textAlign: 'right', fontFamily: 'Roboto_400Regular' },
   resetButton: {
-      backgroundColor: '#f1f5f9',
-      paddingVertical: 14,
-      borderRadius: 12,
-      alignItems: 'center',
-      marginTop: 10,
-      borderWidth: 1,
-      borderColor: '#cbd5e1'
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
   },
   resetText: {
-      color: '#475569',
-      fontSize: 15,
-      fontFamily: 'Montserrat_700Bold'
+    color: '#475569',
+    fontSize: 15,
+    fontFamily: 'Montserrat_700Bold'
   },
-    // 🔥 NEW VISA MODAL STYLES 🔥
-    visaModalCard: {
-      backgroundColor: "#fff",
-      borderRadius: 16,
-      padding: 24,
-      width: '90%',
-      alignItems: 'center',
-      elevation: 5,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84
-    },
-    visaModalCloseBtn: {
-      position: 'absolute',
-      top: 15,
-      right: 15,
-      padding: 5,
-    },
-    visaModalTitle: {
-      fontSize: 22,
-      fontFamily: "Montserrat_700Bold",
-      color: "#305797",
-      marginBottom: 12,
-      textAlign: 'center',
-      marginTop: 15
-    },
-    visaModalText: {
-      fontSize: 14,
-      color: "#4b5563",
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 22,
-      fontFamily: "Roboto_400Regular"
-    },
-    visaButtonRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-      gap: 12
-    },
-    visaPrimaryButton: {
-      flex: 1,
-      backgroundColor: "#305797",
-      paddingVertical: 12,
-      paddingHorizontal: 5,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: 'center'
-    },
-    visaButtonText: {
-      color: "#fff",
-      fontWeight: "bold",
-      fontSize: 13,
-      textAlign: 'center'
-    },
-    // 🔥 NEW DATE FILTER STYLES 🔥
-    dateFilterRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between', // 🔥 NEW: Pushes items to edges cleanly
-      marginBottom: 15,
-      gap: 6 // 🔥 CHANGED: Tighter gap, and REMOVED flexWrap to force one row!
-    },
-    dateSearchContainer: {
-      flex: 1, // 🔥 CHANGED: Removed minWidth so it naturally squishes to fit
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      borderRadius: 8,
-      paddingHorizontal: 8,
-      height: 38,
-      backgroundColor: '#f8fafc'
-    },
-    dateSearchInput: {
-      flex: 1,
-      fontSize: 13,
-      color: '#333',
-      height: '100%',
-      padding: 0
-    },
-    dateClearSearchBtn: {
-      padding: 4
-    },
-    dateToggleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2 // 🔥 CHANGED: Tighter gap between the switch and text
-    },
-    dateToggleText: {
-      fontSize: 11, // 🔥 CHANGED: Slightly smaller to fit in the single row
-      color: '#475569',
-      fontWeight: '500'
-    },
-    dateClearFiltersBtn: {
-      backgroundColor: '#305797',
-      paddingHorizontal: 10, // 🔥 CHANGED: Smaller padding to save space
-      paddingVertical: 10,
-      borderRadius: 6,
-      justifyContent: 'center'
-    },
-    dateClearFiltersText: {
-      color: '#fff',
-      fontSize: 12,
-      fontWeight: 'bold'
-    },
+  //  NEW VISA MODAL STYLES 
+  visaModalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84
+  },
+  visaModalCloseBtn: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    padding: 5,
+  },
+  visaModalTitle: {
+    fontSize: 22,
+    fontFamily: "Montserrat_700Bold",
+    color: "#305797",
+    marginBottom: 12,
+    textAlign: 'center',
+    marginTop: 15
+  },
+  visaModalText: {
+    fontSize: 14,
+    color: "#4b5563",
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+    fontFamily: "Roboto_400Regular"
+  },
+  visaButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12
+  },
+  visaPrimaryButton: {
+    flex: 1,
+    backgroundColor: "#305797",
+    paddingVertical: 12,
+    paddingHorizontal: 5,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: 'center'
+  },
+  visaButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+    textAlign: 'center'
+  },
+  //  NEW DATE FILTER STYLES 
+  dateFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', //  NEW: Pushes items to edges cleanly
+    marginBottom: 15,
+    gap: 6 //  CHANGED: Tighter gap, and REMOVED flexWrap to force one row!
+  },
+  dateSearchContainer: {
+    flex: 1, //  CHANGED: Removed minWidth so it naturally squishes to fit
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    height: 38,
+    backgroundColor: '#f8fafc'
+  },
+  dateSearchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#333',
+    height: '100%',
+    padding: 0
+  },
+  dateClearSearchBtn: {
+    padding: 4
+  },
+  dateToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2 //  CHANGED: Tighter gap between the switch and text
+  },
+  dateToggleText: {
+    fontSize: 11, //  CHANGED: Slightly smaller to fit in the single row
+    color: '#475569',
+    fontWeight: '500'
+  },
+  dateClearFiltersBtn: {
+    backgroundColor: '#305797',
+    paddingHorizontal: 10, //  CHANGED: Smaller padding to save space
+    paddingVertical: 10,
+    borderRadius: 6,
+    justifyContent: 'center'
+  },
+  dateClearFiltersText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold'
+  },
 });
 
 export default DestinationStyles;

@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const ResetPassConfirmStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 105 
+        paddingTop: 105
     },
     heading: {
         fontSize: 28,
@@ -21,7 +21,7 @@ const ResetPassConfirmStyle = StyleSheet.create({
         marginLeft: 20,
         marginBottom: 4
     },
-    // 🔥 NEW: Wrapper for the input to hold the absolute positioned eye icon
+    //  NEW: Wrapper for the input to hold the absolute positioned eye icon
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -47,7 +47,7 @@ const ResetPassConfirmStyle = StyleSheet.create({
         borderColor: "#ff1616",
         borderWidth: 1.5,
     },
-    // 🔥 NEW: Positioning for the eye icon
+    //  NEW: Positioning for the eye icon
     eyeIcon: {
         position: 'absolute',
         right: 15,
@@ -77,25 +77,25 @@ const ResetPassConfirmStyle = StyleSheet.create({
         fontSize: 18,
         fontFamily: "Roboto_500Medium"
     },
-    // 🔥 NEW STYLES ADDED 🔥
+    //  NEW STYLES ADDED 
     errorContainer: {
         height: 25, // Keeps the layout fixed so the button never jumps
     },
     linkContainer: {
-        alignItems: 'flex-start', // 🔥 Changed from 'center' to 'flex-start'
-        marginLeft: 20,           // 🔥 Added margin to align with your inputs
+        alignItems: 'flex-start', //  Changed from 'center' to 'flex-start'
+        marginLeft: 20,           //  Added margin to align with your inputs
         marginBottom: 15,
         marginTop: 5,
     },
     linkText: {
-        fontSize: 16,             // 🔥 Increased size from 14 to 16 to match
+        fontSize: 16,             //  Increased size from 14 to 16 to match
         color: '#305797',
         fontFamily: 'Roboto_400Regular',
-        // 🔥 Removed the underline to mirror the other screen exactly
+        //  Removed the underline to mirror the other screen exactly
     },
-    // 🔥 LOGO AT BOTTOM 🔥
+    //  LOGO AT BOTTOM 
     bottomLogo: {
-        width: 140, 
+        width: 140,
         height: 80,
         marginTop: 165,
         marginBottom: 20,

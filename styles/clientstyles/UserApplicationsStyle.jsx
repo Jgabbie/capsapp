@@ -88,7 +88,7 @@ const UserApplicationsStyle = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 12,
     },
-    // 🔥 FIXED: This forces the text to take up remaining space, pushing the badge to the edge without overflowing it
+    // FIXED: This forces the text to take up remaining space, pushing the badge to the edge without overflowing it
     headerLeft: {
         flex: 1,
         marginRight: 12,
@@ -110,10 +110,10 @@ const UserApplicationsStyle = StyleSheet.create({
         borderRadius: 4,
         alignItems: 'center',
         justifyContent: 'center',
-        maxWidth: 120, // 🔥 FIXED: Prevents the badge from stretching off the screen
+        maxWidth: 120, //  FIXED: Prevents the badge from stretching off the screen
     },
     statusText: {
-        fontSize: 10, // 🔥 FIXED: Dropped size slightly so long words fit perfectly
+        fontSize: 10, //  FIXED: Dropped size slightly so long words fit perfectly
         fontFamily: "Roboto_700Bold",
         textTransform: 'uppercase',
         textAlign: 'center',

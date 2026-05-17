@@ -25,7 +25,7 @@ const UserPackageQuotationStyle = StyleSheet.create({
     marginBottom: 24,
     gap: 12,
   },
-  // 🔥 NEW: Wrapper to hold the buttons evenly
+  // NEW: Wrapper to hold the buttons evenly
   filterRow: {
     flexDirection: 'row',
     gap: 10,

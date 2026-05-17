@@ -10,7 +10,7 @@ const KnowledgeChunkSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// 🔥 Using the exact collection name from your web app so they share data
+// Using the exact collection name from your web app so they share data
 const KnowledgeChunk = mongoose.model('knowledge_chunks', KnowledgeChunkSchema);
 
 export default KnowledgeChunk;

@@ -243,7 +243,7 @@ const ProfileStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         fontSize: 15,
     },
-    // --- 🔥 NEW PREFERENCES STYLES 🔥 ---
+    // --- NEW PREFERENCES STYLES ---
     preferencesHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -311,12 +311,12 @@ const ProfileStyle = StyleSheet.create({
         fontFamily: 'Roboto_400Regular',
     },
     roleSubtitle: {
-    fontSize: 13,
-    fontFamily: "Montserrat_600SemiBold",
-    color: "#305797",
-    textAlign: "center",
-    marginTop: -10,  // This pulls it up closer to the name
-    marginBottom: 20 // Pushes the Personal Info card down a bit
+        fontSize: 13,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#305797",
+        textAlign: "center",
+        marginTop: -10,  // This pulls it up closer to the name
+        marginBottom: 20 // Pushes the Personal Info card down a bit
     }
 });
 

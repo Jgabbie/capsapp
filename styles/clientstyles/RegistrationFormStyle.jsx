@@ -5,11 +5,11 @@ const { width } = Dimensions.get("window");
 const RegistrationFormStyle = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#525659', 
+        backgroundColor: '#525659',
     },
     scrollViewContent: {
         paddingVertical: 20,
-        paddingBottom: 100, // 🔥 This fixes the unclickable button issue
+        paddingBottom: 100, // This fixes the unclickable button issue
     },
     paperPage: {
         backgroundColor: '#fff',

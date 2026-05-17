@@ -74,7 +74,7 @@ const QuotationFormStyle = StyleSheet.create({
         lineHeight: 16,
     },
     sectionGradient: {
-        backgroundColor: "#f7faff", 
+        backgroundColor: "#f7faff",
     },
     sectionTitle: {
         fontFamily: "Montserrat_700Bold",
@@ -211,7 +211,7 @@ const QuotationFormStyle = StyleSheet.create({
         lineHeight: 16
     },
 
-    // --- 🔥 NEW: TRAVELER COUNTERS 🔥 ---
+    // ---  NEW: TRAVELER COUNTERS  ---
     travelerCounterRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

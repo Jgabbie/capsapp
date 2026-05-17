@@ -135,7 +135,7 @@ const HomeStyle = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-    // 🔥 NEW FILTER BUTTON & MODAL STYLES 🔥
+    //  NEW FILTER BUTTON & MODAL STYLES 
     heroFilterBtn: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -340,7 +340,7 @@ const HomeStyle = StyleSheet.create({
         width: width - 65, // Keeps it nicely sized within the horizontal scroll
         alignSelf: 'center',
         backgroundColor: "#fff",
-        borderRadius: 0, // 🔥 NO corner radius as requested
+        borderRadius: 0, //  NO corner radius as requested
         elevation: 10,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
@@ -351,8 +351,8 @@ const HomeStyle = StyleSheet.create({
     },
     bannerImage: {
         width: "100%",
-        height: 200, 
-        borderRadius: 0, // 🔥 NO corner radius
+        height: 200,
+        borderRadius: 0, //  NO corner radius
         backgroundColor: '#e0e0e0',
     },
     bannerTagContainer: {
@@ -422,12 +422,12 @@ const HomeStyle = StyleSheet.create({
     },
     titleBanner: {
         backgroundColor: '#305797',
-        borderRadius: 30, // 🔥 This is the ONLY thing with rounded corners!
+        borderRadius: 30, //  This is the ONLY thing with rounded corners!
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 15,
         paddingHorizontal: 15,
-        marginTop: -25, // 🔥 This pulls the blue box up so it overlaps the image perfectly
+        marginTop: -25, //  This pulls the blue box up so it overlaps the image perfectly
         marginBottom: 15,
         minHeight: 65,
     },
@@ -461,7 +461,7 @@ const HomeStyle = StyleSheet.create({
     viewPackageText: {
         fontFamily: "Roboto_500Medium",
         fontSize: 16,
-        color: "#b22820", // 🔥 The exact red color requested!
+        color: "#b22820", //  The exact red color requested!
     },
 
     // --- BACKGROUND IMAGES ---
@@ -509,7 +509,7 @@ const HomeStyle = StyleSheet.create({
         fontSize: 12,
     },
 
-    // --- 🔥 NEW CAROUSEL & DOTS STYLES 🔥 ---
+    // ---  NEW CAROUSEL & DOTS STYLES  ---
     carouselContainer: {
         height: 240,
         marginBottom: 20,
@@ -523,7 +523,7 @@ const HomeStyle = StyleSheet.create({
         alignSelf: 'center'
     },
     carouselInner: {
-        flex: 1, // 🔥 FIX: Flex 1 lets it fill the space safely without math errors
+        flex: 1, //  FIX: Flex 1 lets it fill the space safely without math errors
         justifyContent: 'flex-end',
         alignItems: 'flex-start',
         padding: 25,
@@ -531,7 +531,7 @@ const HomeStyle = StyleSheet.create({
     carouselOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.4)',
-        borderRadius: 20, // 🔥 Ensures the dim effect respects the corners
+        borderRadius: 20, //  Ensures the dim effect respects the corners
     },
     carouselTitle: {
         fontFamily: "Montserrat_700Bold",
@@ -553,7 +553,7 @@ const HomeStyle = StyleSheet.create({
         flexShrink: 1,
         maxWidth: '85%',
     },
-    // 🔥 IMPROVED CAROUSEL DOT STYLES - Matching PackageDetails 🔥
+    //  IMPROVED CAROUSEL DOT STYLES - Matching PackageDetails 
     carouselDots: {
         flexDirection: 'row',
         position: 'absolute',

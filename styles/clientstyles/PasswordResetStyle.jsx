@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const PasswordResetStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 105 
+        paddingTop: 105
     },
     heading: {
         fontSize: 28,
@@ -46,9 +46,9 @@ const PasswordResetStyle = StyleSheet.create({
         borderColor: "#ff1616",
         borderWidth: 1.5,
     },
-    // 🔥 ADD THIS: Fixed height container to stop jumping
+
     errorContainer: {
-        height: 25,
+        height: 10,
     },
     fieldError: {
         color: "#ff1616",
@@ -73,9 +73,8 @@ const PasswordResetStyle = StyleSheet.create({
         fontFamily: "Roboto_500Medium"
     },
     linksContainer: {
-        alignItems: "flex-start", // 🔥 Changed from "center" to "flex-start"
-        marginLeft: 20,           // 🔥 Added left margin to match the input and button
-        marginTop: 15,
+        alignItems: "flex-start", //  Changed from "center" to "flex-start"
+        marginLeft: 20,           //  Added left margin to match the input and button
         marginBottom: 20
     },
     linkText: {
@@ -86,7 +85,7 @@ const PasswordResetStyle = StyleSheet.create({
     // --- OTP Specific Styles ---
     otpInput: {
         fontSize: 24,
-        letterSpacing: 8, 
+        letterSpacing: 8,
         textAlign: "center",
         borderWidth: 1,
         borderRadius: 10,
@@ -107,9 +106,9 @@ const PasswordResetStyle = StyleSheet.create({
         color: "#992A46",
         fontFamily: "Roboto_700Bold"
     },
-    // 🔥 LOGO AT BOTTOM 🔥
+    //  LOGO AT BOTTOM 
     bottomLogo: {
-        width: 140, 
+        width: 140,
         height: 80,
         marginTop: 250,
         marginBottom: 20,

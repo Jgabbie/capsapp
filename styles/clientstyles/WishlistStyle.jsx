@@ -92,7 +92,7 @@ const WishlistStyle = StyleSheet.create({
         color: '#334155',
         fontFamily: 'Roboto_400Regular'
     },
-    
+
     // --- SLIDER STYLES ---
     budgetValuesRow: {
         flexDirection: "row",
@@ -128,7 +128,7 @@ const WishlistStyle = StyleSheet.create({
         borderColor: "#e2e8f0",
         marginBottom: 20,
         overflow: "hidden",
-        elevation: 1 
+        elevation: 1
     },
     cardImage: {
         width: "100%",
@@ -161,8 +161,8 @@ const WishlistStyle = StyleSheet.create({
         color: "#64748b",
         fontFamily: "Roboto_400Regular",
     },
-    
-    // 🔥 NEW STYLES: Slots & Discount Badge 🔥
+
+    //  NEW STYLES: Slots & Discount Badge 
     slotsText: {
         fontSize: 13,
         color: "#64748b",
@@ -180,7 +180,7 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 11
     },
 
-    // 🔥 NEW STYLES: Pricing Display 🔥
+    //  NEW STYLES: Pricing Display 
     priceContainer: {
         flex: 1,
     },
@@ -201,7 +201,7 @@ const WishlistStyle = StyleSheet.create({
         color: "#94a3b8",
         marginTop: 2
     },
-    
+
     // --- TAGS ---
     tag: {
         paddingHorizontal: 8,
@@ -231,13 +231,13 @@ const WishlistStyle = StyleSheet.create({
         fontFamily: "Montserrat_600SemiBold"
     },
     btnRemove: {
-        backgroundColor: "#a11d33", 
+        backgroundColor: "#a11d33",
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 6,
     },
     btnRemoveText: {
-        color: "#fff", 
+        color: "#fff",
         fontSize: 12,
         fontFamily: "Montserrat_600SemiBold"
     },

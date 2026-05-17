@@ -3,37 +3,37 @@ import { StyleSheet } from "react-native";
 const SignupStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 200 
+        paddingTop: 200
     },
     signupHeading: {
-        display: "none" 
+        display: "none"
     },
     signupSecondHeading: {
-        fontSize: 26, 
+        fontSize: 26,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         marginTop: 0,
-        marginBottom: 0, 
+        marginBottom: 0,
         marginHorizontal: 20,
         textAlign: "center"
     },
     signupLabel: {
-        fontSize: 14, 
+        fontSize: 14,
         fontFamily: "Roboto_500Medium",
         color: "#305797",
         marginLeft: 20,
-        marginBottom: 2 
+        marginBottom: 2
     },
     signupInputs: {
-        fontSize: 14, 
+        fontSize: 14,
         borderWidth: 1,
-        borderRadius: 8, 
+        borderRadius: 8,
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
         marginLeft: 20,
-        marginBottom: 8, 
+        marginBottom: 8,
         width: 350,
-        height: 40, 
+        height: 40,
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
     },
@@ -41,7 +41,7 @@ const SignupStyle = StyleSheet.create({
         flexDirection: "row",
         width: 350,
         marginLeft: 20,
-        justifyContent: "space-between" 
+        justifyContent: "space-between"
     },
     nameInputs: {
         fontSize: 14,
@@ -50,8 +50,8 @@ const SignupStyle = StyleSheet.create({
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
         marginBottom: 8,
-        width: 170, 
-        height: 40, 
+        width: 170,
+        height: 40,
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
     },
@@ -64,7 +64,7 @@ const SignupStyle = StyleSheet.create({
         marginLeft: 20,
         marginBottom: 8,
         width: 350,
-        height: 40, 
+        height: 40,
         backgroundColor: "rgba(255,255,255,0.8)",
         overflow: "hidden"
     },
@@ -106,10 +106,10 @@ const SignupStyle = StyleSheet.create({
     },
     fieldError: {
         color: "#ff1616",
-        fontSize: 11, 
+        fontSize: 11,
         marginLeft: 25,
         marginBottom: 8,
-        marginTop: -5, 
+        marginTop: -5,
     },
     generalError: {
         color: "#ff1616",
@@ -134,7 +134,7 @@ const SignupStyle = StyleSheet.create({
         justifyContent: "center",
         backgroundColor: "#305797",
         width: 350,
-        height: 40, 
+        height: 40,
         marginLeft: 20,
         borderRadius: 8,
         elevation: 2
@@ -144,9 +144,9 @@ const SignupStyle = StyleSheet.create({
         fontSize: 18,
         fontFamily: "Roboto_500Medium"
     },
-    // 🔥 NEW LOGO STYLE AT BOTTOM 🔥
+    // NEW LOGO STYLE AT BOTTOM 
     bottomLogo: {
-        width: 140, 
+        width: 140,
         height: 80,
         marginTop: 10,
         marginBottom: 20,

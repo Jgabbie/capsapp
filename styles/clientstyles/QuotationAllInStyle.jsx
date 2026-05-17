@@ -45,7 +45,7 @@ const QuotationAllInStyle = StyleSheet.create({
         color: "#64748b",
         fontSize: 12,
     },
-    
+
     // --- NEW: Scrollable Images ---
     imageScrollContainer: {
         flexDirection: 'row',
@@ -69,7 +69,7 @@ const QuotationAllInStyle = StyleSheet.create({
     },
     bookingDetailsTitle: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18, 
+        fontSize: 18,
         color: "#1f2a44",
         marginBottom: 15,
         borderBottomWidth: 1,
@@ -216,12 +216,12 @@ const QuotationAllInStyle = StyleSheet.create({
     cardNoteRed: {
         fontFamily: "Roboto_500Medium",
         fontSize: 11,
-        color: "#dc2626", 
+        color: "#dc2626",
         marginTop: 10,
         lineHeight: 16
     },
 
-    // --- 🔥 UPDATED COUNTERS TO MATCH CARDS 🔥 ---
+    // --- UPDATED COUNTERS TO MATCH CARDS  ---
     counterSection: {
         backgroundColor: '#fff',
         borderRadius: 20,

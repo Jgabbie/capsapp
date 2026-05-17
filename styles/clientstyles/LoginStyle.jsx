@@ -8,7 +8,7 @@ const LoginStyle = StyleSheet.create({
         // Adjusted paddingTop since logo moved to bottom
         paddingTop: 200,
         // Centers all children horizontally
-        alignItems: 'center', 
+        alignItems: 'center',
     },
     loginHeading: {
         fontSize: 60,
@@ -28,15 +28,15 @@ const LoginStyle = StyleSheet.create({
         textAlign: "center"
     },
     inputWrapper: {
-        width: width * 0.85, 
-        maxWidth: 400, 
+        width: width * 0.85,
+        maxWidth: 400,
         marginBottom: 10,
     },
     loginLabel: {
         fontSize: 16,
         color: "#305797",
         marginBottom: 4,
-        alignSelf: 'flex-start', 
+        alignSelf: 'flex-start',
     },
     loginInputs: {
         fontSize: 18,
@@ -49,7 +49,7 @@ const LoginStyle = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
     },
-    // 🔥 ADD THIS: The red border style for errors
+    //  ADD THIS: The red border style for errors
     inputErrorBorder: {
         borderColor: "#ef4444", // Using the same red as your error text!
         borderWidth: 1.5,
@@ -85,7 +85,7 @@ const LoginStyle = StyleSheet.create({
     },
     // --- Links Container (Signup & Forgot Pass) ---
     loginLinksContainer: {
-        flexDirection: 'row', 
+        flexDirection: 'row',
         alignItems: 'center',
         width: width * 0.85,
         maxWidth: 400,
@@ -94,11 +94,10 @@ const LoginStyle = StyleSheet.create({
     loginLinks: {
         fontSize: 16,
         color: "#305797",
-        textDecorationLine: 'underline', 
     },
     loginLinksDivider: {
         color: "#305797",
-        marginHorizontal: 10, 
+        marginHorizontal: 10,
     },
     // --- Login Button ---
     loginButton: {
@@ -118,7 +117,7 @@ const LoginStyle = StyleSheet.create({
     // --- OTP Specific Styles ---
     otpInput: {
         fontSize: 24,
-        letterSpacing: 8, 
+        letterSpacing: 8,
         textAlign: "center",
         borderWidth: 1,
         borderRadius: 10,
@@ -139,23 +138,22 @@ const LoginStyle = StyleSheet.create({
         color: "#992A46",
         fontFamily: "Roboto_700Bold"
     },
-    // 🔥 NEW STYLES ADDED 🔥
+    //  NEW STYLES ADDED 
     errorContainer: {
-        height: 20, 
+        height: 10,
         width: width * 0.85,
         maxWidth: 400,
-        marginBottom: 10,
         justifyContent: 'center',
     },
     errorText: {
-        color: '#ef4444', 
+        color: '#ef4444',
         fontSize: 14,
         textAlign: 'left',
         fontFamily: 'Roboto_500Medium',
     },
-    // 🔥 RENAMED AND ADJUSTED FOR THE BOTTOM
+    //  RENAMED AND ADJUSTED FOR THE BOTTOM
     bottomLogo: {
-        width: 140, 
+        width: 140,
         height: 80,
         marginTop: 135,
         marginBottom: 20,

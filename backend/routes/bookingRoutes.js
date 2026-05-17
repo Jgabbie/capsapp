@@ -2,7 +2,7 @@ import express from "express";
 import requireUser from "../middleware/requireUser.js";
 import requireAdmin from "../middleware/requireAdmin.js";
 
-// 🔥 Make sure ALL of these are exported in your mobile bookingController.js!
+// Make sure ALL of these are exported in your mobile bookingController.js!
 import {
   createBooking,
   cancelBooking,
