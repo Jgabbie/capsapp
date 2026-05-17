@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
-import { Video } from 'expo-video';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { ResizeMode } from 'expo-av';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
@@ -88,6 +88,12 @@ export default function PackageDetails({ route, navigation }) {
 
     const [selectedArrangement, setSelectedArrangement] = useState("All in Package");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+    // Video Player Setup
+    const videoPlayer = useVideoPlayer(fullPkg?.packageVideo || null, player => {
+        player.loop = true;
+        player.play();
+    });
 
     //  ADD THESE TWO NEW STATES:
     const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);
@@ -483,11 +489,11 @@ export default function PackageDetails({ route, navigation }) {
 
                         {fullPkg.packageVideo ? (
                             <View style={{ marginTop: 14, marginBottom: 8 }}>
-                                <Video
-                                    source={fullPkg.packageVideo}
+                                <VideoView
+                                    player={videoPlayer}
                                     style={{ width: '100%', height: 240, borderRadius: 12, backgroundColor: '#000' }}
-                                    useNativeControls
-                                    resizeMode={ResizeMode.CONTAIN}
+                                    allowsFullscreen
+                                    nativeControls
                                 />
                             </View>
                         ) : null}
