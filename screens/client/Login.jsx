@@ -222,6 +222,7 @@ export default function Login() {
                     <Text style={LoginStyle.loginLabel}>Username</Text>
                     <TextInput
                         placeholder="Enter username"
+                        placeholderTextColor="#6b7280"
                         maxLength={30}
                         style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
                         onChangeText={(e) => {
@@ -239,6 +240,7 @@ export default function Login() {
                         <TextInput
                             style={[LoginStyle.loginInputs, { paddingRight: 50 }, getError ? LoginStyle.inputErrorBorder : null]}
                             placeholder="Enter password"
+                            placeholderTextColor="#6b7280"
                             value={getPassword}
                             onChangeText={(text) => {
                                 setPassword(text)

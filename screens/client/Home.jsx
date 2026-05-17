@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated, RefreshControl } from 'react-native'
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated, RefreshControl } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -559,15 +559,20 @@ export default function Home({ route }) {
             </Modal>
 
             <Modal visible={isSuccessModalVisible} transparent={true} animationType="fade">
-                <View style={HomeStyle.successModalOverlay}>
-                    <View style={HomeStyle.successModalBox}>
-                        <Text style={HomeStyle.successModalTitle}>Your message has been sent</Text>
-                        <Text style={HomeStyle.successModalSub}>Kindly check your email for responses.</Text>
-                        <TouchableOpacity style={HomeStyle.successModalButton} onPress={() => setSuccessModalVisible(false)}>
-                            <Text style={HomeStyle.successModalButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                <TouchableOpacity style={HomeStyle.successModalOverlay} activeOpacity={1} onPress={() => setSuccessModalVisible(false)}>
+                    <TouchableWithoutFeedback>
+                        <View style={HomeStyle.successModalBox}>
+                            <View style={HomeStyle.successModalCheck}>
+                                <Ionicons name="checkmark" size={32} color="#059669" />
+                            </View>
+                            <Text style={HomeStyle.successModalTitle}>Message Sent</Text>
+                            <Text style={HomeStyle.successModalSub}>Kindly check your email for responses.</Text>
+                            <TouchableOpacity onPress={() => setSuccessModalVisible(false)} style={HomeStyle.successModalButton}>
+                                <Text style={HomeStyle.successModalButtonText}>Got It</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
             </Modal>
 
             <KeyboardAvoidingView
@@ -607,7 +612,7 @@ export default function Home({ route }) {
                                     <View style={HomeStyle.heroSearchInputContainer}>
                                         <TextInput
                                             style={HomeStyle.heroSearchInput}
-                                            placeholder='Search your destination'
+                                            placeholder='Search your destination...'
                                             placeholderTextColor="#999"
                                             value={searchQuery}
                                             onChangeText={setSearchQuery}
@@ -629,8 +634,10 @@ export default function Home({ route }) {
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                     ) : (
                         <>
-                            <Text style={HomeStyle.title}>FOR YOU</Text>
-                            <Text style={HomeStyle.forYouNote}>These are the recommended packages based on the packages you have rated.</Text>
+                            <View style={HomeStyle.forYouTitleBar}>
+                                <Text style={HomeStyle.forYouTitleText}>FOR YOU</Text>
+                            </View>
+                            <Text style={HomeStyle.forYouNote}>These are the recommended packages based on your preferences.</Text>
                             {forYouPackages.length > 0 && (
                                 <ScrollView
                                     horizontal
@@ -649,7 +656,9 @@ export default function Home({ route }) {
                                 </ScrollView>
                             )}
 
-                            <Text style={[HomeStyle.title, { marginTop: 10 }]}>Popular Packages</Text>
+                            <View style={HomeStyle.popularPackagesTitleBar}>
+                                <Text style={HomeStyle.popularPackagesTitleText}>Popular Packages</Text>
+                            </View>
                             {popularLoading ? (
                                 <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
                             ) : (

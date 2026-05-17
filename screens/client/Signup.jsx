@@ -215,6 +215,7 @@ export default function Signup() {
                         <Text style={SignupStyle.signupLabel}>Username</Text>
                         <TextInput
                             placeholder="Enter username"
+                            placeholderTextColor="#6b7280"
                             maxLength={30}
                             style={[SignupStyle.signupInputs, errors.username && SignupStyle.inputErrorBorder]}
                             value={user.username}
@@ -228,6 +229,7 @@ export default function Signup() {
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>First Name</Text>
                                 <TextInput
                                     placeholder="First name"
+                                    placeholderTextColor="#6b7280"
                                     maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.firstname && SignupStyle.inputErrorBorder]}
                                     value={user.firstname}
@@ -240,6 +242,7 @@ export default function Signup() {
                                 <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>Last Name</Text>
                                 <TextInput
                                     placeholder="Last name"
+                                    placeholderTextColor="#6b7280"
                                     maxLength={30}
                                     style={[SignupStyle.nameInputs, errors.lastname && SignupStyle.inputErrorBorder]}
                                     value={user.lastname}
@@ -253,6 +256,7 @@ export default function Signup() {
                         <Text style={SignupStyle.signupLabel}>Email</Text>
                         <TextInput
                             placeholder="Enter email"
+                            placeholderTextColor="#6b7280"
                             maxLength={40}
                             keyboardType="email-address"
                             style={[SignupStyle.signupInputs, errors.email && SignupStyle.inputErrorBorder]}
@@ -270,6 +274,7 @@ export default function Signup() {
                                 style={SignupStyle.phoneInput}
                                 value={user.phonenum}
                                 placeholder="0912 345 6789"
+                                placeholderTextColor="#6b7280"
                                 onChangeText={(e) => changeHandler("phonenum", e)}
                             />
                         </View>
@@ -282,6 +287,7 @@ export default function Signup() {
                                 maxLength={20}
                                 style={SignupStyle.passwordInput}
                                 placeholder="Enter password"
+                                placeholderTextColor="#6b7280"
                                 secureTextEntry={!showPassword}
                                 value={user.password}
                                 onChangeText={(e) => changeHandler("password", e)}
@@ -302,6 +308,7 @@ export default function Signup() {
                                 maxLength={20}
                                 style={SignupStyle.passwordInput}
                                 placeholder="Confirm password"
+                                placeholderTextColor="#6b7280"
                                 secureTextEntry={!showConfirmPassword}
                                 value={user.confirmpassword}
                                 onChangeText={(e) => changeHandler("confirmpassword", e)}
