@@ -8,10 +8,6 @@ const defaultFooterHtml = `
 const defaultLogoHtml = `
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
         <img src="https://mrctravelandtours.com/images/Logo.png" alt="M&RC Travel and Tours" style="width:88px; height:auto; display:block;" />
-        <div>
-            <div style="font-size:12px; letter-spacing:1.8px; text-transform:uppercase; color:#305797; font-weight:700;">M&amp;RC Travel and Tours</div>
-            <div style="font-size:13px; color:#64748b; margin-top:4px;">Travel made simple</div>
-        </div>
     </div>
 `;
 
