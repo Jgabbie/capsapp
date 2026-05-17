@@ -3,7 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
-import { Video, ResizeMode } from 'expo-av';
+import { Video } from 'expo-video';
+import { ResizeMode } from 'expo-av';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Header from "../../components/Header";
@@ -483,11 +484,10 @@ export default function PackageDetails({ route, navigation }) {
                         {fullPkg.packageVideo ? (
                             <View style={{ marginTop: 14, marginBottom: 8 }}>
                                 <Video
-                                    source={{ uri: fullPkg.packageVideo }}
+                                    source={fullPkg.packageVideo}
                                     style={{ width: '100%', height: 240, borderRadius: 12, backgroundColor: '#000' }}
                                     useNativeControls
                                     resizeMode={ResizeMode.CONTAIN}
-                                    isLooping={false}
                                 />
                             </View>
                         ) : null}
