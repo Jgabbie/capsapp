@@ -682,7 +682,19 @@ export default function VisaProgress() {
                 ? 'On Penalty'
                 : null;
 
+    const formatRemainingTime = (deadlineDate) => {
+        if (!deadlineDate) return null;
+        const daysLeft = deadlineDate.diff(dayjs(), 'day');
+        const hoursLeft = deadlineDate.diff(dayjs(), 'hour');
 
+        if (daysLeft < 0) {
+            return 'Deadline overdue';
+        } else if (daysLeft === 0) {
+            return `${hoursLeft} hour${hoursLeft === 1 ? '' : 's'} left`;
+        } else {
+            return `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
+        }
+    };
 
     const checkPendingManualPayment = async () => {
         try {
@@ -2160,9 +2172,7 @@ export default function VisaProgress() {
                                                 Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}
                                                 {stepDaysLeft !== null && (
                                                     <Text style={{ color: stepDaysLeft < 0 ? '#dc2626' : '#6b7280' }}>
-                                                        {` (${stepDaysLeft < 0
-                                                            ? `${Math.abs(stepDaysLeft)} Day${Math.abs(stepDaysLeft) === 1 ? '' : 's'} overdue`
-                                                            : `${stepDaysLeft} day${stepDaysLeft === 1 ? '' : 's'} left`})`}
+                                                        {` (${formatRemainingTime(stepDeadlineDate)})`}
                                                     </Text>
                                                 )}
                                             </Text>

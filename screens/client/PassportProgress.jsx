@@ -367,6 +367,21 @@ export default function PassportApplication() {
         return null;
     };
 
+    // Helper function to format remaining time display
+    const formatRemainingTime = (deadlineDate) => {
+        if (!deadlineDate) return null;
+        const daysLeft = deadlineDate.diff(dayjs(), 'day');
+        const hoursLeft = deadlineDate.diff(dayjs(), 'hour');
+
+        if (daysLeft < 0) {
+            return 'Deadline overdue';
+        } else if (daysLeft === 0) {
+            return `${hoursLeft} hour${hoursLeft === 1 ? '' : 's'} left`;
+        } else {
+            return `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
+        }
+    };
+
     // Find the current step index based on status
     const currentStep = application
         ? Math.max(
@@ -1834,7 +1849,7 @@ export default function PassportApplication() {
                                                 Deadline: {deadlineDate.format('MMM D, YYYY')}
                                                 {typeof daysLeft === 'number' && (
                                                     <Text style={{ color: daysLeft < 0 ? '#dc2626' : '#6b7280' }}>
-                                                        {` (${daysLeft < 0 ? `${Math.abs(daysLeft)} day${Math.abs(daysLeft) === 1 ? '' : 's'} overdue` : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`})`}
+                                                        {` (${formatRemainingTime(deadlineDate)})`}
                                                     </Text>
                                                 )}
                                             </Text>

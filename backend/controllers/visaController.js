@@ -137,7 +137,9 @@ export const buildProcessSteps = (application, serviceProcessSteps = []) => {
 
     let deadline = null;
 
-    if (Number.isFinite(deadlineDays) && deadlineDays > 0) {
+    if (stepTitle === 'Processing by Embassy' && preferredDate) {
+      deadline = preferredDate.startOf('day');
+    } else if (Number.isFinite(deadlineDays) && deadlineDays > 0) {
       if (stepTitle === 'Application Submitted') {
         if (setDate) deadline = setDate.add(deadlineDays, 'day').startOf('day');
       } else if (prevDeadline) {
@@ -890,6 +892,21 @@ export const chooseAppointment = async (req, res) => {
     };
 
     await application.save();
+
+    // Rebuild processSteps since preferredDate changed (affects deadlines)
+    try {
+      const serviceDoc = await ServiceModel.findById(application.serviceId).select('visaProcessSteps');
+      if (serviceDoc) {
+        application.processSteps = buildProcessSteps(application, serviceDoc.visaProcessSteps);
+        await application.save();
+      }
+    } catch (e) {
+      console.error('Failed to rebuild/persist processSteps after chooseAppointment:', e);
+    }
+
+    if (typeof logAction === 'function') {
+      logAction('VISA_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
+    }
 
     return res.status(200).json({
       message: "Preferred schedule updated successfully",
