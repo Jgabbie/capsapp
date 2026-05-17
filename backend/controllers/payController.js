@@ -1739,9 +1739,9 @@ export const createCheckoutSessionQuotation = async (req, res) => {
 
 //paymongo webhook handler
 export const handlePayMongoWebhook = async (req, res) => {
-    console.log('🚀 Webhook HIT!');
+    console.log(' Webhook HIT!');
     res.status(200).send('OK'); // respond instantly
-    console.log('✅ RESPONSE SENT');
+    console.log(' RESPONSE SENT');
 
 
     //check if secret key exists
@@ -1831,9 +1831,9 @@ export const handlePayMongoWebhook = async (req, res) => {
                 );
                 sessionAttributes = sessionResponse?.data?.attributes;
                 metadata = sessionAttributes?.metadata || {};
-                console.log('✅ Session metadata:', metadata);
+                console.log(' Session metadata:', metadata);
             } catch (err) {
-                console.log('❌ Failed to fetch session:', err.data || err.message);
+                console.log(' Failed to fetch session:', err.data || err.message);
             }
         }
 
@@ -1849,7 +1849,7 @@ export const handlePayMongoWebhook = async (req, res) => {
         console.log('metadata:', metadata);
 
         if (metadata.applicationId && metadata.applicationType === "Visa Application") {
-            console.log('🛂 Visa payment detected');
+            console.log(' Visa payment detected');
             const grossAmount =
                 Number(metadata.totalAmountCents || 0) / 100 ||
                 Number(sessionAttributes?.amount_total || 0) / 100;
@@ -1955,7 +1955,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
         // if applicationId exists in metadata, we know this payment is for a passport application, so we create a transaction record linked to that application and send a notification to the user. We also send a confirmation email to the user about their passport payment. After handling the passport payment, we return early since we don't want to accidentally process it as a booking payment as well.
         if (metadata.applicationId && metadata.applicationType === "Passport Application") {
-            console.log('🛂 Passport payment detected');
+            console.log(' Passport payment detected');
             const grossAmount =
                 Number(metadata.totalAmountCents || 0) / 100 ||
                 Number(sessionAttributes?.amount_total || 0) / 100;
@@ -2060,7 +2060,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
         //INSTALLMENT PAYMENT --------------------------------------------------------------------------
         if (metadata.transactionType === "Installment Payment") {
-            console.log('💰 Installment payment detected');
+            console.log(' Installment payment detected');
 
             console.log('Installment payment metadata:', metadata);
 
@@ -2164,7 +2164,7 @@ export const handlePayMongoWebhook = async (req, res) => {
         //BOOKING PAYMENT ----------------------------------------------------------------------------------------
         // if packageId exists in metadata, we know this payment is for a tour package booking, so we either update an existing booking to "Successful" status or create a new booking if it doesn't exist. We also create a transaction record for this booking payment and send a notification to the user about their confirmed booking. Finally, we send a confirmation email to the user with the booking reference. After handling the booking payment, we return early since we've completed all necessary processing for this event.
         if (metadata.bookingId && metadata.transactionType === "Booking Payment") {
-            console.log('🛫 Booking payment detected');
+            console.log(' Booking payment detected');
             console.log('PackageId in metadata:', metadata.packageId);
             let booking = await BookingModel.findById(metadata.bookingId);
 
@@ -2283,7 +2283,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
         //QUOTATION PAYMENT -----------------------------------------------------------------------------
         if (metadata.bookingId && metadata.transactionType === "Quotation Payment") {
-            console.log('🛫 Quotation Booking payment detected');
+            console.log(' Quotation Booking payment detected');
             console.log('PackageId in metadata:', metadata.packageId);
             let booking = await BookingModel.findById(metadata.bookingId);
 

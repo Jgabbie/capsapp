@@ -65,7 +65,7 @@ export const sendContactEmail = async (req, res) => {
             })
         });
 
-        console.log('✅ Contact email sent to admin:', companyEmail, '| Message ID:', companyResult?.messageId);
+        console.log(' Contact email sent to admin:', companyEmail, '| Message ID:', companyResult?.messageId);
 
         // 2. Auto-reply sent to the Customer
         const customerResult = await transporter.sendMail({
@@ -83,7 +83,7 @@ export const sendContactEmail = async (req, res) => {
             })
         });
 
-        console.log('✅ Auto-reply sent to customer:', normalizedEmail, '| Message ID:', customerResult?.messageId);
+        console.log(' Auto-reply sent to customer:', normalizedEmail, '| Message ID:', customerResult?.messageId);
 
         res.status(200).json({ success: true, message: 'Message sent successfully' });
 

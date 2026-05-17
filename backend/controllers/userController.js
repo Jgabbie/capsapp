@@ -85,7 +85,6 @@ const generateOTPEmailTemplate = (otp, type) => {
         bodyHtml: `
             <div style="margin:18px 0 22px; text-align:center;">
                 <div style="display:inline-block; background:#f8fafc; border:1px solid #dbe4f0; border-radius:16px; padding:22px 26px; min-width:260px; text-align:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.7);">
-                    <div style="font-size:12px; letter-spacing:2px; color:#64748b; text-transform:uppercase; margin-bottom:10px; font-weight:700;">One-time code</div>
                     <div style="font-size:34px; font-weight:800; letter-spacing:10px; color:#b91c1c; font-family:Arial, sans-serif;">${otp}</div>
                 </div>
             </div>
@@ -121,7 +120,7 @@ const createVerificationLink = async (user) => {
     });
 
     const mailOptions = {
-        from: process.env.SENDER_EMAIL,
+        from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
         to: user.email,
         subject: 'Welcome to M&RC Travel and Tours',
         html: generateVerificationEmailTemplate(user.username, webVerifyLink)
@@ -159,7 +158,7 @@ const sendLoginOtpEmail = async (user, rawOtp) => {
     });
 
     const mailOptions = {
-        from: process.env.SENDER_EMAIL,
+        from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
         to: user.email,
         subject: 'M&RC Travel and Tours - Login OTP',
         html: generateOTPEmailTemplate(rawOtp, 'login')
@@ -377,7 +376,7 @@ export const sendResetOtp = async (req, res) => {
         });
 
         const mailOptions = {
-            from: process.env.SENDER_EMAIL,
+            from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
             to: email,
             subject: 'M&RC Travel and Tours - Password Reset OTP',
             html: generateOTPEmailTemplate(otp, 'reset')
@@ -485,7 +484,7 @@ export const sendVerifyOtp = async (req, res) => {
         });
 
         const mailOptions = {
-            from: process.env.SENDER_EMAIL,
+            from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
             to: email,
             subject: 'M&RC Travel and Tours - Account Verification',
             html: generateOTPEmailTemplate(otp, 'verify')
