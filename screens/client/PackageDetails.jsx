@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
+import { Video, ResizeMode } from 'expo-av';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Header from "../../components/Header";
@@ -163,6 +164,7 @@ export default function PackageDetails({ route, navigation }) {
                     packageDiscountPercent: currentPkg.packageDiscountPercent || 0,
                     packageDeposit: currentPkg.packageDeposit || 0,
                     visaRequired: currentPkg.visaRequired || false,
+                    packageVideo: currentPkg.packageVideo || currentPkg.video || null,
                     rawPackage: currentPkg
                 });
 
@@ -477,6 +479,18 @@ export default function PackageDetails({ route, navigation }) {
                                 <Text style={DestinationStyles.packageDetailValue}>{fullPkg.visaRequired ? 'Required' : 'Not required'}</Text>
                             </View>
                         </View>
+
+                        {fullPkg.packageVideo ? (
+                            <View style={{ marginTop: 14, marginBottom: 8 }}>
+                                <Video
+                                    source={{ uri: fullPkg.packageVideo }}
+                                    style={{ width: '100%', height: 240, borderRadius: 12, backgroundColor: '#000' }}
+                                    useNativeControls
+                                    resizeMode={ResizeMode.CONTAIN}
+                                    isLooping={false}
+                                />
+                            </View>
+                        ) : null}
 
                         <Text style={DestinationStyles.heroDescription}>{fullPkg.description}</Text>
                     </View>
