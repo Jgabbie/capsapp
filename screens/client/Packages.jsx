@@ -38,14 +38,15 @@ export default function Packages({ navigation, route }) { //  Add route here!
     // Filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-    const [budgetRange, setBudgetRange] = useState([0, 200000]);
+    const [budgetRange, setBudgetRange] = useState([0, 300000]);
     const [minBudgetInput, setMinBudgetInput] = useState("0");
-    const [maxBudgetInput, setMaxBudgetInput] = useState("200000");
+    const [maxBudgetInput, setMaxBudgetInput] = useState("300000");
     const [selectedTags, setSelectedTags] = useState([]);
     const [tourType, setTourType] = useState('All');
     const [daysValue, setDaysValue] = useState([10]);
     const [daysInput, setDaysInput] = useState("10");
     const [travelersValue, setTravelersValue] = useState("");
+    const [visibleCount, setVisibleCount] = useState(10);
 
     const getAvailabilityStatus = (slots) => {
         if (slots === undefined || slots === null) return "Available";
@@ -82,9 +83,9 @@ export default function Packages({ navigation, route }) { //  Add route here!
 
     //  RESET FILTERS FUNCTION 
     const resetFilters = () => {
-        setBudgetRange([0, 200000]);
+        setBudgetRange([0, 300000]);
         setMinBudgetInput('0');
-        setMaxBudgetInput('200000');
+        setMaxBudgetInput('300000');
         setTourType('All');
         setTravelersValue('');
         setDaysValue([maxDaysAvailable]);
@@ -287,6 +288,12 @@ export default function Packages({ navigation, route }) { //  Add route here!
         });
     }, [packages, searchText, budgetRange, selectedTags, tourType, daysValue, travelersValue]);
 
+    const visiblePackages = useMemo(() => filteredPackages.slice(0, visibleCount), [filteredPackages, visibleCount]);
+
+    useEffect(() => {
+        setVisibleCount(Math.min(10, filteredPackages.length));
+    }, [filteredPackages]);
+
     const handleBudgetInputChange = (type, value) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         if (type === 'min') {
@@ -296,7 +303,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
         } else {
             setMaxBudgetInput(numericValue);
             const num = Number(numericValue);
-            if (num >= budgetRange[0] && num <= 200000) setBudgetRange([budgetRange[0], num]);
+            if (num >= budgetRange[0] && num <= 500000) setBudgetRange([budgetRange[0], num]);
         }
     };
 
@@ -305,6 +312,14 @@ export default function Packages({ navigation, route }) { //  Add route here!
         setDaysInput(numericValue);
         const num = Number(numericValue);
         if (num >= 1 && num <= maxDaysAvailable) setDaysValue([num]);
+    };
+
+    const handleLoadMore = () => {
+        setVisibleCount(prev => Math.min(prev + 10, filteredPackages.length));
+    };
+    
+    const handleSeeLess = () => {
+        setVisibleCount(prev => Math.max(10, prev - 10));
     };
 
     return (
@@ -348,7 +363,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
                 </View>
 
                 {loading ? <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} /> : error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{error}</Text> : (
-                    filteredPackages.map((item) => {
+                    <>
+                    {visiblePackages.map((item) => {
                         const tv = Number(travelersValue);
                         const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
                         const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
@@ -449,7 +465,21 @@ export default function Packages({ navigation, route }) { //  Add route here!
                                 </View>
                             </View>
                         );
-                    })
+                    })}
+
+                    {visibleCount > 10 && (
+                        <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>
+                            <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>See less</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {visibleCount < filteredPackages.length && (
+                        <TouchableOpacity onPress={handleLoadMore} style={{ alignSelf: 'center', marginVertical: 12 }}>
+                            <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>Load more</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    </>
                 )}
             </ScrollView>
 
@@ -487,7 +517,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
                                         setMinBudgetInput(String(vals[0]));
                                         setMaxBudgetInput(String(vals[1]));
                                     }}
-                                    min={0} max={200000} step={1000}
+                                    min={0} max={500000} step={1000}
                                     selectedStyle={{ backgroundColor: '#305797' }} markerStyle={{ backgroundColor: '#305797' }}
                                 />
                                 <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>{formatPeso(budgetRange[0])} - {formatPeso(budgetRange[1])}</Text>
