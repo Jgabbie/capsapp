@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert, Modal } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert, Modal, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
@@ -660,17 +660,26 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+    const sanitizeFileName = (value) => {
+        const raw = String(value || 'booking-registration');
+        return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
+    };
 
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
         try {
-            const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
-            await logoAsset.downloadAsync();
-            const logoUri = logoAsset.localUri || logoAsset.uri;
-            const logoBase64 = logoUri
-                ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 })
-                : '';
-            const logoDataUri = logoBase64 ? `data:image/png;base64,${logoBase64}` : '';
+            let logoDataUri = '';
+            try {
+                const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
+                await logoAsset.downloadAsync();
+                const logoUri = logoAsset.localUri || logoAsset.uri;
+                const logoBase64 = logoUri
+                    ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 })
+                    : '';
+                logoDataUri = logoBase64 ? `data:image/png;base64,${logoBase64}` : '';
+            } catch (logoError) {
+                console.warn('Logo load failed:', logoError?.message || logoError);
+            }
 
             const htmlContent = `
                 <html>
@@ -950,7 +959,35 @@ export default function BookingInvoice({ route, navigation }) {
             `;
 
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+
+            const safeReference = sanitizeFileName(reference || 'booking');
+            const fileName = `Booking-Registration-${safeReference}.pdf`;
+
+            if (Platform.OS === 'android') {
+                const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                if (permissions.granted) {
+                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+                    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+                        permissions.directoryUri,
+                        fileName,
+                        'application/pdf'
+                    );
+                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+                    Alert.alert('Registration Saved', fileName);
+                    return;
+                }
+            }
+
+            const newPath = `${FileSystem.documentDirectory}${fileName}`;
+            await FileSystem.copyAsync({ from: uri, to: newPath });
+
+            const canShare = await Sharing.isAvailableAsync();
+            if (!canShare) {
+                Alert.alert('Registration Ready', `Saved as ${fileName}`);
+                return;
+            }
+
+            await Sharing.shareAsync(newPath, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
 
         } catch (error) {
             Alert.alert("Error", "Could not generate PDF. Please try again.");

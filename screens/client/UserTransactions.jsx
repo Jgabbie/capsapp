@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform } from 'react-native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
@@ -6,7 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import dayjs from 'dayjs'
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 
 import Header from '../../components/Header'
@@ -136,6 +136,11 @@ export default function UserTransactions() {
         return true;
     };
 
+    const sanitizeFileName = (value) => {
+        const raw = String(value || 'receipt');
+        return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
+    };
+
     const handleDownloadReceipt = async () => {
         if (!selectedTransaction) return;
         try {
@@ -152,14 +157,19 @@ export default function UserTransactions() {
             const statusLabel = isPaid ? 'PAID' : (rawStatus === 'pending' || rawStatus === 'failed' ? 'NOT PAID' : (selectedTransaction?.status || '').toString().toUpperCase());
             const statusColor = isPaid ? '#389e0d' : '#cf1322';
 
-            // Load and convert logo image to base64
-            const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
-            if (!logoAsset.localUri) {
-                await logoAsset.downloadAsync();
+            // Load and convert logo image to base64 (non-fatal if it fails)
+            let logoDataUri = '';
+            try {
+                const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
+                if (!logoAsset.localUri) {
+                    await logoAsset.downloadAsync();
+                }
+                const logoPath = logoAsset.localUri || logoAsset.uri;
+                const logoBase64 = await FileSystem.readAsStringAsync(logoPath, { encoding: 'base64' });
+                logoDataUri = `data:image/png;base64,${logoBase64}`;
+            } catch (logoError) {
+                console.warn('Logo load failed:', logoError?.message || logoError);
             }
-            const logoPath = logoAsset.localUri || logoAsset.uri;
-            const logoBase64 = await FileSystem.readAsStringAsync(logoPath, { encoding: 'base64' });
-            const logoDataUri = `data:image/png;base64,${logoBase64}`;
 
             const htmlContent = `
                 <html>
@@ -209,7 +219,7 @@ export default function UserTransactions() {
                             <div style="position:relative; z-index:2;">
                             <div class="header">
                                 <div class="header-left">
-                                    <img class="logo" src="${logoDataUri}" />
+                                    ${logoDataUri ? `<img class="logo" src="${logoDataUri}" />` : ''}
                                     <div>
                                         <div class="company-name">M&RC Travel and Tours</div>
                                         <div class="company-details">
@@ -307,12 +317,38 @@ export default function UserTransactions() {
             `;
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
-            // Rename the PDF to use the reference code
-            const fileName = `Receipt-${selectedTransaction.reference}.pdf`;
+            const safeReference = sanitizeFileName(selectedTransaction.reference || 'receipt');
+            const fileName = `Receipt-${safeReference}.pdf`;
+
+            if (Platform.OS === 'android') {
+                const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                if (permissions.granted) {
+                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+                    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+                        permissions.directoryUri,
+                        fileName,
+                        'application/pdf'
+                    );
+                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+                    Alert.alert('Receipt Saved', fileName);
+                    return;
+                }
+            }
+
             const newPath = `${FileSystem.documentDirectory}${fileName}`;
             await FileSystem.copyAsync({ from: uri, to: newPath });
 
-            await Sharing.shareAsync(newPath, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
+            const canShare = await Sharing.isAvailableAsync();
+            if (!canShare) {
+                Alert.alert('Receipt Ready', `Saved as ${fileName}`);
+                return;
+            }
+
+            await Sharing.shareAsync(newPath, {
+                UTI: 'com.adobe.pdf',
+                mimeType: 'application/pdf',
+                dialogTitle: fileName,
+            });
         } catch (error) {
             console.error("PDF Error:", error);
             Alert.alert("Error", "Failed to download receipt.");
