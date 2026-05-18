@@ -23,14 +23,14 @@ const PasswordResetStyle = StyleSheet.create({
         textAlign: "center"
     },
     label: {
-        fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontSize: 16,
+        fontFamily: "Roboto_400Regular",
         color: "#305797",
-        marginLeft: 20,
-        marginBottom: 4
+        marginLeft: 25,
+        marginBottom: 5
     },
     input: {
-        fontSize: 16,
+        fontSize: 18,
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
@@ -40,6 +40,7 @@ const PasswordResetStyle = StyleSheet.create({
         width: 350,
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
+        fontFamily: "Roboto_400Regular",
         color: "#000"
     },
     inputErrorBorder: {
@@ -48,11 +49,12 @@ const PasswordResetStyle = StyleSheet.create({
     },
 
     errorContainer: {
-        height: 10,
+        height: 30,
     },
     fieldError: {
         color: "#ff1616",
-        fontSize: 14,
+        fontFamily: "Roboto_400Regular",
+        fontSize: 16,
         marginLeft: 25,
         marginBottom: 0,
         marginTop: 3,
@@ -110,7 +112,7 @@ const PasswordResetStyle = StyleSheet.create({
     bottomLogo: {
         width: 140,
         height: 80,
-        marginTop: 250,
+        marginTop: 255,
         marginBottom: 20,
         alignSelf: 'center',
     },

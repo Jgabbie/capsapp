@@ -35,8 +35,9 @@ const LoginStyle = StyleSheet.create({
     loginLabel: {
         fontSize: 16,
         color: "#305797",
-        marginBottom: 4,
+        marginBottom: 5,
         alignSelf: 'flex-start',
+        fontFamily: "Roboto_400Regular",
     },
     loginInputs: {
         fontSize: 18,
@@ -47,6 +48,7 @@ const LoginStyle = StyleSheet.create({
         width: '100%',
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
+        fontFamily: "Roboto_400Regular",
         color: "#000"
     },
     //  ADD THIS: The red border style for errors
@@ -140,22 +142,23 @@ const LoginStyle = StyleSheet.create({
     },
     //  NEW STYLES ADDED 
     errorContainer: {
-        height: 10,
+        height: 30,
         width: width * 0.85,
         maxWidth: 400,
         justifyContent: 'center',
+        marginBottom: 10,
     },
     errorText: {
         color: '#ef4444',
-        fontSize: 14,
+        fontSize: 16,
         textAlign: 'left',
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Roboto_400Regular',
     },
     //  RENAMED AND ADJUSTED FOR THE BOTTOM
     bottomLogo: {
         width: 140,
         height: 80,
-        marginTop: 135,
+        marginTop: 130,
         marginBottom: 20,
         alignSelf: 'center',
     },
