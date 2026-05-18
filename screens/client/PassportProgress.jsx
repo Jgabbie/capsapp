@@ -539,18 +539,27 @@ export default function PassportApplication() {
         { key: 'govId', label: 'Government-issued ID' },
     ];
 
+    const buildFullName = (user) => {
+        if (!user) return null;
+        const first = user.firstname || user.firstName || user.givenName || '';
+        const lastn = user.lastname || user.lastName || user.surname || '';
+        const full = [first, lastn].map(s => (s || '').trim()).filter(Boolean).join(' ');
+        return full || (user.username ? String(user.username).trim() : null);
+    };
+
     // Get the most recent staff/admin who changed the status (if available)
-    const getManagerName = (app) => {
+    const getManagerRef = (app) => {
         try {
-            if (!app) return null;
+            if (!app) return { id: null, name: null };
             const history = app.statusHistory;
             if (Array.isArray(history) && history.length > 0) {
-                const applicantId = String(app.userId?._id || app.userId || '');
+                const applicantId = String(app.userId?._id || app.userId || '').trim();
                 const applicantName = String(app.username || '').trim().toLowerCase();
 
                 for (let i = history.length - 1; i >= 0; i -= 1) {
                     const entry = history[i];
-                    const changedById = String(entry?.changedBy?._id || entry?.changedBy || '');
+                    const changedByValue = entry?.changedBy;
+                    const changedById = String(changedByValue?._id || changedByValue || '').trim();
                     const changedByName = String(entry?.changedByName || '').trim();
 
                     if (applicantId && changedById && changedById === applicantId) {
@@ -561,29 +570,72 @@ export default function PassportApplication() {
                         continue;
                     }
 
-                    if (entry?.changedBy && typeof entry.changedBy === 'object') {
-                        const first = entry.changedBy.firstname || entry.changedBy.username || '';
-                        const lastn = entry.changedBy.lastname || '';
-                        const full = [first, lastn].map(s => (s || '').trim()).filter(Boolean).join(' ');
-                        if (full) return full;
+                    if (changedByValue && typeof changedByValue === 'object') {
+                        const full = buildFullName(changedByValue);
+                        if (full) return { id: changedById || null, name: full };
+                        if (changedByValue.name) return { id: changedById || null, name: String(changedByValue.name).trim() };
+                        if (changedById) return { id: changedById, name: null };
                     }
 
-                    if (changedByName) return changedByName;
-                    if (entry?.changedBy && typeof entry.changedBy === 'string') return entry.changedBy;
+                    if (changedById) return { id: changedById, name: null };
+                    if (changedByName) return { id: null, name: changedByName };
                 }
 
-                return null;
+                return { id: null, name: null };
             }
-            return null;
+            return { id: null, name: null };
         } catch (e) {
-            return null;
+            return { id: null, name: null };
         }
     };
 
+    const managerRef = useMemo(() => getManagerRef(application), [application]);
+    const managerRefId = managerRef?.id || null;
+    const managerRefName = managerRef?.name || null;
+    const [managerLookup, setManagerLookup] = useState({ id: null, name: null });
+
+    useEffect(() => {
+        let isActive = true;
+
+        const fetchManagerName = async () => {
+            if (!managerRefId || managerRefName) {
+                setManagerLookup({ id: managerRefId || null, name: null });
+                return;
+            }
+
+            if (managerLookup.id === managerRefId && managerLookup.name) {
+                return;
+            }
+
+            try {
+                const res = await api.get(`/users/${managerRefId}`);
+                const userData = res?.data?.user;
+                const fullName = buildFullName(userData);
+                if (isActive) {
+                    setManagerLookup({ id: managerRefId, name: fullName || null });
+                }
+            } catch (error) {
+                if (isActive) {
+                    setManagerLookup({ id: managerRefId, name: null });
+                }
+            }
+        };
+
+        fetchManagerName();
+
+        return () => {
+            isActive = false;
+        };
+    }, [managerRefId, managerRefName, managerLookup.id, managerLookup.name]);
+
+    const managerName = managerRefName || managerLookup.name || null;
     const currentStatusSetDate = getStatusSetDate(application);
     const statusSetDate = currentStatusSetDate; // alias for compatibility with other components
     const appStatus = (application?.status || '').toString();
-    const hasSuggestedAppointmentScheduleChosen = Boolean(application?.suggestedAppointmentScheduleChosen);
+    const hasSuggestedAppointmentScheduleChosen = Boolean(
+        String(application?.suggestedAppointmentScheduleChosen?.date || '').trim() ||
+        String(application?.suggestedAppointmentScheduleChosen?.time || '').trim()
+    );
     const passportApplicationFee = 2000;
     const deadlineDays = application?.statusDeadlineDays ?? statusDeadlineDaysMap[application?.status] ?? null;
     let statusDeadlineDate = application?.statusDeadlineDate
@@ -1256,7 +1308,7 @@ export default function PassportApplication() {
 
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Managed By</Text>
-                        <Text style={PassportProgressStyle.infoValue}>{application.managedBy || 'N/A'}</Text>
+                        <Text style={PassportProgressStyle.infoValue}>{managerName || 'N/A'}</Text>
                     </View>
 
                     <View style={PassportProgressStyle.infoRow}>
@@ -1671,11 +1723,11 @@ export default function PassportApplication() {
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
-                        {appointmentOptions.length > 0 ? (
+                        {application?.suggestedAppointmentSchedules.length > 0 ? (
                             <>
                                 <Text style={{ color: '#6b7280', marginBottom: 15, fontSize: 13 }}>Please select a date and time for your DFA appointment.</Text>
 
-                                {appointmentOptions.map((slot, index) => (
+                                {application?.suggestedAppointmentSchedules.map((slot, index) => (
                                     (() => {
                                         const normalizedSlot = normalizeScheduleSlot(slot);
                                         return (

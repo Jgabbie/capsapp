@@ -887,3 +887,25 @@ export const getPassportApplications = async (req, res) => {
     return res.status(500).json({ message: "Error retrieving passport applications", error: error.message });
   }
 };
+
+export const getPassportApplicationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await PassportModel.findById(id)
+      .populate('statusHistory.changedBy', 'username firstname lastname')
+      .populate('userId', 'username firstname lastname');
+    if (!application) {
+      return res.status(404).json({ message: "Passport application not found" });
+    }
+
+    // Optionally, populate documents if you have a documents field
+    await processPassportDeadlineAction(application).catch((error) => {
+      console.error('Failed to process passport deadline warning:', error);
+    });
+
+    res.status(200).json(decoratePassportApplication(application));
+  } catch (error) {
+    console.error("Error fetching passport application by id:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

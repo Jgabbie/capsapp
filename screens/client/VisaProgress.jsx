@@ -178,6 +178,10 @@ export default function VisaProgress() {
         : (application?.status || application?.statusText || '');
     const appStatus = statusText || '';
     const normalizedAppStatus = String(appStatus || '').toLowerCase();
+    const hasChosenSuggestedSchedule = Boolean(
+        String(application?.suggestedAppointmentScheduleChosen?.date || '').trim() ||
+        String(application?.suggestedAppointmentScheduleChosen?.time || '').trim()
+    );
 
     // keep steps derived from process to support legacy variable `steps`
     useEffect(() => {
@@ -193,7 +197,7 @@ export default function VisaProgress() {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
 
-
+    console.log('Selected schedule index:', application?.suggestedAppointmentSchedules);
 
     const handleCustomDateChange = (event, date) => {
         setShowCustomDatePicker(false);
@@ -2025,7 +2029,8 @@ export default function VisaProgress() {
                     </View>
                 )}
 
-                {normalizedAppStatus === 'application submitted' && !application?.suggestedAppointmentScheduleChosen && (
+
+                {normalizedAppStatus === 'application submitted' && !hasChosenSuggestedSchedule && Array.isArray(application?.suggestedAppointmentSchedules) && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Suggested Appointment Options</Text>
 
@@ -2120,6 +2125,7 @@ export default function VisaProgress() {
                         )}
                     </View>
                 )}
+
 
                 {/* Progress Tracker Card */}
                 <View style={VisaProgressStyle.card}>
