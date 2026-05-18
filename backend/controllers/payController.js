@@ -990,6 +990,8 @@ export const createCheckoutSession = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100;
+
         const payload = {
             data: {
                 attributes: {
@@ -998,7 +1000,7 @@ export const createCheckoutSession = async (req, res) => {
                         email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
@@ -1077,6 +1079,8 @@ export const createCheckoutSessionDeliveryFee = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100;
+
         const payload = {
             data: {
                 attributes: {
@@ -1085,8 +1089,8 @@ export const createCheckoutSessionDeliveryFee = async (req, res) => {
                         email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
+                        //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: actualPayload.successUrl || successUrl,
@@ -1169,6 +1173,8 @@ export const createCheckoutSessionPassportPenalty = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100; // ₱1.00 for testing
+
         const payload = {
             data: {
                 attributes: {
@@ -1177,8 +1183,8 @@ export const createCheckoutSessionPassportPenalty = async (req, res) => {
                         email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
+                        //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: actualPayload.successUrl || successUrl,
@@ -1260,6 +1266,8 @@ export const createCheckoutSessionVisaPenalty = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100;
+
         const payload = {
             data: {
                 attributes: {
@@ -1268,8 +1276,8 @@ export const createCheckoutSessionVisaPenalty = async (req, res) => {
                         email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
+                        //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: actualPayload.successUrl || successUrl,
@@ -1358,6 +1366,8 @@ export const createCheckoutSessionPassport = async (req, res) => {
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100;
+
         const payload = {
             data: {
                 attributes: {
@@ -1366,8 +1376,8 @@ export const createCheckoutSessionPassport = async (req, res) => {
                         email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
-                        { name: pkgName, quantity: 1, amount: baseAmountCents, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
+                        //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: actualPayload.successUrl || successUrl,
@@ -1537,6 +1547,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
         const username = await User.findById(userId).select('username');
         const email = await User.findById(userId).select('email');
 
+        const testAmount = 100; // ₱1.00 for testing
+
 
         //currently not being used
         const metadata = {
@@ -1562,16 +1574,16 @@ export const createCheckoutSessionDeposit = async (req, res) => {
                         {
                             name: packageName || 'Tour Package',
                             quantity: 1,
-                            amount: baseAmountCents,
+                            amount: testAmount, // Use test amount for testing
                             currency: "PHP",
                         },
-                        {
-                            name: "Convenience Fee",
-                            description: "Payment processing and service fee",
-                            quantity: 1,
-                            amount: convenienceFeeCents,
-                            currency: "PHP",
-                        }
+                        // {
+                        //     name: "Convenience Fee",
+                        //     description: "Payment processing and service fee",
+                        //     quantity: 1,
+                        //     amount: convenienceFeeCents,
+                        //     currency: "PHP",
+                        // }
                     ],
                     payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                     success_url: successUrl,
@@ -1654,6 +1666,8 @@ export const createCheckoutSessionQuotation = async (req, res) => {
         const convenienceFeeCents = Math.round(baseAmountCents * 0.035 + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
 
+        const testAmount = 100; // ₱1.00 for testing
+
         const metadata = {
             userId: tokenDoc.userId,
             bookingId: booking._id,
@@ -1679,16 +1693,16 @@ export const createCheckoutSessionQuotation = async (req, res) => {
                             {
                                 name: packageName || 'Tour Package',
                                 quantity: 1,
-                                amount: baseAmountCents,
+                                amount: testAmount,
                                 currency: "PHP",
                             },
-                            {
-                                name: "Convenience Fee",
-                                description: "Payment processing and service fee",
-                                quantity: 1,
-                                amount: convenienceFeeCents,
-                                currency: "PHP",
-                            }
+                            // {
+                            //     name: "Convenience Fee",
+                            //     description: "Payment processing and service fee",
+                            //     quantity: 1,
+                            //     amount: convenienceFeeCents,
+                            //     currency: "PHP",
+                            // }
                         ],
                         payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
                         success_url: successUrl,
