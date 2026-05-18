@@ -57,14 +57,6 @@ const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink)
                     Verify Account
                 </a>
 
-                ${webVerifyLink ? `
-                <p style="color:#64748b; font-size:12px; margin-top:18px;">
-                    If the button does not open the app, copy and paste this link into your browser:
-                    <br />
-                    <a href="${webVerifyLink}" style="color:#305797; word-break:break-all;">${webVerifyLink}</a>
-                </p>
-                ` : ""}
-
                 <p style="color:#777; font-size:13px; margin-top:30px;">
                     If you did not create this account, please ignore this email.
                 </p>
