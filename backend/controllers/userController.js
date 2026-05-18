@@ -7,7 +7,10 @@ import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const getBackendBaseUrl = () => String(process.env.BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
-const getFrontendLoginUrl = () => String(process.env.FRONTEND_URL || "http://localhost:3000/login").replace(/\/$/, "");
+const getFrontendLoginUrl = () => {
+    const fallback = process.env.FRONTEND_LOGIN_URL || process.env.FRONTEND_URL || process.env.WEB_URL || process.env.CLIENT_URL || "";
+    return String(fallback).replace(/\/$/, "");
+};
 const normalizeRole = (value) => String(value || "").trim().toLowerCase();
 const canonicalRole = (value) => {
     const normalized = normalizeRole(value);
@@ -16,7 +19,7 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
-const generateVerificationEmailTemplate = (username, webVerifyLink) => {
+const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
     return `
         <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
             <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
@@ -39,7 +42,7 @@ const generateVerificationEmailTemplate = (username, webVerifyLink) => {
                     Kindly click the button below to verify your email address and activate your account.
                 </p>
 
-                <a href="${webVerifyLink}"
+                <a href="${appDeepLink}"
                     style="
                         display:inline-block;
                         margin-top:25px;
@@ -123,7 +126,7 @@ const createVerificationLink = async (user) => {
         from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
         to: user.email,
         subject: 'Welcome to M&RC Travel and Tours',
-        html: generateVerificationEmailTemplate(user.username, webVerifyLink)
+        html: generateVerificationEmailTemplate(user.username, appDeepLink, webVerifyLink)
     };
 
     await transporter.sendMail(mailOptions);
@@ -141,9 +144,7 @@ const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUr
             <p>${message}</p>
             <script>
                 window.location.href = "travex://login";
-                setTimeout(() => {
-                    window.location.href = ${JSON.stringify(fallbackUrl)};
-                }, 2500);
+                ${fallbackUrl ? `setTimeout(() => {\n                    window.location.href = ${JSON.stringify(fallbackUrl)};\n                }, 2500);` : ""}
             </script>
         </body>
     </html>

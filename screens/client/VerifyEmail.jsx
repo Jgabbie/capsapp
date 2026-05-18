@@ -10,27 +10,27 @@ export default function VerifyEmail() {
 
     const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'failed'
     const [message, setMessage] = useState('Verifying your account...');
+    const [debugInfo, setDebugInfo] = useState('');
 
     useEffect(() => {
         let isMounted = true;
-        const doVerify = async () => {
+
+        const parseUrlParams = (url) => {
+            if (!url) return { token: null, email: null };
+            const parsed = Linking.parse(url);
+            return {
+                token: parsed.queryParams?.token || null,
+                email: parsed.queryParams?.email || null,
+            };
+        };
+
+        const doVerify = async (token, email) => {
             try {
-                let token = route.params?.token;
-                let email = route.params?.email;
-
-                if (!token || !email) {
-                    const url = await Linking.getInitialURL();
-                    if (url) {
-                        const parsed = Linking.parse(url);
-                        token = token || parsed.queryParams?.token;
-                        email = email || parsed.queryParams?.email;
-                    }
-                }
-
                 if (!token || !email) {
                     if (!isMounted) return;
                     setStatus('failed');
                     setMessage('Invalid verification link.');
+                    setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
                     return;
                 }
 
@@ -45,18 +45,45 @@ export default function VerifyEmail() {
                 } else {
                     const text = await resp.text();
                     setStatus('failed');
-                    setMessage('Verification failed.');
-                    console.warn('verifyEmail response:', resp.status, text);
+                    setMessage(`Verification failed (${resp.status}).`);
+                    setDebugInfo(`API_BASE_URL: ${API_BASE_URL}\nResponse: ${text || 'No response body'}`);
                 }
             } catch (err) {
                 if (!isMounted) return;
                 setStatus('failed');
                 setMessage(err.message || 'Verification error');
+                setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
             }
         };
 
-        doVerify();
-        return () => { isMounted = false; };
+        const run = async () => {
+            let token = route.params?.token;
+            let email = route.params?.email;
+
+            if (!token || !email) {
+                const initialUrl = await Linking.getInitialURL();
+                const parsed = parseUrlParams(initialUrl);
+                token = token || parsed.token;
+                email = email || parsed.email;
+            }
+
+            await doVerify(token, email);
+        };
+
+        const handleUrl = (event) => {
+            const parsed = parseUrlParams(event.url);
+            if (parsed.token && parsed.email) {
+                doVerify(parsed.token, parsed.email);
+            }
+        };
+
+        const subscription = Linking.addEventListener('url', handleUrl);
+        run();
+
+        return () => {
+            isMounted = false;
+            subscription.remove();
+        };
     }, [navigation, route]);
 
     return (
@@ -80,6 +107,7 @@ export default function VerifyEmail() {
                 <>
                     <Text style={styles.failed}>Verification failed</Text>
                     <Text style={styles.message}>{message}</Text>
+                    {debugInfo ? <Text style={styles.debug}>{debugInfo}</Text> : null}
                 </>
             )}
         </View>
@@ -114,5 +142,11 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: '#b91c1c',
         fontWeight: '800'
+    },
+    debug: {
+        marginTop: 10,
+        color: '#94a3b8',
+        textAlign: 'center',
+        fontSize: 12
     }
 });
