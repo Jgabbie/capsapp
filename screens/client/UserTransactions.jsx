@@ -549,15 +549,6 @@ export default function UserTransactions() {
                                     style={UserTransactionStyle.proofImage}
                                     resizeMode="contain"
                                 />
-                                <View style={{ width: '100%', marginTop: 15 }}>
-                                    <TouchableOpacity
-                                        style={{ backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                                        onPress={handleDownloadProof}
-                                    >
-                                        <Ionicons name="download-outline" size={18} color="#fff" />
-                                        <Text style={{ color: '#fff', fontFamily: "Montserrat_600SemiBold", fontSize: 13 }}>Download Image</Text>
-                                    </TouchableOpacity>
-                                </View>
                             </>
                         ) : (
                             <Text>No image available</Text>
@@ -692,10 +683,6 @@ export default function UserTransactions() {
                                                     <Text style={UserTransactionStyle.receiptTotalLabel}>Total Due</Text>
                                                     <Text style={UserTransactionStyle.receiptTotalValue}>{formatCurrency(selectedTransaction.amount)}</Text>
                                                 </View>
-                                                <TouchableOpacity style={UserTransactionStyle.receiptDownloadButton} onPress={handleDownloadReceipt}>
-                                                    <Ionicons name="download-outline" size={14} color="#fff" />
-                                                    <Text style={{ color: '#fff', fontFamily: "Montserrat_600SemiBold", fontSize: 11 }}>Download Receipt</Text>
-                                                </TouchableOpacity>
                                             </View>
                                         </View>
                                     </View>

@@ -674,7 +674,7 @@ export default function BookingInvoice({ route, navigation }) {
                 await logoAsset.downloadAsync();
                 const logoUri = logoAsset.localUri || logoAsset.uri;
                 const logoBase64 = logoUri
-                    ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType.Base64 })
+                    ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType?.Base64 || 'base64' })
                     : '';
                 logoDataUri = logoBase64 ? `data:image/png;base64,${logoBase64}` : '';
             } catch (logoError) {
@@ -963,23 +963,20 @@ export default function BookingInvoice({ route, navigation }) {
             const safeReference = sanitizeFileName(reference || 'booking');
             const fileName = `Booking-Registration-${safeReference}.pdf`;
 
-            if (Platform.OS === 'android') {
+            if (Platform.OS === 'android' && FileSystem.StorageAccessFramework?.requestDirectoryPermissionsAsync) {
                 const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
                 if (permissions.granted) {
-                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType?.Base64 || 'base64' });
                     const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
                         permissions.directoryUri,
                         fileName,
                         'application/pdf'
                     );
-                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType?.Base64 || 'base64' });
                     Alert.alert('Registration Saved', fileName);
                     return;
                 }
             }
-
-            const newPath = `${FileSystem.documentDirectory}${fileName}`;
-            await FileSystem.copyAsync({ from: uri, to: newPath });
 
             const canShare = await Sharing.isAvailableAsync();
             if (!canShare) {
@@ -987,7 +984,7 @@ export default function BookingInvoice({ route, navigation }) {
                 return;
             }
 
-            await Sharing.shareAsync(newPath, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
+            await Sharing.shareAsync(uri, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
 
         } catch (error) {
             Alert.alert("Error", "Could not generate PDF. Please try again.");
