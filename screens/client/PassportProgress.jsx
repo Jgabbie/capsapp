@@ -237,9 +237,8 @@ export default function PassportApplication() {
             setShowCustomDatePicker(false);
             setShowCustomTimePicker(false);
 
-            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
-            const refreshed = allApps.data.find(app => app._id === id);
-            setApplication(refreshed);
+            const refreshed = await api.get(`/passport/applications/${id}`, withUserHeader(user._id));
+            setApplication(refreshed.data);
             setShowAppointmentSuccessModal(true);
             setIsDateSelectedModalOpen(true);
         } catch (err) {
@@ -257,10 +256,9 @@ export default function PassportApplication() {
         const fetchApplication = async () => {
             setLoading(true);
             try {
-                const res = await api.get('/passport/applications', withUserHeader(user._id));
-                const appData = res.data.find(app => app._id === id);
-                if (!appData) throw new Error('Application not found');
-                setApplication(appData);
+                const res = await api.get(`/passport/applications/${id}`, withUserHeader(user._id));
+                if (!res?.data) throw new Error('Application not found');
+                setApplication(res.data);
             } catch (err) {
                 Alert.alert('Error', 'Failed to load passport application details');
                 console.error(err);
@@ -554,19 +552,13 @@ export default function PassportApplication() {
             const history = app.statusHistory;
             if (Array.isArray(history) && history.length > 0) {
                 const applicantId = String(app.userId?._id || app.userId || '').trim();
-                const applicantName = String(app.username || '').trim().toLowerCase();
 
                 for (let i = history.length - 1; i >= 0; i -= 1) {
                     const entry = history[i];
                     const changedByValue = entry?.changedBy;
                     const changedById = String(changedByValue?._id || changedByValue || '').trim();
-                    const changedByName = String(entry?.changedByName || '').trim();
 
                     if (applicantId && changedById && changedById === applicantId) {
-                        continue;
-                    }
-
-                    if (changedByName && applicantName && changedByName.toLowerCase() === applicantName) {
                         continue;
                     }
 
@@ -578,7 +570,6 @@ export default function PassportApplication() {
                     }
 
                     if (changedById) return { id: changedById, name: null };
-                    if (changedByName) return { id: null, name: changedByName };
                 }
 
                 return { id: null, name: null };
@@ -608,7 +599,7 @@ export default function PassportApplication() {
             }
 
             try {
-                const res = await api.get(`/users/${managerRefId}`);
+                const res = await api.get(`/users/${managerRefId}`, withUserHeader(user?._id));
                 const userData = res?.data?.user;
                 const fullName = buildFullName(userData);
                 if (isActive) {
@@ -626,7 +617,7 @@ export default function PassportApplication() {
         return () => {
             isActive = false;
         };
-    }, [managerRefId, managerRefName, managerLookup.id, managerLookup.name]);
+    }, [managerRefId, managerRefName, managerLookup.id, managerLookup.name, user?._id]);
 
     const managerName = managerRefName || managerLookup.name || null;
     const currentStatusSetDate = getStatusSetDate(application);
@@ -1091,9 +1082,8 @@ export default function PassportApplication() {
             setApplicationFormList([]);
             setGovIdList([]);
 
-            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
-            const refreshed = allApps.data.find(app => app._id === id);
-            setApplication(refreshed);
+            const refreshed = await api.get(`/passport/applications/${id}`, withUserHeader(user._id));
+            setApplication(refreshed.data);
 
             setSelectedFiles({});
             setBirthCertList([]);
@@ -1153,9 +1143,8 @@ export default function PassportApplication() {
             setSelectedDate(dateToSend);
             setSelectedTime(timeToSend);
 
-            const allApps = await api.get('/passport/applications', withUserHeader(user._id));
-            const refreshed = allApps.data.find(app => app._id === id);
-            setApplication(refreshed);
+            const refreshed = await api.get(`/passport/applications/${id}`, withUserHeader(user._id));
+            setApplication(refreshed.data);
             setShowAppointmentSuccessModal(true);
             setIsDateSelectedModalOpen(true);
         } catch (error) {
