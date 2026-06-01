@@ -674,9 +674,7 @@ export const applyPassport = async (req, res) => {
       status: "Application Submitted",
     });
 
-    if (typeof logAction === 'function') {
-      logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
-    }
+    logAction('PASSPORT_APPLICATION_SUBMITTED', userId, { "Application Number": application.applicationNumber });
 
     // Populate initial processSteps and persist them on the application document.
     try {
@@ -731,9 +729,13 @@ export const chooseAppointment = async (req, res) => {
       console.error('Failed to rebuild/persist processSteps after chooseAppointment:', e);
     }
 
-    if (typeof logAction === 'function') {
-      logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
-    }
+
+    logAction('PASSPORT_APPOINTMENT_CHOSEN', req.userId, {
+      "Passport Application Updated": `Application Number: ${application.applicationNumber}`,
+      "Date": date,
+      "Time": time
+    });
+
 
     return res.status(200).json({
       message: "Preferred schedule updated successfully",
@@ -784,9 +786,7 @@ export const updatePassportApplicationWithDocs = async (req, res) => {
 
     await application.save();
 
-    if (typeof logAction === 'function') {
-      logAction('PASSPORT_DOCUMENTS_UPLOADED', req.userId, { Application: application._id });
-    }
+    logAction('PASSPORT_DOCUMENTS_UPLOADED', userId, { "Documents Uploaded": `Application Number: ${application.applicationNumber}` });
 
     // Rebuild processSteps since status changed
     try {

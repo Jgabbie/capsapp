@@ -30,9 +30,9 @@ export const createTransaction = async (req, res) => {
             status,
             packageName: packageName || "Custom Package",
         });
-        if (typeof logAction === 'function') {
-            logAction('TRANSACTION_CREATED', userId, { transactionId: transaction._id });
-        }
+
+        logAction('TRANSACTION_CREATED', userId, { transactionId: transaction._id });
+
         return res.status(201).json(transaction);
     } catch (error) {
         console.error("Create Transaction Error:", error);
@@ -108,9 +108,9 @@ export const updateTransaction = async (req, res) => {
         if (!updatedTransaction) {
             return res.status(404).json({ message: "Transaction not found" });
         }
-        if (typeof logAction === 'function') {
-            logAction('TRANSACTION_UPDATED', req.userId, { transactionId: id, status });
-        }
+
+        logAction('TRANSACTION_UPDATED', req.userId, { transactionId: id, status });
+
         return res.status(200).json(updatedTransaction);
     } catch (error) {
         return res.status(500).json({ message: "Failed to update transaction", error: error.message });
@@ -129,6 +129,7 @@ export const deleteTransaction = async (req, res) => {
         }
         return res.status(200).json({ message: "Transaction deleted successfully" });
     } catch (error) {
+        logAction('TRANSACTION_DELETION_FAILED', req.userId, { transactionId: id, error: error.message });
         return res.status(500).json({ message: "Failed to delete transaction", error: error.message });
     }
 };

@@ -641,9 +641,8 @@ export const createManualPayment = async (req, res) => {
             console.error('Failed to send booking email:', emailError);
         }
 
-        if (typeof logAction === 'function') {
-            logAction('CREATE_MANUAL_PAYMENT', userId, { "Payment Uploaded": `Amount: ₱${amount} for Booking: ${bookingRef} ` });
-        }
+        logAction('CREATE_MANUAL_PAYMENT', userId, { "Payment Uploaded": `Amount: ₱${amount} for Booking: ${bookingRef} ` });
+
 
         return res.status(201).json({
             message: 'Manual payment submitted successfully',

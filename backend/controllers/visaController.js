@@ -824,9 +824,9 @@ export const applyVisa = async (req, res) => {
       console.error('Failed to build/persist visa processSteps:', processStepsError);
     }
 
-    if (typeof logAction === 'function') {
-      logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
-    }
+
+    logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
+
 
     return res.status(201).json(newApplication);
   } catch (error) {
@@ -897,6 +897,13 @@ export const chooseAppointment = async (req, res) => {
 
     await application.save();
 
+    logAction('VISA_APPOINTMENT_CHOSEN', req.userId, {
+      "Visa Application Updated": `Application Number: ${application.applicationNumber}`,
+      "Date": date,
+      "Time": time
+    });
+
+
     // Rebuild processSteps since preferredDate changed (affects deadlines)
     try {
       const serviceDoc = await ServiceModel.findById(application.serviceId).select('visaProcessSteps');
@@ -953,9 +960,9 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
 
     await application.save();
 
-    if (typeof logAction === 'function') {
-      logAction('UPDATE_VISA_APPLICATION', userId, { "Visa Application Updated": `Application Number: ${application.applicationNumber}` });
-    }
+
+    logAction('VISA_DOCUMENTS_UPLOADED', userId, { "Documents Uploaded": `Application Number: ${application.applicationNumber}` });
+
 
     res.status(200).json({
       message: "Visa application updated successfully",

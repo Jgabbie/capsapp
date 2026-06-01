@@ -19,9 +19,8 @@ export const savePreferrences = async (req, res) => {
         );
 
         //  LOG ACTION: Track preference updates
-        if (typeof logAction === 'function') {
-            logAction('UPDATE_PREFERENCES', userId, { "Preferences": "User updated their travel moodboard" });
-        }
+        logAction('UPDATE_PREFERENCES', userId, { "Preferences": "User updated their travel moodboard" });
+
 
         // Trigger AI model retraining after preference updates
         scheduleRetrain('preferences-updated');
