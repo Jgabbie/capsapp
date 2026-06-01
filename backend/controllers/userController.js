@@ -88,7 +88,7 @@ const generateOTPEmailTemplate = (otp, type) => {
         bodyHtml: `
             <div style="margin:18px 0 22px; text-align:center;">
                 <div style="display:inline-block; background:#f8fafc; border:1px solid #dbe4f0; border-radius:16px; padding:22px 26px; min-width:260px; text-align:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.7);">
-                    <div style="font-size:34px; font-weight:800; letter-spacing:10px; color:#b91c1c; font-family:Arial, sans-serif;">${otp}</div>
+                    <div style="font-size:34px; font-weight:800; letter-spacing:10px; color:#992A46; font-family:Arial, sans-serif;">${otp}</div>
                 </div>
             </div>
             <p style="color:#475569; font-size:14px; margin:0 0 14px; text-align:center;">This OTP expires in <strong>1 minute</strong>.</p>

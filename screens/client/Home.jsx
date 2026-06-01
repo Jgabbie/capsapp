@@ -28,7 +28,7 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     return (
         // 🔥 FIX 4: Changed this from TouchableOpacity to a standard View. The card itself is no longer clickable!
         <View style={HomeStyle.bannerCard}>
-            
+
             <Image
                 source={imageSource}
                 style={HomeStyle.bannerImage}
@@ -55,12 +55,12 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
             )}
 
             <View style={HomeStyle.bannerFooter}>
-                
+
                 <View style={HomeStyle.titleBanner}>
-                    <Image 
-                        source={require('../../assets/images/destination_icon.png')} 
-                        style={HomeStyle.locationIcon} 
-                        contentFit="contain" 
+                    <Image
+                        source={require('../../assets/images/destination_icon.png')}
+                        style={HomeStyle.locationIcon}
+                        contentFit="contain"
                     />
                     <Text style={HomeStyle.bannerTitle} numberOfLines={2}>
                         {item.packageName}
@@ -76,7 +76,7 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
                 <TouchableOpacity style={HomeStyle.viewPackageBtn} onPress={onPress} activeOpacity={0.6}>
                     <Text style={HomeStyle.viewPackageText}>View Package</Text>
                 </TouchableOpacity>
-                
+
             </View>
         </View>
     )
@@ -253,7 +253,7 @@ export default function Home({ route }) {
                     console.log("Failed to fetch recommendations on refresh:", error.message);
                 }
             }
-            
+
             await fetchPopularPackages();
         } catch (error) {
             console.log("Failed to refresh packages:", error.message);
@@ -358,7 +358,7 @@ export default function Home({ route }) {
         const fetchRecommendations = async () => {
             try {
                 setForYouLoading(true)
-                    const response = await api.get('/recommendations', withUserHeader(user._id))
+                const response = await api.get('/recommendations', withUserHeader(user._id))
                 if (response.data?.packages) {
                     setForYouPackages(response.data.packages)
                 } else {
@@ -371,7 +371,7 @@ export default function Home({ route }) {
                 setForYouLoading(false)
             }
         }
-        
+
         if (user?._id) {
             fetchRecommendations()
         }
@@ -594,7 +594,6 @@ export default function Home({ route }) {
                         <Text style={HomeStyle.mainTitle}>
                             M&RC <Text style={HomeStyle.mainTitleAccent}>Travel and Tours</Text>
                         </Text>
-                        <Text style={HomeStyle.byTravex}>by travex</Text>
                     </View>
                     <ImageBackground
                         source={require('../../assets/images/LandingPage_Banner.png')}

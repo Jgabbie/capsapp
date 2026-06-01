@@ -777,8 +777,12 @@ export const processVisaDeadlineAction = async (application) => {
 
 
 
-const generateApplicationNumber = () =>
-  `APP-VISA-${Math.floor(100000000 + Math.random() * 900000000)}`;
+const generateApplicationNumber = () => {
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `APP-VISA-${timestamp}${random}`
+}
+
 
 export const applyVisa = async (req, res) => {
   const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
@@ -904,10 +908,6 @@ export const chooseAppointment = async (req, res) => {
       console.error('Failed to rebuild/persist processSteps after chooseAppointment:', e);
     }
 
-    if (typeof logAction === 'function') {
-      logAction('VISA_APPOINTMENT_CHOSEN', req.userId, { Application: application._id, date, time });
-    }
-
     return res.status(200).json({
       message: "Preferred schedule updated successfully",
       application
@@ -954,7 +954,7 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
     await application.save();
 
     if (typeof logAction === 'function') {
-      logAction('UPDATE_VISA_APPLICATION', userId, { "Application Number": application.applicationNumber });
+      logAction('UPDATE_VISA_APPLICATION', userId, { "Visa Application Updated": `Application Number: ${application.applicationNumber}` });
     }
 
     res.status(200).json({

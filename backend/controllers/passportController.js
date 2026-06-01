@@ -643,8 +643,11 @@ export const sendPassportDeadlineWarning = async (application) => {
 
 
 
-const randomApplicationNumber = () =>
-  `APP-PASS-${Math.floor(100000000 + Math.random() * 900000000)}`;
+const generateApplicationNumber = () => {
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `APP-PASS-${timestamp}${random}`;
+};
 
 export const applyPassport = async (req, res) => {
   try {
@@ -667,7 +670,7 @@ export const applyPassport = async (req, res) => {
       preferredDate,
       preferredTime,
       applicationType,
-      applicationNumber: randomApplicationNumber(),
+      applicationNumber: generateApplicationNumber(),
       status: "Application Submitted",
     });
 

@@ -16,6 +16,12 @@ const generateBookingReference = () => {
     return `BK-${timestamp}${random}`;
 };
 
+const generateCancellationReference = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `CN-${timestamp}${random}`;
+}
+
 export const createBooking = async (req, res) => {
     // Extracting from root request body
     // Handle both Web format (direct fields) and Mobile format (nested in bookingPayload)
@@ -52,7 +58,9 @@ export const createBooking = async (req, res) => {
             expiresAt: dayjs().add(2, 'minutes').toDate()
         });
 
-        logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageId });
+        const packageName = findbyId(Package, packageId)?.packageName || 'Unknown Package';
+
+        logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageName });
         return res.status(201).json({ booking });
     } catch (error) {
         console.error("Create Booking Error:", error);
@@ -244,7 +252,7 @@ export const cancelBooking = async (req, res) => {
             bookingId: booking._id,
             packageId: booking.packageId,
             userId: userId,
-            reference: `CN-${Math.floor(100000000 + Math.random() * 900000000)}`,
+            reference: generateCancellationReference(),
             cancellationReason: reason,
             cancellationComments: comments || '',
             cancellationDate: new Date(),
