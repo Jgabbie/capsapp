@@ -15,9 +15,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-console.log("=====================================");
-console.log("🚀 AXIOS TARGET URL:", API_BASE_URL);
-console.log("=====================================");
+console.log("AXIOS TARGET URL:", API_BASE_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -26,7 +24,7 @@ export const api = axios.create({
 
 export const withUserHeader = (userId) => ({
   headers: {
-    "x-user-id": String(userId), // Must match middleware!
+    "x-user-id": String(userId), // Must match middleware
   },
 });
 
