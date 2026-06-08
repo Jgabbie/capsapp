@@ -26,7 +26,6 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     const discountPercent = Number(item.packageDiscountPercent || 0)
 
     return (
-        // 🔥 FIX 4: Changed this from TouchableOpacity to a standard View. The card itself is no longer clickable!
         <View style={HomeStyle.bannerCard}>
 
             <Image
@@ -72,7 +71,6 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
                     {subText || item.packageDescription}
                 </Text>
 
-                {/* 🔥 FIX 4: Wrapped "View Package" in TouchableOpacity so ONLY THIS acts as the button */}
                 <TouchableOpacity style={HomeStyle.viewPackageBtn} onPress={onPress} activeOpacity={0.6}>
                     <Text style={HomeStyle.viewPackageText}>View Package</Text>
                 </TouchableOpacity>
@@ -630,36 +628,44 @@ export default function Home({ route }) {
                     </ImageBackground>
 
                     {loading ? (
-                        <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
+                        <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20, marginBottom: 20 }} />
                     ) : (
                         <>
                             <View style={HomeStyle.forYouTitleBar}>
                                 <Text style={HomeStyle.forYouTitleText}>FOR YOU</Text>
                             </View>
-                            <Text style={HomeStyle.forYouNote}>These are the recommended packages based on your preferences.</Text>
-                            {forYouPackages.length > 0 && (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
-                                >
-                                    {forYouPackages.map((pkg) => (
-                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
-                                            <BannerCard
-                                                item={pkg}
-                                                isWishlisted={wishlistedIds.has(String(pkg._id))}
-                                                onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
-                                            />
-                                        </View>
-                                    ))}
-                                </ScrollView>
+                            {forYouLoading ? (
+                                <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20, marginBottom: 20 }} />
+                            ) : (
+                                <>
+                                    <Text style={HomeStyle.forYouNote}>These are the recommended packages based on your preferences.</Text>
+                                    {forYouPackages.length > 0 && (
+                                        <ScrollView
+                                            horizontal
+                                            showsHorizontalScrollIndicator={false}
+                                            contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                                        >
+                                            {forYouPackages.map((pkg) => (
+                                                <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
+                                                    <BannerCard
+                                                        item={pkg}
+                                                        isWishlisted={wishlistedIds.has(String(pkg._id))}
+                                                        onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
+                                                    />
+                                                </View>
+                                            ))}
+                                        </ScrollView>
+                                    )}
+                                </>
                             )}
+
+
 
                             <View style={HomeStyle.popularPackagesTitleBar}>
                                 <Text style={HomeStyle.popularPackagesTitleText}>Popular Packages</Text>
                             </View>
                             {popularLoading ? (
-                                <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20 }} />
+                                <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20, marginBottom: 20 }} />
                             ) : (
                                 <ScrollView
                                     horizontal

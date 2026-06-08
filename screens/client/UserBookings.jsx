@@ -250,35 +250,50 @@ export default function UserBookings() {
                 <Text style={UserBookingsStyle.subtitle}>Track your latest reservations and payment status.</Text>
 
                 <View style={UserBookingsStyle.searchRow}>
-                    <View style={UserBookingsStyle.searchBar}>
-                        <Ionicons name="search" size={16} color="#777" />
-                        <TextInput
-                            style={UserBookingsStyle.searchInput}
-                            placeholder='Search reference, package or status...'
-                            value={searchText}
-                            onChangeText={setSearchText}
-                        />
+                    <View style={{ flex: 1 }}>
+                        <Text style={UserBookingsStyle.filterLabel}>Search</Text>
+                        <View style={UserBookingsStyle.searchBar}>
+                            <Ionicons name="search" size={16} color="#777" />
+                            <TextInput
+                                style={UserBookingsStyle.searchInput}
+                                placeholder='Search reference, package or status...'
+                                placeholderTextColor="#777"
+                                value={searchText}
+                                onChangeText={setSearchText}
+                            />
+                        </View>
                     </View>
 
+
                     <View style={UserBookingsStyle.filterRow}>
-                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setStatusModalOpen(true)}>
-                            <Text style={UserBookingsStyle.dropdownText}>{statusFilter === 'All' ? 'Status' : statusFilter}</Text>
-                            <Ionicons name="chevron-down" size={12} color="#305797" />
-                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserBookingsStyle.filterLabel}>Status</Text>
+                            <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setStatusModalOpen(true)}>
+                                <Text style={UserBookingsStyle.dropdownText}>{statusFilter === 'All' ? 'Status' : statusFilter}</Text>
+                                <Ionicons name="chevron-down" size={12} color="#305797" />
+                            </TouchableOpacity>
+                        </View>
 
-                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setBookingDateOpen(true)}>
-                            <Text style={UserBookingsStyle.dropdownText}>
-                                {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM D') : 'Booking Date'}
-                            </Text>
-                            <Ionicons name="calendar-outline" size={12} color="#305797" />
-                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserBookingsStyle.filterLabel}>Booking Date</Text>
+                            <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setBookingDateOpen(true)}>
+                                <Text style={UserBookingsStyle.dropdownText}>
+                                    {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM D') : 'Booking Date'}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={12} color="#305797" />
+                            </TouchableOpacity>
+                        </View>
 
-                        <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setTravelDateOpen(true)}>
-                            <Text style={UserBookingsStyle.dropdownText}>
-                                {travelDateFilter ? dayjs(travelDateFilter).format('MMM D') : 'Travel Date'}
-                            </Text>
-                            <Ionicons name="airplane-outline" size={12} color="#305797" />
-                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserBookingsStyle.filterLabel}>Travel Date</Text>
+                            <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setTravelDateOpen(true)}>
+                                <Text style={UserBookingsStyle.dropdownText}>
+                                    {travelDateFilter ? dayjs(travelDateFilter).format('MMM D') : 'Travel Date'}
+                                </Text>
+                                <Ionicons name="airplane-outline" size={12} color="#305797" />
+                            </TouchableOpacity>
+                        </View>
+
 
                         {(statusFilter !== 'All' || bookingDateFilter || travelDateFilter) && (
                             <TouchableOpacity onPress={() => { setStatusFilter('All'); setBookingDateFilter(null); setTravelDateFilter(null); }}>

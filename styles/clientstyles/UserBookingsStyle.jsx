@@ -44,8 +44,16 @@ const UserBookingsStyle = StyleSheet.create({
     },
     filterRow: {
         flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
         alignItems: "center",
         gap: 10,
+    },
+    filterLabel: {
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#1e293b",
     },
     dropdownButton: {
         flex: 1,
@@ -58,6 +66,7 @@ const UserBookingsStyle = StyleSheet.create({
         borderColor: "#d9d9d9",
         height: 40,
         paddingHorizontal: 12,
+        gap: 5,
     },
     dropdownText: {
         fontFamily: "Roboto_400Regular",

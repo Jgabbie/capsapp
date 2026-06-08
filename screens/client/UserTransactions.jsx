@@ -385,29 +385,42 @@ export default function UserTransactions() {
                 <Text style={UserTransactionStyle.subtitle}>View your payment history and receipts.</Text>
 
                 <View style={UserTransactionStyle.searchRow}>
-                    <View style={UserTransactionStyle.searchBar}>
-                        <Ionicons name="search" size={16} color="#777" />
-                        <TextInput
-                            style={UserTransactionStyle.searchInput}
-                            placeholder='Search reference or package...'
-                            placeholderTextColor="#999"
-                            value={searchText}
-                            onChangeText={setSearchText}
-                        />
+
+                    <View style={{ flex: 1 }}>
+                        <Text style={UserTransactionStyle.filterLabel}>Search</Text>
+                        <View style={UserTransactionStyle.searchBar}>
+                            <Ionicons name="search" size={16} color="#777" />
+                            <TextInput
+                                style={UserTransactionStyle.searchInput}
+                                placeholder='Search reference or package...'
+                                placeholderTextColor="#777"
+                                value={searchText}
+                                onChangeText={setSearchText}
+                            />
+                        </View>
                     </View>
 
-                    <View style={UserTransactionStyle.dropdownGroup}>
-                        <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setStatusModalVisible(true)}>
-                            <Text style={UserTransactionStyle.dropdownText}>{statusFilter}</Text>
-                            <Ionicons name="chevron-down" size={12} color="#305797" />
-                        </TouchableOpacity>
 
-                        <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setShowDatePicker(true)}>
-                            <Text style={UserTransactionStyle.dropdownText}>
-                                {dateFilter ? dayjs(dateFilter).format('MMM D, YYYY') : 'Date'}
-                            </Text>
-                            <Ionicons name="calendar-outline" size={12} color="#305797" />
-                        </TouchableOpacity>
+                    <View style={UserTransactionStyle.dropdownGroup}>
+
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserTransactionStyle.filterLabel}>Status</Text>
+                            <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setStatusModalVisible(true)}>
+                                <Text style={UserTransactionStyle.dropdownText}>{statusFilter}</Text>
+                                <Ionicons name="chevron-down" size={12} color="#305797" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserTransactionStyle.filterLabel}>Date</Text>
+                            <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setShowDatePicker(true)}>
+                                <Text style={UserTransactionStyle.dropdownText}>
+                                    {dateFilter ? dayjs(dateFilter).format('MMM D, YYYY') : 'Date'}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={12} color="#305797" />
+                            </TouchableOpacity>
+                        </View>
+
 
                         {(statusFilter !== 'Status' || dateFilter) && (
                             <TouchableOpacity onPress={() => { setStatusFilter('Status'); setDateFilter(null); }} style={{ justifyContent: 'center', paddingHorizontal: 5 }}>
@@ -417,90 +430,92 @@ export default function UserTransactions() {
                     </View>
                 </View>
 
-                {loading ? (
-                    <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
-                ) : filteredTransactions.length === 0 ? (
-                    <View style={UserTransactionStyle.emptyContainer}>
-                        <Image source={require('../../assets/images/empty_logo.png')} style={UserTransactionStyle.emptyImage} />
-                        <Text style={UserTransactionStyle.emptyText}>No Transactions found</Text>
-                    </View>
-                ) : (
-                    filteredTransactions.map((item) => {
-                        const statusStyle = getStatusStyle(item.status);
-                        const pName = getTransactionItemLabel(item);
-                        const itemType = getItemType(item);
-                        const cardTitle = itemType;
-                        const allowReceiptView = canViewReceipt(item.status);
+                {
+                    loading ? (
+                        <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />
+                    ) : filteredTransactions.length === 0 ? (
+                        <View style={UserTransactionStyle.emptyContainer}>
+                            <Image source={require('../../assets/images/empty_logo.png')} style={UserTransactionStyle.emptyImage} />
+                            <Text style={UserTransactionStyle.emptyText}>No Transactions found</Text>
+                        </View>
+                    ) : (
+                        filteredTransactions.map((item) => {
+                            const statusStyle = getStatusStyle(item.status);
+                            const pName = getTransactionItemLabel(item);
+                            const itemType = getItemType(item);
+                            const cardTitle = itemType;
+                            const allowReceiptView = canViewReceipt(item.status);
 
-                        return (
-                            <View key={item._id} style={UserTransactionStyle.transactionCard}>
-                                <View style={UserTransactionStyle.cardHeader}>
-                                    <Text style={UserTransactionStyle.transactionRef}>{item.reference}</Text>
-                                    <View style={[UserTransactionStyle.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                                        <Text style={[UserTransactionStyle.transactionStatus, { color: statusStyle.text }]}>
-                                            {item.status || 'Successful'}
-                                        </Text>
+                            return (
+                                <View key={item._id} style={UserTransactionStyle.transactionCard}>
+                                    <View style={UserTransactionStyle.cardHeader}>
+                                        <Text style={UserTransactionStyle.transactionRef}>{item.reference}</Text>
+                                        <View style={[UserTransactionStyle.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                                            <Text style={[UserTransactionStyle.transactionStatus, { color: statusStyle.text }]}>
+                                                {item.status || 'Successful'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={UserTransactionStyle.cardBody}>
+                                        <Text style={UserTransactionStyle.packageName} numberOfLines={1}>{cardTitle}</Text>
+                                        <View style={UserTransactionStyle.detailRow}>
+                                            <Text style={UserTransactionStyle.detailLabel}>Items:</Text>
+                                            <Text style={UserTransactionStyle.detailValue}>{pName}</Text>
+                                        </View>
+                                        <View style={UserTransactionStyle.detailRow}>
+                                            {/*  FIXED LABEL: Date -> Date and Time  */}
+                                            <Text style={UserTransactionStyle.detailLabel}>Date and Time:</Text>
+                                            <Text style={UserTransactionStyle.detailValue}>{dayjs(item.createdAt).format('MMM D, YYYY h:mm A')}</Text>
+                                        </View>
+                                        <View style={UserTransactionStyle.detailRow}>
+                                            {/*  FIXED LABEL: Method -> Payment Method  */}
+                                            <Text style={UserTransactionStyle.detailLabel}>Payment Method:</Text>
+                                            <Text style={UserTransactionStyle.detailValue}>{item.method || 'N/A'}</Text>
+                                        </View>
+                                        <View style={UserTransactionStyle.detailRow}>
+                                            <Text style={UserTransactionStyle.detailLabel}>Amount:</Text>
+                                            <Text style={UserTransactionStyle.amount}>{formatCurrency(item.amount)}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={UserTransactionStyle.actionButtonsRow}>
+                                        {allowReceiptView ? (
+                                            <TouchableOpacity
+                                                style={UserTransactionStyle.viewButton}
+                                                onPress={() => {
+                                                    setSelectedTransaction(item);
+                                                    setReceiptModalVisible(true);
+                                                }}
+                                            >
+                                                <Ionicons name="receipt-outline" size={14} color="#fff" />
+                                                <Text style={UserTransactionStyle.buttonText}>View</Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+
+                                        {item.method?.toLowerCase() === 'manual' && (
+                                            <TouchableOpacity
+                                                style={UserTransactionStyle.viewProofButton}
+                                                onPress={() => {
+                                                    if (!item.proofImage) {
+                                                        Alert.alert("No Proof", "No proof image available for this transaction.");
+                                                        return;
+                                                    }
+                                                    setSelectedTransaction(item);
+                                                    setProofModalVisible(true);
+                                                }}
+                                            >
+                                                <Ionicons name="image-outline" size={14} color="#fff" />
+                                                <Text style={UserTransactionStyle.buttonText}>View Proof</Text>
+                                            </TouchableOpacity>
+                                        )}
                                     </View>
                                 </View>
-
-                                <View style={UserTransactionStyle.cardBody}>
-                                    <Text style={UserTransactionStyle.packageName} numberOfLines={1}>{cardTitle}</Text>
-                                    <View style={UserTransactionStyle.detailRow}>
-                                        <Text style={UserTransactionStyle.detailLabel}>Items:</Text>
-                                        <Text style={UserTransactionStyle.detailValue}>{pName}</Text>
-                                    </View>
-                                    <View style={UserTransactionStyle.detailRow}>
-                                        {/*  FIXED LABEL: Date -> Date and Time  */}
-                                        <Text style={UserTransactionStyle.detailLabel}>Date and Time:</Text>
-                                        <Text style={UserTransactionStyle.detailValue}>{dayjs(item.createdAt).format('MMM D, YYYY h:mm A')}</Text>
-                                    </View>
-                                    <View style={UserTransactionStyle.detailRow}>
-                                        {/*  FIXED LABEL: Method -> Payment Method  */}
-                                        <Text style={UserTransactionStyle.detailLabel}>Payment Method:</Text>
-                                        <Text style={UserTransactionStyle.detailValue}>{item.method || 'N/A'}</Text>
-                                    </View>
-                                    <View style={UserTransactionStyle.detailRow}>
-                                        <Text style={UserTransactionStyle.detailLabel}>Amount:</Text>
-                                        <Text style={UserTransactionStyle.amount}>{formatCurrency(item.amount)}</Text>
-                                    </View>
-                                </View>
-
-                                <View style={UserTransactionStyle.actionButtonsRow}>
-                                    {allowReceiptView ? (
-                                        <TouchableOpacity
-                                            style={UserTransactionStyle.viewButton}
-                                            onPress={() => {
-                                                setSelectedTransaction(item);
-                                                setReceiptModalVisible(true);
-                                            }}
-                                        >
-                                            <Ionicons name="receipt-outline" size={14} color="#fff" />
-                                            <Text style={UserTransactionStyle.buttonText}>View</Text>
-                                        </TouchableOpacity>
-                                    ) : null}
-
-                                    {item.method?.toLowerCase() === 'manual' && (
-                                        <TouchableOpacity
-                                            style={UserTransactionStyle.viewProofButton}
-                                            onPress={() => {
-                                                if (!item.proofImage) {
-                                                    Alert.alert("No Proof", "No proof image available for this transaction.");
-                                                    return;
-                                                }
-                                                setSelectedTransaction(item);
-                                                setProofModalVisible(true);
-                                            }}
-                                        >
-                                            <Ionicons name="image-outline" size={14} color="#fff" />
-                                            <Text style={UserTransactionStyle.buttonText}>View Proof</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            </View>
-                        )
-                    })
-                )}
-            </ScrollView>
+                            )
+                        })
+                    )
+                }
+            </ScrollView >
 
             <Modal transparent visible={isStatusModalVisible} animationType="fade">
                 <TouchableOpacity style={UserTransactionStyle.receiptModalOverlay} onPress={() => setStatusModalVisible(false)} activeOpacity={1}>
@@ -523,14 +538,16 @@ export default function UserTransactions() {
                 </TouchableOpacity>
             </Modal>
 
-            {showDatePicker && (
-                <DateTimePicker
-                    value={dateFilter || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={handleDateChange}
-                />
-            )}
+            {
+                showDatePicker && (
+                    <DateTimePicker
+                        value={dateFilter || new Date()}
+                        mode="date"
+                        display="default"
+                        onChange={handleDateChange}
+                    />
+                )
+            }
 
             <Modal visible={isProofModalVisible} animationType="fade" transparent={true}>
                 <View style={UserTransactionStyle.receiptModalOverlay}>
@@ -693,6 +710,6 @@ export default function UserTransactions() {
                 </View>
             </Modal>
 
-        </View>
+        </View >
     )
 }

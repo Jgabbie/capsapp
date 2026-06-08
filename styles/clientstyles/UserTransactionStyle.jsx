@@ -29,6 +29,11 @@ export default StyleSheet.create({
         marginBottom: 24,
         gap: 12,
     },
+    filterLabel: {
+        fontSize: 12,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#1e293b",
+    },
     searchBar: {
         flexDirection: "row",
         alignItems: "center",

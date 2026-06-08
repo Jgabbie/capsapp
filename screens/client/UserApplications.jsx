@@ -133,42 +133,55 @@ export default function UserApplications() {
                     <Text style={UserApplicationsStyle.subtitle}>Track your ongoing visa and passport applications.</Text>
 
                     <View style={UserApplicationsStyle.filterSection}>
-                        <View style={UserApplicationsStyle.searchContainer}>
-                            <Ionicons name="search" size={18} color="#9ca3af" />
-                            <TextInput
-                                style={UserApplicationsStyle.searchInput}
-                                placeholder="Search applications..."
-                                placeholderTextColor="#9ca3af"
-                                value={searchText}
-                                onChangeText={setSearchText}
-                            />
-                            {searchText !== '' && (
-                                <TouchableOpacity onPress={() => setSearchText('')}>
-                                    <Ionicons name="close-circle" size={18} color="#d1d5db" />
-                                </TouchableOpacity>
-                            )}
+
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserApplicationsStyle.filterLabel}>Search</Text>
+                            <View style={UserApplicationsStyle.searchContainer}>
+                                <Ionicons name="search" size={18} color="#9ca3af" />
+                                <TextInput
+                                    style={UserApplicationsStyle.searchInput}
+                                    placeholder="Search applications..."
+                                    placeholderTextColor="#9ca3af"
+                                    value={searchText}
+                                    onChangeText={setSearchText}
+                                />
+                                {searchText !== '' && (
+                                    <TouchableOpacity onPress={() => setSearchText('')}>
+                                        <Ionicons name="close-circle" size={18} color="#d1d5db" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
-                        <View style={UserApplicationsStyle.dropdownGroup}>
-                            <TouchableOpacity
-                                style={UserApplicationsStyle.dropdownButton}
-                                onPress={() => setShowStatusModal(true)}
-                            >
-                                <Text style={UserApplicationsStyle.dropdownText}>
-                                    {statusFilter === 'All' ? 'Status' : statusFilter}
-                                </Text>
-                                <Ionicons name="chevron-down" size={12} color="#9ca3af" />
-                            </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={UserApplicationsStyle.dropdownButton}
-                                onPress={() => setShowDateModal(true)}
-                            >
-                                <Text style={UserApplicationsStyle.dropdownText}>
-                                    {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'Application Date'}
-                                </Text>
-                                <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
-                            </TouchableOpacity>
+                        <View style={UserApplicationsStyle.dropdownGroup}>
+
+                            <View style={{ flex: 1 }}>
+                                <Text style={UserApplicationsStyle.filterLabel}>Status</Text>
+                                <TouchableOpacity
+                                    style={UserApplicationsStyle.dropdownButton}
+                                    onPress={() => setShowStatusModal(true)}
+                                >
+                                    <Text style={UserApplicationsStyle.dropdownText}>
+                                        {statusFilter === 'All' ? 'Status' : statusFilter}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={12} color="#9ca3af" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={{ flex: 1 }}>
+                                <Text style={UserApplicationsStyle.filterLabel}>Date</Text>
+                                <TouchableOpacity
+                                    style={UserApplicationsStyle.dropdownButton}
+                                    onPress={() => setShowDateModal(true)}
+                                >
+                                    <Text style={UserApplicationsStyle.dropdownText}>
+                                        {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'Application Date'}
+                                    </Text>
+                                    <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
+                                </TouchableOpacity>
+                            </View>
+
 
                             {(statusFilter !== 'Status' && statusFilter !== 'All') || applicationDateFilter ? (
                                 <TouchableOpacity

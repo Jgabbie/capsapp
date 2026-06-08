@@ -115,9 +115,12 @@ const WishlistStyle = StyleSheet.create({
         color: "#1e293b",
     },
     foundText: {
+        backgroundColor: "#305797",
         fontSize: 12,
-        color: "#94a3b8",
-        fontFamily: "Roboto_400Regular"
+        fontWeight: "600",
+        color: "#fff",
+        borderRadius: 15,
+        padding: 10,
     },
 
     // --- CARD (Matches Web) ---

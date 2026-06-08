@@ -2,7 +2,7 @@ import { StyleSheet, Platform, Dimensions } from "react-native";
 
 const { width } = Dimensions.get('window');
 
-const UserPackageQuotationStyle = StyleSheet.create({
+export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f7fa", // Web-like background
@@ -30,6 +30,11 @@ const UserPackageQuotationStyle = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     width: '100%'
+  },
+  filterLabel: {
+    fontSize: 12,
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#1e293b",
   },
   searchBar: {
     flexDirection: "row",
@@ -252,5 +257,3 @@ const UserPackageQuotationStyle = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
   },
 });
-
-export default UserPackageQuotationStyle;

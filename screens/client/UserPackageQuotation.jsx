@@ -20,7 +20,7 @@ import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
-import styles from "../../styles/clientstyles/UserPackageQuotationStyle";
+import UserPackageQuotationStyle from "../../styles/clientstyles/UserPackageQuotationStyle";
 
 export default function UserPackageQuotation() {
     const navigation = useNavigation();
@@ -146,67 +146,80 @@ export default function UserPackageQuotation() {
     const hasActiveFilters = (statusFilter !== "Status" && statusFilter !== "All") || bookingDateFilter;
 
     return (
-        <View style={styles.container}>
+        <View style={UserPackageQuotationStyle.container}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-                <Text style={styles.title}>My Quotation Requests</Text>
-                <Text style={styles.subtitle}>Review your customized package quotation requests.</Text>
+                <Text style={UserPackageQuotationStyle.title}>My Quotation Requests</Text>
+                <Text style={UserPackageQuotationStyle.subtitle}>Review your customized package quotation requests.</Text>
 
-                {/* --- WEB SYNCED FILTER ROW --- */}
-                <View style={styles.filterSection}>
-                    <View style={styles.searchBar}>
-                        <Ionicons name="search" size={16} color="#777" />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search reference, package or status..."
-                            placeholderTextColor="#999"
-                            value={searchText}
-                            onChangeText={setSearchText}
-                        />
-                        {searchText !== "" && (
-                            <TouchableOpacity onPress={() => setSearchText("")}>
-                                <Ionicons name="close-circle" size={16} color="#ccc" />
-                            </TouchableOpacity>
-                        )}
+                {/* --- FILTER ROW --- */}
+                <View style={UserPackageQuotationStyle.filterSection}>
+
+                    <View style={{ flex: 1 }}>
+                        <Text style={UserPackageQuotationStyle.filterLabel}>Status</Text>
+                        <View style={UserPackageQuotationStyle.searchBar}>
+                            <Ionicons name="search" size={16} color="#777" />
+                            <TextInput
+                                style={UserPackageQuotationStyle.searchInput}
+                                placeholder="Search reference, package or status..."
+                                placeholderTextColor="#999"
+                                value={searchText}
+                                onChangeText={setSearchText}
+                            />
+                            {searchText !== "" && (
+                                <TouchableOpacity onPress={() => setSearchText("")}>
+                                    <Ionicons name="close-circle" size={16} color="#ccc" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
 
-                    <View style={styles.filterRow}>
+
+                    <View style={UserPackageQuotationStyle.filterRow}>
 
                         {/* Status Filter */}
-                        <View style={styles.dropdownGroup}>
-                            <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowStatusModal(true)}>
-                                <Text style={[styles.dropdownText, statusFilter !== "Status" && styles.dropdownTextSelected]} numberOfLines={1}>
-                                    {statusFilter}
-                                </Text>
-                                <Ionicons name="chevron-down" size={14} color={statusFilter !== "Status" ? "#305797" : "#999"} style={styles.dropdownIcon} />
-                            </TouchableOpacity>
-                            {statusFilter !== "Status" && (
-                                <TouchableOpacity onPress={() => setStatusFilter("Status")} style={{ marginLeft: 6 }}>
-                                    <Ionicons name="close-circle" size={18} color="#999" />
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserPackageQuotationStyle.filterLabel}>Status</Text>
+                            <View style={UserPackageQuotationStyle.dropdownGroup}>
+                                <TouchableOpacity style={UserPackageQuotationStyle.dropdownButton} onPress={() => setShowStatusModal(true)}>
+                                    <Text style={[UserPackageQuotationStyle.dropdownText, statusFilter !== "Status" && UserPackageQuotationStyle.dropdownTextSelected]} numberOfLines={1}>
+                                        {statusFilter}
+                                    </Text>
+                                    <Ionicons name="chevron-down" size={14} color={statusFilter !== "Status" ? "#305797" : "#999"} style={UserPackageQuotationStyle.dropdownIcon} />
                                 </TouchableOpacity>
-                            )}
+                                {statusFilter !== "Status" && (
+                                    <TouchableOpacity onPress={() => setStatusFilter("Status")} style={{ marginLeft: 6 }}>
+                                        <Ionicons name="close-circle" size={18} color="#999" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
+
                         {/* Requested Date Filter */}
-                        <View style={styles.dropdownGroup}>
-                            <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowDateModal(true)}>
-                                <Text style={[styles.dropdownText, bookingDateFilter && styles.dropdownTextSelected]} numberOfLines={1}>
-                                    {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM DD, YYYY') : "Requested Date"}
-                                </Text>
-                                <Ionicons name="calendar-outline" size={14} color={bookingDateFilter ? "#305797" : "#999"} style={styles.dropdownIcon} />
-                            </TouchableOpacity>
-                            {bookingDateFilter && (
-                                <TouchableOpacity onPress={() => setBookingDateFilter(null)} style={{ marginLeft: 6 }}>
-                                    <Ionicons name="close-circle" size={18} color="#999" />
+                        <View style={{ flex: 1 }}>
+                            <Text style={UserPackageQuotationStyle.filterLabel}>Date</Text>
+                            <View style={UserPackageQuotationStyle.dropdownGroup}>
+                                <TouchableOpacity style={UserPackageQuotationStyle.dropdownButton} onPress={() => setShowDateModal(true)}>
+                                    <Text style={[UserPackageQuotationStyle.dropdownText, bookingDateFilter && UserPackageQuotationStyle.dropdownTextSelected]} numberOfLines={1}>
+                                        {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM DD, YYYY') : "Requested Date"}
+                                    </Text>
+                                    <Ionicons name="calendar-outline" size={14} color={bookingDateFilter ? "#305797" : "#999"} style={UserPackageQuotationStyle.dropdownIcon} />
                                 </TouchableOpacity>
-                            )}
+                                {bookingDateFilter && (
+                                    <TouchableOpacity onPress={() => setBookingDateFilter(null)} style={{ marginLeft: 6 }}>
+                                        <Ionicons name="close-circle" size={18} color="#999" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
+
 
                         {hasActiveFilters && (
                             <TouchableOpacity
-                                style={[styles.clearFilterBtn, { marginLeft: 8 }]}
+                                style={[UserPackageQuotationStyle.clearFilterBtn, { marginLeft: 8 }]}
                                 onPress={clearFilters}
                             >
                                 <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
@@ -227,42 +240,42 @@ export default function UserPackageQuotation() {
                         const pType = item.packageId?.packageType || item.quotationDetails?.packageType || item.travelDetails?.packageType || "DOMESTIC";
 
                         return (
-                            <View key={item._id} style={styles.quoteCard}>
-                                <View style={styles.cardHeader}>
-                                    <Text style={styles.quoteRef}>{item.reference}</Text>
-                                    <View style={[styles.statusBadge, { backgroundColor: sStyle.bg, borderColor: sStyle.border }]}>
-                                        <Text style={[styles.statusText, { color: sStyle.text }]}>
+                            <View key={item._id} style={UserPackageQuotationStyle.quoteCard}>
+                                <View style={UserPackageQuotationStyle.cardHeader}>
+                                    <Text style={UserPackageQuotationStyle.quoteRef}>{item.reference}</Text>
+                                    <View style={[UserPackageQuotationStyle.statusBadge, { backgroundColor: sStyle.bg, borderColor: sStyle.border }]}>
+                                        <Text style={[UserPackageQuotationStyle.statusText, { color: sStyle.text }]}>
                                             {item.status || 'Pending'}
                                         </Text>
                                     </View>
                                 </View>
 
-                                <View style={styles.cardBody}>
-                                    <Text style={styles.packageName} numberOfLines={1}>{pName}</Text>
+                                <View style={UserPackageQuotationStyle.cardBody}>
+                                    <Text style={UserPackageQuotationStyle.packageName} numberOfLines={1}>{pName}</Text>
 
                                     {/* ADDED PACKAGE TYPE */}
-                                    <View style={styles.detailRow}>
-                                        <Text style={styles.detailLabel}>Package Type:</Text>
-                                        <Text style={styles.detailValue}>{pType.toUpperCase()}</Text>
+                                    <View style={UserPackageQuotationStyle.detailRow}>
+                                        <Text style={UserPackageQuotationStyle.detailLabel}>Package Type:</Text>
+                                        <Text style={UserPackageQuotationStyle.detailValue}>{pType.toUpperCase()}</Text>
                                     </View>
 
-                                    <View style={styles.detailRow}>
-                                        <Text style={styles.detailLabel}>Travelers:</Text>
-                                        <Text style={styles.detailValue}>{calculateTotalTravelers(item)}</Text>
+                                    <View style={UserPackageQuotationStyle.detailRow}>
+                                        <Text style={UserPackageQuotationStyle.detailLabel}>Travelers:</Text>
+                                        <Text style={UserPackageQuotationStyle.detailValue}>{calculateTotalTravelers(item)}</Text>
                                     </View>
 
-                                    <View style={styles.detailRow}>
-                                        <Text style={styles.detailLabel}>Requested Date:</Text>
-                                        <Text style={styles.detailValue}>{getRequestedDateForItem(item)}</Text>
+                                    <View style={UserPackageQuotationStyle.detailRow}>
+                                        <Text style={UserPackageQuotationStyle.detailLabel}>Requested Date:</Text>
+                                        <Text style={UserPackageQuotationStyle.detailValue}>{getRequestedDateForItem(item)}</Text>
                                     </View>
                                 </View>
 
                                 <TouchableOpacity
-                                    style={styles.viewButton}
+                                    style={UserPackageQuotationStyle.viewButton}
                                     onPress={() => navigation.navigate("userquotationrequest", { id: item._id })}
                                 >
                                     <Ionicons name="eye-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                                    <Text style={styles.buttonText}>View Details</Text>
+                                    <Text style={UserPackageQuotationStyle.buttonText}>View Details</Text>
                                 </TouchableOpacity>
                             </View>
                         );
@@ -270,13 +283,13 @@ export default function UserPackageQuotation() {
                 )}
 
                 {!loading && filteredQuotations.length === 0 && (
-                    <View style={styles.emptyContainer}>
+                    <View style={UserPackageQuotationStyle.emptyContainer}>
                         <Image
                             source={require("../../assets/images/empty_logo.png")}
-                            style={styles.emptyImage}
+                            style={UserPackageQuotationStyle.emptyImage}
                             resizeMode="contain"
                         />
-                        <Text style={styles.emptyText}>No Data yet</Text>
+                        <Text style={UserPackageQuotationStyle.emptyText}>No Data yet</Text>
                     </View>
                 )}
                 <View style={{ height: 40 }} />
@@ -290,29 +303,29 @@ export default function UserPackageQuotation() {
                 onRequestClose={() => setShowStatusModal(false)}
             >
                 <TouchableOpacity
-                    style={styles.modalOverlay}
+                    style={UserPackageQuotationStyle.modalOverlay}
                     activeOpacity={1}
                     onPress={() => setShowStatusModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={styles.modalContainer}>
-                            <View style={styles.modalHeaderRow}>
-                                <Text style={styles.modalTitleText}>Select Status</Text>
+                        <View style={UserPackageQuotationStyle.modalContainer}>
+                            <View style={UserPackageQuotationStyle.modalHeaderRow}>
+                                <Text style={UserPackageQuotationStyle.modalTitleText}>Select Status</Text>
                                 <TouchableOpacity onPress={() => setShowStatusModal(false)}>
                                     <Ionicons name="close" size={22} color="#999" />
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={styles.tagContainer}>
+                            <View style={UserPackageQuotationStyle.tagContainer}>
                                 {statusOptions.map((status) => {
                                     const isSelected = status === statusFilter;
                                     return (
                                         <TouchableOpacity
                                             key={status}
                                             onPress={() => { setStatusFilter(status); setShowStatusModal(false); }}
-                                            style={[styles.modalStatusTag, isSelected && styles.modalStatusTagSelected]}
+                                            style={[UserPackageQuotationStyle.modalStatusTag, isSelected && UserPackageQuotationStyle.modalStatusTagSelected]}
                                         >
-                                            <Text style={[styles.modalStatusText, isSelected && styles.modalStatusTextSelected]}>{status}</Text>
+                                            <Text style={[UserPackageQuotationStyle.modalStatusText, isSelected && UserPackageQuotationStyle.modalStatusTextSelected]}>{status}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -324,11 +337,11 @@ export default function UserPackageQuotation() {
 
             {/* --- DATE PICKER MODAL --- */}
             <Modal visible={showDateModal} transparent animationType="fade">
-                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDateModal(false)}>
+                <TouchableOpacity style={UserPackageQuotationStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDateModal(false)}>
                     <TouchableWithoutFeedback>
-                        <View style={styles.modalContainer}>
-                            <View style={styles.modalHeaderRow}>
-                                <Text style={styles.modalTitleText}>Booking Date</Text>
+                        <View style={UserPackageQuotationStyle.modalContainer}>
+                            <View style={UserPackageQuotationStyle.modalHeaderRow}>
+                                <Text style={UserPackageQuotationStyle.modalTitleText}>Booking Date</Text>
                                 <TouchableOpacity onPress={() => setShowDateModal(false)}>
                                     <Ionicons name="close" size={22} color="#999" />
                                 </TouchableOpacity>
