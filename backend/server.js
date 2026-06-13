@@ -1,30 +1,57 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
-import connectDB from "./config/db.js";
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const { fileURLToPath } = require("url");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
 
-import userRoutes from "./routes/userRoutes.js";
-import bookingRoutes from "./routes/bookingRoutes.js";
-import quotationRoutes from "./routes/quotationRoutes.js";
-import payRoutes from "./routes/payRoutes.js";
-import transactionRoutes from "./routes/transactionRoutes.js";
-import packageRoutes from "./routes/packageRoutes.js";
-import wishlistRoutes from "./routes/wishlistRoutes.js";
-import passportRoutes from "./routes/passportRoutes.js";
-import visaRoutes from "./routes/visaRoutes.js";
-import visaServiceRoutes from "./routes/visaServiceRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
-import sendEmailRoutes from "./routes/sendEmailRoutes.js";
-import ratingRoutes from "./routes/ratingRoutes.js";
-import uploadRoutes from './routes/uploadRoutes.js';
-import chatbotRoutes from './routes/chatbotRoutes.js';
-import recommendationsRoutes from './routes/recommendationsRoutes.js';
 
-import logRoutes from "./routes/logRoutes.js";
+const userRoutes = require("./routes/userRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const quotationRoutes = require("./routes/quotationRoutes");
+const payRoutes = require("./routes/payRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");
+const packageRoutes = require("./routes/packageRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const passportRoutes = require("./routes/passportRoutes");
+const visaRoutes = require("./routes/visaRoutes");
+const visaServiceRoutes = require("./routes/visaServiceRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const sendEmailRoutes = require("./routes/sendEmailRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
+const uploadRoutes = require('./routes/uploadRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
+const recommendationsRoutes = require('./routes/recommendationsRoutes');
+const logRoutes = require("./routes/logRoutes");
+const preferenceRoutes = require("./routes/preferencesRoutes");
 
-import preferenceRoutes from "./routes/preferencesRoutes.js";
+
+// import express from "express";
+// import cors from "cors";
+// import path from "path";
+// import { fileURLToPath } from "url";
+// import dotenv from "dotenv";
+// import connectDB from "./config/db.js";
+
+
+// import userRoutes from "./routes/userRoutes.js";
+// import bookingRoutes from "./routes/bookingRoutes.js";
+// import quotationRoutes from "./routes/quotationRoutes.js";
+// import payRoutes from "./routes/payRoutes.js";
+// import transactionRoutes from "./routes/transactionRoutes.js";
+// import packageRoutes from "./routes/packageRoutes.js";
+// import wishlistRoutes from "./routes/wishlistRoutes.js";
+// import passportRoutes from "./routes/passportRoutes.js";
+// import visaRoutes from "./routes/visaRoutes.js";
+// import visaServiceRoutes from "./routes/visaServiceRoutes.js";
+// import notificationRoutes from "./routes/notificationRoutes.js";
+// import sendEmailRoutes from "./routes/sendEmailRoutes.js";
+// import ratingRoutes from "./routes/ratingRoutes.js";
+// import uploadRoutes from './routes/uploadRoutes.js';
+// import chatbotRoutes from './routes/chatbotRoutes.js';
+// import recommendationsRoutes from './routes/recommendationsRoutes.js';
+// import logRoutes from "./routes/logRoutes.js";
+// import preferenceRoutes from "./routes/preferencesRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

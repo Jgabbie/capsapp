@@ -1,15 +1,27 @@
-import mongoose from "mongoose";
-import Booking from "../models/booking.js";
-import Cancellation from "../models/cancellation.js";
-import Transaction from "../models/transaction.js";
-import Package from "../models/package.js";
-import User from "../models/users.js";
-import TokenCheckout from "../models/tokenCheckout.js";
-import NotificationModel from "../models/notification.js";
-import dayjs from "dayjs";
-import logAction from "../utils/logger.js";
+const mongoose = require("mongoose");
+const Booking = require("../models/booking");
+const Cancellation = require("../models/cancellation");
+const Transaction = require("../models/transaction");
+const Package = require("../models/package");
+const User = require("../models/users");
+const TokenCheckout = require("../models/tokenCheckout");
+const NotificationModel = require("../models/notification");
+const dayjs = require("dayjs");
+const logAction = require("../utils/logger");
 
-// Helper to generate unique reference numbers
+
+// import mongoose from "mongoose";
+// import Booking from "../models/booking.js";
+// import Cancellation from "../models/cancellation.js";
+// import Transaction from "../models/transaction.js";
+// import Package from "../models/package.js";
+// import User from "../models/users.js";
+// import TokenCheckout from "../models/tokenCheckout.js";
+// import NotificationModel from "../models/notification.js";
+// import dayjs from "dayjs";
+// import logAction from "../utils/logger.js";
+
+// generate unique reference numbers
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
@@ -22,7 +34,7 @@ const generateCancellationReference = () => {
     return `CN-${timestamp}${random}`;
 }
 
-export const createBooking = async (req, res) => {
+const createBooking = async (req, res) => {
     // Extracting from root request body
     // Handle both Web format (direct fields) and Mobile format (nested in bookingPayload)
     const rawBody = req.body.bookingPayload || req.body;
@@ -69,7 +81,7 @@ export const createBooking = async (req, res) => {
 };
 
 
-export const getUserBookings = async (req, res) => {
+const getUserBookings = async (req, res) => {
     try {
         const userObjectId = new mongoose.Types.ObjectId(req.userId);
         const bookings = await Booking.find({ userId: userObjectId })
@@ -83,7 +95,7 @@ export const getUserBookings = async (req, res) => {
     }
 };
 
-export const getBookingsTotalBaseOnMonth = async (req, res) => {
+const getBookingsTotalBaseOnMonth = async (req, res) => {
     try {
         const { reference } = req.query || {};
 
@@ -146,7 +158,7 @@ export const getBookingsTotalBaseOnMonth = async (req, res) => {
     }
 };
 
-export const getInvoiceNumber = async (req, res) => {
+const getInvoiceNumber = async (req, res) => {
     const { reference } = req.params;
 
     try {
@@ -212,7 +224,7 @@ export const getInvoiceNumber = async (req, res) => {
     }
 };
 
-export const getAllBookings = async (_req, res) => {
+const getAllBookings = async (_req, res) => {
     try {
         const bookings = await Booking.find()
             .populate("packageId")
@@ -226,7 +238,7 @@ export const getAllBookings = async (_req, res) => {
 };
 
 
-export const cancelBooking = async (req, res) => {
+const cancelBooking = async (req, res) => {
     const { reason, comments, imageProof } = req.body;
     const userId = req.userId;
 
@@ -270,7 +282,7 @@ export const cancelBooking = async (req, res) => {
 
 
 
-export const resubmitBookingDocuments = async (req, res) => {
+const resubmitBookingDocuments = async (req, res) => {
     const { id } = req.params
     const userId = req.userId
     const { passportFiles = [], photoFiles = [], visaFiles = [], travelers = [], travelerIndex } = req.body
@@ -351,7 +363,7 @@ export const resubmitBookingDocuments = async (req, res) => {
 
 
 
-export const getBookingByReference = async (req, res) => {
+const getBookingByReference = async (req, res) => {
     const userId = req.userId;
     const { reference } = req.params;
 
@@ -376,7 +388,7 @@ export const getBookingByReference = async (req, res) => {
     }
 };
 
-export const verifyTokenCheckout = async (req, res) => {
+const verifyTokenCheckout = async (req, res) => {
     try {
         const { token } = req.body;
         const tokenCheckout = await TokenCheckout.findOne({ token });
@@ -388,4 +400,16 @@ export const verifyTokenCheckout = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ valid: false, message: 'Error verifying token', error: error.message });
     }
+};
+
+module.exports = {
+    createBooking,
+    getUserBookings,
+    getBookingsTotalBaseOnMonth,
+    getInvoiceNumber,
+    getAllBookings,
+    cancelBooking,
+    resubmitBookingDocuments,
+    getBookingByReference,
+    verifyTokenCheckout
 };
