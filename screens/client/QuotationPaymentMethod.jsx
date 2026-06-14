@@ -300,14 +300,17 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
 
                 // Create checkout token for online payment
-                let paymentToken = null;
-                if (method === 'paymongo') {
-                    const tokenRes = await api.post('/payment/create-checkout-token', {
+                const tokenRes = await api.post(
+                    '/payment/create-checkout-token',
+                    {
                         totalPrice: safeAmount,
                         bookingId: newBookingId
-                    }, withUserHeader(user?._id));
-                    paymentToken = tokenRes.data?.token;
-                }
+                    },
+                    withUserHeader(user?._id)
+                );
+
+                const paymentToken = tokenRes.data?.token;
+
 
                 if (method === 'manual') {
                     const receiptFormData = new FormData();

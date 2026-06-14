@@ -316,10 +316,19 @@ export default function PaymentMethod({ route, navigation }) {
                 };
 
                 const bookingSaved = await api.post('/booking/create-booking', { bookingPayload: finalBookingPayload }, withUserHeader(user?._id));
-
                 const newBookingId = bookingSaved.data?.booking?._id || bookingSaved.data?.bookingId || bookingSaved.data?._id;
                 const bookingRef = bookingSaved.data?.booking?.reference || bookingSaved.data?.reference || 'PENDING';
-                const paymentToken = bookingSaved.data?.paymentToken;
+
+                const tokenRes = await api.post(
+                    '/payment/create-checkout-token',
+                    {
+                        totalPrice: finalAmountToPay,
+                        bookingId: newBookingId
+                    },
+                    withUserHeader(user?._id)
+                );
+
+                const paymentToken = tokenRes.data?.token;
 
                 if (method === 'manual') {
                     const receiptFormData = new FormData();
