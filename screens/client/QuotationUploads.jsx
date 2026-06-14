@@ -565,7 +565,7 @@ export default function QuotationUploads({ route, navigation }) {
                                             </TouchableOpacity>
                                         )}
                                         <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], photo: null, photoType: null, photoName: null } }))}>
-                                            <Text style={QuotationUploadsStyle.removeImageText}>{uploads[index]?.photoType === 'pdf' ? 'Remove' : 'Remove Image'}</Text>
+                                            <Text style={QuotationUploadsStyle.removeImageText}>Remove</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ) : null}

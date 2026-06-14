@@ -619,11 +619,25 @@ const DestinationStyles = StyleSheet.create({
     borderTopWidth: 0
   },
 
+  sectionPill: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#305797",
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginBottom: 12,
+    marginTop: 12,
+    gap: 6
+  },
+
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
-    color: "#305797",
-    marginBottom: 10
+    color: "#ffffff",
+    textAlign: "center",
   },
 
   tabItemRow: {

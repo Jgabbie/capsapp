@@ -754,7 +754,11 @@ export default function PackageDetails({ route, navigation }) {
                                                 </View>
                                             )}
 
-                                            <Text style={DestinationStyles.sectionTitle}>{day.toUpperCase()}</Text>
+                                            <View style={DestinationStyles.sectionPill}>
+                                                <Image source={require('../../assets/images/checklist-svgrepo-com.svg')} alt="Calendar Icon" style={{ width: 24, height: 24 }} />
+                                                <Text style={DestinationStyles.sectionTitle}>{day.toUpperCase()}</Text>
+                                            </View>
+
 
                                             {Array.isArray(items) ? items.map((item, j) => (
                                                 <View key={j} style={DestinationStyles.tabItemRow}>

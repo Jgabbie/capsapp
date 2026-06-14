@@ -559,7 +559,7 @@ export default function BookingUploads({ route, navigation }) {
                                             </TouchableOpacity>
                                         )}
                                         <TouchableOpacity onPress={() => setUploads(prev => ({ ...prev, [index]: { ...prev[index], photo: null, photoType: null, photoName: null } }))}>
-                                            <Text style={BookingUploadsStyle.removeImageText}>{uploads[index]?.photoType === 'pdf' ? 'Remove' : 'Remove Image'}</Text>
+                                            <Text style={BookingUploadsStyle.removeImageText}>Remove</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ) : null}
