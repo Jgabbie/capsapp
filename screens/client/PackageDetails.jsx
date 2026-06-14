@@ -98,6 +98,11 @@ export default function PackageDetails({ route, navigation }) {
     //  ADD THESE TWO NEW STATES:
     const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);
     const [isRecommendVisaModalOpen, setIsRecommendVisaModalOpen] = useState(false);
+
+    const [isPassportRequiredModalOpen, setIsPassportRequiredModalOpen] = useState(false);
+    const [isRecommendPassportModalOpen, setIsRecommendPassportModalOpen] = useState(false);
+
+
     //  ADD FILTER STATES:
     const [dateSearchQuery, setDateSearchQuery] = useState("");
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
@@ -290,11 +295,12 @@ export default function PackageDetails({ route, navigation }) {
         }
 
         //  NEW: Check if a Visa is required first!
-        if (fullPkg?.visaRequired) {
-            setIsVisaRequiredModalOpen(true);
+        if (fullPkg?.packageType === "international") {
+            setIsPassportRequiredModalOpen(true);
         } else {
             setIsArrangementModalOpen(true); // Normal flow
         }
+
     };
 
     const handleWishlistAdd = async () => {
@@ -905,6 +911,83 @@ export default function PackageDetails({ route, navigation }) {
                                 }}
                             >
                                 <Text style={DestinationStyles.visaButtonText}>Proceed to Visa Services</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/*  NEW: PASSPORT REQUIRED MODAL  */}
+            <Modal visible={isPassportRequiredModalOpen} transparent animationType="fade" onRequestClose={() => setIsPassportRequiredModalOpen(false)}>
+                <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <View style={DestinationStyles.visaModalCard}>
+                        <TouchableOpacity style={DestinationStyles.visaModalCloseBtn} onPress={() => setIsPassportRequiredModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+
+                        <Text style={DestinationStyles.visaModalTitle}>Passport Required</Text>
+                        <Text style={DestinationStyles.visaModalText}>
+                            This international package requires a passport. Do you already have a valid passport for this trip?
+                        </Text>
+
+                        <View style={DestinationStyles.visaButtonRow}>
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
+                                onPress={() => {
+                                    setIsPassportRequiredModalOpen(false);
+                                    setIsVisaRequiredModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Yes — I have a passport</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
+                                onPress={() => {
+                                    setIsPassportRequiredModalOpen(false);
+                                    setIsRecommendPassportModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>No — I need a passport</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+            {/*  NEW: WE RECOMMEND A PASSPORT MODAL  */}
+            <Modal visible={isRecommendPassportModalOpen} transparent animationType="fade" onRequestClose={() => setIsRecommendPassportModalOpen(false)}>
+                <View style={[DestinationStyles.modalOverlay, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <View style={DestinationStyles.visaModalCard}>
+                        <TouchableOpacity style={DestinationStyles.visaModalCloseBtn} onPress={() => setIsRecommendPassportModalOpen(false)}>
+                            <Ionicons name="close" size={24} color="#9ca3af" />
+                        </TouchableOpacity>
+
+                        <Text style={DestinationStyles.visaModalTitle}>We Recommend a Passport</Text>
+                        <Text style={DestinationStyles.visaModalText}>
+                            We highly recommend that you obtain a passport before booking this tour package to avoid issues during travel.
+                        </Text>
+
+                        <View style={DestinationStyles.visaButtonRow}>
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
+                                onPress={() => {
+                                    setIsRecommendPassportModalOpen(false);
+                                    setIsVisaRequiredModalOpen(true);
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Continue to Booking</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={DestinationStyles.visaPrimaryButton}
+                                onPress={() => {
+                                    setIsRecommendPassportModalOpen(false);
+                                    navigation.navigate("passportguidance");
+                                }}
+                            >
+                                <Text style={DestinationStyles.visaButtonText}>Proceed to Passport Services</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
