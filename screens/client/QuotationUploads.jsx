@@ -75,7 +75,7 @@ const getBirthdayBounds = (travelerType) => {
     return {
         minDate: adultMinDate,
         maxDate: adultMaxDate,
-        minAge: 12,
+        minAge: 18,
         maxAge: null
     };
 };
@@ -106,14 +106,14 @@ export default function QuotationUploads({ route, navigation }) {
     const isInternationalPackage = String(packageType).toLowerCase() === 'international';
     const requiresVisa = isInternationalPackage || rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
-    console.log("🛂 QuotationUploads - Visa Check:", {
-        rawVisaValue,
-        packageType,
-        isInternationalPackage,
-        requiresVisa,
-        packageName: activeQuotation?.packageId?.packageName,
-        message: requiresVisa ? "✅ Visa required - will show form" : "❌ Visa not required - will NOT show form"
-    });
+    // console.log(" QuotationUploads - Visa Check:", {
+    //     rawVisaValue,
+    //     packageType,
+    //     isInternationalPackage,
+    //     requiresVisa,
+    //     packageName: activeQuotation?.packageId?.packageName,
+    //     message: requiresVisa ? " Visa required - will show form" : " Visa not required - will NOT show form"
+    // });
 
     const travelerTypes = useMemo(() => {
         const types = [];
@@ -320,7 +320,15 @@ export default function QuotationUploads({ route, navigation }) {
 
     const openDatePicker = (index, type) => {
         const existingDateStr = travelersData[index][type];
-        const initialDate = existingDateStr ? new Date(existingDateStr) : new Date();
+        const travelerType = travelerTypes[index];
+        let initialDate;
+        if (existingDateStr) {
+            initialDate = new Date(existingDateStr);
+        } else if (type === 'birthdate' && travelerType === 'Adult') {
+            initialDate = new Date(2000, 0, 1);
+        } else {
+            initialDate = new Date();
+        }
         setDatePickerConfig({ index, type, currentDate: initialDate });
         setShowDatePicker(true);
     };

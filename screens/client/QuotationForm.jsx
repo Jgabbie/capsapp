@@ -272,14 +272,14 @@ export default function QuotationForm({ route, navigation }) {
                 quotationDetails: detailsObject
             };
 
-            console.log("📤 Sending Quotation Payload:", JSON.stringify(payload, null, 2));
+            //console.log(" Sending Quotation Payload:", JSON.stringify(payload, null, 2));
 
             await api.post("/quotation/create-quotation", payload, withUserHeader(user?._id));
 
             setSuccessModalVisible(true);
         } catch (error) {
             const backendError = error.response?.data?.message || error.response?.data?.error || JSON.stringify(error.response?.data) || "Failed to submit request.";
-            console.error("❌ Quotation Error Detail:", error.response?.data || error.message);
+            console.error(" Quotation Error Detail:", error.response?.data || error.message);
             Alert.alert("Backend Error", backendError);
         } finally {
             setIsSubmitting(false);
@@ -666,6 +666,7 @@ export default function QuotationForm({ route, navigation }) {
                             <TextInput
                                 style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea, errors.itineraryNotes && !itineraryNotes[index].trim() && QuotationFormStyle.inputErrorBorder]}
                                 placeholder={`Notes for ${label.toLowerCase()}. Type "NONE" if no changes`}
+                                placeholderTextColor="#9ca3af"
                                 multiline
                                 value={itineraryNotes[index]}
                                 onChangeText={(text) => {
@@ -683,6 +684,7 @@ export default function QuotationForm({ route, navigation }) {
                     <TextInput
                         style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea]}
                         placeholder="Anything else we should know?"
+                        placeholderTextColor="#9ca3af"
                         multiline
                         value={additionalComments}
                         onChangeText={setAdditionalComments}
