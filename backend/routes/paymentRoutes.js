@@ -19,7 +19,7 @@ import {
     createManualPaymentDeliveryFee,
     handlePayMongoWebhook,
     createCheckoutToken
-} from "../controllers/payController.js";
+} from "../controllers/paymentController.js";
 
 const router = express.Router();
 

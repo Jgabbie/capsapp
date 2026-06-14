@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import TokenCheckout from "../models/tokenCheckout.js";
 import TokenCheckoutVisaModel from "../models/tokencheckoutvisa.js";
 import TokenCheckoutPassportModel from "../models/tokencheckoutpassport.js";
-import VisaModel from "../models/visaApplication.js";
+import VisaModel from "../models/visas.js";
 import PassportModel from "../models/passport.js";
 import BookingModel from "../models/booking.js";
 import TransactionModel from "../models/transaction.js";

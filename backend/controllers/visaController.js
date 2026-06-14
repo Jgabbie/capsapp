@@ -1,5 +1,5 @@
-import VisaModel from "../models/visaApplication.js";
-import ServiceModel from "../models/visaService.js";
+import VisaModel from "../models/visas.js";
+import ServiceModel from "../models/service.js";
 import UserModel from "../models/users.js";
 import NotificationModel from "../models/notification.js";
 import transporter from "../config/nodemailer.js";

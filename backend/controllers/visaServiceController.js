@@ -1,4 +1,4 @@
-import ServiceModel from "../models/visaService.js";
+import ServiceModel from "../models/service.js";
 
 
 
