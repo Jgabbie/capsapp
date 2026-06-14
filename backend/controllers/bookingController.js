@@ -58,7 +58,8 @@ export const createBooking = async (req, res) => {
             expiresAt: dayjs().add(2, 'minutes').toDate()
         });
 
-        const packageName = findbyId(Package, packageId)?.packageName || 'Unknown Package';
+        const packageDoc = await Package.findById(packageId)
+        const packageName = packageDoc?.packageName || 'Unknown Package';
 
         logAction('CREATE_BOOKING', userId, { "Booking Created": `Reference: ${booking.reference}`, packageName });
         return res.status(201).json({ booking });

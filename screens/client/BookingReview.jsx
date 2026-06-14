@@ -23,36 +23,36 @@ export default function BookingReview({ route, navigation }) {
 
     // Extract itinerary images
     const itineraryImages = pkg?.packageItineraryImages || {};
-    
-    console.log("🖼️ BookingReview - packageItineraryImages:", itineraryImages);
-    console.log("📦 pkg object keys:", Object.keys(pkg || {}));
+
+    // console.log(" BookingReview - packageItineraryImages:", itineraryImages);
+    // console.log(" pkg object keys:", Object.keys(pkg || {}));
 
     // Helper function to get image URL for a day
     const getImageForDay = (dayLabel) => {
         if (!dayLabel || !itineraryImages) {
-            console.log("🔍 getImageForDay - Missing dayLabel or itineraryImages:", { dayLabel, hasImages: !!itineraryImages, imageKeys: Object.keys(itineraryImages || {}) });
+            //console.log(" getImageForDay - Missing dayLabel or itineraryImages:", { dayLabel, hasImages: !!itineraryImages, imageKeys: Object.keys(itineraryImages || {}) });
             return null;
         }
         // Try exact match first
         if (itineraryImages[dayLabel]) {
-            console.log(`✅ Found image for "${dayLabel}" (exact match)`);
+            //console.log(` Found image for "${dayLabel}" (exact match)`);
             return itineraryImages[dayLabel];
         }
         // Try lowercase
         const lowercase = dayLabel.toLowerCase();
         if (itineraryImages[lowercase]) {
-            console.log(`✅ Found image for "${dayLabel}" (lowercase: ${lowercase})`);
+            //console.log(` Found image for "${dayLabel}" (lowercase: ${lowercase})`);
             return itineraryImages[lowercase];
         }
         // Try removing spaces
         const noSpaces = dayLabel.replace(/\s+/g, '');
         if (itineraryImages[noSpaces]) {
-            console.log(`✅ Found image for "${dayLabel}" (noSpaces: ${noSpaces})`);
+            //console.log(` Found image for "${dayLabel}" (noSpaces: ${noSpaces})`);
             return itineraryImages[noSpaces];
         }
         // Try lowercase no spaces
         if (itineraryImages[noSpaces.toLowerCase()]) {
-            console.log(`✅ Found image for "${dayLabel}" (lowercase noSpaces: ${noSpaces.toLowerCase()})`);
+            //console.log(` Found image for "${dayLabel}" (lowercase noSpaces: ${noSpaces.toLowerCase()})`);
             return itineraryImages[noSpaces.toLowerCase()];
         }
         // Try numeric day (Day 1 -> 1)
@@ -60,19 +60,19 @@ export default function BookingReview({ route, navigation }) {
         if (dayMatch) {
             const dayNum = dayMatch[0];
             if (itineraryImages[dayNum]) {
-                console.log(`✅ Found image for "${dayLabel}" (numeric: ${dayNum})`);
+                //console.log(` Found image for "${dayLabel}" (numeric: ${dayNum})`);
                 return itineraryImages[dayNum];
             }
             if (itineraryImages[`day${dayNum}`]) {
-                console.log(`✅ Found image for "${dayLabel}" (day${dayNum})`);
+                //console.log(` Found image for "${dayLabel}" (day${dayNum})`);
                 return itineraryImages[`day${dayNum}`];
             }
             if (itineraryImages[`Day${dayNum}`]) {
-                console.log(`✅ Found image for "${dayLabel}" (Day${dayNum})`);
+                //console.log(`Found image for "${dayLabel}" (Day${dayNum})`);
                 return itineraryImages[`Day${dayNum}`];
             }
         }
-        console.log(`❌ No image found for "${dayLabel}". Available keys:`, Object.keys(itineraryImages));
+        //console.log(` No image found for "${dayLabel}". Available keys:`, Object.keys(itineraryImages));
         return null;
     };
 

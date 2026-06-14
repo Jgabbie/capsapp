@@ -77,7 +77,7 @@ const getBirthdayBounds = (travelerType) => {
     return {
         minDate: adultMinDate,
         maxDate: adultMaxDate, // 12+ years old
-        minAge: 12,
+        minAge: 18,
         maxAge: null
     };
 };

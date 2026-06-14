@@ -45,7 +45,7 @@ export default function QuotationForm2({ route, navigation }) {
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
 
     React.useEffect(() => {
-        console.log('medicalData state updated:', medicalData);
+        //console.log('medicalData state updated:', medicalData);
     }, [medicalData]);
 
     const isValidEmail = (email) => {
