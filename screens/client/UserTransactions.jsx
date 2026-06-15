@@ -6,7 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import dayjs from 'dayjs'
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 
 import Header from '../../components/Header'
@@ -320,21 +320,6 @@ export default function UserTransactions() {
             const safeReference = sanitizeFileName(selectedTransaction.reference || 'receipt');
             const fileName = `Receipt-${safeReference}.pdf`;
 
-            if (Platform.OS === 'android') {
-                const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-                if (permissions.granted) {
-                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-                    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
-                        permissions.directoryUri,
-                        fileName,
-                        'application/pdf'
-                    );
-                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType.Base64 });
-                    Alert.alert('Receipt Saved', fileName);
-                    return;
-                }
-            }
-
             const newPath = `${FileSystem.documentDirectory}${fileName}`;
             await FileSystem.copyAsync({ from: uri, to: newPath });
 
@@ -577,9 +562,20 @@ export default function UserTransactions() {
                 <View style={UserTransactionStyle.receiptModalOverlay}>
                     <SafeAreaView style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
                         <View style={UserTransactionStyle.receiptPaper}>
-                            <TouchableOpacity style={UserTransactionStyle.receiptCloseBtn} onPress={() => setReceiptModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#1f2a44" />
+
+
+
+                            <TouchableOpacity
+                                style={UserTransactionStyle.receiptCloseBtn}
+                                onPress={() => setReceiptModalVisible(false)}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={24}
+                                    color="#1f2a44"
+                                />
                             </TouchableOpacity>
+
 
                             {selectedTransaction && (
                                 <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 10 }}>
@@ -704,8 +700,40 @@ export default function UserTransactions() {
                                     </View>
                                 </ScrollView>
                             )}
+
+                            <TouchableOpacity
+                                onPress={handleDownloadReceipt}
+                                style={{
+                                    backgroundColor: '#305797',
+                                    width: 110,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    borderRadius: 8,
+                                    marginRight: 10,
+                                }}
+                            >
+                                <Ionicons
+                                    name="download-outline"
+                                    size={18}
+                                    color="#fff"
+                                />
+                                <Text
+                                    style={{
+                                        color: '#fff',
+                                        marginLeft: 6,
+                                        fontFamily: 'Montserrat_600SemiBold',
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    Download
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </SafeAreaView>
+
+
                 </View>
             </Modal>
 

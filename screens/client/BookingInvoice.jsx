@@ -995,6 +995,318 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    const handleDownloadInvoice = async () => {
+        try {
+            const htmlContent = `
+        <html>
+        <head>
+        <style>
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+
+            body {
+                font-family: Helvetica;
+                color: #3f3f3f;
+                padding: 0;
+                margin: 0;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+
+            .company-name {
+                font-size: 18px;
+                font-weight: bold;
+                color: #1f2b4d;
+                margin-bottom: 5px;
+            }
+
+            .company-info {
+                font-size: 11px;
+                color: #666;
+                line-height: 1.6;
+            }
+
+            .invoice-title {
+                font-size: 32px;
+                font-weight: 300;
+                color: #1f2b4d;
+            }
+
+            .divider {
+                height: 3px;
+                background: #1f2b4d;
+                margin: 30px 0;
+            }
+
+            .top-section {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 40px;
+            }
+
+            .billed-to {
+                width: 35%;
+            }
+
+            .label {
+                font-size: 11px;
+                color: #888;
+                font-weight: bold;
+                margin-bottom: 8px;
+            }
+
+            .customer {
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            .summary {
+                width: 55%;
+                display: flex;
+                border: 1px solid #ddd;
+            }
+
+            .summary-box {
+                flex: 1;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .summary-dark {
+                background: #1f2b4d;
+                color: white;
+            }
+
+            .summary-title {
+                font-size: 10px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+            .summary-value {
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th {
+                text-align: left;
+                border-bottom: 2px solid #999;
+                padding: 12px 0;
+                font-size: 11px;
+            }
+
+            td {
+                padding: 12px 0;
+                border-bottom: 1px solid #ddd;
+                font-size: 11px;
+            }
+
+            .watermark {
+                position: absolute;
+                top: 45%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 90px;
+                font-weight: bold;
+                color: rgba(180, 50, 50, 0.08);
+                z-index: -1;
+            }
+
+            .bottom {
+                margin-top: 50px;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .bank-section {
+                width: 50%;
+            }
+
+            .bank-title {
+                font-weight: bold;
+                margin-top: 15px;
+                margin-bottom: 5px;
+            }
+
+            .bank-line {
+                font-size: 11px;
+                margin-bottom: 5px;
+            }
+
+            .totals {
+                width: 25%;
+            }
+
+            .total-row {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid #aaa;
+                padding: 12px 0;
+            }
+
+            .grand-total {
+                font-weight: bold;
+                color: #1f2b4d;
+                font-size: 18px;
+            }
+        </style>
+        </head>
+
+        <body>
+            <div class="watermark">
+                ${paidAmount >= previewTotalAmount ? 'PAID' : 'NOT PAID'}
+            </div>
+
+            <div class="header">
+                <div>
+                    <div class="company-name">
+                        M&RC Travel and Tours
+                    </div>
+
+                    <div class="company-info">
+                        2nd Floor #1 Cor Fatima Street<br>
+                        Parañaque City, Philippines<br>
+                        1709 PHL<br>
+                        +63 969 055 4806<br>
+                        info1@mrctravels.com
+                    </div>
+                </div>
+
+                <div class="invoice-title">
+                    INVOICE ${invoiceNumber}
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="top-section">
+
+                <div class="billed-to">
+                    <div class="label">BILLED TO</div>
+                    <div class="customer">${customerName}</div>
+                </div>
+
+                <div class="summary">
+
+                    <div class="summary-box">
+                        <div class="summary-title">DATE</div>
+                        <div class="summary-value">
+                            ${issueDate.format('DD-MM-YYYY')}
+                        </div>
+                    </div>
+
+                    <div class="summary-box summary-dark">
+                        <div class="summary-title">
+                            AMOUNT TO PAY
+                        </div>
+                        <div class="summary-value">
+                            ₱${formatPesoNumber(previewTotalAmount)}
+                        </div>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-title">REFERENCE</div>
+                        <div class="summary-value">
+                            ${reference}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <table>
+                <tr>
+                    <th>QTY</th>
+                    <th>DESCRIPTION</th>
+                    <th style="text-align:right">UNIT PRICE</th>
+                    <th style="text-align:right">AMOUNT</th>
+                </tr>
+
+                ${previewInvoiceItems.map(item => `
+                    <tr>
+                        <td>${item.qty}</td>
+                        <td>${item.description}</td>
+                        <td style="text-align:right">
+                            ₱${formatPesoNumber(item.rate)}
+                        </td>
+                        <td style="text-align:right">
+                            ₱${formatPesoNumber(item.qty * item.rate)}
+                        </td>
+                    </tr>
+                `).join('')}
+            </table>
+
+
+            <div class="bottom">
+
+                <div class="bank-section">
+
+                    <div class="bank-title">BANK ACCOUNT:</div>
+
+                    <div class="bank-line">Bank: BDO UNIBANK</div>
+                    <div class="bank-line">Account Name: M&RC Travel and Tours</div>
+                    <div class="bank-line">Account #: 00683032692</div>
+
+                    <div class="bank-title">USD ACCOUNT:</div>
+
+                    <div class="bank-line">Bank: BDO UNIBANK</div>
+                    <div class="bank-line">Account Name: M&RC Travel and Tours</div>
+                    <div class="bank-line">Account #: 113190015176</div>
+
+                </div>
+
+                <div class="totals">
+
+                    <div class="total-row">
+                        <span>Total</span>
+                        <span>₱${formatPesoNumber(previewTotalAmount)}</span>
+                    </div>
+
+                    <div class="total-row grand-total">
+                        <span>Total Due</span>
+                        <span>₱${formatPesoNumber(
+                Math.max(previewTotalAmount - paidAmount, 0)
+            )}</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </body>
+        </html>
+        `;
+
+            const { uri } = await Print.printToFileAsync({
+                html: htmlContent,
+            });
+
+            await Sharing.shareAsync(uri, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Download Invoice',
+                UTI: 'com.adobe.pdf',
+            });
+
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Failed to generate invoice PDF.');
+        }
+    };
+
     return (
         <SafeAreaView style={BookingInvoiceStyle.safeArea}>
             <StatusBar barStyle="dark-content" />
@@ -1638,6 +1950,13 @@ export default function BookingInvoice({ route, navigation }) {
                                     </View>
                                 </View>
                             </ScrollView>
+                            <TouchableOpacity
+                                style={PaymentStyle.downloadBtn}
+                                onPress={handleDownloadInvoice}
+                            >
+                                <Ionicons name="download-outline" size={20} color="#fff" />
+                                <Text style={PaymentStyle.downloadBtnText}>Download Invoice</Text>
+                            </TouchableOpacity>
                         </View>
                     </SafeAreaView>
                 </View>
