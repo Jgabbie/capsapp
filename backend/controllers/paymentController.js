@@ -843,15 +843,13 @@ export const createManualPaymentQuotation = async (req, res) => {
         if (quotationId) {
             quotation = await Quotation.findById(quotationId);
             if (!quotation) {
-                console.warn('Quotation not found for ID:', quotationId);
+                console.error('Quotation not found for ID:', quotationId);
             } else {
                 quotation.status = 'Booked';
-                console.log("Updated Quotation Status to Booked for Quotation ID:", quotationId);
-                console.log("Quotation status after update:", quotation.status);
                 await quotation.save();
             }
         } else {
-            console.log('No quotationId provided for manual quotation payment.');
+            console.error('No quotationId provided for manual quotation payment.');
         }
 
 
@@ -1491,8 +1489,6 @@ export const createCheckoutSessionVisa = async (req, res) => {
             }
         });
 
-        console.log('PAYMONGO RESPONSE:', JSON.stringify(response.data, null, 2)); // 👈 ADD THIS
-
         return res.status(200).json(response.data);
     } catch (error) {
         return res.status(500).json({ message: "Error creating checkout session", error: error.response?.data || error.message });
@@ -1756,20 +1752,14 @@ export const handlePayMongoWebhook = async (req, res) => {
     res.status(200).send('OK'); // respond instantly
     console.log(' RESPONSE SENT');
 
-
     //check if secret key exists
     if (!process.env.PAYMONGO_WEBHOOK_SECRET) {
-        console.log('Webhook secret not configured');
+        console.error('Webhook secret not configured');
         return
     }
 
-    //if the request body is a buffer, convert it to string for signature verification
-    // const rawBody = Buffer.isBuffer(req.body)
-    //     ? req.body.toString('utf8')
-    //     : JSON.stringify(req.body || {});
-
     if (!req.rawBody) {
-        console.log('Raw body not captured. Check middleware.');
+        console.error('Raw body not captured. Check middleware.');
         return
     }
 
@@ -1781,7 +1771,7 @@ export const handlePayMongoWebhook = async (req, res) => {
         const parsedSignature = parsePayMongoSignature(signatureHeader);
 
         if (!parsedSignature) {
-            console.log('Invalid signature header format');
+            console.error('Invalid signature header format');
             return
         }
 
@@ -1800,7 +1790,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 Buffer.from(parsedSignature.signature, 'utf8')
             )
         ) {
-            console.log('Invalid signature');
+            console.error('Invalid signature');
             return
         }
 
@@ -1812,11 +1802,11 @@ export const handlePayMongoWebhook = async (req, res) => {
         const payload = JSON.parse(rawBodyString);
         const eventType = payload?.data?.attributes?.type;
         if (!eventType) {
-            console.log('Invalid webhook payload');
+            console.error('Invalid webhook payload');
             return res.status(400).send('Invalid payload');
         }
 
-        console.log('📦 Parsed Payload:', JSON.stringify(payload, null, 2));
+        console.log('Parsed Payload:', JSON.stringify(payload, null, 2));
         console.log('STEP 4: PROCESSING EVENT');
 
         //paymongo can send different types of events, but we're mainly interested in the checkout_session.payment.paid event which indicates a successful payment. We will extract the metadata from the event to know which user and booking this payment is for, then we can update our database accordingly.
@@ -1846,18 +1836,18 @@ export const handlePayMongoWebhook = async (req, res) => {
                 metadata = sessionAttributes?.metadata || {};
                 console.log(' Session metadata:', metadata);
             } catch (err) {
-                console.log(' Failed to fetch session:', err.data || err.message);
+                console.error(' Failed to fetch session:', err.data || err.message);
             }
         }
 
         // checks if the metadata contains the necessary identifiers to link this payment to a user and a booking/application. If not, we log a warning and exit gracefully since we can't process this payment without that information. This is a safeguard against processing incomplete or malformed webhook events.
         if (!metadata.userId && !metadata.applicationId && !metadata.packageId) {
-            console.warn('Missing metadata; cannot process');
-            return console.log('missing metadata:', metadata);
+            console.error('Missing metadata; cannot process');
+            return console.error('missing metadata:', metadata);
         }
 
         const user = await User.findById(metadata.userId);
-        if (!user) return console.log('user not found for metadata userId:', metadata.userId);
+        if (!user) return console.error('user not found for metadata userId:', metadata.userId);
 
         console.log('metadata:', metadata);
 
@@ -1896,7 +1886,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             );
 
             if (!updatedVisa) {
-                console.warn(`No visa application found with applicationId ${metadata.applicationId}`);
+                console.error(`No visa application found with applicationId ${metadata.applicationId}`);
             } else {
                 console.log("Visa payment status updated:", updatedVisa.status);
             }
@@ -1998,7 +1988,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             );
 
             if (!updatedApp) {
-                console.warn(`No passport application found with applicationId ${metadata.applicationId}`);
+                console.error(`No passport application found with applicationId ${metadata.applicationId}`);
             } else {
                 console.log("Updated status:", updatedApp.status);
             }
@@ -2182,8 +2172,8 @@ export const handlePayMongoWebhook = async (req, res) => {
             let booking = await BookingModel.findById(metadata.bookingId);
 
             if (!booking) {
-                console.warn('Booking not found for ID:', metadata.bookingId);
-                return console.log('Booking not found for ID:', metadata.bookingId);
+                console.error('Booking not found for ID:', metadata.bookingId);
+                return console.error('Booking not found for ID:', metadata.bookingId);
             }
 
             const bookingStart = dayjs(booking.travelDate.startDate).format('YYYY-MM-DD');
@@ -2210,7 +2200,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             );
 
             if (updateResult.matchedCount === 0) {
-                console.log('No matching date range found or no slots remaining.');
+                console.error('No matching date range found or no slots remaining.');
             } else if (updateResult.modifiedCount === 1) {
                 console.log('Slot successfully decremented.');
                 if (!booking.slotDecremented) {
@@ -2301,8 +2291,8 @@ export const handlePayMongoWebhook = async (req, res) => {
             let booking = await BookingModel.findById(metadata.bookingId);
 
             if (!booking) {
-                console.warn('Booking not found for ID:', metadata.bookingId);
-                return console.log('Booking not found for ID:', metadata.bookingId);
+                console.error('Booking not found for ID:', metadata.bookingId);
+                return console.error('Booking not found for ID:', metadata.bookingId);
             }
 
             const bookingStart = dayjs(booking.travelDate.startDate).format('YYYY-MM-DD');
@@ -2330,7 +2320,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             )
 
             if (updateResult.matchedCount === 0) {
-                console.log('No matching date range found or no slots remaining.');
+                console.error('No matching date range found or no slots remaining.');
             } else if (updateResult.modifiedCount === 1) {
                 console.log('Slot successfully decremented.');
                 if (!booking.slotDecremented) {
@@ -2449,9 +2439,9 @@ export const handlePayMongoWebhook = async (req, res) => {
         }
 
         // if we reach this point, it means we received a valid webhook with correct signature and metadata, but it doesn't match our expected structure for either passport or booking payments. We log this as a warning for further investigation but still return a 200 response to acknowledge receipt of the webhook. This way we avoid unnecessary retries from PayMongo while we investigate the unexpected payload structure.
-        console.warn('Received unhandled webhook event with valid signature but missing expected metadata:', metadata);
+        console.error('Received unhandled webhook event with valid signature but missing expected metadata:', metadata);
     } catch (error) {
-        console.log('Webhook Error:', error);
+        console.error('Webhook Error:', error);
     }
 };
 

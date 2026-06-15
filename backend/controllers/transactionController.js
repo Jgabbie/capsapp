@@ -59,7 +59,7 @@ export const getUserTransactions = async (req, res) => {
             });
         return res.status(200).json(transactions);
     } catch (error) {
-        console.log("TRANSACTION CRASH REASON:", error.message);
+        console.error("Transaction Fetch Error:", error.message);
         return res.status(500).json({ message: "Error fetching transactions", error: error.message });
     }
 };
@@ -72,6 +72,7 @@ export const getTransactionsForApplication = async (req, res) => {
         const transactions = await Transaction.find({ userId, applicationId }).sort({ createdAt: -1 })
         res.status(200).json(transactions)
     } catch (error) {
+        console.error("Transaction Fetch Error:", error.message);
         res.status(500).json({ message: "Failed to fetch transactions", error: error.message })
     }
 }

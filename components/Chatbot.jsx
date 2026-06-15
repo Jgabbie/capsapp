@@ -15,7 +15,7 @@ export default function Chatbot() {
     const [loading, setLoading] = useState(false);
     const scrollViewRef = useRef(null);
 
-    // 🔥 Added Time Formatter matching the Web
+    // Added Time Formatter matching the Web
     const formatTimestamp = (timestamp) => {
         const date = new Date(parseInt(timestamp));
         return date.toLocaleString('en-US', {
@@ -29,7 +29,7 @@ export default function Chatbot() {
 
         const userMessage = { role: 'user', content: message.trim(), id: Date.now().toString() };
         const newMessages = [...messages, userMessage];
-        
+
         setMessages(newMessages);
         setMessage("");
         setLoading(true);
@@ -41,7 +41,7 @@ export default function Chatbot() {
 
             setMessages(prev => [...prev, { role: 'assistant', content: botReply, id: Date.now().toString() }]);
         } catch (error) {
-            console.log("Chatbot Error:", error.response?.data || error.message);
+            console.error("Chatbot Error:", error.response?.data || error.message);
             const errorMsg = error.response?.data?.error || "Connection error. Please try again.";
             setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${errorMsg}`, id: Date.now().toString() }]);
         } finally {
@@ -68,24 +68,24 @@ export default function Chatbot() {
             </TouchableOpacity>
 
             <Modal visible={chatbotOpen} transparent animationType="slide">
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'undefined'} 
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'undefined'}
                     style={{ flex: 1 }}
                 >
                     <View style={ChatbotStyle.chatbotOverlay}>
                         <View style={ChatbotStyle.chatbotBox}>
-                            
+
                             <View style={ChatbotStyle.chatbotHeader}>
-                                <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                                    <Image source={require('../assets/images/chatbot_icon.png')} style={{width: 24, height: 24, tintColor: '#305797'}} />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                    <Image source={require('../assets/images/chatbot_icon.png')} style={{ width: 24, height: 24, tintColor: '#305797' }} />
                                     <Text style={ChatbotStyle.chatbotTitle}>TRAVEX Assistant</Text>
                                 </View>
-                                <TouchableOpacity onPress={() => setChatbotOpen(false)} style={{padding: 5}}>
+                                <TouchableOpacity onPress={() => setChatbotOpen(false)} style={{ padding: 5 }}>
                                     <Text style={{ fontSize: 18, color: "#666", fontWeight: 'bold' }}>X</Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <ScrollView 
+                            <ScrollView
                                 ref={scrollViewRef}
                                 style={ChatbotStyle.chatWindow}
                                 onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
@@ -95,8 +95,8 @@ export default function Chatbot() {
                                     const isUser = msg.role === 'user';
                                     return (
                                         <View key={msg.id} style={[ChatbotStyle.messageWrapper, isUser ? ChatbotStyle.messageWrapperUser : ChatbotStyle.messageWrapperBot]}>
-                                            
-                                            {/* 🔥 ADDED: Sender Info & Timestamp */}
+
+                                            {/* Sender Info & Timestamp */}
                                             <View style={[ChatbotStyle.messageHeader, isUser ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }]}>
                                                 <Ionicons name={isUser ? "person-outline" : "hardware-chip-outline"} size={12} color="#6b7280" />
                                                 <Text style={ChatbotStyle.messageHeaderText}>{isUser ? 'You' : 'TRAVEX Assistant'}</Text>
@@ -124,7 +124,7 @@ export default function Chatbot() {
                                 <TouchableOpacity style={ChatbotStyle.newChatBtn} onPress={handleNewChat}>
                                     <Ionicons name="refresh" size={18} color="#666" />
                                 </TouchableOpacity>
-                                
+
                                 <TextInput
                                     style={ChatbotStyle.chatInput}
                                     placeholder='Type your message...'

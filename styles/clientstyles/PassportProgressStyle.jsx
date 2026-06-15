@@ -127,7 +127,7 @@ const PassportProgressStyle = StyleSheet.create({
         fontFamily: 'Montserrat_600SemiBold',
         fontSize: 15,
     },
-    // 🔥 NEW STYLES FOR SUBMITTED DOCUMENTS 🔥
+    // NEW STYLES FOR SUBMITTED DOCUMENTS 
     docRow: {
         flexDirection: 'row',
         alignItems: 'center',

@@ -233,7 +233,7 @@ export const chatAction = async (req, res) => {
 
         const queryEmbedding = await getEmbedding(lastUserMessage.content);
         let knowledgeChunks = [];
-        try { knowledgeChunks = await searchKnowledge(queryEmbedding); } catch (e) { console.log(e.message) }
+        try { knowledgeChunks = await searchKnowledge(queryEmbedding); } catch (e) { console.error(e.message) }
 
         const knowledgeContext = knowledgeChunks.length
             ? knowledgeChunks.map((chunk) => `Source: ${chunk.source} - ${chunk.text}`).join('\n')
@@ -245,7 +245,7 @@ export const chatAction = async (req, res) => {
             const result = await buildPackageContext(lastUserMessage.content);
             packageContext = result.text;
             packageNames = result.names;
-        } catch (e) { console.log(e.message) }
+        } catch (e) { console.error(e.message) }
 
         let visaServiceContext = '';
         let serviceNames = [];
@@ -253,7 +253,7 @@ export const chatAction = async (req, res) => {
             const result = await buildVisaServiceContext();
             visaServiceContext = result.text;
             serviceNames = result.names;
-        } catch (e) { console.log(e.message) }
+        } catch (e) { console.error(e.message) }
 
         const response = await openai.responses.create({
             prompt: { id: TRAVEX_PROMPT_ID },

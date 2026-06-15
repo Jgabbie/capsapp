@@ -212,7 +212,6 @@ export const createUser = async (req, res) => {
 
         try {
             await createVerificationLink(savedUser);
-            console.log("Welcome email sent to:", email);
         } catch (emailError) {
             console.error("Failed to send welcome email:", emailError);
         }

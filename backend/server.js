@@ -5,8 +5,6 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 
-
-
 import userRoutes from "./routes/userRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import quotationRoutes from "./routes/quotationRoutes.js";

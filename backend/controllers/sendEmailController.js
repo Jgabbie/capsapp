@@ -16,8 +16,6 @@ export const sendContactEmail = async (req, res) => {
     const companyEmail = process.env.COMPANY_EMAIL;
     const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    console.log('Received contact form submission:', { name, normalizedEmail, subject, companyEmail });
-
     if (!name || !normalizedEmail || !subject || !message) {
         return res.status(400).json({ message: 'All fields are required' });
     }
@@ -64,8 +62,6 @@ export const sendContactEmail = async (req, res) => {
                 logoHtml,
             })
         });
-
-        console.log(' Contact email sent to admin:', companyEmail, '| Message ID:', companyResult?.messageId);
 
         // 2. Auto-reply sent to the Customer
         const customerResult = await transporter.sendMail({

@@ -15,7 +15,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-console.log("AXIOS TARGET URL:", API_BASE_URL);
+console.log("Axios Target URL:", API_BASE_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

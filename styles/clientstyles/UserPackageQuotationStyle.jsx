@@ -54,15 +54,15 @@ export default StyleSheet.create({
     fontFamily: "Roboto_400Regular",
   },
   dropdownGroup: {
-    flex: 1, // 🔥 Expands to take half the screen
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },
   dropdownButton: {
-    flex: 1, // 🔥 Fills the group container
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // 🔥 Pushes the text to the left and icon to the right
+    justifyContent: "space-between",
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingHorizontal: 12,

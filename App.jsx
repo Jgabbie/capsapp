@@ -25,7 +25,7 @@ import BookingReview from './screens/client/BookingReview';
 import BookingUploads from './screens/client/BookingUploads';
 import Notifications from './screens/client/Notifications';
 
-// 🔥 REGISTRATION STEPS
+// REGISTRATION STEPS
 import RegistrationStep1 from './screens/client/RegistrationStep1';
 import RegistrationStep2 from './screens/client/RegistrationStep2';
 import RegistrationStep3 from './screens/client/RegistrationStep3';

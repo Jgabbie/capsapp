@@ -13,16 +13,16 @@ export default function Header({ openSidebar }) {
     const fetchUnread = async () => {
         if (!user?._id) return;
         try {
-            // 🔥 Match Web: Request 25 items
+            // Match Web: Request 25 items
             const response = await api.get('/notifications/my?limit=25', withUserHeader(user._id));
 
-            // 🔥 Count unread within those 25 items (Should result in 22)
+            // Count unread within those 25 items (Should result in 22)
             const list = response.data || [];
             const count = list.filter(n => !n.isRead).length;
 
             setUnreadCount(count);
         } catch (error) {
-            console.log("Header Sync Error:", error.message);
+            console.error("Header Sync Error:", error.message);
         }
     };
 
