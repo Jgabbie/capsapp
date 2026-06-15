@@ -375,6 +375,8 @@ export default function Home({ route }) {
         }
     }, [user?._id])
 
+
+    //Fetch popular packages with fallback
     const fetchPopularPackages = async () => {
         setPopularLoading(true);
         try {
@@ -392,7 +394,6 @@ export default function Home({ route }) {
                 setFallbackPopularPackages([]);
             }
         } catch (error) {
-            console.error('Failed to fetch popular packages:', error.message);
             setPopularPackages([]);
             try {
                 const fallbackResponse = await api.get('/package/get-packages');

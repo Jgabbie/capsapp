@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
@@ -660,53 +660,61 @@ export default function BookingInvoice({ route, navigation }) {
 
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
+
         try {
-            let logoDataUri = '';
-            try {
-                const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
-                await logoAsset.downloadAsync();
-                const logoUri = logoAsset.localUri || logoAsset.uri;
-                const logoBase64 = logoUri
-                    ? await FileSystem.readAsStringAsync(logoUri, { encoding: FileSystem.EncodingType?.Base64 || 'base64' })
-                    : '';
-                logoDataUri = logoBase64 ? `data:image/png;base64,${logoBase64}` : '';
-            } catch (logoError) {
-                console.warn('Logo load failed:', logoError?.message || logoError);
-            }
+            const logoAsset = Asset.fromModule(
+                require('../../assets/images/LastPushLogo.png')
+            );
+
+            await logoAsset.downloadAsync();
+
+            const logoUri = logoAsset.localUri;
+
+            const logoBase64 = await FileSystem.readAsStringAsync(
+                logoUri,
+                {
+                    encoding: 'base64',
+                }
+            );
+
+            const logoDataUri = `data:image/png;base64,${logoBase64}`;
+
 
             const htmlContent = `
                 <html>
                     <head>
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+
                         <style>
                             @page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }
-                            body { font-family: 'Helvetica', sans-serif; color: #000; font-size: 10px; margin: 0; padding: 0; }
-                            .page { page-break-after: always; break-after: page; position: relative; box-sizing: border-box; min-height: 250mm; }
+                            body { font-family: 'Helvetica', sans-serif; color: #000; font-size: 12px; margin: 0; padding: 0; }
+                            .page { page-break-after: always; break-after: page; position: relative; box-sizing: border-box; height: 267mm; overflow: hidden; }
                             .page.last-page { page-break-after: auto; break-after: auto; }
                             .header-gold { background-color: #FFD700; border: 1px solid #000; text-align: center; font-weight: bold; padding: 5px; margin-bottom: 12px; font-size: 12px; text-transform: uppercase; }
-                            .header-blue { background-color: #ADD8E6; border: 1px solid #000; font-weight: bold; padding: 4px 5px; margin-top: 12px; margin-bottom: 8px; font-size: 10px; text-transform: uppercase; }
+                            .header-blue { background-color: #ADD8E6; border: 1px solid #000; font-weight: bold; padding: 4px 5px; margin-top: 12px; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; }
                             table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-                            th, td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 8px; }
+                            th, td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 12px; }
                             th { background-color: #ADD8E6; text-align: center; font-weight: bold; }
                             .info-grid { display: table; width: 100%; margin-bottom: 12px; }
                             .info-row { display: table-row; }
                             .info-col { display: table-cell; padding-bottom: 6px; padding-right: 8px;}
-                            .label { font-weight: bold; font-size: 7px; display: block; margin-bottom: 2px; text-transform: uppercase; }
-                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 9px; }
-                            p { text-align: justify; line-height: 1.35; margin-bottom: 7px; font-size: 9px; }
-                            .p-text { text-align: justify; line-height: 1.35; margin-bottom: 10px; font-size: 9px; }
-                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 9px;}
-                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 28px; }
+                            .label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 2px; text-transform: uppercase; }
+                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 12px; }
+                            p { text-align: justify; line-height: 1.15; margin-bottom: 4px; font-size: 12px; }
+                            .p-text { text-align: justify; line-height: 1.15; margin-bottom: 4px; font-size: 12px; }
+                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 12px;}
+                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 20px; }
                             .sig-line { border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; font-weight: bold; font-size: 10px; display: flex; align-items: flex-end; justify-content: center; height: 14px; }
                             .flex-container { display: flex; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 12px;}
                             .flex-col { flex: 1; }
                             .logo-container { text-align: center; margin-bottom: 10px; }
-                            .logo-container img { height: 42px; object-fit: contain; }
-                            .yes-no-box { display: inline-block; width: 30px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 3px; font-size: 9px;}
-                            .detail-box { border: 1px solid #000; min-height: 32px; width: 100%; padding: 4px; font-size: 9px; margin-top: 5px; margin-bottom: 12px; }
-                            .note-text { font-size: 7px; font-style: italic; color: #555; }
-                            .small-text { font-size: 8px; }
+                            .logo-container img { width: 80px; height: auto; object-fit: contain; }
+                            .yes-no-box { display: inline-block; width: 30px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 3px; font-size: 10px;}
+                            .detail-box { border: 1px solid #000; min-height: 32px; width: 100%; padding: 4px; font-size: 10px; margin-top: 5px; margin-bottom: 12px; }
+                            .note-text { font-size: 10px; font-style: italic; color: #555; }
+                            .small-text { font-size: 10px; }
                         </style>
+
                     </head>
                     <body>
                         <div class="page">
@@ -729,7 +737,7 @@ export default function BookingInvoice({ route, navigation }) {
                             <div class="header-blue">LEAD GUEST INFORMATION</div>
                             <div class="info-grid">
                                 <div class="info-row">
-                                    <div class="info-col" style="width: 15%;"><span class="label" style="color: red;">* TITLE:</span><span class="value">${bookingDetails?.leadTitle || 'MR'}</span></div>
+                                    <div class="info-col" style="width: 15%;"><span class="label"> TITLE:</span><span class="value">${bookingDetails?.leadTitle || 'MR'}</span></div>
                                     <div class="info-col" style="width: 85%;"><span class="label">FULL NAME:</span><span class="value">${bookingDetails?.leadFullName || user?.firstname + ' ' + user?.lastname}</span></div>
                                 </div>
                                 <div class="info-row">
@@ -759,7 +767,7 @@ export default function BookingInvoice({ route, navigation }) {
                                 `).join('')}
                             </table>
                             
-                            <div style="margin-top: 20px; font-size: 8px;">
+                            <div style="margin-top: 20px; font-size: 10px;">
                                 <div style="width: 50%; float: left;">
                                     <span style="color: red; font-weight: bold;">GUIDE IN ROOM ASSIGNMENTS:</span><br/>
                                     <i>*Important note: All room type requests are subject for availability. Use of SINGLE ROOM has a single supplement charge.</i><br/><br/>
@@ -777,11 +785,11 @@ export default function BookingInvoice({ route, navigation }) {
                             
                             <div class="sig-box" style="margin-top: 40px;">
                                 <div class="sig-line">${bookingDetails?.leadFullName || user?.firstname + ' ' + user?.lastname}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Signature over printed name</div>
+                                <div style="font-size: 10px; font-weight: bold;">Signature over printed name</div>
                             </div>
                             <div class="sig-box" style="float: right; margin-top: 40px;">
                                 <div class="sig-line">${dayjs(booking?.createdAt).format('MMMM D, YYYY')}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Date</div>
+                                <div style="font-size: 10px; font-weight: bold;">Date</div>
                             </div>
                         </div>
 
@@ -790,7 +798,7 @@ export default function BookingInvoice({ route, navigation }) {
                                 <img src="${logoDataUri}" alt="M&RC Travel and Tours" />
                             </div>
                             <div class="header-gold">TRAVEL REGISTRATION DETAILS</div>
-                            <p style="text-align: center; font-style: italic; font-size: 8px; margin-bottom: 10px;">Instructions: Please fill-up and write your answers inside each box.</p>
+                            <p style="text-align: center; font-style: italic; font-size: 10px; margin-bottom: 10px;">Instructions: Please fill-up and write your answers inside each box.</p>
                             
                             <div style="margin-bottom: 10px;"><strong>TOUR PACKAGE TITLE:</strong> ${packageName}</div>
                             <div style="margin-bottom: 20px;"><strong>PACKAGE TRAVEL DATE:</strong> ${formattedTravelDate}</div>
@@ -799,13 +807,13 @@ export default function BookingInvoice({ route, navigation }) {
                                 <tr>
                                     <td style="border: none; padding: 0; width: 90%;">
                                         <strong>Does anyone in your group have any dietary requests?</strong><br/>
-                                        <span style="font-size: 8px; font-style: italic; color: #555;">(Applicable for tour package with meal inclusions; if not included, please select N/A)</span>
+                                        <span style="font-size: 10px; font-style: italic; color: #555;">(Applicable for tour package with meal inclusions; if not included, please select N/A)</span>
                                     </td>
                                     <td style="border: none; text-align: right;"><div class="yes-no-box">${bookingDetails?.dietaryRequest === 'Y' ? 'Y' : 'N'}</div></td>
                                 </tr>
                             </table>
                             <div style="display: flex; align-items: center;">
-                                <span style="font-size: 9px; margin-right: 10px;">If yes, please indicate details:</span>
+                                <span style="font-size: 10px; margin-right: 10px;">If yes, please indicate details:</span>
                                 <div class="detail-box">${bookingDetails?.dietaryDetails || ''}</div>
                             </div>
 
@@ -813,32 +821,32 @@ export default function BookingInvoice({ route, navigation }) {
                                 <tr>
                                     <td style="border: none; padding: 0; width: 90%;">
                                         <strong>Does anyone in your group have any Allergies/Medical conditions?</strong><br/>
-                                        <span style="font-size: 8px; font-style: italic; color: #555;">(Applicable for tour package with meal inclusions; if not included, please select N/A)</span>
+                                        <span style="font-size: 10px; font-style: italic; color: #555;">(Applicable for tour package with meal inclusions; if not included, please select N/A)</span>
                                     </td>
                                     <td style="border: none; text-align: right;"><div class="yes-no-box">${bookingDetails?.medicalRequest === 'Y' ? 'Y' : 'N'}</div></td>
                                 </tr>
                             </table>
                             <div style="display: flex; align-items: center;">
-                                <span style="font-size: 9px; margin-right: 10px;">If yes, please indicate details:</span>
+                                <span style="font-size: 10px; margin-right: 10px;">If yes, please indicate details:</span>
                                 <div class="detail-box">${bookingDetails?.medicalDetails || ''}</div>
                             </div>
                             
                             <div style="border: 1px solid #000; padding: 12px; margin-top: 16px; border-radius: 5px;">
                                 <div style="font-weight: bold; font-size: 10px; margin-bottom: 8px;">TRAVEL INSURANCE</div>
-                                <p style="font-size: 8px; margin-bottom: 12px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
+                                <p style="font-size: 10px; margin-bottom: 12px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <div style="width: 80%; font-size: 9px;">Do you agree to purchase a Travel Insurance from us?</div>
+                                    <div style="width: 80%; font-size: 10px;">Do you agree to purchase a Travel Insurance from us?</div>
                                     <div style="width: 15%; border: 1px solid #000; text-align: center; padding: 4px; font-weight: bold;">
                                         ${bookingDetails?.purchaseInsurance === 'Y' ? 'Y' : 'N'}
                                     </div>
                                 </div>
-                                <p style="font-style: italic; font-size: 7px; color: #555; margin-bottom: 12px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
+                                <p style="font-style: italic; font-size: 10px; color: #555; margin-bottom: 12px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
                                 
                                 <table style="margin: 0;">
                                     <tr>
                                         <td style="width: 40%; text-align: right; font-weight: bold; border: 1px solid #000;">If YES, please indicate details:</td>
-                                        <td style="font-style: italic; font-size: 9px; border: 1px solid #000;">Please check the conditions and coverage carefully and send us a copy of the policy so we can review as well.</td>
+                                        <td style="font-style: italic; font-size: 10px; border: 1px solid #000;">Please check the conditions and coverage carefully and send us a copy of the policy so we can review as well.</td>
                                     </tr>
                                     <tr>
                                         <td style="text-align: right; font-weight: bold; border: 1px solid #000;">If NO but chose not to purchase Travel Insurance from us:</td>
@@ -847,7 +855,7 @@ export default function BookingInvoice({ route, navigation }) {
                                 </table>
                             </div>
 
-                            <div class="header-blue" style="margin-top: 20px;">EMERGENCY CONTACT <span style="font-size: 8px; font-style: italic; text-transform: none; font-weight: normal;">(i.e: the person to contact in the event of an emergency while you are away)</span></div>
+                            <div class="header-blue" style="margin-top: 20px;">EMERGENCY CONTACT <span style="font-size: 10px; font-style: italic; text-transform: none; font-weight: normal;">(i.e: the person to contact in the event of an emergency while you are away)</span></div>
                             <table style="margin-top: 0;">
                                 <tr>
                                     <td style="width: 15%;"><strong>Title:</strong> ${bookingDetails?.emergencyTitle || 'MR'}</td>
@@ -862,11 +870,11 @@ export default function BookingInvoice({ route, navigation }) {
 
                             <div class="sig-box" style="margin-top: 40px;">
                                 <div class="sig-line">${bookingDetails?.leadFullName || user?.firstname + ' ' + user?.lastname}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Signature over printed name</div>
+                                <div style="font-size: 10px; font-weight: bold;">Signature over printed name</div>
                             </div>
                             <div class="sig-box" style="float: right; margin-top: 40px;">
                                 <div class="sig-line">${dayjs(booking?.createdAt).format('MMMM D, YYYY')}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Date</div>
+                                <div style="font-size: 10px; font-weight: bold;">Date</div>
                             </div>
                         </div>
 
@@ -901,11 +909,11 @@ export default function BookingInvoice({ route, navigation }) {
                             
                             <div class="sig-box" style="margin-top: 50px;">
                                 <div class="sig-line">${bookingDetails?.leadFullName || user?.firstname + ' ' + user?.lastname}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Signature over printed name</div>
+                                <div style="font-size: 10px; font-weight: bold;">Signature over printed name</div>
                             </div>
                             <div class="sig-box" style="float: right; margin-top: 50px;">
                                 <div class="sig-line">${dayjs(booking?.createdAt).format('MMMM D, YYYY')}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Date</div>
+                                <div style="font-size: 10px; font-weight: bold;">Date</div>
                             </div>
                         </div>
 
@@ -940,11 +948,11 @@ export default function BookingInvoice({ route, navigation }) {
 
                             <div class="sig-box" style="margin-top: 50px;">
                                 <div class="sig-line">${bookingDetails?.leadFullName || user?.firstname + ' ' + user?.lastname}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Signature over printed name</div>
+                                <div style="font-size: 10px; font-weight: bold;">Signature over printed name</div>
                             </div>
                             <div class="sig-box" style="float: right; margin-top: 50px;">
                                 <div class="sig-line">${dayjs(booking?.createdAt).format('MMMM D, YYYY')}</div>
-                                <div style="font-size: 9px; font-weight: bold;">Date</div>
+                                <div style="font-size: 10px; font-weight: bold;">Date</div>
                             </div>
                         </div>
                     </body>
