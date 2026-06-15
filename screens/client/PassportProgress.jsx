@@ -523,10 +523,11 @@ export default function PassportApplication() {
 
     const getUploadedDocumentEntries = () => {
         const docs = {
-            birthCertificate: application?.birthCertificate,
-            applicationForm: application?.applicationForm,
-            govId: application?.govId,
+            birthCertificate: application?.submittedDocuments?.birthCertificate,
+            applicationForm: application?.submittedDocuments?.applicationForm,
+            govId: application?.submittedDocuments?.govId,
         } || {};
+
         return Object.entries(docs).filter(([, value]) => Boolean(value));
     };
 
@@ -1223,6 +1224,8 @@ export default function PassportApplication() {
         );
     }
 
+
+
     return (
         <View style={PassportProgressStyle.container}>
             <Header openSidebar={() => setSidebarVisible(true)} />
@@ -1678,8 +1681,11 @@ export default function PassportApplication() {
                 )}
 
 
+
+
+
                 {/* UPLOADED DOCUMENTS */}
-                {appStatus.toLowerCase() === "payment completed" && (!isOnPenalty || hasSecondChance) && getUploadedDocumentEntries().length > 0 && (
+                {appStatus.toLowerCase() === "documents uploaded" && (!isOnPenalty || hasSecondChance) && getUploadedDocumentEntries().length > 0 && (
                     <View style={PassportProgressStyle.card}>
                         <Text style={PassportProgressStyle.cardTitle}>Uploaded Documents</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
