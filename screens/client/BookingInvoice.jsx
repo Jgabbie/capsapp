@@ -998,298 +998,430 @@ export default function BookingInvoice({ route, navigation }) {
 
     const handleDownloadInvoice = async () => {
         try {
-            const htmlContent = `
-        <html>
-        <head>
-        <style>
-            @page {
-                size: A4;
-                margin: 20mm;
-            }
+            const logoAsset = Asset.fromModule(
+                require('../../assets/images/LastPushLogo.png')
+            );
 
-            body {
-                font-family: Helvetica;
-                color: #3f3f3f;
-                padding: 0;
-                margin: 0;
-            }
+            await logoAsset.downloadAsync();
 
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-            }
+            const logoUri = logoAsset.localUri;
 
-            .company-name {
-                font-size: 18px;
-                font-weight: bold;
-                color: #1f2b4d;
-                margin-bottom: 5px;
-            }
+            const logoBase64 = await FileSystem.readAsStringAsync(
+                logoUri,
+                {
+                    encoding: 'base64',
+                }
+            );
 
-            .company-info {
-                font-size: 11px;
-                color: #666;
-                line-height: 1.6;
-            }
+            const logoDataUri = `data:image/png;base64,${logoBase64}`;
 
-            .invoice-title {
-                font-size: 32px;
-                font-weight: 300;
-                color: #1f2b4d;
-            }
 
-            .divider {
-                height: 3px;
-                background: #1f2b4d;
-                margin: 30px 0;
-            }
+            const htmlContent =
+                `<html>
+                <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-            .top-section {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 40px;
-            }
+                <style>
+                    @page {
+                        size: A4;
+                        margin: 12mm;
+                    }
 
-            .billed-to {
-                width: 35%;
-            }
+                    body {
+                        font-family: Helvetica, Arial, sans-serif;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                        font-size: 11px;
+                    }
 
-            .label {
-                font-size: 11px;
-                color: #888;
-                font-weight: bold;
-                margin-bottom: 8px;
-            }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                    }
 
-            .customer {
-                font-size: 20px;
-                font-weight: bold;
-            }
+                    .company-block {
+                        display: flex;
+                        gap: 12px;
+                        width: 60%;
+                    }
 
-            .summary {
-                width: 55%;
-                display: flex;
-                border: 1px solid #ddd;
-            }
+                    .logo {
+                        width: 70px;
+                        height: 70px;
+                        object-fit: contain;
+                    }
 
-            .summary-box {
-                flex: 1;
-                text-align: center;
-                padding: 12px;
-            }
+                    .company-name {
+                        font-size: 18px;
+                        font-weight: bold;
+                        color: #1f2b4d;
+                        margin-bottom: 4px;
+                    }
 
-            .summary-dark {
-                background: #1f2b4d;
-                color: white;
-            }
+                    .muted {
+                        color: #666;
+                        line-height: 1.4;
+                    }
 
-            .summary-title {
-                font-size: 10px;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
+                    .invoice-title {
+                        font-size: 32px;
+                        font-weight: 700;
+                        color: #1f2b4d;
+                    }
 
-            .summary-value {
-                font-size: 18px;
-                font-weight: bold;
-            }
+                    .divider {
+                        height: 3px;
+                        background: #1f2b4d;
+                        margin: 25px 0;
+                    }
 
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-            }
+                    .bill-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 25px;
+                    }
 
-            th {
-                text-align: left;
-                border-bottom: 2px solid #999;
-                padding: 12px 0;
-                font-size: 11px;
-            }
+                    .bill-to {
+                        width: 40%;
+                    }
 
-            td {
-                padding: 12px 0;
-                border-bottom: 1px solid #ddd;
-                font-size: 11px;
-            }
+                    .label {
+                        font-size: 10px;
+                        font-weight: bold;
+                        color: #777;
+                        text-transform: uppercase;
+                        margin-bottom: 4px;
+                    }
 
-            .watermark {
-                position: absolute;
-                top: 45%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 90px;
-                font-weight: bold;
-                color: rgba(180, 50, 50, 0.08);
-                z-index: -1;
-            }
+                    .customer {
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 6px;
+                    }
 
-            .bottom {
-                margin-top: 50px;
-                display: flex;
-                justify-content: space-between;
-            }
+                    .summary-grid {
+                        width: 55%;
+                        display: flex;
+                        border: 1px solid #ddd;
+                    }
 
-            .bank-section {
-                width: 50%;
-            }
+                    .summary-col {
+                        flex: 1;
+                        padding: 12px;
+                        text-align: center;
+                    }
 
-            .bank-title {
-                font-weight: bold;
-                margin-top: 15px;
-                margin-bottom: 5px;
-            }
+                    .summary-dark {
+                        background: #1f2b4d;
+                        color: white;
+                    }
 
-            .bank-line {
-                font-size: 11px;
-                margin-bottom: 5px;
-            }
+                    .summary-title {
+                        font-size: 10px;
+                        font-weight: bold;
+                        margin-bottom: 6px;
+                    }
 
-            .totals {
-                width: 25%;
-            }
+                    .summary-value {
+                        font-size: 14px;
+                        font-weight: bold;
+                    }
 
-            .total-row {
-                display: flex;
-                justify-content: space-between;
-                border-bottom: 1px solid #aaa;
-                padding: 12px 0;
-            }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 15px;
+                    }
 
-            .grand-total {
-                font-weight: bold;
-                color: #1f2b4d;
-                font-size: 18px;
-            }
-        </style>
-        </head>
+                    th {
+                        border-bottom: 2px solid #1f2b4d;
+                        padding: 10px 4px;
+                        text-align: left;
+                        font-size: 10px;
+                    }
 
-        <body>
-            <div class="watermark">
-                ${paidAmount >= previewTotalAmount ? 'PAID' : 'NOT PAID'}
-            </div>
+                    td {
+                        border-bottom: 1px solid #eee;
+                        padding: 10px 4px;
+                        font-size: 10px;
+                    }
 
-            <div class="header">
-                <div>
-                    <div class="company-name">
-                        M&RC Travel and Tours
-                    </div>
+                    .right {
+                        text-align: right;
+                    }
 
-                    <div class="company-info">
-                        2nd Floor #1 Cor Fatima Street<br>
-                        Parañaque City, Philippines<br>
-                        1709 PHL<br>
-                        +63 969 055 4806<br>
-                        info1@mrctravels.com
-                    </div>
-                </div>
+                    .center {
+                        text-align: center;
+                    }
 
-                <div class="invoice-title">
-                    INVOICE ${invoiceNumber}
-                </div>
-            </div>
+                    .schedule-section {
+                        margin-top: 30px;
+                    }
 
-            <div class="divider"></div>
+                    .schedule-title {
+                        font-weight: bold;
+                        font-size: 12px;
+                        margin-bottom: 10px;
+                        color: #666;
+                    }
 
-            <div class="top-section">
+                    .footer {
+                        margin-top: 35px;
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 20px;
+                    }
 
-                <div class="billed-to">
-                    <div class="label">BILLED TO</div>
-                    <div class="customer">${customerName}</div>
-                </div>
+                    .bank {
+                        width: 50%;
+                    }
 
-                <div class="summary">
+                    .totals {
+                        width: 35%;
+                    }
 
-                    <div class="summary-box">
-                        <div class="summary-title">DATE</div>
-                        <div class="summary-value">
-                            ${issueDate.format('DD-MM-YYYY')}
+                    .total-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 10px 0;
+                        border-bottom: 2px solid #1f2b4d;
+                    }
+
+                    .total-label {
+                        font-weight: bold;
+                    }
+
+                    .total-value {
+                        font-weight: bold;
+                    }
+
+                    .remaining {
+                        color: #b91c1c;
+                        font-weight: bold;
+                        font-size: 14px;
+                    }
+
+                    .thank-you {
+                        margin-top: 10px;
+                        text-align: right;
+                        font-weight: bold;
+                    }
+                </style>
+                </head>
+
+                <body>
+
+                <div class="header">
+
+                    <div class="company-block">
+                        ${logoDataUri
+                    ? `<img src="${logoDataUri}" class="logo" />`
+                    : ''
+                }
+
+                        <div>
+                            <div class="company-name">
+                                M&RC Travel and Tours
+                            </div>
+
+                            <div class="muted">
+                                2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1<br/>
+                                Parañaque City, Philippines<br/>
+                                1709 PHL<br/>
+                                +63 969 055 4806<br/>
+                                info1@mrctravels.com
+                            </div>
                         </div>
                     </div>
 
-                    <div class="summary-box summary-dark">
-                        <div class="summary-title">
-                            AMOUNT TO PAY
-                        </div>
-                        <div class="summary-value">
-                            ₱${formatPesoNumber(previewTotalAmount)}
-                        </div>
-                    </div>
-
-                    <div class="summary-box">
-                        <div class="summary-title">REFERENCE</div>
-                        <div class="summary-value">
-                            ${reference}
-                        </div>
+                    <div class="invoice-title">
+                        Invoice ${booking?.invoiceNumber || invoiceNumber}
                     </div>
 
                 </div>
-            </div>
 
-            <table>
+                <div class="divider"></div>
+
+                <div class="bill-row">
+
+                    <div class="bill-to">
+                        <div class="label">Bill To</div>
+
+                        <div class="customer">
+                            ${customerName.toUpperCase()}
+                        </div>
+
+                        <div>${bookingDetails?.leadContact || user?.phonenum || '--'}</div>
+                        <div>Reference: ${reference}</div>
+                        <div>Travel Date: ${formattedTravelDate}</div>
+                    </div>
+
+                    <div class="summary-grid">
+
+                        <div class="summary-col">
+                            <div class="summary-title">DATE</div>
+                            <div class="summary-value">
+                                ${issueDate.format('MM/DD/YYYY')}
+                            </div>
+                        </div>
+
+                        <div class="summary-col summary-dark">
+                            <div class="summary-title">TOTAL PRICE</div>
+                            <div class="summary-value">
+                                PHP ${formatPesoNumber(previewTotalAmount)}
+                            </div>
+                        </div>
+
+                        <div class="summary-col">
+                            <div class="summary-title">DUE DATE</div>
+                            <div class="summary-value">
+                                ${dueDateDisplay.format('MM/DD/YYYY')}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <table>
+
+                <thead>
                 <tr>
-                    <th>QTY</th>
+                    <th>DATE</th>
+                    <th>ACTIVITY</th>
                     <th>DESCRIPTION</th>
-                    <th style="text-align:right">UNIT PRICE</th>
-                    <th style="text-align:right">AMOUNT</th>
+                    <th class="center">QTY</th>
+                    <th class="right">RATE</th>
+                    <th class="right">AMOUNT</th>
                 </tr>
+                </thead>
+
+                <tbody>
 
                 ${previewInvoiceItems.map(item => `
-                    <tr>
-                        <td>${item.qty}</td>
-                        <td>${item.description}</td>
-                        <td style="text-align:right">
-                            ₱${formatPesoNumber(item.rate)}
-                        </td>
-                        <td style="text-align:right">
-                            ₱${formatPesoNumber(item.qty * item.rate)}
-                        </td>
-                    </tr>
+                <tr>
+                    <td>${dayjs(item.date).format('MM/DD/YYYY')}</td>
+                    <td>${item.activity}</td>
+                    <td>${item.description}</td>
+                    <td class="center">${item.qty}</td>
+                    <td class="right">PHP ${formatPesoNumber(item.rate)}</td>
+                    <td class="right">
+                        PHP ${formatPesoNumber(
+                    Number(item.qty || 0) * Number(item.rate || 0)
+                )}
+                    </td>
+                </tr>
                 `).join('')}
-            </table>
 
+                </tbody>
+                </table>
 
-            <div class="bottom">
+                ${paymentMode === 'Deposit' && paymentSchedule.length > 0
+                    ? `
+                <div class="schedule-section">
 
-                <div class="bank-section">
+                    <div class="schedule-title">
+                        PAYMENT SCHEDULE (${String(paymentFrequency).toUpperCase()})
+                    </div>
 
-                    <div class="bank-title">BANK ACCOUNT:</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>DESCRIPTION</th>
+                                <th>DUE DATE</th>
+                                <th class="right">AMOUNT</th>
+                                <th class="right">STATUS</th>
+                            </tr>
+                        </thead>
 
-                    <div class="bank-line">Bank: BDO UNIBANK</div>
-                    <div class="bank-line">Account Name: M&RC Travel and Tours</div>
-                    <div class="bank-line">Account #: 00683032692</div>
+                        <tbody>
+                            ${paymentSchedule.map(row => `
+                            <tr>
+                                <td>${row.label}</td>
+                                <td>${dayjs(row.date).format('MMM D, YYYY')}</td>
+                                <td class="right">
+                                    PHP ${formatPesoNumber(row.amount)}
+                                </td>
+                                <td
+                                    class="right"
+                                    style="
+                                    font-weight:bold;
+                                    color:
+                                    ${row.status === 'PAID'
+                            ? '#389e0d'
+                            : row.status === 'PENDING'
+                                ? '#d97706'
+                                : row.status === 'FAILED'
+                                    ? '#cf1322'
+                                    : '#6b7280'
+                        };
+                                    "
+                                >
+                                    ${row.status}
+                                </td>
+                            </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
 
-                    <div class="bank-title">USD ACCOUNT:</div>
+                </div>
+                `
+                    : ''
+                }
 
-                    <div class="bank-line">Bank: BDO UNIBANK</div>
-                    <div class="bank-line">Account Name: M&RC Travel and Tours</div>
-                    <div class="bank-line">Account #: 113190015176</div>
+                <div class="footer">
+
+                    <div class="bank">
+
+                        <div style="margin-bottom:10px;">
+                            Payment to be deposited in below bank details:
+                        </div>
+
+                        <div><strong>PESO ACCOUNT:</strong></div>
+                        <div>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</div>
+                        <div>ACCOUNT NAME: M&RC TRAVEL AND TOURS</div>
+                        <div>ACCOUNT NUMBER: 006830132692</div>
+
+                    </div>
+
+                    <div class="totals">
+
+                        <div class="total-row">
+                            <span class="total-label">TOTAL PRICE</span>
+                            <span class="total-value">
+                                PHP ${formatPesoNumber(previewTotalAmount)}
+                            </span>
+                        </div>
+
+                        <div class="total-row">
+                            <span class="total-label">PAID TO DATE</span>
+                            <span class="total-value">
+                                PHP ${formatPesoNumber(paidAmount)}
+                            </span>
+                        </div>
+
+                        <div class="total-row remaining">
+                            <span>REMAINING BAL.</span>
+                            <span>
+                                PHP ${formatPesoNumber(
+                    Math.max(previewTotalAmount - paidAmount, 0)
+                )}
+                            </span>
+                        </div>
+
+                        <div class="thank-you">
+                            THANK YOU.
+                        </div>
+
+                    </div>
 
                 </div>
 
-                <div class="totals">
-
-                    <div class="total-row">
-                        <span>Total</span>
-                        <span>₱${formatPesoNumber(previewTotalAmount)}</span>
-                    </div>
-
-                    <div class="total-row grand-total">
-                        <span>Total Due</span>
-                        <span>₱${formatPesoNumber(
-                Math.max(previewTotalAmount - paidAmount, 0)
-            )}</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-        </body>
-        </html>
-        `;
+                </body>
+                </html>
+                `;
 
             const { uri } = await Print.printToFileAsync({
                 html: htmlContent,
