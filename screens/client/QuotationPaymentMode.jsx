@@ -50,8 +50,6 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
     const travelDetails = latestPdfRevision?.travelDetails || {};
 
-    console.log("Travel Details from PDF Revision: ", travelDetails);
-
     const packageName = quotation?.packageId?.packageName || 'N/A'
     const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
     const totalAmount = travelDetails?.totalPrice || 0;
@@ -84,7 +82,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                 setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
                 return;
             } catch (error) {
-                console.log('Error fetching monthly invoice number:', error.message);
+                console.error('Error fetching monthly invoice number:', error.message);
             }
 
             // Fallback: current month with sequence 01

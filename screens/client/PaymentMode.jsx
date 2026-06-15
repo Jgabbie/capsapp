@@ -67,7 +67,6 @@ export default function PaymentMode({ route, navigation }) {
 
     const travelers = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
 
-    //console.log("Number of travelers:", travelers);
 
     const totalAmount = setupData?.totalPrice || 0;
 
@@ -93,7 +92,7 @@ export default function PaymentMode({ route, navigation }) {
                 setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
                 return;
             } catch (error) {
-                console.log('Error fetching monthly invoice number:', error.message);
+                console.error('Error fetching monthly invoice number:', error.message);
             }
 
             // Fallback: current month with sequence 01

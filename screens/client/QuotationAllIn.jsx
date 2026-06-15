@@ -90,17 +90,6 @@ export default function QuotationAllIn() {
     const soloRate = baseSoloRate * discountMultiplier;
     const childRate = baseChildRate * discountMultiplier;
     const infantRate = baseInfantRate * discountMultiplier;
-
-    // console.log("Base package price per pax:", basePackagePricePerPax);
-    // console.log("Solo rate:", baseSoloRate);
-    // console.log("Child rate:", baseChildRate);
-    // console.log("Infant rate:", baseInfantRate);
-
-    // console.log("Discounted Package price per pax:", packagePricePerPax);
-    // console.log("Discounted Solo rate:", soloRate);
-    // console.log("Discounted Child rate:", childRate);
-    // console.log("Discounted Infant rate:", infantRate);
-
     const soloExtraRate = Math.max(0, soloRate - packagePricePerPax);
     const dateSurcharge = selectedDateRate || 0;
 

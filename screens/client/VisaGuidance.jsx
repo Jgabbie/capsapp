@@ -31,8 +31,8 @@ export default function VisaGuidance() {
                 const { data } = await api.get('/visa-services/services')
                 setServices(Array.isArray(data) ? data : [])
             } catch (error) {
-                console.log("Visa Fetch Error:", error.message)
-                Alert.alert('Error', 'Unable to load visa services. Please check your connection.')
+                console.error("Visa Fetch Error:", error.message)
+                Alert.alert("Visa Fetch Error:", error.message)
             } finally {
                 setLoading(false)
             }

@@ -66,8 +66,6 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         }
     };
 
-    console.log("Travel Details: ", travelDetails);
-
     const executePaymentFlow = async () => {
         setIsProceedModalOpen(false);
         setLoading(true);

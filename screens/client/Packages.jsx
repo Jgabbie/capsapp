@@ -20,8 +20,6 @@ const showToast = (message) => {
         ToastAndroid.show(message, ToastAndroid.SHORT);
         return;
     }
-
-    console.log(message);
 };
 
 export default function Packages({ navigation, route }) { //  Add route here!
@@ -186,11 +184,11 @@ export default function Packages({ navigation, route }) { //  Add route here!
                             });
                         }
                     } catch (userErr) {
-                        console.log("Could not sync user data:", userErr.message);
+                        console.error("Could not sync user data:", userErr.message);
                     }
                 }
             } catch (err) {
-                console.log("Fetch Error: ", err.message);
+                console.error("Fetch Error: ", err.message);
                 setError("Unable to load packages. Please check your connection.");
             } finally {
                 setLoading(false);
@@ -226,7 +224,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
                 });
                 showToast('Package removed from your wishlist.');
             } catch (error) {
-                console.log('Remove wishlist error', error.message);
+                console.error('Remove wishlist error', error.message);
                 showToast('Failed to remove from wishlist. Please try again.');
             }
         } else {
@@ -248,7 +246,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
                 setWishlistEntryMap(wMap);
                 showToast('Package added to your wishlist.');
             } catch (error) {
-                console.log('Add wishlist error', error.message);
+                console.error('Add wishlist error', error.message);
                 showToast('Failed to add to wishlist. Please try again.');
             }
         }
@@ -317,7 +315,7 @@ export default function Packages({ navigation, route }) { //  Add route here!
     const handleLoadMore = () => {
         setVisibleCount(prev => Math.min(prev + 10, filteredPackages.length));
     };
-    
+
     const handleSeeLess = () => {
         setVisibleCount(prev => Math.max(10, prev - 10));
     };
@@ -364,120 +362,120 @@ export default function Packages({ navigation, route }) { //  Add route here!
 
                 {loading ? <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} /> : error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{error}</Text> : (
                     <>
-                    {visiblePackages.map((item) => {
-                        const tv = Number(travelersValue);
-                        const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
-                        const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
-                        const isWishlisted = wishlistedIds.has(String(item.id));
+                        {visiblePackages.map((item) => {
+                            const tv = Number(travelersValue);
+                            const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
+                            const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
+                            const isWishlisted = wishlistedIds.has(String(item.id));
 
-                        return (
-                            <View key={item.id} style={DestinationStyles.packageCard}>
-                                <Image
-                                    source={item.image}
-                                    style={DestinationStyles.packageImage}
-                                    contentFit="cover"
-                                    transition={300}
-                                />
-                                <View style={DestinationStyles.packageContent}>
+                            return (
+                                <View key={item.id} style={DestinationStyles.packageCard}>
+                                    <Image
+                                        source={item.image}
+                                        style={DestinationStyles.packageImage}
+                                        contentFit="cover"
+                                        transition={300}
+                                    />
+                                    <View style={DestinationStyles.packageContent}>
 
-                                    <View style={DestinationStyles.cardHeaderRow}>
-                                        <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
-                                        {/*  Removed the "hide if 0.0" condition so the star is always visible */}
-                                        <View style={DestinationStyles.ratingContainer}>
-                                            <Ionicons name="star" size={14} color="#facc15" />
-                                            <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={DestinationStyles.cardSubHeaderRow}>
-                                        <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
-                                            <Text style={[DestinationStyles.typeTagText, { color: item.packageType.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
-                                                {item.packageType.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                        <View style={[DestinationStyles.availTag, { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }]}>
-                                            <Text style={[DestinationStyles.availTagText, { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }]}>
-                                                {item.availability.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                        <Text style={DestinationStyles.durationText}>{item.duration}</Text>
-                                    </View>
-
-                                    <View style={DestinationStyles.cardDetailsRow}>
-                                        <View style={DestinationStyles.cardLeftColumn}>
-                                            <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
-                                            {item.packageTags && item.packageTags.length > 0 && (
-                                                <View style={DestinationStyles.packageTagsRow}>
-                                                    {item.packageTags.slice(0, 4).map((tag, index) => (
-                                                        <View key={index} style={DestinationStyles.tagPill}>
-                                                            <Text style={DestinationStyles.tagText}>{tag}</Text>
-                                                        </View>
-                                                    ))}
-                                                </View>
-                                            )}
-                                        </View>
-
-                                        <View style={DestinationStyles.cardRightColumn}>
-                                            {item.discountPercent > 0 && (
-                                                <View style={DestinationStyles.discountBadge}>
-                                                    <Text style={DestinationStyles.discountBadgeText}>-{item.discountPercent}%</Text>
-                                                </View>
-                                            )}
-                                            <TouchableOpacity onPress={() => handleWishlistToggle(item.id)} style={{ padding: 4 }}>
-                                                <Ionicons
-                                                    name={isWishlisted ? "heart" : "heart-outline"}
-                                                    size={26}
-                                                    color={isWishlisted ? "#cf1322" : "#305797"}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-
-                                    <View style={DestinationStyles.packageFooter}>
-                                        <View style={DestinationStyles.priceContainer}>
-                                            {tv > 1 ? (
-                                                <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
-                                                    {formatPeso(item.discountedPrice)} x {tv} pax =
-                                                </Text>
-                                            ) : null}
-
-                                            {item.discountPercent > 0 && (
-                                                <Text style={DestinationStyles.packagePriceOld}>
-                                                    {formatPeso(originalPrice)}
-                                                </Text>
-                                            )}
-
-                                            <View style={DestinationStyles.priceRowBox}>
-                                                <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
-                                                <Text style={DestinationStyles.budgetPaxText}>
-                                                    {item.discountPercent > 0 ? "Discounted / Pax" : "Budget / Pax"}
-                                                </Text>
+                                        <View style={DestinationStyles.cardHeaderRow}>
+                                            <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
+                                            {/*  Removed the "hide if 0.0" condition so the star is always visible */}
+                                            <View style={DestinationStyles.ratingContainer}>
+                                                <Ionicons name="star" size={14} color="#facc15" />
+                                                <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
                                             </View>
                                         </View>
 
-                                        <TouchableOpacity
-                                            style={DestinationStyles.viewDetailsButton}
-                                            onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
-                                        >
-                                            <Text style={DestinationStyles.viewDetailsText}>View Details</Text>
-                                        </TouchableOpacity>
+                                        <View style={DestinationStyles.cardSubHeaderRow}>
+                                            <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
+                                                <Text style={[DestinationStyles.typeTagText, { color: item.packageType.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
+                                                    {item.packageType.toUpperCase()}
+                                                </Text>
+                                            </View>
+                                            <View style={[DestinationStyles.availTag, { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }]}>
+                                                <Text style={[DestinationStyles.availTagText, { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }]}>
+                                                    {item.availability.toUpperCase()}
+                                                </Text>
+                                            </View>
+                                            <Text style={DestinationStyles.durationText}>{item.duration}</Text>
+                                        </View>
+
+                                        <View style={DestinationStyles.cardDetailsRow}>
+                                            <View style={DestinationStyles.cardLeftColumn}>
+                                                <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
+                                                {item.packageTags && item.packageTags.length > 0 && (
+                                                    <View style={DestinationStyles.packageTagsRow}>
+                                                        {item.packageTags.slice(0, 4).map((tag, index) => (
+                                                            <View key={index} style={DestinationStyles.tagPill}>
+                                                                <Text style={DestinationStyles.tagText}>{tag}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                )}
+                                            </View>
+
+                                            <View style={DestinationStyles.cardRightColumn}>
+                                                {item.discountPercent > 0 && (
+                                                    <View style={DestinationStyles.discountBadge}>
+                                                        <Text style={DestinationStyles.discountBadgeText}>-{item.discountPercent}%</Text>
+                                                    </View>
+                                                )}
+                                                <TouchableOpacity onPress={() => handleWishlistToggle(item.id)} style={{ padding: 4 }}>
+                                                    <Ionicons
+                                                        name={isWishlisted ? "heart" : "heart-outline"}
+                                                        size={26}
+                                                        color={isWishlisted ? "#cf1322" : "#305797"}
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+
+                                        <View style={DestinationStyles.packageFooter}>
+                                            <View style={DestinationStyles.priceContainer}>
+                                                {tv > 1 ? (
+                                                    <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
+                                                        {formatPeso(item.discountedPrice)} x {tv} pax =
+                                                    </Text>
+                                                ) : null}
+
+                                                {item.discountPercent > 0 && (
+                                                    <Text style={DestinationStyles.packagePriceOld}>
+                                                        {formatPeso(originalPrice)}
+                                                    </Text>
+                                                )}
+
+                                                <View style={DestinationStyles.priceRowBox}>
+                                                    <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
+                                                    <Text style={DestinationStyles.budgetPaxText}>
+                                                        {item.discountPercent > 0 ? "Discounted / Pax" : "Budget / Pax"}
+                                                    </Text>
+                                                </View>
+                                            </View>
+
+                                            <TouchableOpacity
+                                                style={DestinationStyles.viewDetailsButton}
+                                                onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
+                                            >
+                                                <Text style={DestinationStyles.viewDetailsText}>View Details</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        );
-                    })}
+                            );
+                        })}
 
-                    {visibleCount > 10 && (
-                        <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>
-                            <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>See less</Text>
-                        </TouchableOpacity>
-                    )}
+                        {visibleCount > 10 && (
+                            <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>See less</Text>
+                            </TouchableOpacity>
+                        )}
 
-                    {visibleCount < filteredPackages.length && (
-                        <TouchableOpacity onPress={handleLoadMore} style={{ alignSelf: 'center', marginVertical: 12 }}>
-                            <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>Load more</Text>
-                        </TouchableOpacity>
-                    )}
+                        {visibleCount < filteredPackages.length && (
+                            <TouchableOpacity onPress={handleLoadMore} style={{ alignSelf: 'center', marginVertical: 12 }}>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>Load more</Text>
+                            </TouchableOpacity>
+                        )}
 
                     </>
                 )}

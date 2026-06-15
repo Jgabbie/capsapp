@@ -153,7 +153,7 @@ export default function UserBookings() {
             setBookings(mappedBookings);
 
         } catch (error) {
-            console.log("BOOKING CRASH REASON:", error.response?.data || error.message);
+            console.error("Booking Error:", error.response?.data || error.message);
             setBookings([])
         } finally {
             setLoading(false)

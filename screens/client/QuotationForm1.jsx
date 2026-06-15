@@ -90,7 +90,7 @@ export default function QuotationForm1({ route, navigation }) {
                     const response = await api.get(`/users/users/${user._id}`);
                     setFullUserData(response.data.user || response.data);
                 } catch (error) {
-                    console.log("Failed to fetch full user profile", error);
+                    console.error("Failed to fetch full user profile", error);
                 }
             }
         };

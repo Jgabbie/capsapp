@@ -105,7 +105,8 @@ export default function Wishlist() {
                     });
                     setPackages(mapped);
                 } catch (err) {
-                    console.log("Fetch Wishlist Error:", err.message);
+                    console.error("Fetch Wishlist Error:", err.message);
+                    Alert.alert("Fetch Wishlist Error", err.message);
                 } finally {
                     setLoading(false);
                 }

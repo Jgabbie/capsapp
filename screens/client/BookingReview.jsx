@@ -13,66 +13,60 @@ export default function BookingReview({ route, navigation }) {
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
 
-    //  FIX: Properly check for "Yes", "true", or boolean true
+    // Properly check for "Yes", "true", or boolean true
     const rawVisaValue = pkg?.requiresVisa ?? pkg?.packageRequiresVisa ?? pkg?.visaRequired;
     const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
-    //  NEW: Check if it's a domestic package to dynamically change the button text
+    // Check if it's a domestic package to dynamically change the button text
     const isDomestic = String(pkg?.packageType || '').toLowerCase().includes('domestic');
     const documentLabel = isDomestic ? 'Valid ID' : 'Passport';
 
     // Extract itinerary images
     const itineraryImages = pkg?.packageItineraryImages || {};
 
-    // console.log(" BookingReview - packageItineraryImages:", itineraryImages);
-    // console.log(" pkg object keys:", Object.keys(pkg || {}));
 
     // Helper function to get image URL for a day
     const getImageForDay = (dayLabel) => {
         if (!dayLabel || !itineraryImages) {
-            //console.log(" getImageForDay - Missing dayLabel or itineraryImages:", { dayLabel, hasImages: !!itineraryImages, imageKeys: Object.keys(itineraryImages || {}) });
             return null;
         }
-        // Try exact match first
+
+        // exact match first
         if (itineraryImages[dayLabel]) {
-            //console.log(` Found image for "${dayLabel}" (exact match)`);
             return itineraryImages[dayLabel];
         }
-        // Try lowercase
+
+        // lowercase
         const lowercase = dayLabel.toLowerCase();
         if (itineraryImages[lowercase]) {
-            //console.log(` Found image for "${dayLabel}" (lowercase: ${lowercase})`);
             return itineraryImages[lowercase];
         }
-        // Try removing spaces
+
+        // removing spaces
         const noSpaces = dayLabel.replace(/\s+/g, '');
         if (itineraryImages[noSpaces]) {
-            //console.log(` Found image for "${dayLabel}" (noSpaces: ${noSpaces})`);
             return itineraryImages[noSpaces];
         }
-        // Try lowercase no spaces
+
+        // lowercase no spaces
         if (itineraryImages[noSpaces.toLowerCase()]) {
-            //console.log(` Found image for "${dayLabel}" (lowercase noSpaces: ${noSpaces.toLowerCase()})`);
             return itineraryImages[noSpaces.toLowerCase()];
         }
+
         // Try numeric day (Day 1 -> 1)
         const dayMatch = dayLabel.match(/\d+/);
         if (dayMatch) {
             const dayNum = dayMatch[0];
             if (itineraryImages[dayNum]) {
-                //console.log(` Found image for "${dayLabel}" (numeric: ${dayNum})`);
                 return itineraryImages[dayNum];
             }
             if (itineraryImages[`day${dayNum}`]) {
-                //console.log(` Found image for "${dayLabel}" (day${dayNum})`);
                 return itineraryImages[`day${dayNum}`];
             }
             if (itineraryImages[`Day${dayNum}`]) {
-                //console.log(`Found image for "${dayLabel}" (Day${dayNum})`);
                 return itineraryImages[`Day${dayNum}`];
             }
         }
-        //console.log(` No image found for "${dayLabel}". Available keys:`, Object.keys(itineraryImages));
         return null;
     };
 
@@ -94,7 +88,7 @@ export default function BookingReview({ route, navigation }) {
                     <Text style={QuotationAllInStyle.subtitle}>Review the day-by-day schedule and what your package covers.</Text>
                 </View>
 
-                {/* --- ITINERARY SECTION --- */}
+                {/* section itinerary */}
                 <View style={BookingReviewStyle.sectionCard}>
                     <View style={BookingReviewStyle.cardHeader}>
                         <View>
@@ -133,7 +127,7 @@ export default function BookingReview({ route, navigation }) {
                     })}
                 </View>
 
-                {/* --- INCLUSIONS & EXCLUSIONS SECTION --- */}
+                {/* inclusions and exclusions */}
                 <View style={BookingReviewStyle.sectionCard}>
                     <View style={BookingReviewStyle.cardHeader}>
                         <View>
@@ -163,7 +157,7 @@ export default function BookingReview({ route, navigation }) {
                         </View>
                     </View>
 
-                    {/* --- Visa Requirement Card --- */}
+                    {/* Visa Requirement Card */}
                     <View style={[BookingReviewStyle.policyCard, { marginTop: 20 }]}>
                         <Text style={BookingReviewStyle.policyTitle}>Visa Requirement</Text>
                         <Text style={BookingReviewStyle.policyText}>
@@ -173,7 +167,7 @@ export default function BookingReview({ route, navigation }) {
                         </Text>
                     </View>
 
-                    {/* --- Cancellation Policy Card --- */}
+                    {/* Cancellation Policy Card */}
                     <View style={[BookingReviewStyle.policyCard, { marginTop: 16 }]}>
                         <Text style={BookingReviewStyle.policyTitle}>Cancellation Policy</Text>
                         <Text style={BookingReviewStyle.policyText}>
@@ -182,7 +176,7 @@ export default function BookingReview({ route, navigation }) {
                     </View>
                 </View>
 
-                {/* --- COMPACT FOOTER NAVIGATION --- */}
+                {/* Footer Navigation */}
                 <View style={BookingReviewStyle.footerContainer}>
                     <TouchableOpacity
                         style={BookingReviewStyle.smallProceedButton}

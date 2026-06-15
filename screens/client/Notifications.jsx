@@ -26,7 +26,7 @@ export default function Notifications() {
 
             setNotifs(res.data || []);
         } catch (e) {
-            console.log("Notif Screen Error:", e.message);
+            console.error("Notif Screen Error:", e.message);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -53,7 +53,7 @@ export default function Notifications() {
             await api.patch('/notifications/read-all', {}, withUserHeader(user._id));
             setNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
         } catch (e) {
-            console.log("Mark all read error:", e.message);
+            console.error("Mark all read error:", e.message);
         }
     };
 
@@ -66,7 +66,7 @@ export default function Notifications() {
                 await api.patch(`/notifications/${item._id}/read`, {}, withUserHeader(user._id));
                 setNotifs(prev => prev.map(n => n._id === item._id ? { ...n, isRead: true } : n));
             } catch (e) {
-                console.log(e.message);
+                console.error("Mark as read error:", e.message);
             }
         }
 
@@ -108,7 +108,7 @@ export default function Notifications() {
 
                 navigation.navigate(targetRoute, navParams);
             } catch (err) {
-                console.log("Navigation error:", err);
+                console.error("Navigation error:", err);
             }
         }
     };

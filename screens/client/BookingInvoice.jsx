@@ -114,9 +114,7 @@ export default function BookingInvoice({ route, navigation }) {
                 finalBooking = bookingRes.data?.booking || rawBooking;
                 finalTxns = bookingRes.data?.transactions || [];
             } catch (err) {
-                // console.log("Primary fetch failed. Triggering Transaction Fallback...");
 
-                // If by-reference 500s, we grab the transactions directly and link them!
                 try {
                     const txRes = await api.get('/transaction/my-transactions', withUserHeader(user?._id));
                     const allTx = txRes.data?.transactions || txRes.data || [];
@@ -128,7 +126,7 @@ export default function BookingInvoice({ route, navigation }) {
                         tx.bookingReference === reference
                     );
                 } catch (txErr) {
-                    console.log("Fallback transaction fetch failed:", txErr.message);
+                    console.error("Fallback transaction fetch failed:", txErr.message);
                 }
             }
 
@@ -151,7 +149,7 @@ export default function BookingInvoice({ route, navigation }) {
                         setInvoiceNumber(`${monthKey}${String(sequence).padStart(2, '0')}`);
                     }
                 } catch (countErr) {
-                    console.log("Error fetching invoice number for reference:", countErr.message);
+                    console.error("Error fetching invoice number for reference:", countErr.message);
                     const cDate = finalBooking.createdAt || finalBooking.bookingDate || new Date();
                     setInvoiceNumber(`${dayjs(cDate).format('MM')}01`);
                 }
@@ -518,8 +516,6 @@ export default function BookingInvoice({ route, navigation }) {
                 visaImage ? uploadDocument(visaImage) : Promise.resolve(null)
             ]);
 
-            console.log('Uploaded document URLs:', { passportUrl, photoUrl, visaUrl });
-
             const travelersArray = bookingDetails?.travelers || [];
             const updatedTravelers = travelersArray.map((traveler, idx) => {
                 if (idx !== travelerIndex) return traveler;
@@ -554,10 +550,7 @@ export default function BookingInvoice({ route, navigation }) {
                 travelerIndex: Number(travelerIndex)
             };
 
-            console.log('Sending resubmit payload:', JSON.stringify(updatePayload));
-
             const response = await api.post(`/booking/${booking._id}/resubmit-documents`, updatePayload, withUserHeader(user?._id));
-            console.log('Resubmit response:', response);
 
             const updatedBooking = response?.data?.booking || response?.booking || booking;
             setBooking(updatedBooking);

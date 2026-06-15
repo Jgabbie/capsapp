@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ToastAndroid, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
@@ -10,12 +10,21 @@ export default function SuccessfulPaymentVisa({ route, navigation }) {
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
 
+    //show message function
+    const showMessage = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(message, ToastAndroid.SHORT);
+        } else {
+            Alert.alert('Notification', message);
+        }
+    };
+
     useEffect(() => {
         const token = route.params?.token;
 
         if (token && user?._id) {
             api.post('/visa/verify-payment', { token }, withUserHeader(user._id))
-                .then(res => console.log("Visa payment verified successfully."))
+                .then(res => showMessage('Visa payment verified successfully.'))
                 .catch(err => console.error("Visa payment verification failed:", err.message));
         }
     }, [route.params?.token, user?._id]);
@@ -37,7 +46,7 @@ export default function SuccessfulPaymentVisa({ route, navigation }) {
         <SafeAreaView style={SuccessfulPaymentVisaStyle.container}>
             <StatusBar barStyle="dark-content" />
             <View style={SuccessfulPaymentVisaStyle.content}>
-                
+
                 <View style={SuccessfulPaymentVisaStyle.iconWrapper}>
                     <Ionicons name="checkmark-sharp" size={50} color="#fff" />
                 </View>
@@ -52,15 +61,15 @@ export default function SuccessfulPaymentVisa({ route, navigation }) {
                 </Text>
 
                 <View style={SuccessfulPaymentVisaStyle.buttonRow}>
-                    <TouchableOpacity 
-                        style={SuccessfulPaymentVisaStyle.buttonSecondary} 
+                    <TouchableOpacity
+                        style={SuccessfulPaymentVisaStyle.buttonSecondary}
                         onPress={() => { setIsActive(false); navigation.navigate('userapplications'); }}
                     >
                         <Text style={SuccessfulPaymentVisaStyle.buttonTextSecondary}>View Applications</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
-                        style={SuccessfulPaymentVisaStyle.buttonPrimary} 
+                    <TouchableOpacity
+                        style={SuccessfulPaymentVisaStyle.buttonPrimary}
                         onPress={() => { setIsActive(false); navigation.navigate('home'); }}
                     >
                         <Text style={SuccessfulPaymentVisaStyle.buttonTextPrimary}>Go to Home</Text>

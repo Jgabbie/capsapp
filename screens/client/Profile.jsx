@@ -18,15 +18,6 @@ import { extractPackageTags } from '../../utils/packageTags'
 import { useUser } from '../../context/UserContext'
 
 export default function Profile() {
-    const { user, updateUser } = useUser()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
-    const [editing, setEditing] = useState(false)
-
-    // Modals & Pickers
-    const [confirmModalVisible, setConfirmModalVisible] = useState(false)
-    const [successModalVisible, setSuccessModalVisible] = useState(false)
-    const [genderModalVisible, setGenderModalVisible] = useState(false)
-    const [showDatePicker, setShowDatePicker] = useState(false)
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -37,6 +28,20 @@ export default function Profile() {
         Roboto_700Bold
     })
 
+
+    // User, sidebar and edit states
+    const { user, updateUser } = useUser()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [editing, setEditing] = useState(false)
+
+    // Modals & Pickers
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false)
+    const [successModalVisible, setSuccessModalVisible] = useState(false)
+    const [genderModalVisible, setGenderModalVisible] = useState(false)
+    const [nationalityModalVisible, setNationalityModalVisible] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false)
+
+    // User data states
     const [profileImage, setProfileImage] = useState('')
     const [selectedReviewToDelete, setSelectedReviewToDelete] = useState(null)
     const [userData, setUserData] = useState({
@@ -53,6 +58,7 @@ export default function Profile() {
         isAccountVerified: false
     })
 
+    //Original data for canceling edits and error states
     const [originalData, setOriginalData] = useState({})
     const [errors, setErrors] = useState({
         firstname: "",
@@ -61,10 +67,12 @@ export default function Profile() {
         phonenum: ""
     })
 
+    //Recent bookings
     const [recentBookings, setRecentBookings] = useState([])
     const [recentReviews, setRecentReviews] = useState([])
     const [loadingExtra, setLoadingExtra] = useState(false)
 
+    //Preferences states
     const [moodOptions, setMoodOptions] = useState([])
     const tourOptions = ['Domestic', 'International']
     const [preferences, setPreferences] = useState({ moods: [], tours: [] })
@@ -74,7 +82,7 @@ export default function Profile() {
     const [removedTagWarning, setRemovedTagWarning] = useState(false)
     const [deleteReviewModalVisible, setDeleteReviewModalVisible] = useState(false)
 
-    // --- FETCH USER DATA ---
+    // Fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -112,13 +120,14 @@ export default function Profile() {
                     })
                 }
             } catch (error) {
-                console.log("Fetch Error:", error.message)
+                console.error("Fetch Error:", error.message)
             }
         }
         if (user?._id) fetchUserData()
     }, [user?._id])
 
-    // --- FETCH RECENT ACTIVITY & PREFERENCES ---
+
+    // fetch recent bookings, reviews and preferences
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user?._id) return;
@@ -147,7 +156,7 @@ export default function Profile() {
                 }
 
             } catch (error) {
-                console.log("Error fetching dashboard data:", error.message);
+                console.error("Error fetching dashboard data:", error.message);
             } finally {
                 setLoadingExtra(false);
             }
@@ -175,6 +184,7 @@ export default function Profile() {
         });
     }, [moodOptions]);
 
+
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
             ToastAndroid.show(msg, ToastAndroid.SHORT)
@@ -182,6 +192,8 @@ export default function Profile() {
             Alert.alert(msg)
         }
     }
+
+
 
     const toProperCase = (value) =>
         value.toLowerCase().split(" ").map(word =>
@@ -346,7 +358,7 @@ export default function Profile() {
                 })
             }
         } catch (error) {
-            console.log("Update Error:", error.response?.data || error.message)
+            console.error("Update Error:", error.response?.data || error.message)
             showMessage("Failed to update profile.")
             setConfirmModalVisible(false)
         }
@@ -358,7 +370,7 @@ export default function Profile() {
         setEditing(false)
     }
 
-    //  PREFERENCES HANDLERS 
+    //  preference handlers
     const togglePreference = (key, value, limit) => {
         if (!editingPreferences) return;
         setPreferences(prev => {
@@ -425,7 +437,7 @@ export default function Profile() {
             )
             showMessage('Review deleted successfully.')
         } catch (error) {
-            console.log('Delete review error:', error.response?.data || error.message)
+            console.error('Delete review error:', error.response?.data || error.message)
             showMessage('Unable to delete review.')
         } finally {
             setDeleteReviewModalVisible(false)
@@ -433,7 +445,148 @@ export default function Profile() {
         }
     }
 
+    //Date Birth restrictions
+    const defaultBirthDate = new Date(2000, 0, 1);
+
+    const maxBirthDate = new Date();
+    maxBirthDate.setFullYear(maxBirthDate.getFullYear() - 18);
+
     if (!fontsLoaded) return null;
+
+    //List of Nationalities
+    const nationalities = [
+        'Afghan',
+        'Albanian',
+        'Algerian',
+        'American',
+        'Andorran',
+        'Angolan',
+        'Argentine',
+        'Armenian',
+        'Australian',
+        'Austrian',
+        'Azerbaijani',
+        'Bahraini',
+        'Bangladeshi',
+        'Barbadian',
+        'Belarusian',
+        'Belgian',
+        'Belizean',
+        'Beninese',
+        'Bhutanese',
+        'Bolivian',
+        'Bosnian',
+        'Botswanan',
+        'Brazilian',
+        'British',
+        'Bruneian',
+        'Bulgarian',
+        'Burkinabe',
+        'Burmese',
+        'Burundian',
+        'Cambodian',
+        'Cameroonian',
+        'Canadian',
+        'Chilean',
+        'Chinese',
+        'Colombian',
+        'Congolese',
+        'Costa Rican',
+        'Croatian',
+        'Cuban',
+        'Cypriot',
+        'Czech',
+        'Danish',
+        'Dominican',
+        'Dutch',
+        'Ecuadorian',
+        'Egyptian',
+        'English',
+        'Estonian',
+        'Ethiopian',
+        'Fijian',
+        'Filipino',
+        'Finnish',
+        'French',
+        'Georgian',
+        'German',
+        'Ghanaian',
+        'Greek',
+        'Guatemalan',
+        'Haitian',
+        'Honduran',
+        'Hungarian',
+        'Icelandic',
+        'Indian',
+        'Indonesian',
+        'Iranian',
+        'Iraqi',
+        'Irish',
+        'Israeli',
+        'Italian',
+        'Jamaican',
+        'Japanese',
+        'Jordanian',
+        'Kazakh',
+        'Kenyan',
+        'Kuwaiti',
+        'Laotian',
+        'Latvian',
+        'Lebanese',
+        'Liberian',
+        'Libyan',
+        'Lithuanian',
+        'Luxembourgish',
+        'Malaysian',
+        'Malian',
+        'Maltese',
+        'Mexican',
+        'Mongolian',
+        'Moroccan',
+        'Nepalese',
+        'New Zealander',
+        'Nigerian',
+        'Norwegian',
+        'Omani',
+        'Pakistani',
+        'Panamanian',
+        'Paraguayan',
+        'Peruvian',
+        'Polish',
+        'Portuguese',
+        'Qatari',
+        'Romanian',
+        'Russian',
+        'Saudi',
+        'Scottish',
+        'Senegalese',
+        'Serbian',
+        'Singaporean',
+        'Slovak',
+        'Slovenian',
+        'Somali',
+        'South African',
+        'South Korean',
+        'Spanish',
+        'Sri Lankan',
+        'Sudanese',
+        'Swedish',
+        'Swiss',
+        'Syrian',
+        'Taiwanese',
+        'Tanzanian',
+        'Thai',
+        'Tunisian',
+        'Turkish',
+        'Ukrainian',
+        'Uruguayan',
+        'Venezuelan',
+        'Vietnamese',
+        'Welsh',
+        'Yemeni',
+        'Zambian',
+        'Zimbabwean'
+    ];
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#f5f7fa' }} showsVerticalScrollIndicator={false}>
@@ -548,17 +701,40 @@ export default function Profile() {
 
                     {showDatePicker && (
                         <DateTimePicker
-                            value={userData.birthdate ? new Date(userData.birthdate) : new Date()}
-                            mode="date" display="default" maximumDate={new Date()} onChange={handleDateChange}
+                            value={userData.birthdate ? new Date(userData.birthdate) : defaultBirthDate}
+                            mode="date"
+                            display="default"
+                            maximumDate={maxBirthDate}
+                            onChange={handleDateChange}
                         />
                     )}
 
                     <Text style={ProfileStyle.profileLabel}>Nationality</Text>
-                    <TextInput
-                        value={userData.nationality} editable={editing}
-                        onChangeText={(text) => valueHandler('nationality', text)}
-                        style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]}
-                    />
+                    <TouchableOpacity
+                        style={[
+                            ProfileStyle.profileInputs,
+                            ProfileStyle.dropdownButton,
+                            !editing && ProfileStyle.profileInputsDisabled
+                        ]}
+                        disabled={!editing}
+                        onPress={() => setNationalityModalVisible(true)}
+                    >
+                        <Text
+                            style={{
+                                color: userData.nationality ? '#333' : '#a0a0a0',
+                                fontFamily: 'Roboto_400Regular'
+                            }}
+                        >
+                            {userData.nationality || "Select nationality"}
+                        </Text>
+                        {editing && (
+                            <Ionicons
+                                name="chevron-down"
+                                size={16}
+                                color="#666"
+                            />
+                        )}
+                    </TouchableOpacity>
 
                     {userData.isAccountVerified && (
                         <View style={ProfileStyle.verifiedBadge}>
@@ -733,6 +909,7 @@ export default function Profile() {
                 <View style={{ height: 30 }} />
 
                 {/* Modals */}
+                {/* Gender Modal */}
                 <Modal visible={genderModalVisible} transparent={true} animationType="fade">
                     <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setGenderModalVisible(false)}>
                         <View style={[ModalStyle.modalBox, { width: '80%', paddingVertical: 10 }]}>
@@ -748,6 +925,65 @@ export default function Profile() {
                                     </TouchableOpacity>
                                 )
                             })}
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
+
+                {/* Nationality Modal */}
+                <Modal
+                    visible={nationalityModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                >
+                    <TouchableOpacity
+                        style={ModalStyle.modalOverlay}
+                        activeOpacity={1}
+                        onPress={() => setNationalityModalVisible(false)}
+                    >
+                        <View
+                            style={[
+                                ModalStyle.modalBox,
+                                {
+                                    width: '85%',
+                                    maxHeight: '70%',
+                                    paddingVertical: 10
+                                }
+                            ]}
+                        >
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {nationalities.map((option, index) => {
+                                    const isSelected = userData.nationality === option;
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={{
+                                                paddingVertical: 15,
+                                                borderBottomWidth:
+                                                    index === nationalities.length - 1 ? 0 : 1,
+                                                borderBottomColor: '#f0f0f0',
+                                                alignItems: 'center'
+                                            }}
+                                            onPress={() => {
+                                                valueHandler('nationality', option);
+                                                setNationalityModalVisible(false);
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    fontSize: 16,
+                                                    color: isSelected ? '#305797' : '#000',
+                                                    fontFamily: isSelected
+                                                        ? 'Roboto_500Medium'
+                                                        : 'Roboto_400Regular'
+                                                }}
+                                            >
+                                                {option}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
                         </View>
                     </TouchableOpacity>
                 </Modal>

@@ -101,7 +101,7 @@ export default function VisaDetailsGuidance() {
                     setServiceDetails((prev) => ({ ...(prev || {}), ...data }))
                 }
             } catch (error) {
-                console.log('Failed to load full visa service details:', error?.message)
+                console.error('Failed to load full visa service details:', error?.message)
             }
         }
 

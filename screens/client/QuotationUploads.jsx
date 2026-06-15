@@ -106,14 +106,6 @@ export default function QuotationUploads({ route, navigation }) {
     const isInternationalPackage = String(packageType).toLowerCase() === 'international';
     const requiresVisa = isInternationalPackage || rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
-    // console.log(" QuotationUploads - Visa Check:", {
-    //     rawVisaValue,
-    //     packageType,
-    //     isInternationalPackage,
-    //     requiresVisa,
-    //     packageName: activeQuotation?.packageId?.packageName,
-    //     message: requiresVisa ? " Visa required - will show form" : " Visa not required - will NOT show form"
-    // });
 
     const travelerTypes = useMemo(() => {
         const types = [];

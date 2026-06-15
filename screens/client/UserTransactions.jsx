@@ -84,7 +84,7 @@ export default function UserTransactions() {
                 const transactions = response.data.transactions || response.data || [];
                 setTransac(Array.isArray(transactions) ? transactions : []);
             } catch (error) {
-                console.log("TRANSACTION CRASH REASON:", error.response?.data || error.message);
+                console.error("Transaction Error:", error.response?.data || error.message);
             } finally {
                 setLoading(false)
             }
@@ -367,8 +367,7 @@ export default function UserTransactions() {
             await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
         } catch (error) {
             //  NEW: Add detailed logging to find the error 
-            console.error("Download Image Error:", error);
-            console.log("Error Reason:", error.message);
+            console.error("Download Image Error:", error.message);
             Alert.alert("Error", `Could not download image. Reason: ${error.message || 'Unknown'}`);
         }
     };

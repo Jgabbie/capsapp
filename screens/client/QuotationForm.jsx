@@ -272,8 +272,6 @@ export default function QuotationForm({ route, navigation }) {
                 quotationDetails: detailsObject
             };
 
-            //console.log(" Sending Quotation Payload:", JSON.stringify(payload, null, 2));
-
             await api.post("/quotation/create-quotation", payload, withUserHeader(user?._id));
 
             setSuccessModalVisible(true);

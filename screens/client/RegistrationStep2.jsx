@@ -35,12 +35,7 @@ export default function RegistrationStep2({ route, navigation }) {
     );
 
     const [activeDropdown, setActiveDropdown] = useState(null);
-
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
-
-    React.useEffect(() => {
-        //console.log('medicalData state updated:', medicalData);
-    }, [medicalData]);
 
     // --- Validation Logic ---
     const isValidEmail = (email) => {
@@ -90,7 +85,6 @@ export default function RegistrationStep2({ route, navigation }) {
     // --- Dropdown Handlers ---
     const handleDropdownSelect = (value, field) => {
         const target = field || activeDropdown;
-        console.log('handleDropdownSelect called', { target, value });
         if (target === 'dietary') {
             setMedicalData((prev) => ({
                 ...prev,

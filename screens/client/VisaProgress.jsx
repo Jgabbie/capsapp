@@ -197,7 +197,6 @@ export default function VisaProgress() {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
 
-    console.log('Selected schedule index:', application?.suggestedAppointmentSchedules);
 
     const handleCustomDateChange = (event, date) => {
         setShowCustomDatePicker(false);
@@ -1200,11 +1199,9 @@ export default function VisaProgress() {
 
     //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
     const handleConfirmSuggested = async () => {
-        console.log('Confirming appointment with selected index:', selectedSuggestedIndex);
 
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
             notification.warning({ message: 'Please select an appointment option first.', placement: 'topRight' });
-            console.log(selectedSuggestedIndex);
             return;
         }
 

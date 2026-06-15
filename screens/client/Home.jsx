@@ -248,13 +248,13 @@ export default function Home({ route }) {
                         setForYouPackages(recResponse.data.packages);
                     }
                 } catch (error) {
-                    console.log("Failed to fetch recommendations on refresh:", error.message);
+                    console.error("Failed to fetch recommendations on refresh:", error.message);
                 }
             }
 
             await fetchPopularPackages();
         } catch (error) {
-            console.log("Failed to refresh packages:", error.message);
+            console.error("Failed to refresh packages:", error.message);
         } finally {
             setRefreshing(false);
         }
@@ -339,11 +339,11 @@ export default function Home({ route }) {
                         setWishlistedIds(wIds);
 
                     } catch (userErr) {
-                        console.log("Could not sync user data for sidebar:", userErr.message)
+                        console.error("Could not sync user data for sidebar:", userErr.message)
                     }
                 }
             } catch (error) {
-                console.log("Failed to fetch packages:", error.message)
+                console.error("Failed to fetch packages:", error.message)
             } finally {
                 setLoading(false)
             }
@@ -363,7 +363,7 @@ export default function Home({ route }) {
                     setForYouPackages([])
                 }
             } catch (error) {
-                console.log("Failed to fetch recommendations:", error.message)
+                console.error("Failed to fetch recommendations:", error.message)
                 setForYouPackages([])
             } finally {
                 setForYouLoading(false)
@@ -392,13 +392,13 @@ export default function Home({ route }) {
                 setFallbackPopularPackages([]);
             }
         } catch (error) {
-            console.log('Failed to fetch popular packages:', error.message);
+            console.error('Failed to fetch popular packages:', error.message);
             setPopularPackages([]);
             try {
                 const fallbackResponse = await api.get('/package/get-packages');
                 setFallbackPopularPackages((fallbackResponse.data || []).slice(0, 5));
             } catch (fallbackError) {
-                console.log('Failed to fetch fallback packages:', fallbackError.message);
+                console.error('Failed to fetch fallback packages:', fallbackError.message);
                 setFallbackPopularPackages([]);
             }
         } finally {
@@ -475,7 +475,7 @@ export default function Home({ route }) {
                 isWishlisted: !isCurrentlyWishlisted
             }));
         } catch (error) {
-            console.log("Wishlist toggle error:", error.message);
+            console.error("Wishlist toggle error:", error.message);
         }
     };
 
@@ -518,7 +518,7 @@ export default function Home({ route }) {
             setEmailError('');
 
         } catch (error) {
-            console.log("Contact submit error:", error.message);
+            console.error("Contact submit error:", error.message);
             Alert.alert("Failed to Send Message", "There was an error sending your message. Please try again later.");
         } finally {
             setSubmittingContact(false);
@@ -701,6 +701,8 @@ export default function Home({ route }) {
                         </TouchableOpacity>
                     </ImageBackground>
 
+
+                    {/* Carousel */}
                     <View style={HomeStyle.carouselContainer}>
                         <ScrollView
                             ref={carouselRef}
@@ -738,7 +740,7 @@ export default function Home({ route }) {
                             </View>
                         )}
                     </View>
-                    {/* --- END CAROUSEL --- */}
+
 
                     <View style={HomeStyle.servicesContainer}>
                         <Text style={HomeStyle.servicesHeader}>THE <Text style={{ color: '#305797' }}>SERVICES</Text> WE OFFER</Text>

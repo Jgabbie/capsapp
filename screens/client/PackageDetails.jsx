@@ -115,7 +115,7 @@ export default function PackageDetails({ route, navigation }) {
             const reviewResponse = await api.get(`/rating/package/${packageId}/ratings`, withUserHeader(user?._id));
             setReviews(reviewResponse.data || []);
         } catch (reviewErr) {
-            console.log("No reviews yet or unauthorized.");
+            console.error("No reviews yet or unauthorized.");
         }
     };
 
@@ -135,7 +135,7 @@ export default function PackageDetails({ route, navigation }) {
 
             setHasFullyPaidBooking(!!fullyPaidBooking);
         } catch (bookingErr) {
-            console.log("Error fetching booking status:", bookingErr.message);
+            console.error("Error fetching booking status:", bookingErr.message);
             setHasFullyPaidBooking(false);
         }
     };
@@ -191,7 +191,7 @@ export default function PackageDetails({ route, navigation }) {
                         });
                         setWishlistedIds(ids);
                     } catch (e) {
-                        console.log("Wishlist fetch error:", e.message);
+                        console.error("Wishlist fetch error:", e.message);
                     }
 
                     // Fetch booking status to check for fully paid bookings
@@ -199,7 +199,7 @@ export default function PackageDetails({ route, navigation }) {
                 }
 
             } catch (err) {
-                console.log("Error loading package data:", err.message);
+                console.error("Error loading package data:", err.message);
             }
 
             await fetchReviewsData();
