@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -2325,6 +2325,16 @@ export default function VisaProgress() {
                     </View>
                 </Modal>
 
+                <Modal visible={paymentLoading} transparent animationType="fade">
+                    <View style={VisaProgressStyle.loadingOverlay}>
+                        <View style={VisaProgressStyle.loadingCard}>
+                            <ActivityIndicator size="large" color="#305797" />
+                            <Text style={VisaProgressStyle.loadingText}>Processing payment...</Text>
+                            <Text style={VisaProgressStyle.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                        </View>
+                    </View>
+                </Modal>
+
                 <Modal visible={isDateSelectedModalOpen} transparent animationType="fade" onRequestClose={() => setIsDateSelectedModalOpen(false)}>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
                         <TouchableWithoutFeedback>
@@ -2353,3 +2363,4 @@ export default function VisaProgress() {
         </View>
     );
 }
+

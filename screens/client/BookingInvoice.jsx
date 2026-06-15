@@ -1067,7 +1067,7 @@ export default function BookingInvoice({ route, navigation }) {
 
                     .invoice-title {
                         font-size: 32px;
-                        font-weight: 700;
+                        font-weight: 600;
                         color: #1f2b4d;
                     }
 

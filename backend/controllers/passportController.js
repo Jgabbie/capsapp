@@ -749,6 +749,7 @@ export const chooseAppointment = async (req, res) => {
 export const updatePassportApplicationWithDocs = async (req, res) => {
   const { id } = req.params;
   const { submittedDocuments } = req.body;
+  const userId = req.userId;
 
   try {
     if (!submittedDocuments || typeof submittedDocuments !== 'object') {
@@ -772,7 +773,7 @@ export const updatePassportApplicationWithDocs = async (req, res) => {
     application.status = "Documents Uploaded";
 
     try {
-      const userWho = await User.findById(userId).select('username firstname lastname');
+      const userWho = await UserModel.findById(userId).select('username firstname lastname');
       application.statusHistory = application.statusHistory || [];
       application.statusHistory.push({
         status: application.status,

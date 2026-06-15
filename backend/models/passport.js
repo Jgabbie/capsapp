@@ -31,8 +31,8 @@ const passportSchema = new mongoose.Schema(
     submittedDocuments: {
       birthCertificate: { type: String },
       applicationForm: { type: String },
-      photo: { type: String },
       govId: { type: String },
+      // photo: { type: String },
     },
     passportReleaseOption: { type: String },
     deliveryAddress: { type: String },

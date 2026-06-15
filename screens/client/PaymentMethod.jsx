@@ -82,9 +82,8 @@ export default function PaymentMethod({ route, navigation }) {
             const safeAmount = Number(setupData?.totalPrice || amountToPay || 0);
             const finalAmountToPay = safeAmount;
 
-            // ==========================================================
-            // SCENARIO A: PAYING FOR AN EXISTING BOOKING
-            // ==========================================================
+            // PAYING FOR AN EXISTING BOOKING
+
             if (isExistingBooking) {
                 if (method === 'manual') {
                     const receiptFormData = new FormData();
@@ -142,9 +141,7 @@ export default function PaymentMethod({ route, navigation }) {
                 }
             }
 
-            // ==========================================================
-            // SCENARIO B: CREATING A BRAND NEW BOOKING
-            // ==========================================================
+            // CREATING A BRAND NEW BOOKING
             else {
                 const safeAdultCount = parseInt(setupData?.travelerCounts?.adult) || (passengers ? passengers.length : 1);
                 const safeChildCount = parseInt(setupData?.travelerCounts?.child) || 0;
@@ -548,11 +545,11 @@ export default function PaymentMethod({ route, navigation }) {
             </Modal>
 
             <Modal visible={loading} transparent animationType="fade">
-                <View style={localStyles.loadingOverlay}>
-                    <View style={localStyles.loadingCard}>
+                <View style={PaymentStyle.loadingOverlay}>
+                    <View style={PaymentStyle.loadingCard}>
                         <ActivityIndicator size="large" color="#305797" />
-                        <Text style={localStyles.loadingText}>Processing payment...</Text>
-                        <Text style={localStyles.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                        <Text style={PaymentStyle.loadingText}>Processing payment...</Text>
+                        <Text style={PaymentStyle.loadingSubtext}>Please do not close the app or tap anything.</Text>
                     </View>
                 </View>
             </Modal>
@@ -573,20 +570,3 @@ export default function PaymentMethod({ route, navigation }) {
         </SafeAreaView>
     );
 }
-
-const localStyles = StyleSheet.create({
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-    modalBox: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 24, paddingTop: 35, alignItems: 'center', elevation: 5 },
-    closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
-    modalTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 22, color: '#305797', marginBottom: 12 },
-    modalSubtitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25 },
-    modalButtonRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 12 },
-    proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
-    cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
-    loadingOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-    loadingCard: { width: '100%', backgroundColor: '#fff', borderRadius: 16, paddingVertical: 28, paddingHorizontal: 22, alignItems: 'center', elevation: 6 },
-    loadingText: { marginTop: 14, fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#305797', textAlign: 'center' },
-    loadingSubtext: { marginTop: 6, fontFamily: 'Roboto_400Regular', fontSize: 13, color: '#64748b', textAlign: 'center' }
-});

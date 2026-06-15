@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image, StyleSheet } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -301,7 +301,7 @@ export default function PassportApplication() {
     const normalizeResubmissionTarget = (target) => {
         switch (target) {
             case 'birthCertificate':
-                return 'birthCert';
+                return 'birthCertificate';
             case 'applicationForm':
             case 'govId':
                 return target;
@@ -340,8 +340,8 @@ export default function PassportApplication() {
 
     const hasSelectedFileForTarget = (target) => {
         switch (target) {
-            case 'birthCert':
-                return Boolean(selectedFiles.birthCert);
+            case 'birthCertificate':
+                return Boolean(selectedFiles.birthCertificate);
             case 'applicationForm':
                 return Boolean(selectedFiles.applicationForm);
             case 'govId':
@@ -522,7 +522,7 @@ export default function PassportApplication() {
     };
 
     const getUploadedDocumentEntries = () => {
-        const docs = application?.submittedDocuments || {
+        const docs = {
             birthCertificate: application?.birthCertificate,
             applicationForm: application?.applicationForm,
             govId: application?.govId,
@@ -532,7 +532,6 @@ export default function PassportApplication() {
 
     const passportRequirements = [
         { key: 'birthCertificate', label: 'PSA Birth Certificate' },
-        { key: 'birthCert', label: 'PSA Birth Certificate' },
         { key: 'applicationForm', label: 'Application Form' },
         { key: 'govId', label: 'Government-issued ID' },
     ];
@@ -938,8 +937,8 @@ export default function PassportApplication() {
         const submittedDocuments = application?.submittedDocuments || application?.documents || {};
 
         switch (key) {
-            case 'birthCert':
-                return selectedFiles.birthCert || birthCertList[0] || submittedDocuments.birthCertificate || application?.birthCertificate || null;
+            case 'birthCertificate':
+                return selectedFiles.birthCertificate || birthCertList[0] || submittedDocuments.birthCertificate || application?.birthCertificate || null;
             case 'applicationForm':
                 return selectedFiles.applicationForm || applicationFormList[0] || submittedDocuments.applicationForm || application?.applicationForm || null;
             case 'govId':
@@ -988,7 +987,7 @@ export default function PassportApplication() {
         }
 
         if (!resubmissionRequested) {
-            if (!selectedFiles.birthCert || !selectedFiles.applicationForm || !selectedFiles.govId) {
+            if (!selectedFiles.birthCertificate || !selectedFiles.applicationForm || !selectedFiles.govId) {
                 Alert.alert('Warning', "Please upload the required documents before submitting.");
                 return;
             }
@@ -1015,12 +1014,12 @@ export default function PassportApplication() {
             });
 
             const appendedOrder = [];
-            if (selectedFiles.birthCert && isRequestedResubmissionTarget('birthCert')) {
-                if (!selectedFiles.birthCert?.uri) {
+            if (selectedFiles.birthCertificate && isRequestedResubmissionTarget('birthCertificate')) {
+                if (!selectedFiles.birthCertificate?.uri) {
                     Alert.alert('Error', 'PSA Birth Certificate file is invalid. Please reselect the file.');
                     return;
                 }
-                formData.append('files', appendSelectedFile(selectedFiles.birthCert));
+                formData.append('files', appendSelectedFile(selectedFiles.birthCertificate));
                 appendedOrder.push('birthCertificate');
             }
 
@@ -1617,11 +1616,11 @@ export default function PassportApplication() {
                         </Text>
 
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
-                            {passportRequirements.filter((doc) => doc.key !== 'birthCertificate').map((doc, idx, filteredDocs) => {
+                            {passportRequirements.map((doc, idx, filteredDocs) => {
                                 const selectedFile = selectedFiles[doc.key];
                                 const uploadedUrl = uploadedDocuments[doc.key]
                                     || application?.submittedDocuments?.[doc.key]
-                                    || (doc.key === 'birthCert' ? (uploadedDocuments.birthCertificate || application?.submittedDocuments?.birthCertificate) : null);
+                                    || (doc.key === 'birthCertificate' ? (uploadedDocuments.birthCertificate || application?.submittedDocuments?.birthCertificate) : null);
                                 const hasFile = Boolean(uploadedUrl || selectedFile);
                                 const isValidRequirement = !isRequestedResubmissionTarget(doc.key);
 
@@ -1977,6 +1976,16 @@ export default function PassportApplication() {
                 </TouchableOpacity>
             </Modal>
 
+            <Modal visible={paymentLoading} transparent animationType="fade">
+                <View style={PassportProgressStyle.loadingOverlay}>
+                    <View style={PassportProgressStyle.loadingCard}>
+                        <ActivityIndicator size="large" color="#305797" />
+                        <Text style={PassportProgressStyle.loadingText}>Processing payment...</Text>
+                        <Text style={PassportProgressStyle.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                    </View>
+                </View>
+            </Modal>
+
             <Modal visible={!!requirementPreview} transparent animationType="fade" onRequestClose={() => setRequirementPreview(null)}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
                     <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden' }}>
@@ -2013,6 +2022,8 @@ export default function PassportApplication() {
                     </View>
                 </View>
             </Modal>
+
+
 
         </View>
     );
