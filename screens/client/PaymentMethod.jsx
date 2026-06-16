@@ -523,21 +523,21 @@ export default function PaymentMethod({ route, navigation }) {
             </ScrollView>
 
             <Modal visible={isProceedModalOpen} transparent animationType="fade">
-                <View style={localStyles.modalOverlay}>
-                    <View style={localStyles.modalBox}>
-                        <TouchableOpacity style={localStyles.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
+                <View style={PaymentStyle.modalOverlay}>
+                    <View style={PaymentStyle.modalBox}>
+                        <TouchableOpacity style={PaymentStyle.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
                             <Ionicons name="close" size={24} color="#9ca3af" />
                         </TouchableOpacity>
 
-                        <Text style={localStyles.modalTitle}>Proceed to Payment</Text>
-                        <Text style={localStyles.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
+                        <Text style={PaymentStyle.modalTitle}>Proceed to Payment</Text>
+                        <Text style={PaymentStyle.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
 
-                        <View style={localStyles.modalButtonRow}>
-                            <TouchableOpacity style={localStyles.proceedBtn} onPress={executePaymentFlow}>
-                                <Text style={localStyles.proceedBtnText}>Proceed</Text>
+                        <View style={PaymentStyle.modalButtonRow}>
+                            <TouchableOpacity style={PaymentStyle.proceedBtn} onPress={executePaymentFlow}>
+                                <Text style={PaymentStyle.proceedBtnText}>Proceed</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={localStyles.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
-                                <Text style={localStyles.cancelBtnText}>Cancel</Text>
+                            <TouchableOpacity style={PaymentStyle.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
+                                <Text style={PaymentStyle.cancelBtnText}>Cancel</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
