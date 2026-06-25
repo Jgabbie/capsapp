@@ -120,6 +120,8 @@ export const createNotification = async (
         return res.status(201).json(
             notification
         );
+
+        console.log("Notification created and push sent:", notification);
     } catch (error) {
         console.error(
             "Create notification error:",
