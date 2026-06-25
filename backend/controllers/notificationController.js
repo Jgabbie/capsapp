@@ -70,8 +70,13 @@ export const registerPushToken = async (req, res) => {
             error
         );
 
+        console.error("REGISTER PUSH TOKEN ERROR:", error);
+        console.error("ERROR MESSAGE:", error.message);
+        console.error("ERROR STACK:", error.stack);
+
         return res.status(500).json({
             message: "Failed to register push token.",
+            error: error.message,
         });
     }
 };
