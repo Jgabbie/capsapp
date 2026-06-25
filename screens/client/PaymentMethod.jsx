@@ -24,7 +24,18 @@ export default function PaymentMethod({ route, navigation }) {
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
 
-    const { setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const params = route.params || {};
+
+    const {
+        setupData,
+        amountToPay,
+        paymentType,
+        frequency,
+        passengers,
+        leadGuestInfo,
+        medicalData,
+        emergency
+    } = params;
 
     const [method, setMethod] = useState('paymongo');
     const [proofImage, setProofImage] = useState(null);
@@ -70,8 +81,14 @@ export default function PaymentMethod({ route, navigation }) {
         setLoading(true);
 
         try {
-            const isExistingBooking = !!route.params.existingBookingId;
-            const targetPackageId = route.params.existingPackageId || setupData?.pkg?._id || setupData?.pkg?.id || setupData?.packageId || route.params.packageId;
+            const isExistingBooking = Boolean(params.existingBookingId);
+
+            const targetPackageId =
+                params.existingPackageId ||
+                params.packageId ||
+                setupData?.pkg?._id ||
+                setupData?.pkg?.id ||
+                setupData?.packageId;
 
             if (!targetPackageId) {
                 Alert.alert("Error", "Package ID is missing. Cannot proceed.");
@@ -118,8 +135,23 @@ export default function PaymentMethod({ route, navigation }) {
                     }, withUserHeader(user?._id));
                     const realCheckoutToken = tokenRes.data?.token;
 
-                    const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: route.params.existingReference, mode: 'online' } });
-                    const cancelDeepLink = Linking.createURL('paymentmethod');
+                    const successDeepLink = Linking.createURL('paymentsuccess', {
+                        queryParams: {
+                            reference: params.existingReference,
+                            mode: 'online'
+                        }
+                    });
+
+                    const cancelDeepLink = Linking.createURL('paymentmethod', {
+                        queryParams: {
+                            packageId: String(targetPackageId),
+                            existingPackageId: String(targetPackageId),
+                            existingBookingId: String(params.existingBookingId),
+                            existingReference: String(params.existingReference || ''),
+                            amountToPay: String(finalAmountToPay),
+                            paymentType: String(paymentType || 'Full Payment'),
+                        },
+                    });
 
                     const paymentPayload = {
                         bookingId: route.params.existingBookingId,
