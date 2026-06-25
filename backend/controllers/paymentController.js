@@ -16,6 +16,10 @@ import transporter from "../config/nodemailer.js";
 import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
+import {
+    createNotificationAndPush,
+} from "../services/notificationService.js";
+
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
@@ -96,7 +100,7 @@ export const createManualPaymentDeliveryFee = async (req, res) => {
         const passportApp = await PassportModel.findById(applicationId);
         const userDoc = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: 'Manual Payment Submitted',
             message: `Your manual payment for delivery fee ${passportApp?.applicationNumber || applicationNumber || applicationId} has been submitted and is pending review.`,
@@ -187,7 +191,7 @@ export const createManualPaymentPassportPenalty = async (req, res) => {
         const passportApp = await PassportModel.findById(applicationId);
         const userDoc = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: 'Manual Payment Submitted',
             message: `Your manual payment for passport penalty fee ${passportApp?.applicationNumber || applicationNumber || applicationId} has been submitted and is pending review.`,
@@ -280,7 +284,7 @@ export const createManualPaymentVisaPenalty = async (req, res) => {
         const visaApp = await VisaModel.findById(applicationId);
         const userDoc = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: 'Manual Payment Submitted',
             message: `Your manual payment for your penalty fee ${visaApp?.applicationNumber || applicationNumber || applicationId} has been submitted and is pending review.`,
@@ -370,7 +374,7 @@ export const createManualPaymentPassport = async (req, res) => {
         const passportApp = await PassportModel.findById(applicationId);
         const userDoc = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: 'Manual Payment Submitted',
             message: `Your manual payment for passport application ${passportApp?.applicationNumber || applicationNumber || applicationId} has been submitted and is pending review.`,
@@ -463,7 +467,7 @@ export const createManualPaymentVisa = async (req, res) => {
         const visaApp = await VisaModel.findById(applicationId);
         const user = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: "Manual Payment Submitted",
             message: `Your manual payment for visa application ${visaApp.applicationNumber} has been submitted and is pending review.`,
@@ -580,7 +584,7 @@ export const createManualPayment = async (req, res) => {
         const bookingStart = dayjs(booking?.travelDate?.startDate || new Date()).format('YYYY-MM-DD');
         const bookingEnd = dayjs(booking?.travelDate?.endDate || new Date()).format('YYYY-MM-DD');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId,
             title: 'Booking Confirmed',
             message: `Your manual payment for booking ${booking.reference} has been received and is currently pending verification by our team.We will notify you once the verification is complete.This will take 1 - 2 business days.Thank you for your patience!`,
@@ -710,7 +714,7 @@ export const createManualPaymentDeposit = async (req, res) => {
         });
         const user = await User.findById(userId).select('email username');
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId: user._id,
             title: 'Installment Payment Successful',
             message: `Your manual installment payment for booking ${booking.reference} has been received and is currently pending verification by our team.We will notify you once the verification is complete.This will take 1 - 2 business days.Thank you for your patience!`,
@@ -858,7 +862,7 @@ export const createManualPaymentQuotation = async (req, res) => {
         const user = await User.findById(userId).select('email username');
 
 
-        await Notification.create({
+        await createNotificationAndPush({
             userId: user._id,
             title: 'Booking Quotation Confirmed',
             message: `Your manual payment for booking ${booking.reference} has been received and is currently pending verification by our team.We will notify you once the verification is complete.This will take 1 - 2 business days.Thank you for your patience!`,
@@ -1891,7 +1895,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 console.log("Visa payment status updated:", updatedVisa.status);
             }
 
-            await Notification.create({
+            await createNotificationAndPush({
                 userId: user._id,
                 title: 'Visa Payment Successful',
                 message: `Your visa application ${metadata.applicationNumber} was successful.`,
@@ -1994,7 +1998,7 @@ export const handlePayMongoWebhook = async (req, res) => {
             }
             console.log("Updated status:", updatedApp.status);
 
-            await Notification.create({
+            await createNotificationAndPush({
                 userId: user._id,
                 title: 'Passport Payment Successful',
                 message: `Your passport application ${metadata.applicationNumber} was successful.`,
@@ -2096,7 +2100,7 @@ export const handlePayMongoWebhook = async (req, res) => {
 
             await updateBookingPaymentStatus(metadata.bookingId);
 
-            await Notification.create({
+            await createNotificationAndPush({
                 userId: user._id,
                 title: 'Installment Payment Successful',
                 message: `Your installment payment for booking ${metadata.bookingReference} was successful.`,
@@ -2242,7 +2246,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 await updateBookingPaymentStatus(booking._id);
             }
 
-            await Notification.create({
+            await createNotificationAndPush({
                 userId: user._id,
                 title: 'Booking Confirmed',
                 message: `Your booking ${booking.reference} has been confirmed.`,
@@ -2369,7 +2373,7 @@ export const handlePayMongoWebhook = async (req, res) => {
                 await updateBookingPaymentStatus(booking._id);
             }
 
-            await Notification.create({
+            await createNotificationAndPush({
                 userId: user._id,
                 title: 'Booking Quotation Confirmed',
                 message: `Your booking Quotation ${booking.reference} has been confirmed.`,
