@@ -19,6 +19,7 @@
     "android": {
       "usesCleartextTraffic": true,
       "package": "com.yourname.capsapp",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/MobileIcon.png",

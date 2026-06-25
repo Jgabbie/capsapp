@@ -11,17 +11,25 @@ Notifications.setNotificationHandler({
     }),
 });
 
+export async function configureNotificationChannel() {
+    if (Platform.OS !== "android") return;
+
+    await Notifications.setNotificationChannelAsync("default", {
+        name: "M&RC Notifications",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#305797",
+        enableVibrate: true,
+
+        // Do not put sound: "default" here.
+    });
+}
+
 export async function registerForPushNotifications() {
     try {
-        if (Platform.OS === "android") {
-            await Notifications.setNotificationChannelAsync("default", {
-                name: "M&RC Notifications",
-                importance: Notifications.AndroidImportance.MAX,
-                vibrationPattern: [0, 250, 250, 250],
-                lightColor: "#305797",
-                sound: "default",
-            });
-        }
+        // Android 13 requires the channel to exist before
+        // requesting notification permissions or a push token.
+        await configureNotificationChannel();
 
         const currentPermission =
             await Notifications.getPermissionsAsync();
@@ -36,7 +44,9 @@ export async function registerForPushNotifications() {
         }
 
         if (finalStatus !== "granted") {
-            console.log("Push notification permission was not granted.");
+            console.log(
+                "Push notification permission was not granted."
+            );
             return null;
         }
 
@@ -54,6 +64,8 @@ export async function registerForPushNotifications() {
             await Notifications.getExpoPushTokenAsync({
                 projectId,
             });
+
+        console.log("Expo push token:", tokenResponse.data);
 
         return tokenResponse.data;
     } catch (error) {

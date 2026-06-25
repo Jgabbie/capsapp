@@ -658,26 +658,145 @@ export default function BookingInvoice({ route, navigation }) {
         return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
     };
 
-    const handleDownloadRegistrationForms = async () => {
-        setIsGeneratingPdf(true);
-
+    const getLogoDataUri = async () => {
         try {
             const logoAsset = Asset.fromModule(
                 require('../../assets/images/LastPushLogo.png')
             );
 
-            await logoAsset.downloadAsync();
+            const downloadedAsset = await logoAsset.downloadAsync();
 
-            const logoUri = logoAsset.localUri;
+            // Use the returned downloaded asset because preview/release builds
+            // may resolve bundled assets differently from Expo Go.
+            const logoUri =
+                downloadedAsset?.localUri ||
+                logoAsset?.localUri ||
+                null;
 
-            const logoBase64 = await FileSystem.readAsStringAsync(
-                logoUri,
-                {
-                    encoding: 'base64',
+            if (!logoUri) {
+                console.warn('Logo local URI is unavailable.');
+                return '';
+            }
+
+            const logoBase64 = await FileSystem.readAsStringAsync(logoUri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            return `data:image/png;base64,${logoBase64}`;
+        } catch (error) {
+            // Do not stop the entire PDF generation just because the logo failed.
+            console.warn('Unable to load PDF logo:', error);
+            return '';
+        }
+    };
+
+    const saveOrSharePdf = async ({
+        sourceUri,
+        fileName,
+        successTitle = 'PDF Saved',
+    }) => {
+        if (!sourceUri) {
+            throw new Error('Generated PDF URI is missing.');
+        }
+
+        const fileInfo = await FileSystem.getInfoAsync(sourceUri);
+
+        if (!fileInfo.exists) {
+            throw new Error(`Generated PDF does not exist: ${sourceUri}`);
+        }
+
+        /*
+         * Android:
+         * Ask the user to choose a folder and save the PDF there.
+         */
+        if (
+            Platform.OS === 'android' &&
+            FileSystem.StorageAccessFramework
+        ) {
+            try {
+                const permission =
+                    await FileSystem.StorageAccessFramework
+                        .requestDirectoryPermissionsAsync();
+
+                if (permission.granted) {
+                    const pdfBase64 = await FileSystem.readAsStringAsync(
+                        sourceUri,
+                        {
+                            encoding: FileSystem.EncodingType.Base64,
+                        }
+                    );
+
+                    // Expo expects the file name without its extension here.
+                    const fileNameWithoutExtension = fileName.replace(
+                        /\.pdf$/i,
+                        ''
+                    );
+
+                    const destinationUri =
+                        await FileSystem.StorageAccessFramework.createFileAsync(
+                            permission.directoryUri,
+                            fileNameWithoutExtension,
+                            'application/pdf'
+                        );
+
+                    await FileSystem.writeAsStringAsync(
+                        destinationUri,
+                        pdfBase64,
+                        {
+                            encoding: FileSystem.EncodingType.Base64,
+                        }
+                    );
+
+                    Alert.alert(
+                        successTitle,
+                        `${fileName} was saved successfully.`
+                    );
+
+                    return destinationUri;
                 }
-            );
+            } catch (androidSaveError) {
+                console.warn(
+                    'Direct Android PDF save failed. Falling back to share:',
+                    androidSaveError
+                );
+            }
+        }
 
-            const logoDataUri = `data:image/png;base64,${logoBase64}`;
+        /*
+         * iOS or Android fallback:
+         * Copy the temporary PDF to a named cache file, then share it.
+         */
+        const canShare = await Sharing.isAvailableAsync();
+
+        if (!canShare) {
+            throw new Error('File sharing is not available on this device.');
+        }
+
+        const namedPdfUri = `${FileSystem.cacheDirectory}${fileName}`;
+
+        await FileSystem.deleteAsync(namedPdfUri, {
+            idempotent: true,
+        });
+
+        await FileSystem.copyAsync({
+            from: sourceUri,
+            to: namedPdfUri,
+        });
+
+        await Sharing.shareAsync(namedPdfUri, {
+            mimeType: 'application/pdf',
+            UTI: 'com.adobe.pdf',
+            dialogTitle: fileName,
+        });
+
+        return namedPdfUri;
+    };
+
+    const handleDownloadRegistrationForms = async () => {
+        setIsGeneratingPdf(true);
+
+        try {
+            const logoDataUri = await getLogoDataUri();
 
 
             const htmlContent = `
@@ -964,28 +1083,11 @@ export default function BookingInvoice({ route, navigation }) {
             const safeReference = sanitizeFileName(reference || 'booking');
             const fileName = `Booking-Registration-${safeReference}.pdf`;
 
-            if (Platform.OS === 'android' && FileSystem.StorageAccessFramework?.requestDirectoryPermissionsAsync) {
-                const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-                if (permissions.granted) {
-                    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType?.Base64 || 'base64' });
-                    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
-                        permissions.directoryUri,
-                        fileName,
-                        'application/pdf'
-                    );
-                    await FileSystem.writeAsStringAsync(destUri, base64, { encoding: FileSystem.EncodingType?.Base64 || 'base64' });
-                    Alert.alert('Registration Saved', fileName);
-                    return;
-                }
-            }
-
-            const canShare = await Sharing.isAvailableAsync();
-            if (!canShare) {
-                Alert.alert('Registration Ready', `Saved as ${fileName}`);
-                return;
-            }
-
-            await Sharing.shareAsync(uri, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf', dialogTitle: fileName });
+            await saveOrSharePdf({
+                sourceUri: uri,
+                fileName,
+                successTitle: 'Registration Saved',
+            });
 
         } catch (error) {
             Alert.alert("Error", "Could not generate PDF. Please try again.");
@@ -998,22 +1100,7 @@ export default function BookingInvoice({ route, navigation }) {
 
     const handleDownloadInvoice = async () => {
         try {
-            const logoAsset = Asset.fromModule(
-                require('../../assets/images/LastPushLogo.png')
-            );
-
-            await logoAsset.downloadAsync();
-
-            const logoUri = logoAsset.localUri;
-
-            const logoBase64 = await FileSystem.readAsStringAsync(
-                logoUri,
-                {
-                    encoding: 'base64',
-                }
-            );
-
-            const logoDataUri = `data:image/png;base64,${logoBase64}`;
+            const logoDataUri = await getLogoDataUri();
 
 
             const htmlContent =
@@ -1427,10 +1514,20 @@ export default function BookingInvoice({ route, navigation }) {
                 html: htmlContent,
             });
 
-            await Sharing.shareAsync(uri, {
-                mimeType: 'application/pdf',
-                dialogTitle: 'Download Invoice',
-                UTI: 'com.adobe.pdf',
+            const safeReference = sanitizeFileName(reference || 'booking');
+            const invoiceValue =
+                booking?.invoiceNumber ||
+                invoiceNumber ||
+                safeReference;
+
+            const fileName = `Booking-Invoice-${sanitizeFileName(
+                invoiceValue
+            )}.pdf`;
+
+            await saveOrSharePdf({
+                sourceUri: uri,
+                fileName,
+                successTitle: 'Invoice Saved',
             });
 
         } catch (error) {
