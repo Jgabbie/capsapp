@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+    registerPushToken,
     createNotification,
     getUserNotifications,
     markNotificationRead,
@@ -16,5 +17,6 @@ router.get('/my', requireUser, getUserNotifications);
 router.post('/create', requireUser, createNotification);
 router.patch('/read-all', requireUser, markAllRead);
 router.patch('/:id/read', requireUser, markNotificationRead);
+router.post('/push-token', requireUser, registerPushToken);
 
 export default router;

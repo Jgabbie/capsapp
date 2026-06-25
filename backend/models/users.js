@@ -119,7 +119,11 @@ const userSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    expoPushTokens: {
+        type: [String],
+        default: [],
+    },
 }, { strict: false });
 
 // ES module export

@@ -9,6 +9,56 @@ import NotificationModel from "../models/notification.js";
 import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
 
+import {
+    sendExpoPushNotification
+} from "../utils/sendExpoPushNotification.js";
+
+export const createUserNotification = async ({
+    userId,
+    title,
+    message,
+    link = null,
+    metadata = {},
+}) => {
+    const notification =
+        await NotificationModel.create({
+            userId,
+            title,
+            message,
+            link,
+            metadata,
+            isRead: false,
+        });
+
+    try {
+        const user = await UserModel.findById(
+            userId
+        ).select("expoPushTokens");
+
+        await sendExpoPushNotification({
+            tokens: user?.expoPushTokens || [],
+            title,
+            message,
+            data: {
+                notificationId:
+                    notification._id.toString(),
+                link,
+                routeState:
+                    metadata?.routeState || {},
+            },
+        });
+    } catch (error) {
+        // The notification remains saved even when push delivery
+        // temporarily fails.
+        console.error(
+            "Push delivery error:",
+            error.message
+        );
+    }
+
+    return notification;
+};
+
 // generate unique reference numbers
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
@@ -330,7 +380,7 @@ export const resubmitBookingDocuments = async (req, res) => {
 
         await booking.save()
 
-        await NotificationModel.create({
+        await createUserNotification({
             userId: booking.userId,
             title: 'Documents Resubmitted',
             message: `Documents for booking ${booking.reference} were resubmitted.`,

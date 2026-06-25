@@ -7,6 +7,56 @@ import dayjs from "dayjs";
 import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
+import {
+  sendExpoPushNotification
+} from "../utils/sendExpoPushNotification.js";
+
+export const createUserNotification = async ({
+  userId,
+  title,
+  message,
+  link = null,
+  metadata = {},
+}) => {
+  const notification =
+    await NotificationModel.create({
+      userId,
+      title,
+      message,
+      link,
+      metadata,
+      isRead: false,
+    });
+
+  try {
+    const user = await UserModel.findById(
+      userId
+    ).select("expoPushTokens");
+
+    await sendExpoPushNotification({
+      tokens: user?.expoPushTokens || [],
+      title,
+      message,
+      data: {
+        notificationId:
+          notification._id.toString(),
+        link,
+        routeState:
+          metadata?.routeState || {},
+      },
+    });
+  } catch (error) {
+    // The notification remains saved even when push delivery
+    // temporarily fails.
+    console.error(
+      "Push delivery error:",
+      error.message
+    );
+  }
+
+  return notification;
+};
+
 const PENALTY_AMOUNT = 1500;
 const PENALTY_PAYMENT_WINDOW_DAYS = 1;
 const SECOND_CHANCE_EXTENSION_DAYS = 3;
@@ -456,7 +506,7 @@ export const sendVisaDeadlineWarning = async (application) => {
   const deadlineLabel = deadlineInfo.deadlineDate.format('MMMM DD, YYYY');
   const statusLabel = deadlineInfo.status;
 
-  await NotificationModel.create({
+  await createUserNotification({
     userId: user._id,
     title: 'Visa Deadline Reminder',
     message: `One day remains to complete ${statusLabel} for ${applicationNumber}. The deadline is ${deadlineLabel}.`,
@@ -550,7 +600,7 @@ const sendVisaPenaltyNotification = async (application, deadlineInfo) => {
   const displayName = user.firstname || user.username || 'Customer';
   const deadlineLabel = deadlineInfo.deadlineDate.format('MMMM DD, YYYY');
 
-  await NotificationModel.create({
+  await createUserNotification({
     userId: user._id,
     title: 'Visa Application On Penalty',
     message: `Your visa application ${applicationNumber} is now on penalty. Please pay PHP ${PENALTY_AMOUNT.toLocaleString('en-PH')} within 1 day.`,
@@ -634,7 +684,7 @@ export const rejectVisaApplicationForDeadline = async (application, deadlineInfo
   const deadlineLabel = resolvedDeadlineInfo.deadlineDate.format('MMMM DD, YYYY');
 
   if (user && user._id) {
-    await NotificationModel.create({
+    await createUserNotification({
       userId: user._id,
       title: 'Visa Application Automatically Rejected',
       message: reachedSecondDeadline

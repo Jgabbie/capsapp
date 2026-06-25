@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 
+import * as Notifications from "expo-notifications";
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import NotificationStyle from '../../styles/clientstyles/NotificationStyle';
@@ -32,6 +33,19 @@ export default function Notifications() {
             setRefreshing(false);
         }
     }, [user?._id]);
+
+    useEffect(() => {
+        const subscription =
+            Notifications.addNotificationReceivedListener(
+                () => {
+                    fetchNotifs();
+                }
+            );
+
+        return () => {
+            subscription.remove();
+        };
+    }, [fetchNotifs]);
 
     useEffect(() => {
         if (user?._id) fetchNotifs();

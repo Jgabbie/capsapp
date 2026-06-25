@@ -1,5 +1,82 @@
 import Notification from '../models/notification.js';
 
+export const registerPushToken = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { token } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Unauthorized",
+            });
+        }
+
+        if (!token || typeof token !== "string") {
+            return res.status(400).json({
+                message: "Push token is required.",
+            });
+        }
+
+        const isValidExpoToken =
+            /^(ExpoPushToken|ExponentPushToken)\[[^\]]+\]$/.test(
+                token
+            );
+
+        if (!isValidExpoToken) {
+            return res.status(400).json({
+                message: "Invalid Expo push token.",
+            });
+        }
+
+        // Prevent the same device token from belonging to
+        // multiple user accounts.
+        await UserModel.updateMany(
+            {
+                _id: { $ne: userId },
+                expoPushTokens: token,
+            },
+            {
+                $pull: {
+                    expoPushTokens: token,
+                },
+            }
+        );
+
+        const user = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $addToSet: {
+                    expoPushTokens: token,
+                },
+            },
+            {
+                new: true,
+            }
+        ).select("expoPushTokens");
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found.",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Push token registered.",
+            expoPushTokens: user.expoPushTokens,
+        });
+    } catch (error) {
+        console.error(
+            "Register push token error:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Failed to register push token.",
+        });
+    }
+};
+
+
 export const createNotification = async (req, res) => {
     const { userId, title, message, type, link, metadata } = req.body;
     if (!userId || !title || !message) {
