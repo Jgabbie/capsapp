@@ -10,11 +10,11 @@ import Login from './screens/client/Login';
 import PasswordReset from './screens/client/PasswordReset';
 import ResetPassConfirm from './screens/client/ResetPassConfirm';
 import VerifyEmail from './screens/client/VerifyEmail';
-import PushNotificationManager from "./src/components/PushNotificationManager";
+import PushNotificationManager from "./components/PushNotificationManager";
 import {
   navigationRef,
   flushPendingNotification
-} from "./src/utils/notificationNavigation";
+} from "./utils/notificationNavigation";
 
 import Home from './screens/client/Home';
 import Profile from './screens/client/Profile';

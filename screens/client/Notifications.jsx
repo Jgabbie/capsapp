@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 
-import * as Notifications from "expo-notifications";
+import * as ExpoNotifications from "expo-notifications";
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import NotificationStyle from '../../styles/clientstyles/NotificationStyle';
@@ -36,7 +36,7 @@ export default function Notifications() {
 
     useEffect(() => {
         const subscription =
-            Notifications.addNotificationReceivedListener(
+            ExpoNotifications.addNotificationReceivedListener(
                 () => {
                     fetchNotifs();
                 }
