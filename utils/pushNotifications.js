@@ -11,24 +11,40 @@ Notifications.setNotificationHandler({
     }),
 });
 
+
+export async function testLocalNotification() {
+    await configureNotificationChannel();
+
+    await Notifications.scheduleNotificationAsync({
+        content: {
+            title: "M&RC Test",
+            body: "Notification display is working.",
+            sound: "default",
+        },
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 2,
+            channelId: "mrc-default-v2",
+        },
+    });
+}
+
 export async function configureNotificationChannel() {
     if (Platform.OS !== "android") return;
 
-    await Notifications.setNotificationChannelAsync("default", {
+    await Notifications.setNotificationChannelAsync("mrc-default-v2", {
         name: "M&RC Notifications",
         importance: Notifications.AndroidImportance.MAX,
+        sound: "default",
         vibrationPattern: [0, 250, 250, 250],
         lightColor: "#305797",
         enableVibrate: true,
-
-        // Do not put sound: "default" here.
+        showBadge: true,
     });
 }
 
 export async function registerForPushNotifications() {
     try {
-        // Android 13 requires the channel to exist before
-        // requesting notification permissions or a push token.
         await configureNotificationChannel();
 
         const currentPermission =

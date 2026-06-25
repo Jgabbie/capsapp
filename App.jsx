@@ -75,6 +75,19 @@ import FAQs from './screens/client/FAQs';
 
 import { UserProvider, useUser } from './context/UserContext';
 
+import * as ExpoNotifications from "expo-notifications";
+
+ExpoNotifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    priority: ExpoNotifications.AndroidNotificationPriority.HIGH,
+  }),
+});
+
+
 const MyScreen = createNativeStackNavigator();
 
 const prefix = Linking.createURL('/');
@@ -196,6 +209,23 @@ function AppNavigator() {
 }
 
 export default function App() {
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      const token = await registerForPushNotifications();
+
+      if (!token) return;
+
+      console.log("Token to save:", token);
+
+    };
+
+    initializeNotifications();
+  }, []);
+
+
+
+
   return (
     <UserProvider>
       <AppNavigator />

@@ -18,6 +18,9 @@ import { useUser } from '../../context/UserContext'
 
 const { width } = Dimensions.get("window");
 
+
+
+
 const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     const imageSource = item.images && item.images.length > 0
         ? item.images[0]
@@ -79,6 +82,8 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
         </View>
     )
 });
+
+
 
 export default function Home({ route }) {
     const cs = useNavigation()

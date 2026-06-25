@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
 
+import { testLocalNotification } from '../../utils/pushNotifications';
+
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import FAQsStyle from '../../styles/clientstyles/FAQsStyle';
@@ -60,7 +62,7 @@ const faqData = [
 export default function FAQs() {
     const cs = useNavigation();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    
+
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [expandedIndex, setExpandedIndex] = useState(null);
@@ -99,9 +101,9 @@ export default function FAQs() {
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <ScrollView contentContainerStyle={FAQsStyle.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                    
+
                     {/* Hero Section with Background Image */}
-                    <ImageBackground 
+                    <ImageBackground
                         source={require('../../assets/images/FAQs_BackgroundImage.jpg')}
                         style={FAQsStyle.heroSection}
                         imageStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
@@ -118,18 +120,47 @@ export default function FAQs() {
                         </Text>
                     </View>
 
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: '#305797',
+                            paddingVertical: 14,
+                            paddingHorizontal: 20,
+                            borderRadius: 8,
+                            marginHorizontal: 20,
+                            marginBottom: 20,
+                            alignItems: 'center',
+                        }}
+                        onPress={async () => {
+                            try {
+                                await testLocalNotification();
+                                console.log('Local notification scheduled.');
+                            } catch (error) {
+                                console.error('Local notification test failed:', error);
+                            }
+                        }}
+                    >
+                        <Text
+                            style={{
+                                color: '#ffffff',
+                                fontWeight: '700',
+                            }}
+                        >
+                            Test Notification
+                        </Text>
+                    </TouchableOpacity>
+
                     {/* Horizontal Categories Filter */}
                     <View>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={FAQsStyle.filterScroll}>
                             {categories.map((category) => {
                                 const isActive = activeCategory === category;
                                 return (
-                                    <TouchableOpacity 
-                                        key={category} 
+                                    <TouchableOpacity
+                                        key={category}
                                         style={[FAQsStyle.filterPill, isActive && FAQsStyle.filterPillActive]}
                                         onPress={() => {
                                             setActiveCategory(category);
-                                            setExpandedIndex(null); 
+                                            setExpandedIndex(null);
                                         }}
                                     >
                                         <Text style={[FAQsStyle.filterPillText, isActive && FAQsStyle.filterPillTextActive]}>
@@ -178,19 +209,19 @@ export default function FAQs() {
                                     const isExpanded = expandedIndex === index;
                                     return (
                                         <View key={index} style={FAQsStyle.accordionItem}>
-                                            <TouchableOpacity 
-                                                style={FAQsStyle.accordionHeader} 
+                                            <TouchableOpacity
+                                                style={FAQsStyle.accordionHeader}
                                                 onPress={() => toggleAccordion(index)}
                                                 activeOpacity={0.7}
                                             >
                                                 <Text style={FAQsStyle.questionText}>{item.question}</Text>
-                                                <Ionicons 
-                                                    name={isExpanded ? "chevron-up" : "chevron-down"} 
-                                                    size={20} 
-                                                    color="#305797" 
+                                                <Ionicons
+                                                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                                                    size={20}
+                                                    color="#305797"
                                                 />
                                             </TouchableOpacity>
-                                            
+
                                             {isExpanded && (
                                                 <View style={FAQsStyle.accordionBody}>
                                                     <Text style={FAQsStyle.answerText}>{item.answer}</Text>
