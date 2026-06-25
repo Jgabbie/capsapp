@@ -1,4 +1,5 @@
 import Notification from '../models/notification.js';
+import User from '../models/users.js';
 
 export const registerPushToken = async (req, res) => {
     try {
@@ -30,7 +31,7 @@ export const registerPushToken = async (req, res) => {
 
         // Prevent the same device token from belonging to
         // multiple user accounts.
-        await UserModel.updateMany(
+        await User.updateMany(
             {
                 _id: { $ne: userId },
                 expoPushTokens: token,
@@ -42,7 +43,7 @@ export const registerPushToken = async (req, res) => {
             }
         );
 
-        const user = await UserModel.findByIdAndUpdate(
+        const user = await User.findByIdAndUpdate(
             userId,
             {
                 $addToSet: {
