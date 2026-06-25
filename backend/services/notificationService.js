@@ -182,6 +182,13 @@ export const createNotificationAndPush = async ({
     link = "",
     metadata = {},
 }) => {
+
+    console.log("======================================");
+    console.log("[NOTIFICATION SERVICE] CALLED");
+    console.log("[NOTIFICATION SERVICE] User:", userId);
+    console.log("[NOTIFICATION SERVICE] Title:", title);
+    console.log("======================================");
+
     const notification = await Notification.create({
         userId,
         title,

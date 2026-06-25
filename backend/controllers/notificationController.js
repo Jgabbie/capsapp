@@ -91,6 +91,12 @@ export const createNotification = async (
     req,
     res
 ) => {
+
+    console.log("======================================");
+    console.log("[NOTIFICATION CONTROLLER] ROUTE HIT");
+    console.log("[NOTIFICATION CONTROLLER] BODY:", req.body);
+    console.log("======================================");
+
     const {
         userId,
         title,
