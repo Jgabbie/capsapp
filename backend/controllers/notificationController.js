@@ -117,11 +117,16 @@ export const createNotification = async (
                 metadata,
             });
 
+        console.log(
+            "Notification created and push attempted:",
+            notification._id
+        );
+
         return res.status(201).json(
             notification
         );
 
-        console.log("Notification created and push sent:", notification);
+
     } catch (error) {
         console.error(
             "Create notification error:",

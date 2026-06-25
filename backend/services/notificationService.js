@@ -23,8 +23,8 @@ export const sendNotificationPush = async (notification) => {
     ).select("expoPushTokens");
 
     if (!user) {
-        console.log(
-            `Push skipped: user ${notification.userId} was not found.`
+        console.error(
+            `[PUSH] USER_NOT_FOUND: ${notification.userId}`
         );
 
         return {
@@ -33,17 +33,9 @@ export const sendNotificationPush = async (notification) => {
         };
     }
 
-    const tokens = [
-        ...new Set(
-            (user.expoPushTokens || []).filter(
-                isValidExpoToken
-            )
-        ),
-    ];
-
     if (tokens.length === 0) {
-        console.log(
-            `Push skipped: user ${notification.userId} has no valid tokens.`
+        console.error(
+            `[PUSH] NO_PUSH_TOKENS for user: ${notification.userId}`
         );
 
         return {
@@ -186,30 +178,30 @@ export const createNotificationAndPush = async ({
     userId,
     title,
     message,
-    type,
-    link,
-    metadata,
+    type = "general",
+    link = "",
+    metadata = {},
 }) => {
-    const notification =
-        await Notification.create({
-            userId,
-            title,
-            message,
-            type,
-            link,
-            metadata,
-        });
+    const notification = await Notification.create({
+        userId,
+        title,
+        message,
+        type,
+        link,
+        metadata,
+    });
 
     try {
-        await sendNotificationPush(notification);
+        const pushResult = await sendNotificationPush(notification);
+
+        console.log(
+            `[PUSH] Result for notification ${notification._id}:`,
+            JSON.stringify(pushResult, null, 2)
+        );
     } catch (error) {
-        /*
-         * Do not remove or fail the in-system notification
-         * just because remote push delivery failed.
-         */
         console.error(
-            `Push failed for notification ${notification._id}:`,
-            error
+            `[PUSH] Failed for notification ${notification._id}:`,
+            error.message
         );
     }
 
