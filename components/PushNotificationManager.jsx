@@ -1,24 +1,24 @@
 import { useEffect, useRef } from "react";
+import { Alert } from "react-native";
 import * as Notifications from "expo-notifications";
 
 import {
-    registerForPushNotifications
+    registerForPushNotifications,
 } from "../utils/pushNotifications";
 
 import {
-    openNotificationScreen
+    openNotificationScreen,
 } from "../utils/notificationNavigation";
 
 import {
     api,
-    withUserHeader
+    withUserHeader,
 } from "../utils/api";
 
 import { useUser } from "../context/UserContext";
 
 export default function PushNotificationManager() {
     const { user } = useUser();
-
     const handledNotificationId = useRef(null);
 
     useEffect(() => {
@@ -26,116 +26,74 @@ export default function PushNotificationManager() {
             return;
         }
 
-        let isMounted = true;
+        let active = true;
 
         const registerToken = async () => {
-            const expoPushToken =
-                await registerForPushNotifications();
-
-            if (!expoPushToken || !isMounted) {
-                return;
-            }
-
             try {
-                await api.post(
+                const token =
+                    await registerForPushNotifications();
+
+                if (!active) return;
+
+                if (!token) {
+                    Alert.alert(
+                        "Push Registration Failed",
+                        "No Expo push token was generated."
+                    );
+                    return;
+                }
+
+                const response = await api.post(
                     "/notifications/push-token",
-                    {
-                        token: expoPushToken,
-                    },
+                    { token },
                     withUserHeader(user._id)
                 );
 
-                console.log(
-                    "Expo push token registered:",
-                    expoPushToken
+                Alert.alert(
+                    "Push Token Saved",
+                    JSON.stringify(response.data, null, 2)
                 );
             } catch (error) {
-                console.error(
-                    "Failed to save push token:",
-                    error.response?.data ||
-                    error.message
+                Alert.alert(
+                    "Push Token Error",
+                    JSON.stringify(
+                        error.response?.data || {
+                            status: error.response?.status,
+                            message: error.message,
+                        },
+                        null,
+                        2
+                    )
                 );
             }
-        };
-
-        const handleNotificationResponse = async (
-            response
-        ) => {
-            const notification =
-                response?.notification;
-
-            const notificationIdentifier =
-                notification?.request?.identifier;
-
-            if (
-                notificationIdentifier &&
-                handledNotificationId.current ===
-                notificationIdentifier
-            ) {
-                return;
-            }
-
-            handledNotificationId.current =
-                notificationIdentifier;
-
-            const data =
-                notification?.request?.content?.data ||
-                {};
-
-            if (data.notificationId) {
-                try {
-                    await api.patch(
-                        `/notifications/${data.notificationId}/read`,
-                        {},
-                        withUserHeader(user._id)
-                    );
-                } catch (error) {
-                    console.error(
-                        "Failed to mark push notification as read:",
-                        error.message
-                    );
-                }
-            }
-
-            openNotificationScreen(data);
         };
 
         registerToken();
 
-        // Runs when a notification arrives while the app is open.
         const receivedSubscription =
             Notifications.addNotificationReceivedListener(
                 notification => {
-                    console.log(
-                        "Push received:",
-                        notification.request.content
+                    Alert.alert(
+                        "Push Received",
+                        notification.request.content.title ||
+                        "Notification received"
                     );
                 }
             );
 
-        // Runs when the user taps a notification.
         const responseSubscription =
             Notifications.addNotificationResponseReceivedListener(
-                handleNotificationResponse
+                response => {
+                    const data =
+                        response.notification?.request?.content?.data ||
+                        {};
+
+                    openNotificationScreen(data);
+                }
             );
 
-        // Handles the notification that opened a terminated app.
-        Notifications
-            .getLastNotificationResponseAsync()
-            .then(response => {
-                if (response) {
-                    handleNotificationResponse(response);
-                }
-            })
-            .catch(error => {
-                console.error(
-                    "Initial notification response error:",
-                    error
-                );
-            });
-
         return () => {
-            isMounted = false;
+            active = false;
             receivedSubscription.remove();
             responseSubscription.remove();
         };

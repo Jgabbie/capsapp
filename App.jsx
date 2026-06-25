@@ -4,9 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 
-import {
-  registerForPushNotifications
-} from "./utils/pushNotifications";
 
 import SplashScreen from './screens/client/SplashScreen';
 import Signup from './screens/client/Signup';
@@ -121,113 +118,101 @@ function AppNavigator() {
   }
 
   return (
-    <>
+
+
+
+
+    <NavigationContainer
+      linking={linking}
+      ref={navigationRef}
+      onReady={flushPendingNotification}
+    >
+
       <PushNotificationManager />
 
-
-      <NavigationContainer
-        linking={linking}
-        ref={navigationRef}
-        onReady={flushPendingNotification}
+      <MyScreen.Navigator
+        key={initialRoute}
+        initialRouteName={initialRoute}
+        screenOptions={{ headerShown: false }}
       >
-        <MyScreen.Navigator
-          key={initialRoute}
-          initialRouteName={initialRoute}
-          screenOptions={{ headerShown: false }}
-        >
 
-          {!user ? (
-            <>
-              <MyScreen.Screen name="splash" component={SplashScreen} />
-              <MyScreen.Screen name="login" component={Login} />
-              <MyScreen.Screen name="signup" component={Signup} />
-              <MyScreen.Screen name="passwordreset" component={PasswordReset} />
-              <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
-              <MyScreen.Screen name="verify" component={VerifyEmail} />
-            </>
-          ) : (
-            <>
-              <MyScreen.Screen name="home" component={Home} />
-              <MyScreen.Screen name="profile" component={Profile} />
-              <MyScreen.Screen name="userpreference" component={UserPreference} />
-              <MyScreen.Screen name="packages" component={Packages} />
-              <MyScreen.Screen name="packagedetails" component={PackageDetails} />
-              <MyScreen.Screen name="wishlist" component={Wishlist} />
+        {!user ? (
+          <>
+            <MyScreen.Screen name="splash" component={SplashScreen} />
+            <MyScreen.Screen name="login" component={Login} />
+            <MyScreen.Screen name="signup" component={Signup} />
+            <MyScreen.Screen name="passwordreset" component={PasswordReset} />
+            <MyScreen.Screen name="resetpassconfirm" component={ResetPassConfirm} />
+            <MyScreen.Screen name="verify" component={VerifyEmail} />
+          </>
+        ) : (
+          <>
+            <MyScreen.Screen name="home" component={Home} />
+            <MyScreen.Screen name="profile" component={Profile} />
+            <MyScreen.Screen name="userpreference" component={UserPreference} />
+            <MyScreen.Screen name="packages" component={Packages} />
+            <MyScreen.Screen name="packagedetails" component={PackageDetails} />
+            <MyScreen.Screen name="wishlist" component={Wishlist} />
 
-              <MyScreen.Screen name="userbookings" component={UserBookings} />
-              <MyScreen.Screen name="usertransactions" component={UserTransactions} />
-              <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
-              <MyScreen.Screen name="userapplications" component={UserApplications} />
-              <MyScreen.Screen name="bookingreview" component={BookingReview} />
-              <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
-              <MyScreen.Screen name="notifications" component={Notifications} />
+            <MyScreen.Screen name="userbookings" component={UserBookings} />
+            <MyScreen.Screen name="usertransactions" component={UserTransactions} />
+            <MyScreen.Screen name="bookinginvoice" component={BookingInvoice} />
+            <MyScreen.Screen name="userapplications" component={UserApplications} />
+            <MyScreen.Screen name="bookingreview" component={BookingReview} />
+            <MyScreen.Screen name="bookinguploads" component={BookingUploads} />
+            <MyScreen.Screen name="notifications" component={Notifications} />
 
 
-              <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
-              <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
-              <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
-              <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
+            <MyScreen.Screen name="registrationstep1" component={RegistrationStep1} />
+            <MyScreen.Screen name="registrationstep2" component={RegistrationStep2} />
+            <MyScreen.Screen name="registrationstep3" component={RegistrationStep3} />
+            <MyScreen.Screen name="registrationstep4" component={RegistrationStep4} />
 
 
-              <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
-              <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
-              <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
-              <MyScreen.Screen name="quotationbookingprocess" component={QuotationBookingProcess} />
-              <MyScreen.Screen name="quotationincluexclu" component={QuotationIncluExclu} />
-              <MyScreen.Screen name="quotationuploads" component={QuotationUploads} />
-              <MyScreen.Screen name="quotationform1" component={QuotationForm1} />
-              <MyScreen.Screen name="quotationform2" component={QuotationForm2} />
-              <MyScreen.Screen name="quotationform3" component={QuotationForm3} />
-              <MyScreen.Screen name="quotationform4" component={QuotationForm4} />
-              <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
-              <MyScreen.Screen name="quotationform" component={QuotationForm} />
+            <MyScreen.Screen name="quotationallin" component={QuotationAllIn} />
+            <MyScreen.Screen name="userquotations" component={UserPackageQuotation} />
+            <MyScreen.Screen name="userquotationrequest" component={UserQuotationRequest} />
+            <MyScreen.Screen name="quotationbookingprocess" component={QuotationBookingProcess} />
+            <MyScreen.Screen name="quotationincluexclu" component={QuotationIncluExclu} />
+            <MyScreen.Screen name="quotationuploads" component={QuotationUploads} />
+            <MyScreen.Screen name="quotationform1" component={QuotationForm1} />
+            <MyScreen.Screen name="quotationform2" component={QuotationForm2} />
+            <MyScreen.Screen name="quotationform3" component={QuotationForm3} />
+            <MyScreen.Screen name="quotationform4" component={QuotationForm4} />
+            <MyScreen.Screen name="quotationcheckout" component={QuotationCheckout} />
+            <MyScreen.Screen name="quotationform" component={QuotationForm} />
 
-              <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
-              <MyScreen.Screen name="paymentmode" component={PaymentMode} />
-              <MyScreen.Screen name="quotationpaymentmethod" component={QuotationPaymentMethod} />
-              <MyScreen.Screen name="quotationpaymentmode" component={QuotationPaymentMode} />
-              <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
-              <MyScreen.Screen name="successfulpaymentpassport" component={SuccessfulPaymentPassport} />
-              <MyScreen.Screen name="successfulpaymentvisa" component={SuccessfulPaymentVisa} />
-              <MyScreen.Screen name="successfulmanualpaymentvisa" component={SuccessfulManualPaymentVisa} />
-              <MyScreen.Screen name="successfulmanualpaymentpassport" component={SuccessfulManualPaymentPassport} />
+            <MyScreen.Screen name="paymentmethod" component={PaymentMethod} />
+            <MyScreen.Screen name="paymentmode" component={PaymentMode} />
+            <MyScreen.Screen name="quotationpaymentmethod" component={QuotationPaymentMethod} />
+            <MyScreen.Screen name="quotationpaymentmode" component={QuotationPaymentMode} />
+            <MyScreen.Screen name="paymentsuccess" component={PaymentSuccess} />
+            <MyScreen.Screen name="successfulpaymentpassport" component={SuccessfulPaymentPassport} />
+            <MyScreen.Screen name="successfulpaymentvisa" component={SuccessfulPaymentVisa} />
+            <MyScreen.Screen name="successfulmanualpaymentvisa" component={SuccessfulManualPaymentVisa} />
+            <MyScreen.Screen name="successfulmanualpaymentpassport" component={SuccessfulManualPaymentPassport} />
 
-              <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
-              <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} />
-              <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} />
-              <MyScreen.Screen name="passportprogress" component={PassportProgress} />
-              <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
-              <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
-              <MyScreen.Screen name="visaprogress" component={VisaProgress} />
+            <MyScreen.Screen name="passportguidance" component={PassportGuidance} />
+            <MyScreen.Screen name="passportguidancenew" component={PassportGuidanceNew} />
+            <MyScreen.Screen name="passportguidancerenew" component={PassportGuidanceReNew} />
+            <MyScreen.Screen name="passportprogress" component={PassportProgress} />
+            <MyScreen.Screen name="visaguidance" component={VisaGuidance} />
+            <MyScreen.Screen name="visadetailsguidance" component={VisaDetailsGuidance} />
+            <MyScreen.Screen name="visaprogress" component={VisaProgress} />
 
-              <MyScreen.Screen name="aboutus" component={AboutUs} />
-              <MyScreen.Screen name="faqs" component={FAQs} />
-            </>
-          )}
+            <MyScreen.Screen name="aboutus" component={AboutUs} />
+            <MyScreen.Screen name="faqs" component={FAQs} />
+          </>
+        )}
 
-        </MyScreen.Navigator>
-      </NavigationContainer>
-    </>
+      </MyScreen.Navigator>
+    </NavigationContainer>
+
 
   );
 }
 
 export default function App() {
-
-  useEffect(() => {
-    const initializeNotifications = async () => {
-      const token = await registerForPushNotifications();
-
-      if (!token) return;
-
-      console.log("Token to save:", token);
-
-    };
-
-    initializeNotifications();
-  }, []);
-
-
 
 
   return (
