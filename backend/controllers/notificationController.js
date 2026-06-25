@@ -134,7 +134,7 @@ export const createNotification = async (
     }
 };
 
-
+//get notifications for a user
 export const getUserNotifications = async (req, res) => {
     const limit = Number.parseInt(req.query.limit, 10) || 20;
     try {
