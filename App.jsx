@@ -4,6 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 
+import {
+  registerForPushNotifications
+} from "./utils/pushNotifications";
+
 import SplashScreen from './screens/client/SplashScreen';
 import Signup from './screens/client/Signup';
 import Login from './screens/client/Login';

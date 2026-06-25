@@ -32,15 +32,17 @@ export async function testLocalNotification() {
 export async function configureNotificationChannel() {
     if (Platform.OS !== "android") return;
 
-    await Notifications.setNotificationChannelAsync("mrc-default-v2", {
-        name: "M&RC Notifications",
-        importance: Notifications.AndroidImportance.MAX,
-        sound: "default",
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#305797",
-        enableVibrate: true,
-        showBadge: true,
-    });
+    await Notifications.setNotificationChannelAsync(
+        "mrc-notifications-v3",
+        {
+            name: "M&RC Notifications",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#305797",
+            enableVibrate: true,
+            showBadge: true,
+        }
+    );
 }
 
 export async function registerForPushNotifications() {
