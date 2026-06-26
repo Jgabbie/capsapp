@@ -78,6 +78,8 @@ export default function Notifications() {
                 "Direct Push Result",
                 JSON.stringify(response.data, null, 2)
             );
+
+            console.log("Direct push test response:", response.data, null, 2);
         } catch (error) {
             Alert.alert(
                 "Direct Push Failed",
