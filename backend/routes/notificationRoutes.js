@@ -1,6 +1,7 @@
 import express from 'express';
 import {
     registerPushToken,
+    testDirectPush,
     createNotification,
     getUserNotifications,
     markNotificationRead,
@@ -18,5 +19,6 @@ router.post('/create', requireUser, createNotification);
 router.patch('/read-all', requireUser, markAllRead);
 router.patch('/:id/read', requireUser, markNotificationRead);
 router.post('/push-token', requireUser, registerPushToken);
+router.post('/test-direct-push', requireUser, testDirectPush);
 
 export default router;

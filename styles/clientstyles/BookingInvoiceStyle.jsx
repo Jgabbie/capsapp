@@ -483,7 +483,7 @@ export default StyleSheet.create({
 
     downloadBtn: {
         backgroundColor: '#305797',
-        width: 110,
+        width: 145,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,

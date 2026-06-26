@@ -5,6 +5,70 @@ import {
     createNotificationAndPush,
 } from "../services/notificationService.js";
 
+export const testDirectPush = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        const user = await User.findById(userId)
+            .select("expoPushTokens");
+
+        const tokens = Array.isArray(user?.expoPushTokens)
+            ? user.expoPushTokens.filter(Boolean)
+            : [];
+
+        if (tokens.length === 0) {
+            return res.status(400).json({
+                success: false,
+                reason: "NO_PUSH_TOKENS",
+                userId,
+                storedTokens: [],
+            });
+        }
+
+        const messages = tokens.map(token => ({
+            to: token,
+            sound: "default",
+            title: "M&RC Push Test",
+            body: "Your remote push notification is working.",
+            priority: "high",
+            channelId: "mrc-notifications-v3",
+            data: {
+                type: "test",
+                link: "/notifications",
+            },
+        }));
+
+        const expoResponse = await fetch(
+            "https://exp.host/--/api/v2/push/send",
+            {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(messages),
+            }
+        );
+
+        const expoResult = await expoResponse.json();
+
+        return res.status(200).json({
+            success: expoResponse.ok,
+            userId,
+            storedTokens: tokens,
+            expoHttpStatus: expoResponse.status,
+            expoResult,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: error.stack,
+        });
+    }
+};
+
 export const registerPushToken = async (req, res) => {
     try {
         const userId = req.userId;
