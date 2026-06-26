@@ -175,6 +175,7 @@ export const createNotification = async (req, res) => {
             type,
             link,
             metadata,
+            pushStatus: "pending",
         });
 
         return res.status(201).json({
