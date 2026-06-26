@@ -1,6 +1,8 @@
 import Notification from "../models/notification.js";
 import User from "../models/users.js";
 
+import sendExpoPushNotification from "../utils/sendExpoPushNotification.js";
+
 const EXPO_PUSH_URL =
     "https://exp.host/--/api/v2/push/send";
 
