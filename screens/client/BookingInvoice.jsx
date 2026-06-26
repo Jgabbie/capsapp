@@ -1081,7 +1081,8 @@ export default function BookingInvoice({ route, navigation }) {
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
             const safeReference = sanitizeFileName(reference || 'booking');
-            const fileName = `Booking-Registration-${safeReference}.pdf`;
+            const date = dayjs().format('MM-DD-YYYY');
+            const fileName = `Booking-Registration_${safeReference}_${date}.pdf`;
 
             await saveOrSharePdf({
                 sourceUri: uri,
@@ -1520,9 +1521,10 @@ export default function BookingInvoice({ route, navigation }) {
                 invoiceNumber ||
                 safeReference;
 
+            const date = dayjs().format('MM-DD-YYYY');
             const fileName = `Booking-Invoice-${sanitizeFileName(
                 invoiceValue
-            )}.pdf`;
+            )}_${date}.pdf`;
 
             await saveOrSharePdf({
                 sourceUri: uri,

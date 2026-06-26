@@ -22,6 +22,74 @@ export default function PushNotificationManager() {
     const handledNotificationId = useRef(null);
 
     useEffect(() => {
+        Alert.alert(
+            "Push Manager Mounted",
+            JSON.stringify({
+                hasUser: Boolean(user),
+                userId: user?._id || user?.id || user?.userId || null,
+            }, null, 2)
+        );
+
+        const userId =
+            user?._id ||
+            user?.id ||
+            user?.userId;
+
+        if (!userId) {
+            return;
+        }
+
+        const registerToken = async () => {
+            try {
+                Alert.alert(
+                    "Push Step 1",
+                    "Starting push token registration"
+                );
+
+                const token =
+                    await registerForPushNotifications();
+
+                Alert.alert(
+                    "Push Step 2",
+                    token || "No Expo push token returned"
+                );
+
+                if (!token) {
+                    return;
+                }
+
+                const response = await api.post(
+                    "/notifications/push-token",
+                    {
+                        token,
+                    },
+                    withUserHeader(userId)
+                );
+
+                Alert.alert(
+                    "Push Step 3",
+                    JSON.stringify(response.data, null, 2)
+                );
+            } catch (error) {
+                Alert.alert(
+                    "Push Registration Error",
+                    JSON.stringify(
+                        {
+                            message: error.message,
+                            status: error.response?.status,
+                            data: error.response?.data,
+                        },
+                        null,
+                        2
+                    )
+                );
+            }
+        };
+
+        registerToken();
+    }, [user?._id, user?.id, user?.userId]);
+
+    useEffect(() => {
         if (!user?._id) {
             return;
         }

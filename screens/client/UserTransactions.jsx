@@ -318,7 +318,8 @@ export default function UserTransactions() {
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
             const safeReference = sanitizeFileName(selectedTransaction.reference || 'receipt');
-            const fileName = `Receipt-${safeReference}.pdf`;
+            const date = dayjs().format('MM-DD-YYYY');
+            const fileName = `Receipt_${safeReference}_${date}.pdf`;
 
             const newPath = `${FileSystem.documentDirectory}${fileName}`;
             await FileSystem.copyAsync({ from: uri, to: newPath });
@@ -345,8 +346,9 @@ export default function UserTransactions() {
         try {
             const url = selectedTransaction.proofImage;
             const fileExt = url.split('.').pop().split('?')[0] || 'jpg';
+            const date = dayjs().format('MM-DD-YYYY');
             //  FIXED: Specify exact filename for download 
-            const fileUri = FileSystem.documentDirectory + `proof-of-payment-${selectedTransaction.reference}.${fileExt}`;
+            const fileUri = FileSystem.documentDirectory + `Proof-of-Payment_${selectedTransaction.reference}_${date}.${fileExt}`;
 
             const { uri } = await FileSystem.downloadAsync(url, fileUri);
             await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
