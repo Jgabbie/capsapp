@@ -17,49 +17,42 @@ const isValidExpoToken = (token) => {
 /**
  * Sends a saved Notification document as a push notification.
  */
-export const sendNotificationPush = async (notification) => {
+export const sendNotificationPush = async notification => {
     const user = await User.findById(
         notification.userId
     ).select("expoPushTokens");
 
     if (!user) {
-        console.error(
-            `[PUSH] USER_NOT_FOUND: ${notification.userId}`
-        );
-
         return {
             sent: false,
             reason: "USER_NOT_FOUND",
+            tickets: [],
         };
     }
 
-    if (tokens.length === 0) {
-        console.error(
-            `[PUSH] NO_PUSH_TOKENS for user: ${notification.userId}`
-        );
+    // This declaration was missing in your current service.
+    const tokens = Array.isArray(user.expoPushTokens)
+        ? user.expoPushTokens.filter(Boolean)
+        : [];
 
+    if (tokens.length === 0) {
         return {
             sent: false,
             reason: "NO_PUSH_TOKENS",
+            tickets: [],
         };
     }
 
-    /*
-     * Convert the Mongoose document into a plain object.
-     * flattenMaps handles metadata if it uses a Map field.
-     */
     const savedNotification =
-        notification.toObject({
-            flattenMaps: true,
-        });
+        typeof notification.toObject === "function"
+            ? notification.toObject({
+                flattenMaps: true,
+            })
+            : notification;
 
-    /*
-     * These fields come directly from the saved
-     * Notification model.
-     */
     const pushData = {
         notificationId:
-            savedNotification._id.toString(),
+            savedNotification._id?.toString() || "",
 
         type:
             savedNotification.type || "general",
@@ -70,72 +63,27 @@ export const sendNotificationPush = async (notification) => {
         metadata:
             savedNotification.metadata || {},
 
-        createdAt:
-            savedNotification.createdAt
-                ? new Date(
-                    savedNotification.createdAt
-                ).toISOString()
-                : new Date().toISOString(),
+        createdAt: savedNotification.createdAt
+            ? new Date(
+                savedNotification.createdAt
+            ).toISOString()
+            : new Date().toISOString(),
     };
 
-    /*
-     * Generate one Expo message for each registered
-     * device belonging to the user.
-     */
-    const messages = tokens.map((token) => ({
-        to: token,
+    const tickets =
+        await sendExpoPushNotification({
+            tokens,
+            title: savedNotification.title,
+            message: savedNotification.message,
+            data: pushData,
+        });
 
-        // From the saved Notification document
-        title: savedNotification.title,
-        body: savedNotification.message,
-
-        data: pushData,
-
-        priority: "high",
-        channelId: ANDROID_CHANNEL_ID,
-    }));
-
-    const response = await fetch(EXPO_PUSH_URL, {
-        method: "POST",
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messages),
-    });
-
-    const result = await response.json();
-
-    console.log(
-        "Expo push result:",
-        JSON.stringify(result, null, 2)
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            result?.errors?.[0]?.message ||
-            "Expo push request failed."
-        );
-    }
-
-    const tickets = Array.isArray(result.data)
-        ? result.data
-        : result.data
-            ? [result.data]
-            : [];
-
-    /*
-     * Remove device tokens Expo says are no longer
-     * registered.
-     */
     const invalidTokens = tickets
         .map((ticket, index) => {
-            const errorCode =
-                ticket?.details?.error;
-
             if (
                 ticket?.status === "error" &&
-                errorCode === "DeviceNotRegistered"
+                ticket?.details?.error ===
+                "DeviceNotRegistered"
             ) {
                 return tokens[index];
             }
@@ -157,11 +105,18 @@ export const sendNotificationPush = async (notification) => {
                 },
             }
         );
+    }
 
-        console.log(
-            "Removed invalid Expo tokens:",
-            invalidTokens
-        );
+    const ticketErrors = tickets.filter(
+        ticket => ticket?.status === "error"
+    );
+
+    if (ticketErrors.length > 0) {
+        return {
+            sent: false,
+            reason: "EXPO_TICKET_ERROR",
+            tickets,
+        };
     }
 
     return {
@@ -171,8 +126,8 @@ export const sendNotificationPush = async (notification) => {
 };
 
 /**
- * Creates one in-system Notification document and
- * sends that exact saved notification as a push.
+ * Creates an in-system notification and sends
+ * the same notification as a remote push.
  */
 export const createNotificationAndPush = async ({
     userId,
@@ -182,13 +137,6 @@ export const createNotificationAndPush = async ({
     link = "",
     metadata = {},
 }) => {
-
-    console.log("======================================");
-    console.log("[NOTIFICATION SERVICE] CALLED");
-    console.log("[NOTIFICATION SERVICE] User:", userId);
-    console.log("[NOTIFICATION SERVICE] Title:", title);
-    console.log("======================================");
-
     const notification = await Notification.create({
         userId,
         title,
@@ -199,16 +147,17 @@ export const createNotificationAndPush = async ({
     });
 
     try {
-        const pushResult = await sendNotificationPush(notification);
+        const pushResult =
+            await sendNotificationPush(notification);
 
         console.log(
-            `[PUSH] Result for notification ${notification._id}:`,
+            `[PUSH] Result for ${notification._id}:`,
             JSON.stringify(pushResult, null, 2)
         );
     } catch (error) {
-        console.log(
-            `[PUSH] Failed for notification ${notification._id}:`,
-            error.message
+        console.error(
+            `[PUSH] Failed for ${notification._id}:`,
+            error
         );
     }
 

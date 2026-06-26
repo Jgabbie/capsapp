@@ -1,6 +1,9 @@
 const EXPO_PUSH_ENDPOINT =
     "https://exp.host/--/api/v2/push/send";
 
+const ANDROID_CHANNEL_ID =
+    "mrc-notifications-v3";
+
 const isExpoPushToken = token =>
     typeof token === "string" &&
     /^(ExpoPushToken|ExponentPushToken)\[[^\]]+\]$/.test(
@@ -14,7 +17,9 @@ export const sendExpoPushNotification = async ({
     data = {},
 }) => {
     const validTokens = [
-        ...new Set(tokens.filter(isExpoPushToken)),
+        ...new Set(
+            tokens.filter(isExpoPushToken)
+        ),
     ];
 
     if (validTokens.length === 0) {
@@ -27,7 +32,7 @@ export const sendExpoPushNotification = async ({
         title,
         body: message,
         priority: "high",
-        channelId: "default",
+        channelId: ANDROID_CHANNEL_ID,
         data,
     }));
 
@@ -37,14 +42,17 @@ export const sendExpoPushNotification = async ({
             method: "POST",
             headers: {
                 Accept: "application/json",
-                "Accept-Encoding": "gzip, deflate",
-                "Content-Type": "application/json",
+                "Accept-Encoding":
+                    "gzip, deflate",
+                "Content-Type":
+                    "application/json",
             },
             body: JSON.stringify(payload),
         }
     );
 
-    const responseData = await response.json();
+    const responseData =
+        await response.json();
 
     if (!response.ok) {
         throw new Error(
@@ -53,5 +61,13 @@ export const sendExpoPushNotification = async ({
         );
     }
 
-    return responseData.data || [];
+    const tickets = Array.isArray(
+        responseData.data
+    )
+        ? responseData.data
+        : responseData.data
+            ? [responseData.data]
+            : [];
+
+    return tickets;
 };
