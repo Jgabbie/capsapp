@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import {
     startNotificationPushWorker,
-} from "./workers/notificationPushWorker.js";
+} from "../workers/notificationPushWorker.js";
 
 const connectDB = async () => {
     try {
