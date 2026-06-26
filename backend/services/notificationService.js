@@ -146,20 +146,20 @@ export const createNotificationAndPush = async ({
         metadata,
     });
 
-    try {
-        const pushResult =
-            await sendNotificationPush(notification);
+    let pushResult;
 
-        console.log(
-            `[PUSH] Result for ${notification._id}:`,
-            JSON.stringify(pushResult, null, 2)
-        );
+    try {
+        pushResult = await sendNotificationPush(notification);
     } catch (error) {
-        console.error(
-            `[PUSH] Failed for ${notification._id}:`,
-            error
-        );
+        pushResult = {
+            sent: false,
+            reason: "PUSH_EXCEPTION",
+            error: error.message,
+        };
     }
 
-    return notification;
+    return {
+        notification,
+        pushResult,
+    };
 };

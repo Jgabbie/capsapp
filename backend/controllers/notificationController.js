@@ -151,16 +151,7 @@ export const registerPushToken = async (req, res) => {
 };
 
 
-export const createNotification = async (
-    req,
-    res
-) => {
-
-    console.log("======================================");
-    console.log("[NOTIFICATION CONTROLLER] ROUTE HIT");
-    console.log("[NOTIFICATION CONTROLLER] BODY:", req.body);
-    console.log("======================================");
-
+export const createNotification = async (req, res) => {
     const {
         userId,
         title,
@@ -177,35 +168,24 @@ export const createNotification = async (
     }
 
     try {
-        const notification =
-            await createNotificationAndPush({
-                userId,
-                title,
-                message,
-                type,
-                link,
-                metadata,
-            });
+        const result = await createNotificationAndPush({
+            userId,
+            title,
+            message,
+            type,
+            link,
+            metadata,
+        });
 
-        console.log(
-            "Notification created and push attempted:",
-            notification._id
-        );
-
-        return res.status(201).json(
-            notification
-        );
-
-
+        return res.status(201).json({
+            success: true,
+            notification: result.notification,
+            pushResult: result.pushResult,
+        });
     } catch (error) {
-        console.error(
-            "Create notification error:",
-            error
-        );
-
         return res.status(500).json({
-            message:
-                "Error creating notification",
+            success: false,
+            message: "Error creating notification",
             error: error.message,
         });
     }
