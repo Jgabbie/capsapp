@@ -39,7 +39,7 @@ export default StyleSheet.create({
         fontFamily: 'Roboto_400Regular',
         marginBottom: 24,
     },
-    
+
     // --- SUMMARY CARDS ---
     metaContainer: {
         backgroundColor: '#fff',
@@ -72,7 +72,7 @@ export default StyleSheet.create({
         color: '#333',
         fontFamily: 'Roboto_500Medium',
     },
-    
+
     // --- STAT CARDS (Prices) ---
     statsRow: {
         flexDirection: 'row',
@@ -150,7 +150,7 @@ export default StyleSheet.create({
         fontSize: 13,
         fontFamily: 'Roboto_400Regular',
     },
-    
+
     // --- REVIEW NOTICE CARD ---
     reviewNoticeCard: {
         backgroundColor: '#f0fdf4',
@@ -309,7 +309,7 @@ export default StyleSheet.create({
     modeNote: {
         fontSize: 12,
     },
-    
+
     // --- MANUAL BANK & UPLOAD SECTION (NEW) ---
     manualBankSection: {
         marginTop: 5,
@@ -481,15 +481,97 @@ export default StyleSheet.create({
         marginLeft: 8,
     },
 
+    downloadBtn: {
+        backgroundColor: '#305797',
+        width: 110,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginRight: 10,
+    },
+
+    downloadBtnText: {
+        color: '#fff',
+        marginLeft: 6,
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 12,
+    },
+
+
     // --- MODAL CONFIRMATION STYLES ---
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-    modalBox: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 24, paddingTop: 35, alignItems: 'center', elevation: 5 },
-    closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
-    modalTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 22, color: '#305797', marginBottom: 12 },
-    modalSubtitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25 },
-    modalButtonRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 12 },
-    proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
-    cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 }
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20
+    },
+
+    modalBox: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        paddingTop: 35,
+        alignItems: 'center',
+        elevation: 5
+    },
+
+    closeIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        padding: 5
+    },
+
+    modalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 22,
+        color: '#305797',
+        marginBottom: 12
+    },
+
+    modalSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 14, color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 25
+    },
+
+    modalButtonRow: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'space-between',
+        gap: 12
+    },
+
+    proceedBtn: {
+        flex: 1,
+        backgroundColor: '#305797',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center'
+    },
+
+    proceedBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14
+    },
+
+    cancelBtn: {
+        flex: 1,
+        backgroundColor: '#9f2b46',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center'
+    },
+
+    cancelBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14
+    }
 });

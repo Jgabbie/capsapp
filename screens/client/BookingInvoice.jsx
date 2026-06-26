@@ -2182,11 +2182,11 @@ export default function BookingInvoice({ route, navigation }) {
                                 </View>
                             </ScrollView>
                             <TouchableOpacity
-                                style={PaymentStyle.downloadBtn}
+                                style={BookingInvoiceStyle.downloadBtn}
                                 onPress={handleDownloadInvoice}
                             >
                                 <Ionicons name="download-outline" size={20} color="#fff" />
-                                <Text style={PaymentStyle.downloadBtnText}>Download Invoice</Text>
+                                <Text style={BookingInvoiceStyle.downloadBtnText}>Download Invoice</Text>
                             </TouchableOpacity>
                         </View>
                     </SafeAreaView>
