@@ -206,7 +206,7 @@ export const createNotificationAndPush = async ({
             JSON.stringify(pushResult, null, 2)
         );
     } catch (error) {
-        console.error(
+        console.log(
             `[PUSH] Failed for notification ${notification._id}:`,
             error.message
         );
