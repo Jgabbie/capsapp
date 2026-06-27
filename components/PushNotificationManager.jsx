@@ -21,73 +21,73 @@ export default function PushNotificationManager() {
     const { user } = useUser();
     const handledNotificationId = useRef(null);
 
-    useEffect(() => {
-        Alert.alert(
-            "Push Manager Mounted",
-            JSON.stringify({
-                hasUser: Boolean(user),
-                userId: user?._id || user?.id || user?.userId || null,
-            }, null, 2)
-        );
+    // useEffect(() => {
+    //     Alert.alert(
+    //         "Push Manager Mounted",
+    //         JSON.stringify({
+    //             hasUser: Boolean(user),
+    //             userId: user?._id || user?.id || user?.userId || null,
+    //         }, null, 2)
+    //     );
 
-        const userId =
-            user?._id ||
-            user?.id ||
-            user?.userId;
+    //     const userId =
+    //         user?._id ||
+    //         user?.id ||
+    //         user?.userId;
 
-        if (!userId) {
-            return;
-        }
+    //     if (!userId) {
+    //         return;
+    //     }
 
-        const registerToken = async () => {
-            try {
-                Alert.alert(
-                    "Push Step 1",
-                    "Starting push token registration"
-                );
+    //     const registerToken = async () => {
+    //         try {
+    //             Alert.alert(
+    //                 "Push Step 1",
+    //                 "Starting push token registration"
+    //             );
 
-                const token =
-                    await registerForPushNotifications();
+    //             const token =
+    //                 await registerForPushNotifications();
 
-                Alert.alert(
-                    "Push Step 2",
-                    token || "No Expo push token returned"
-                );
+    //             Alert.alert(
+    //                 "Push Step 2",
+    //                 token || "No Expo push token returned"
+    //             );
 
-                if (!token) {
-                    return;
-                }
+    //             if (!token) {
+    //                 return;
+    //             }
 
-                const response = await api.post(
-                    "/notifications/push-token",
-                    {
-                        token,
-                    },
-                    withUserHeader(userId)
-                );
+    //             const response = await api.post(
+    //                 "/notifications/push-token",
+    //                 {
+    //                     token,
+    //                 },
+    //                 withUserHeader(userId)
+    //             );
 
-                Alert.alert(
-                    "Push Step 3",
-                    JSON.stringify(response.data, null, 2)
-                );
-            } catch (error) {
-                Alert.alert(
-                    "Push Registration Error",
-                    JSON.stringify(
-                        {
-                            message: error.message,
-                            status: error.response?.status,
-                            data: error.response?.data,
-                        },
-                        null,
-                        2
-                    )
-                );
-            }
-        };
+    //             Alert.alert(
+    //                 "Push Step 3",
+    //                 JSON.stringify(response.data, null, 2)
+    //             );
+    //         } catch (error) {
+    //             Alert.alert(
+    //                 "Push Registration Error",
+    //                 JSON.stringify(
+    //                     {
+    //                         message: error.message,
+    //                         status: error.response?.status,
+    //                         data: error.response?.data,
+    //                     },
+    //                     null,
+    //                     2
+    //                 )
+    //             );
+    //         }
+    //     };
 
-        registerToken();
-    }, [user?._id, user?.id, user?.userId]);
+    //     registerToken();
+    // }, [user?._id, user?.id, user?.userId]);
 
     useEffect(() => {
         if (!user?._id) {
@@ -117,10 +117,10 @@ export default function PushNotificationManager() {
                     withUserHeader(user._id)
                 );
 
-                Alert.alert(
-                    "Push Token Saved",
-                    JSON.stringify(response.data, null, 2)
-                );
+                // Alert.alert(
+                //     "Push Token Saved",
+                //     JSON.stringify(response.data, null, 2)
+                // );
             } catch (error) {
                 Alert.alert(
                     "Push Token Error",
@@ -138,16 +138,16 @@ export default function PushNotificationManager() {
 
         registerToken();
 
-        const receivedSubscription =
-            Notifications.addNotificationReceivedListener(
-                notification => {
-                    Alert.alert(
-                        "Push Received",
-                        notification.request.content.title ||
-                        "Notification received"
-                    );
-                }
-            );
+        // const receivedSubscription =
+        //     Notifications.addNotificationReceivedListener(
+        //         notification => {
+        //             Alert.alert(
+        //                 "Push Received",
+        //                 notification.request.content.title ||
+        //                 "Notification received"
+        //             );
+        //         }
+        //     );
 
         const responseSubscription =
             Notifications.addNotificationResponseReceivedListener(
