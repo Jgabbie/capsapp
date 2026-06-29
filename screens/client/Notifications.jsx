@@ -61,40 +61,6 @@ export default function Notifications() {
         [notifs]
     );
 
-    const handleDirectPushTest = async () => {
-        try {
-            const userId =
-                user?._id ||
-                user?.id ||
-                user?.userId;
-
-            const response = await api.post(
-                "/notifications/test-direct-push",
-                {},
-                withUserHeader(userId)
-            );
-
-            Alert.alert(
-                "Direct Push Result",
-                JSON.stringify(response.data, null, 2)
-            );
-
-            console.log("Direct push test response:", response.data, null, 2);
-        } catch (error) {
-            Alert.alert(
-                "Direct Push Failed",
-                JSON.stringify(
-                    error.response?.data || {
-                        message: error.message,
-                        status: error.response?.status,
-                    },
-                    null,
-                    2
-                )
-            );
-        }
-    };
-
 
     const handleMarkAllRead = async () => {
         if (unreadCount === 0) return;
@@ -196,26 +162,6 @@ export default function Notifications() {
                     </View>
                 </View>
 
-                <TouchableOpacity
-                    onPress={handleDirectPushTest}
-                    style={{
-                        backgroundColor: "#305797",
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        margin: 16,
-                        borderRadius: 8,
-                    }}
-                >
-                    <Text
-                        style={{
-                            color: "#ffffff",
-                            fontWeight: "600",
-                            textAlign: "center",
-                        }}
-                    >
-                        Test Direct Push
-                    </Text>
-                </TouchableOpacity>
 
                 <View style={NotificationStyle.searchContainer}>
                     <Ionicons name="search" size={18} color="#9ca3af" />

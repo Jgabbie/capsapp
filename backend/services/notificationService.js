@@ -148,22 +148,48 @@ export const createNotificationAndPush = async ({
         type,
         link,
         metadata,
+        pushStatus: "sending",
+        pushAttempts: 1,
+        pushClaimedAt: new Date(),
     });
 
-    let pushResult;
-
     try {
-        pushResult = await sendNotificationPush(notification);
+        const pushResult =
+            await sendNotificationPush(notification);
+
+        if (!pushResult.sent) {
+            throw new Error(
+                pushResult.reason ||
+                "Push notification was not sent."
+            );
+        }
+
+        notification.pushStatus = "sent";
+        notification.pushSentAt = new Date();
+        notification.pushLastError = null;
+        notification.pushTickets =
+            pushResult.tickets || [];
+
+        await notification.save();
+
+        return {
+            notification,
+            pushResult,
+        };
     } catch (error) {
-        pushResult = {
-            sent: false,
-            reason: "PUSH_EXCEPTION",
-            error: error.message,
+        notification.pushStatus = "failed";
+        notification.pushLastError =
+            error.message || "Unknown push error";
+
+        await notification.save();
+
+        return {
+            notification,
+            pushResult: {
+                sent: false,
+                reason: "PUSH_EXCEPTION",
+                error: error.message,
+            },
         };
     }
-
-    return {
-        notification,
-        pushResult,
-    };
 };

@@ -253,7 +253,18 @@ export default function Home({ route }) {
                         setForYouPackages(recResponse.data.packages);
                     }
                 } catch (error) {
-                    console.error("Failed to fetch recommendations on refresh:", error.message);
+                    console.error(
+                        "Failed to fetch recommendations on refresh:",
+                        {
+                            message: error.message,
+                            status: error.response?.status,
+                            data: error.response?.data
+                        }
+                    );
+
+                    setForYouPackages(
+                        transformedPackages.slice(0, 5)
+                    );
                 }
             }
 
@@ -359,26 +370,60 @@ export default function Home({ route }) {
     // Fetch personalized recommendations
     useEffect(() => {
         const fetchRecommendations = async () => {
+            if (!user?._id || loading) {
+                return;
+            }
+
             try {
-                setForYouLoading(true)
-                const response = await api.get('/recommendations', withUserHeader(user._id))
-                if (response.data?.packages) {
-                    setForYouPackages(response.data.packages)
-                } else {
-                    setForYouPackages([])
+                setForYouLoading(true);
+
+                const response = await api.get(
+                    '/recommendations',
+                    withUserHeader(user._id)
+                );
+
+                const recommendedPackages =
+                    Array.isArray(response.data?.packages)
+                        ? response.data.packages.filter(
+                            (pkg) => pkg?._id
+                        )
+                        : [];
+
+                // Use regular packages when the endpoint returns nothing.
+                setForYouPackages(
+                    recommendedPackages.length > 0
+                        ? recommendedPackages
+                        : packages.slice(0, 5)
+                );
+
+                if (response.data?.fallback) {
+                    console.warn(
+                        'AI recommendation fallback used:',
+                        response.data?.warning ||
+                        response.data?.method
+                    );
                 }
             } catch (error) {
-                console.error("Failed to fetch recommendations:", error.message)
-                setForYouPackages([])
-            } finally {
-                setForYouLoading(false)
-            }
-        }
+                console.error(
+                    'Failed to fetch recommendations:',
+                    {
+                        message: error.message,
+                        status: error.response?.status,
+                        data: error.response?.data
+                    }
+                );
 
-        if (user?._id) {
-            fetchRecommendations()
-        }
-    }, [user?._id])
+                // Keep the FOR YOU section visible.
+                setForYouPackages(
+                    packages.slice(0, 5)
+                );
+            } finally {
+                setForYouLoading(false);
+            }
+        };
+
+        fetchRecommendations();
+    }, [user?._id, loading]);
 
 
     //Fetch popular packages with fallback

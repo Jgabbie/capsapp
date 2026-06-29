@@ -1,113 +1,276 @@
 import axios from 'axios';
 import Package from '../models/package.js';
-import { default as mongoose } from 'mongoose';
+import mongoose from 'mongoose';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://recommendationtravex.onrender.com';
-const AI_SERVICE_TIMEOUT = 10000; // 10 seconds
+const AI_SERVICE_URL = String(
+    process.env.AI_SERVICE_URL ||
+    'https://recommendationtravex.onrender.com'
+).replace(/\/$/, '');
 
-// Create axios instance for AI service
+const AI_SERVICE_TIMEOUT = Number(
+    process.env.AI_SERVICE_TIMEOUT || 60000
+);
+
 const aiService = axios.create({
     baseURL: AI_SERVICE_URL,
-    timeout: AI_SERVICE_TIMEOUT
+    timeout: AI_SERVICE_TIMEOUT,
+    headers: {
+        Accept: 'application/json'
+    }
 });
 
+const getFallbackPackages = async (limit = 5) => {
+    return Package.find({})
+        .sort({
+            averageRating: -1,
+            createdAt: -1
+        })
+        .limit(limit)
+        .lean()
+        .exec();
+};
+
+const normalizeRecommendation = (item) => {
+    if (typeof item === 'string') {
+        return {
+            packageId: item,
+            packageName: null
+        };
+    }
+
+    if (!item || typeof item !== 'object') {
+        return null;
+    }
+
+    return {
+        packageId: item.packageId || item._id || item.id || null,
+        packageName: item.packageName || item.name || null
+    };
+};
+
 export const getRecommendations = async (req, res) => {
+    const userId = req.userId
+        ? String(req.userId)
+        : null;
+
+    if (!userId) {
+        console.warn('[Recommendations] Missing req.userId');
+
+        return res.status(401).json({
+            message: 'User not authenticated'
+        });
+    }
+
     try {
-        const userId = req.userId ? String(req.userId) : null;
-        if (!userId) {
-            console.warn('[Recommendations] Rejected before AI call: missing req.userId')
-            return res.status(401).json({ message: "User not authenticated" });
+        console.log(
+            `[Recommendations] Fetching recommendations for user ${userId}`
+        );
+
+        const response = await aiService.get(
+            `/recommend/${encodeURIComponent(userId)}`
+        );
+
+        const payload = response.data || {};
+
+        if (payload.error) {
+            throw new Error(payload.error);
         }
 
-        console.log(`[Recommendations] Fetching recommendations for user: ${userId}`);
+        // Supports different response names from the Python service.
+        const rawRecommendations = Array.isArray(payload.recommendations)
+            ? payload.recommendations
+            : Array.isArray(payload.packages)
+                ? payload.packages
+                : Array.isArray(payload.tours)
+                    ? payload.tours
+                    : [];
 
-        // Call the Python AI service
-        const response = await aiService.get(`/recommend/${userId}`);
-        console.log(`[Recommendations] AI response status: ${response.status}, method: ${response.data?.method || 'n/a'}, count: ${response.data?.recommendations?.length || 0}`)
+        const recommendations = rawRecommendations
+            .map(normalizeRecommendation)
+            .filter(Boolean);
 
-        // Check if there was an error from the AI service
-        if (response.data.error) {
-            console.warn(`[Recommendations] AI Service error: ${response.data.error}`);
-            return res.status(503).json({
-                message: "AI Service error",
-                error: response.data.error
+        // AI returned an empty result.
+        if (recommendations.length === 0) {
+            const fallbackPackages = await getFallbackPackages();
+
+            return res.status(200).json({
+                packages: fallbackPackages,
+                tours: fallbackPackages,
+                method: payload.method || 'database-fallback',
+                count: fallbackPackages.length,
+                fallback: true
             });
         }
 
-        const recommendations = response.data.recommendations || [];
-        const recommendedIds = recommendations.map(item => item.packageId || item._id || item).filter(Boolean);
-        const recommendedNames = recommendations.map(item => item.packageName || '').filter(Boolean);
+        const objectIds = recommendations
+            .map((item) => item.packageId)
+            .filter(
+                (id) =>
+                    id &&
+                    mongoose.Types.ObjectId.isValid(id)
+            )
+            .map(
+                (id) =>
+                    new mongoose.Types.ObjectId(id)
+            );
 
-        if (recommendedIds.length === 0 && recommendedNames.length === 0) {
-            console.warn(`[Recommendations] AI returned empty recommendation payload for user: ${userId}`);
-            return res.json({ packages: [], tours: [], method: response.data.method || "none" });
-        }
-
-        console.log(`[Recommendations] Retrieved ${recommendations.length} recommendations using ${response.data.method}`);
-
-        // Convert recommended id strings to ObjectId where valid
-        const objectIds = recommendedIds
-            .map(id => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null))
+        const packageNames = recommendations
+            .map((item) => item.packageName)
             .filter(Boolean);
 
-        let packagesFromDb = [];
+        const filters = [];
+
         if (objectIds.length > 0) {
-            packagesFromDb = await Package.find({ _id: { $in: objectIds } }).lean().exec();
+            filters.push({
+                _id: {
+                    $in: objectIds
+                }
+            });
         }
 
-        // Map by stringified _id for quick lookup
-        const pkgMap = new Map(packagesFromDb.map(p => [String(p._id), p]));
+        if (packageNames.length > 0) {
+            filters.push({
+                packageName: {
+                    $in: packageNames
+                }
+            });
+        }
 
-        // Build ordered list preserving AI order. If DB record missing, keep a minimal fallback object.
+        const packagesFromDb =
+            filters.length > 0
+                ? await Package.find({
+                    $or: filters
+                })
+                    .lean()
+                    .exec()
+                : [];
+
+        const packageById = new Map(
+            packagesFromDb.map((pkg) => [
+                String(pkg._id),
+                pkg
+            ])
+        );
+
+        const packageByName = new Map(
+            packagesFromDb.map((pkg) => [
+                String(pkg.packageName)
+                    .trim()
+                    .toLowerCase(),
+                pkg
+            ])
+        );
+
+        const seen = new Set();
         const orderedPackages = [];
-        for (const rec of recommendations) {
-            const recId = rec.packageId || rec._id || null;
-            let pkg = recId ? pkgMap.get(String(recId)) : null;
-            if (pkg) {
-                orderedPackages.push(pkg);
+
+        // Preserve the order returned by the AI.
+        for (const recommendation of recommendations) {
+            const idKey = recommendation.packageId
+                ? String(recommendation.packageId)
+                : null;
+
+            const nameKey = recommendation.packageName
+                ? String(recommendation.packageName)
+                    .trim()
+                    .toLowerCase()
+                : null;
+
+            const pkg =
+                (idKey
+                    ? packageById.get(idKey)
+                    : null) ||
+                (nameKey
+                    ? packageByName.get(nameKey)
+                    : null);
+
+            // Do not include incomplete AI-only package objects.
+            if (!pkg) {
                 continue;
             }
 
-            // Try matching by name when id lookup fails
-            if (rec.packageName) {
-                const byName = await Package.findOne({ packageName: rec.packageName }).lean().exec();
-                if (byName) {
-                    orderedPackages.push(byName);
-                    continue;
-                }
+            const pkgId = String(pkg._id);
+
+            if (seen.has(pkgId)) {
+                continue;
             }
 
-            // As a last resort, include the AI-provided minimal info so caller receives same count
-            orderedPackages.push({ _id: recId || null, packageName: rec.packageName || null });
+            seen.add(pkgId);
+            orderedPackages.push(pkg);
         }
 
-        res.json({
+        // The AI returned IDs or names that do not exist in MongoDB.
+        if (orderedPackages.length === 0) {
+            const fallbackPackages = await getFallbackPackages();
+
+            return res.status(200).json({
+                packages: fallbackPackages,
+                tours: fallbackPackages,
+                method: 'database-fallback',
+                count: fallbackPackages.length,
+                fallback: true
+            });
+        }
+
+        return res.status(200).json({
             packages: orderedPackages,
             tours: orderedPackages,
-            method: response.data.method,
-            count: orderedPackages.length
+            method: payload.method || 'ai',
+            count: orderedPackages.length,
+            fallback: false
         });
-    } catch (err) {
-        console.error(`[Recommendations] Error: ${err.message}`);
+    } catch (error) {
+        const isTimeout =
+            error.code === 'ECONNABORTED' ||
+            String(error.message || '')
+                .toLowerCase()
+                .includes('timeout');
 
-        if (err.code === 'ECONNREFUSED') {
+        const upstreamStatus =
+            error.response?.status || null;
+
+        const upstreamData =
+            error.response?.data || null;
+
+        console.error(
+            '[Recommendations] AI request failed:',
+            {
+                message: error.message,
+                code: error.code,
+                upstreamStatus,
+                upstreamData
+            }
+        );
+
+        // Return database packages instead of breaking the Home screen.
+        try {
+            const fallbackPackages =
+                await getFallbackPackages();
+
+            return res.status(200).json({
+                packages: fallbackPackages,
+                tours: fallbackPackages,
+                method: isTimeout
+                    ? 'database-fallback-timeout'
+                    : 'database-fallback-error',
+                count: fallbackPackages.length,
+                fallback: true,
+                warning: isTimeout
+                    ? 'Recommendation service timed out'
+                    : 'Recommendation service unavailable'
+            });
+        } catch (fallbackError) {
+            console.error(
+                '[Recommendations] Database fallback failed:',
+                fallbackError.message
+            );
+
             return res.status(503).json({
-                message: "AI Service is offline",
-                error: "Cannot connect to recommendation service"
+                message:
+                    'Recommendations are temporarily unavailable',
+                error: error.message
             });
         }
-
-        if (err.response?.status === 503) {
-            return res.status(503).json({
-                message: "AI Service is temporarily unavailable",
-                error: err.response?.data?.error
-            });
-        }
-
-        res.status(500).json({
-            message: "Error fetching recommendations",
-            error: err.message
-        });
     }
 };
 
@@ -117,8 +280,6 @@ export const getRecommendations = async (req, res) => {
  */
 export const trainModels = async (req, res) => {
     try {
-        console.log("[Train] Triggering model training...");
-
         const response = await aiService.post('/train');
 
         res.json({
@@ -127,17 +288,16 @@ export const trainModels = async (req, res) => {
             models_ready: response.data.models_ready
         });
     } catch (err) {
-        console.error(`[Train] Error: ${err.message}`);
+        console.error(
+            '[Train] Error:',
+            error.response?.data || error.message
+        );
 
-        if (err.code === 'ECONNREFUSED') {
-            return res.status(503).json({
-                message: "AI Service is offline"
-            });
-        }
-
-        res.status(500).json({
-            message: "Error triggering model training",
-            error: err.message
+        return res.status(503).json({
+            message: 'Unable to trigger model training',
+            error:
+                error.response?.data?.error ||
+                error.message
         });
     }
 };
@@ -149,16 +309,26 @@ export const checkHealth = async (req, res) => {
     try {
         const response = await aiService.get('/health');
 
-        res.json({
-            status: response.data.status,
-            models_ready: response.data.models_ready
+        return res.status(200).json({
+            status:
+                response.data?.status || 'healthy',
+            models_ready: Boolean(
+                response.data?.models_ready
+            ),
+            aiServiceUrl: AI_SERVICE_URL
         });
-    } catch (err) {
-        console.error(`[Health] Error: ${err.message}`);
+    } catch (error) {
+        console.error(
+            '[Health] Error:',
+            error.response?.data || error.message
+        );
 
-        res.status(503).json({
-            status: "unhealthy",
-            error: err.message
+        return res.status(503).json({
+            status: 'unhealthy',
+            error:
+                error.response?.data?.error ||
+                error.message,
+            aiServiceUrl: AI_SERVICE_URL
         });
     }
 };

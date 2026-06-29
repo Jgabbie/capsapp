@@ -2180,6 +2180,21 @@ export const handlePayMongoWebhook = async (req, res) => {
                 return console.error('Booking not found for ID:', metadata.bookingId);
             }
 
+            const existingBookingPayment =
+                await TransactionModel.findOne({
+                    bookingId: booking._id,
+                    method: "Paymongo",
+                    status: "Successful",
+                });
+
+            if (existingBookingPayment) {
+                console.log(
+                    "Booking payment already processed. Duplicate webhook skipped:",
+                    booking.reference
+                );
+                return;
+            }
+
             const bookingStart = dayjs(booking.travelDate.startDate).format('YYYY-MM-DD');
             const bookingEnd = dayjs(booking.travelDate.endDate).format('YYYY-MM-DD');
             const packageId = booking.packageId.toString();

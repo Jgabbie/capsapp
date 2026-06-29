@@ -138,17 +138,6 @@ export default function PushNotificationManager() {
 
         registerToken();
 
-        // const receivedSubscription =
-        //     Notifications.addNotificationReceivedListener(
-        //         notification => {
-        //             Alert.alert(
-        //                 "Push Received",
-        //                 notification.request.content.title ||
-        //                 "Notification received"
-        //             );
-        //         }
-        //     );
-
         const responseSubscription =
             Notifications.addNotificationResponseReceivedListener(
                 response => {
