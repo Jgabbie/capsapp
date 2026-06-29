@@ -373,10 +373,6 @@ export default function Home({ route }) {
             try {
                 setForYouLoading(true);
 
-                console.log("Recommendation user:", {
-                    userId: user?._id,
-                    user
-                });
 
                 const config = withUserHeader(user._id);
 
@@ -385,12 +381,6 @@ export default function Home({ route }) {
                 const response = await api.get(
                     '/recommendations',
                     config
-                );
-
-                console.log(
-                    "Recommendation response:",
-                    response.status,
-                    response.data
                 );
 
                 const recommendedPackages =
