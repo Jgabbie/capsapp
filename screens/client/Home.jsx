@@ -370,59 +370,59 @@ export default function Home({ route }) {
     // Fetch personalized recommendations
     useEffect(() => {
         const fetchRecommendations = async () => {
-            if (!user?._id || loading) {
-                return;
-            }
-
             try {
                 setForYouLoading(true);
 
+                console.log("Recommendation user:", {
+                    userId: user?._id,
+                    user
+                });
+
+                const config = withUserHeader(user._id);
+
+                console.log("Recommendation request config:", config);
+
                 const response = await api.get(
                     '/recommendations',
-                    withUserHeader(user._id)
+                    config
+                );
+
+                console.log(
+                    "Recommendation response:",
+                    response.status,
+                    response.data
                 );
 
                 const recommendedPackages =
                     Array.isArray(response.data?.packages)
-                        ? response.data.packages.filter(
-                            (pkg) => pkg?._id
-                        )
+                        ? response.data.packages.filter(pkg => pkg?._id)
                         : [];
 
-                // Use regular packages when the endpoint returns nothing.
                 setForYouPackages(
                     recommendedPackages.length > 0
                         ? recommendedPackages
                         : packages.slice(0, 5)
                 );
-
-                if (response.data?.fallback) {
-                    console.warn(
-                        'AI recommendation fallback used:',
-                        response.data?.warning ||
-                        response.data?.method
-                    );
-                }
             } catch (error) {
-                console.error(
-                    'Failed to fetch recommendations:',
-                    {
-                        message: error.message,
-                        status: error.response?.status,
-                        data: error.response?.data
-                    }
-                );
+                console.error("Recommendation request failed:", {
+                    message: error.message,
+                    code: error.code,
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    url: error.config?.url,
+                    baseURL: error.config?.baseURL,
+                    headers: error.config?.headers
+                });
 
-                // Keep the FOR YOU section visible.
-                setForYouPackages(
-                    packages.slice(0, 5)
-                );
+                setForYouPackages(packages.slice(0, 5));
             } finally {
                 setForYouLoading(false);
             }
         };
 
-        fetchRecommendations();
+        if (user?._id && !loading) {
+            fetchRecommendations();
+        }
     }, [user?._id, loading]);
 
 
