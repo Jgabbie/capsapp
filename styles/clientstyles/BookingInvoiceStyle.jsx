@@ -494,7 +494,7 @@ export default StyleSheet.create({
     pdfButtonText: {
         color: '#305797',
         fontFamily: 'Montserrat_600SemiBold',
-        fontSize: 15,
+        fontSize: 13,
         marginLeft: 8,
     },
 
