@@ -39,6 +39,23 @@ export default StyleSheet.create({
         fontFamily: 'Roboto_400Regular',
         marginBottom: 24,
     },
+    viewBookingInvoiceButton: {
+        marginTop: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f8faff',
+        borderWidth: 1,
+        borderColor: '#305797',
+        borderRadius: 8,
+        paddingVertical: 12,
+        gap: 8
+    },
+    viewBookingInvoiceButtonText: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 13,
+        color: '#305797'
+    },
 
     // --- SUMMARY CARDS ---
     metaContainer: {

@@ -1596,11 +1596,11 @@ export default function BookingInvoice({ route, navigation }) {
                         </View>
 
                         <TouchableOpacity
-                            style={{ marginTop: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8faff', borderWidth: 1, borderColor: '#305797', borderRadius: 8, paddingVertical: 12, gap: 8 }}
+                            style={BookingInvoiceStyle.viewBookingInvoiceButton}
                             onPress={handleViewInvoice}
                         >
                             <Ionicons name="document-text-outline" size={18} color="#305797" />
-                            <Text style={{ fontFamily: "Montserrat_600SemiBold", fontSize: 13, color: '#305797' }}>Preview Booking Invoice</Text>
+                            <Text style={BookingInvoiceStyle.viewBookingInvoiceButtonText}>Preview Booking Invoice</Text>
                         </TouchableOpacity>
                     </View>
 
