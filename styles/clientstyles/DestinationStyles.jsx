@@ -60,6 +60,26 @@ const DestinationStyles = StyleSheet.create({
     height: 25
   },
 
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 10,
+    backgroundColor: "#305797",
+  },
+
+  backText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "Montserrat_600SemiBold",
+    marginTop: 4
+  },
+
+
+
+
+
+
+
   heroBanner: {
     height: 190,
     marginHorizontal: -20,
@@ -220,6 +240,7 @@ const DestinationStyles = StyleSheet.create({
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#305797',
     gap: 4
   },
 
@@ -480,6 +501,7 @@ const DestinationStyles = StyleSheet.create({
   },
 
   heroDescription: {
+    textAlign: "justify",
     fontSize: 13,
     color: "#374151",
     lineHeight: 20
@@ -568,6 +590,7 @@ const DestinationStyles = StyleSheet.create({
   },
 
   cancellationPolicyText: {
+    textAlign: 'justify',
     fontSize: 13,
     color: '#6b7280',
     lineHeight: 20

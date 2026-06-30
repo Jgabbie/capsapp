@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
-import { useFocusEffect } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
@@ -54,8 +54,30 @@ const isFullyPaidBooking = (booking, packageId) => {
     return totalPrice > 0 && paidAmount >= totalPrice;
 };
 
+function PackageVideo({ source }) {
+    const player = useVideoPlayer(source, (player) => {
+        player.loop = true;
+        player.play();
+    });
+
+    return (
+        <VideoView
+            player={player}
+            style={{
+                width: "100%",
+                height: 240,
+                borderRadius: 12,
+                backgroundColor: "#000",
+            }}
+            allowsFullscreen
+            nativeControls
+        />
+    );
+}
+
 export default function PackageDetails({ route, navigation }) {
     const { user } = useUser();
+    const isScreenFocused = useIsFocused();
     const scrollViewRef = useRef(null);
     const carouselRef = useRef(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -88,28 +110,6 @@ export default function PackageDetails({ route, navigation }) {
 
     const [selectedArrangement, setSelectedArrangement] = useState("All in Package");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
-
-    // Video Player Setup
-    const videoPlayer = useVideoPlayer(
-        fullPkg?.packageVideo || null,
-        (player) => {
-            player.loop = true;
-        }
-    );
-
-    useFocusEffect(
-        React.useCallback(() => {
-            // Screen is currently visible
-            if (fullPkg?.packageVideo) {
-                videoPlayer.play();
-            }
-
-            // Runs when navigating to another screen
-            return () => {
-                videoPlayer.pause();
-            };
-        }, [videoPlayer, fullPkg?.packageVideo])
-    );
 
     //  ADD THESE TWO NEW STATES:
     const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);
@@ -443,8 +443,8 @@ export default function PackageDetails({ route, navigation }) {
 
                     <View style={DestinationStyles.detailsHeader}>
                         <View style={DestinationStyles.titleRowHeader}>
-                            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: 10, paddingTop: 4 }}>
-                                <Ionicons name="arrow-back" size={24} color="#305797" />
+                            <TouchableOpacity style={DestinationStyles.backButton} onPress={() => navigation.goBack()} >
+                                <Text style={DestinationStyles.backText}>Back</Text>
                             </TouchableOpacity>
                             <Text style={DestinationStyles.detailsTitle} numberOfLines={2}>{fullPkg.title}</Text>
                         </View>
@@ -509,14 +509,9 @@ export default function PackageDetails({ route, navigation }) {
                             </View>
                         </View>
 
-                        {fullPkg.packageVideo ? (
+                        {fullPkg.packageVideo && isScreenFocused ? (
                             <View style={{ marginTop: 14, marginBottom: 8 }}>
-                                <VideoView
-                                    player={videoPlayer}
-                                    style={{ width: '100%', height: 240, borderRadius: 12, backgroundColor: '#000' }}
-                                    allowsFullscreen
-                                    nativeControls
-                                />
+                                <PackageVideo source={fullPkg.packageVideo} />
                             </View>
                         ) : null}
 
