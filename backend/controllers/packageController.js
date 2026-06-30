@@ -1,7 +1,7 @@
 import PackageModel from "../models/package.js";
 
 // fetch all packages with average rating
-export const getPackages = async (req, res) => {
+const getPackages = async (req, res) => {
     try {
         const packages = await PackageModel.aggregate([
             {
@@ -39,7 +39,7 @@ export const getPackages = async (req, res) => {
 
 
 //fetch single package by ID
-export const getPackage = async (req, res) => {
+const getPackage = async (req, res) => {
     try {
         const { id } = req.params;
 
