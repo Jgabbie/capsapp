@@ -205,7 +205,7 @@ const ProfileStyle = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontSize: 15,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_600SemiBold",
     },
     dropdownButton: {
         flexDirection: "row",

@@ -64,14 +64,18 @@ const DestinationStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginRight: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 14,
+    paddingRight: 14,
+    borderRadius: 20,
     backgroundColor: "#305797",
   },
 
   backText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#FFFFFF",
     fontFamily: "Montserrat_600SemiBold",
-    marginTop: 4
   },
 
 
@@ -175,7 +179,7 @@ const DestinationStyles = StyleSheet.create({
 
   filterButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontFamily: 'Montserrat_600SemiBold',
     fontSize: 12,
     marginLeft: 6
   },
@@ -241,13 +245,33 @@ const DestinationStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#305797',
+    borderRadius: 20,
+    padding: 12,
+    gap: 4
+  },
+
+  averageRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#305797',
+    borderRadius: 20,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 14,
+    paddingRight: 14,
     gap: 4
   },
 
   ratingText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#fbbf24'
+    color: '#ffffff'
+  },
+
+  averageRatingText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff'
   },
 
   cardSubHeaderRow: {
@@ -279,9 +303,18 @@ const DestinationStyles = StyleSheet.create({
     fontWeight: "700"
   },
 
+  durationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#305797',
+    borderRadius: 20,
+    padding: 12,
+    gap: 4
+  },
+
   durationText: {
     fontSize: 13,
-    color: "#64748b",
+    color: "#ffffff",
     fontWeight: "600"
   },
 
@@ -422,7 +455,7 @@ const DestinationStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingLeft: 34,
+
     marginBottom: 12
   },
 

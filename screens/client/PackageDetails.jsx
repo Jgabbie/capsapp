@@ -450,10 +450,13 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
 
                         <View style={DestinationStyles.subtitleRow}>
-                            <Text style={DestinationStyles.durationText}>{fullPkg.duration} DAYS</Text>
-                            <View style={DestinationStyles.ratingContainer}>
+                            <View style={DestinationStyles.durationContainer}>
+                                <Text style={DestinationStyles.durationText}>{fullPkg.duration} DAYS</Text>
+                            </View>
+
+                            <View style={DestinationStyles.averageRatingContainer}>
                                 <Ionicons name="star" size={14} color="#facc15" />
-                                <Text style={DestinationStyles.ratingText}>{averageRating} ({reviews.length} reviews)</Text>
+                                <Text style={DestinationStyles.averageRatingText}>Average Rating: {averageRating} ({reviews.length} reviews)</Text>
                             </View>
                         </View>
 
