@@ -3,8 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Acti
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
+import { useFocusEffect } from "@react-navigation/native";
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { ResizeMode } from 'expo-av';
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Header from "../../components/Header";
@@ -90,10 +90,26 @@ export default function PackageDetails({ route, navigation }) {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     // Video Player Setup
-    const videoPlayer = useVideoPlayer(fullPkg?.packageVideo || null, player => {
-        player.loop = true;
-        player.play();
-    });
+    const videoPlayer = useVideoPlayer(
+        fullPkg?.packageVideo || null,
+        (player) => {
+            player.loop = true;
+        }
+    );
+
+    useFocusEffect(
+        React.useCallback(() => {
+            // Screen is currently visible
+            if (fullPkg?.packageVideo) {
+                videoPlayer.play();
+            }
+
+            // Runs when navigating to another screen
+            return () => {
+                videoPlayer.pause();
+            };
+        }, [videoPlayer, fullPkg?.packageVideo])
+    );
 
     //  ADD THESE TWO NEW STATES:
     const [isVisaRequiredModalOpen, setIsVisaRequiredModalOpen] = useState(false);

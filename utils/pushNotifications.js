@@ -12,23 +12,6 @@ Notifications.setNotificationHandler({
 });
 
 
-export async function testLocalNotification() {
-    await configureNotificationChannel();
-
-    await Notifications.scheduleNotificationAsync({
-        content: {
-            title: "M&RC Test",
-            body: "Notification display is working.",
-            sound: "default",
-        },
-        trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-            seconds: 2,
-            channelId: "mrc-default-v2",
-        },
-    });
-}
-
 export async function configureNotificationChannel() {
     if (Platform.OS !== "android") return;
 

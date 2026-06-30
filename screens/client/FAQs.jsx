@@ -5,8 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
 
-import { testLocalNotification } from '../../utils/pushNotifications';
-
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import FAQsStyle from '../../styles/clientstyles/FAQsStyle';
@@ -119,35 +117,6 @@ export default function FAQs() {
                             Browse our FAQs to find quick answers about bookings, payments, and services. Can't find what you're looking for? Contact us for personalized support.
                         </Text>
                     </View>
-
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: '#305797',
-                            paddingVertical: 14,
-                            paddingHorizontal: 20,
-                            borderRadius: 8,
-                            marginHorizontal: 20,
-                            marginBottom: 20,
-                            alignItems: 'center',
-                        }}
-                        onPress={async () => {
-                            try {
-                                await testLocalNotification();
-                                console.log('Local notification scheduled.');
-                            } catch (error) {
-                                console.error('Local notification test failed:', error);
-                            }
-                        }}
-                    >
-                        <Text
-                            style={{
-                                color: '#ffffff',
-                                fontWeight: '700',
-                            }}
-                        >
-                            Test Notification
-                        </Text>
-                    </TouchableOpacity>
 
                     {/* Horizontal Categories Filter */}
                     <View>
