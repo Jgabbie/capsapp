@@ -13,7 +13,7 @@ const generateTransactionReference = () => {
 
 
 //create transaction function
-export const createTransaction = async (req, res) => {
+const createTransaction = async (req, res) => {
     const userId = req.userId;
     const { bookingId, packageId, amount, method, status, packageName } = req.body;
     try {
@@ -46,7 +46,7 @@ export const createTransaction = async (req, res) => {
 
 
 //get user transactions function
-export const getUserTransactions = async (req, res) => {
+const getUserTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({ userId: req.userId })
             .sort({ createdAt: -1 })
@@ -71,7 +71,7 @@ export const getUserTransactions = async (req, res) => {
 
 
 //get transactions for a specific application function
-export const getTransactionsForApplication = async (req, res) => {
+const getTransactionsForApplication = async (req, res) => {
     const userId = req.userId
     const { applicationId } = req.params
     try {
