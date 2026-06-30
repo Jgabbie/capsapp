@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 
 //send contact email function
-export const sendContactEmail = async (req, res) => {
+const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
 
     // Use SMTP_USER (verified Brevo sender) for best deliverability
