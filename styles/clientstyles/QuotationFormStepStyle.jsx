@@ -181,10 +181,12 @@ const QuotationFormStepStyle = StyleSheet.create({
         marginBottom: 24,
         paddingHorizontal: 8,
     },
+
     verifyModalButtonsRow: {
         flexDirection: 'row',
         gap: 12,
     },
+
     verifyPrimaryButton: {
         flex: 1,
         backgroundColor: '#315c9d',
@@ -200,12 +202,14 @@ const QuotationFormStepStyle = StyleSheet.create({
         shadowRadius: 6,
         elevation: 4,
     },
+
     verifyPrimaryButtonText: {
         color: '#fff',
         fontSize: 15,
         fontFamily: 'Montserrat_700Bold',
         textAlign: 'center',
     },
+
     verifySecondaryButton: {
         flex: 1,
         backgroundColor: '#a82d4d',
@@ -221,19 +225,62 @@ const QuotationFormStepStyle = StyleSheet.create({
         shadowRadius: 6,
         elevation: 4,
     },
+
     verifySecondaryButtonText: {
         color: '#fff',
         fontSize: 15,
         fontFamily: 'Montserrat_700Bold',
         textAlign: 'center',
     },
-    dropdownBox: { backgroundColor: '#fff', width: 280, maxHeight: 350, borderRadius: 12, padding: 10, elevation: 5, alignSelf: 'center' },
-    dropdownItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
-    dropdownText: { fontFamily: 'Montserrat_700Bold', fontSize: 16, color: '#305797' },
-    errorText: { color: '#d32f2f', fontFamily: 'Montserrat_600SemiBold', fontSize: 10, marginTop: 5, marginLeft: 5 },
-    footerContainer: { padding: 20, paddingBottom: 40 },
-    backTextButton: { alignItems: 'center', paddingVertical: 15 },
-    backText: { fontFamily: 'Montserrat_600SemiBold', fontSize: 15, color: '#ccc' }
+
+    dropdownBox: {
+        backgroundColor: '#fff',
+        width: 280, maxHeight: 350,
+        borderRadius: 12, padding: 10,
+        elevation: 5,
+        alignSelf: 'center'
+    },
+
+    dropdownItem: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+        alignItems: 'center'
+    },
+
+    dropdownText: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 16,
+        color: '#305797'
+    },
+
+    errorText: {
+        color: '#d32f2f',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 10,
+        marginTop: 5,
+        marginLeft: 5
+    },
+
+    footerContainer: {
+        padding: 20,
+        paddingBottom: 40
+    },
+
+    backTextButton: {
+        backgroundColor: "#305797",
+        height: 50,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+
+    backText: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 15,
+        color: '#ffffff'
+    }
 });
 
 export default QuotationFormStepStyle;

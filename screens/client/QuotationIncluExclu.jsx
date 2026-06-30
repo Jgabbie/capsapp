@@ -6,12 +6,36 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function QuotationIncluExclu({ route, navigation }) {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation } = route.params || {};
     const pkg = quotation?.packageId || quotation?.pkg || {};
     const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const inclusions = Array.isArray(latestPdfRevision?.travelDetails.inclusions)
         ? latestPdfRevision.travelDetails.inclusions
@@ -180,7 +204,10 @@ export default function QuotationIncluExclu({ route, navigation }) {
                         </TouchableOpacity>
 
                     </View>
+
                 </View>
+
+
 
             </ScrollView>
         </SafeAreaView>

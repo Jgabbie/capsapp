@@ -5,10 +5,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from "expo-constants";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
-import { useFonts } from '@expo-google-fonts/montserrat';
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
-
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import Chatbot from '../../components/Chatbot';
@@ -16,6 +12,21 @@ import WishlistStyle from '../../styles/clientstyles/WishlistStyle';
 import ModalStyle from '../../styles/componentstyles/ModalStyle';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
+
+import { useFonts } from '@expo-google-fonts/montserrat';
+
+import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto';
 
 const { width } = Dimensions.get('window');
 
@@ -55,8 +66,13 @@ export default function Wishlist() {
     const [priceRange, setPriceRange] = useState([0, 100000]);
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
     });
 
     const getAvailabilityStatus = (slots) => {

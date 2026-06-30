@@ -2,8 +2,19 @@ import { View, Text, TouchableOpacity, Alert, ScrollView, Modal, ActivityIndicat
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 
@@ -59,13 +70,17 @@ export default function PassportGuidanceReNew() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [showDatePicker, setShowDatePicker] = useState(false)
-    const [showTimePickerModal, setShowTimePickerModal] = useState(false) 
+    const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
     })
 
     const getMinDate = () => {
@@ -101,12 +116,12 @@ export default function PassportGuidanceReNew() {
 
         try {
             setIsSubmitting(true)
-            
+
             const payload = {
                 dfaLocation,
                 preferredDate: formatDate(preferredDate),
                 preferredTime,
-                applicationType: 'Renewal Passport' 
+                applicationType: 'Renewal Passport'
             };
 
             await api.post('/passport/apply', payload, withUserHeader(user._id))
@@ -128,7 +143,7 @@ export default function PassportGuidanceReNew() {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <ScrollView contentContainerStyle={PassportGuidanceStyle.scrollContent} showsVerticalScrollIndicator={false}>
-                
+
                 <View style={PassportGuidanceStyle.headerContainer}>
                     <TouchableOpacity onPress={() => cs.goBack()} style={{ marginBottom: 10 }}>
                         <Ionicons name="arrow-back" size={24} color="#1f2937" />

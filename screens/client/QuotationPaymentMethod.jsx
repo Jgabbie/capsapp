@@ -14,12 +14,36 @@ import { useUser } from "../../context/UserContext";
 import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
 import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function QuotationPaymentMethod({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const { quotation, setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 

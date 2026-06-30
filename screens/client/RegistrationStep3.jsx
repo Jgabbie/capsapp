@@ -4,6 +4,20 @@ import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormSty
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -12,8 +26,17 @@ const formatLongDate = (dateVal) => {
 
 export default function RegistrationStep3({ route, navigation }) {
     const { user } = useUser();
-    // Pass all previous data forward
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const currentDateLong = formatLongDate(new Date());
 

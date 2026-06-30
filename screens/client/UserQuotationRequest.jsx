@@ -19,11 +19,35 @@ import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import styles from "../../styles/clientstyles/UserQuotationRequestStyle";
 
+import {
+  useFonts,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function UserQuotationRequest({ route, navigation }) {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [quotation, setQuotation] = useState(null);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [fontsLoaded] = useFonts({
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+  });
 
   // Modal States
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);

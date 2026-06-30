@@ -1,13 +1,24 @@
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, ToastAndroid, Platform, Alert } from 'react-native';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { useFonts, Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
-import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
 
 import UserPreferenceStyle from '../../styles/clientstyles/UserPreferenceStyle';
 import { api, withUserHeader } from '../../utils/api';
 import { extractPackageTags } from '../../utils/packageTags';
 import { useUser } from '../../context/UserContext';
+
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium
+} from '@expo-google-fonts/roboto';
 
 export default function UserPreference() {
     const navigation = useNavigation();

@@ -5,6 +5,20 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext';
 import { api } from '../../utils/api';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -82,6 +96,17 @@ const assignRooms = (travelers) => {
 export default function RegistrationStep1({ route, navigation }) {
     const { user } = useUser();
     const { setupData, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
+
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const totalCount = (setupData?.travelerCounts?.adult || 0) +
         (setupData?.travelerCounts?.child || 0) +

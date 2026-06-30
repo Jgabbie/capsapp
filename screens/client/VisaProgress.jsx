@@ -9,6 +9,15 @@ import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
+import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -22,15 +31,6 @@ import {
     Roboto_500Medium,
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
-
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
-import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 const VISA_TERMINAL_STATUSES = new Set([
     'documents submitted',

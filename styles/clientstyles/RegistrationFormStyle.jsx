@@ -286,7 +286,7 @@ const RegistrationFormStyle = StyleSheet.create({
         fontSize: 16,
         color: '#305797',
     },
-    // --- Validation & Footer Styles ---
+
     errorText: {
         color: '#d32f2f',
         fontFamily: "Montserrat_600SemiBold",
@@ -299,13 +299,17 @@ const RegistrationFormStyle = StyleSheet.create({
         paddingBottom: 40,
     },
     backTextButton: {
+        backgroundColor: "#305797",
+        height: 50,
+        borderRadius: 12,
+        justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 15,
+        marginTop: 10,
     },
     backText: {
-        fontFamily: "Montserrat_600SemiBold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 15,
-        color: "#ccc", // Light grey since the background is dark grey
+        color: "#ffffff",
     }
 });
 

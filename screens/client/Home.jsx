@@ -3,8 +3,18 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
 
 import { Image } from 'expo-image';
 

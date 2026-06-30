@@ -2,11 +2,21 @@ import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Modal, Acti
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
-
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import VisaDetailsGuidanceStyle from '../../styles/clientstyles/VisaDetailsGuidanceStyle'
@@ -82,8 +92,12 @@ export default function VisaDetailsGuidance() {
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
     })
 
     useEffect(() => {

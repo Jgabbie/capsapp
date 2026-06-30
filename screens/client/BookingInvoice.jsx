@@ -9,6 +9,16 @@ import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
 
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import AdminSidebar from "../../components/AdminSidebar";
+import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
+import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -23,15 +33,6 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import AdminSidebar from "../../components/AdminSidebar";
-import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
-import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 export default function BookingInvoice({ route, navigation }) {
     const { user } = useUser();

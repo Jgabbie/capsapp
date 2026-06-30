@@ -2,8 +2,17 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
-import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
+
+import {
+    useFonts,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium
+} from '@expo-google-fonts/roboto';
 
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';

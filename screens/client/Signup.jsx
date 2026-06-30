@@ -2,11 +2,20 @@ import { View, Text, TextInput, TouchableOpacity, Modal, ImageBackground, ToastA
 import React, { useState, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { Ionicons } from '@expo/vector-icons'
 import SignupStyle from '../../styles/clientstyles/SignupStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
 
 // IMPORT OUR SMART API INSTEAD OF RAW AXIOS!
 import { api } from '../../utils/api'

@@ -8,6 +8,20 @@ import dayjs from "dayjs";
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import Constants from "expo-constants";
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import QuotationFormStyle from "../../styles/clientstyles/QuotationFormStyle";
 import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import Header from "../../components/Header";
@@ -40,6 +54,16 @@ const periodsList = ['AM', 'PM'];
 export default function QuotationForm({ route, navigation }) {
     const { user } = useUser();
     const today = dayjs();
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Data Extraction
     const { pkg, packageId: routePackageId, id: routeId } = route.params || {};
@@ -296,9 +320,9 @@ export default function QuotationForm({ route, navigation }) {
 
             <ScrollView style={QuotationFormStyle.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
 
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                    <Ionicons name="arrow-back" size={20} color="#305797" />
-                    <Text style={{ color: "#305797", fontFamily: "Montserrat_600SemiBold", marginLeft: 8 }}>Back</Text>
+                <TouchableOpacity style={QuotationFormStyle.backButton} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={16} color="#fff" />
+                    <Text style={QuotationFormStyle.backButtonText}>Back</Text>
                 </TouchableOpacity>
 
                 {/*  REMOVED CARD BORDERS HERE */}

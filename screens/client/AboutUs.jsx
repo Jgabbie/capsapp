@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Linking, SafeAreaView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFonts, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
-import { Roboto_400Regular, Roboto_500Medium } from '@expo-google-fonts/roboto';
+import {
+    useFonts,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
+import {
+    Roboto_400Regular,
+    Roboto_500Medium
+} from '@expo-google-fonts/roboto';
 
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';

@@ -4,15 +4,23 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { Calendar } from 'react-native-calendars';
-
-import { useFonts, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
-
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import UserApplicationsStyle from '../../styles/clientstyles/UserApplicationsStyle';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
+
+import {
+    useFonts,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto';
 
 export default function UserApplications() {
     const cs = useNavigation();

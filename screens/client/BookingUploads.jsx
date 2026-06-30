@@ -6,6 +6,20 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Linking from 'expo-linking';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
@@ -92,6 +106,16 @@ export default function BookingUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData } = route.params || {};
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
     const totalTravelers = counts.adult + counts.child + counts.infant;

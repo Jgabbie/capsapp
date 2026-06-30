@@ -22,9 +22,33 @@ import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import UserPackageQuotationStyle from "../../styles/clientstyles/UserPackageQuotationStyle";
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function UserPackageQuotation() {
     const navigation = useNavigation();
     const { user } = useUser();
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [quotations, setQuotations] = useState([]);

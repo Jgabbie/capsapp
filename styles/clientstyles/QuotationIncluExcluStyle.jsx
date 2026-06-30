@@ -136,7 +136,7 @@ const QuotationIncluExcluStyle = StyleSheet.create({
 
     //  NEW BOTTOM BUTTON STYLES 
     actionContainer: {
-        marginTop: 30,
+        marginTop: 10,
         gap: 12,
     },
     primaryButton: {
@@ -151,16 +151,14 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         fontSize: 16,
     },
     secondaryButton: {
-        backgroundColor: '#fff',
+        backgroundColor: '#305797',
         borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#cbd5e1',
         paddingVertical: 15,
         alignItems: 'center',
     },
     secondaryButtonText: {
-        color: '#64748b',
-        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontFamily: 'Montserrat_700Bold',
         fontSize: 16,
     }
 });

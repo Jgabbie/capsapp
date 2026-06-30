@@ -32,19 +32,6 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         color: "#4e5b72",
         marginTop: 4,
     },
-    backButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#cbd5e1',
-        backgroundColor: '#fff',
-    },
-    backButtonText: {
-        fontFamily: "Roboto_500Medium",
-        color: "#64748b",
-        fontSize: 12,
-    },
 
     imageScrollContainer: {
         flexDirection: 'row',
@@ -67,7 +54,7 @@ const QuotationBookingProcessStyle = StyleSheet.create({
     },
     bookingDetailsTitle: {
         fontFamily: "Montserrat_700Bold",
-        fontSize: 18, 
+        fontSize: 18,
         color: "#1f2a44",
         marginBottom: 15,
         borderBottomWidth: 1,
@@ -159,15 +146,29 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         textTransform: 'uppercase',
     },
 
-    proceedButton: {
-        backgroundColor: "#305797",
-        height: 50,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
+    actionContainer: {
         marginTop: 10,
+        gap: 12,
+    },
+    proceedButton: {
+        backgroundColor: '#305797',
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
     },
     proceedButtonText: {
+        fontFamily: "Montserrat_700Bold",
+        color: "#fff",
+        fontSize: 16,
+    },
+
+    backButton: {
+        backgroundColor: '#305797',
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    backButtonText: {
         fontFamily: "Montserrat_700Bold",
         color: "#fff",
         fontSize: 16,

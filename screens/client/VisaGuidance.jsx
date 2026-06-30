@@ -2,10 +2,20 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Tex
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import { Ionicons } from '@expo/vector-icons'
 
+import {
+    Montserrat_400Regular,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
+import { Ionicons } from '@expo/vector-icons'
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import Chatbot from '../../components/Chatbot'
@@ -20,8 +30,12 @@ export default function VisaGuidance() {
     const [searchQuery, setSearchQuery] = useState('')
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
     })
 
     useEffect(() => {

@@ -2,8 +2,19 @@ import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, ToastA
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
 import { Ionicons } from '@expo/vector-icons'
 import LoginStyle from '../../styles/clientstyles/LoginStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'

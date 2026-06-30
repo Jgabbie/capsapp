@@ -3,6 +3,20 @@ import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Moda
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
@@ -53,6 +67,16 @@ export default function PaymentMode({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');

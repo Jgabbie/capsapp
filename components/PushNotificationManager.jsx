@@ -83,7 +83,6 @@ export default function PushNotificationManager() {
 
         return () => {
             active = false;
-            receivedSubscription.remove();
             responseSubscription.remove();
         };
     }, [user?._id]);

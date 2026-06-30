@@ -5,6 +5,20 @@ import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import ModalStyle from '../../styles/componentstyles/ModalStyle'; //  IMPORTED MODAL STYLES 
 import { useUser } from '../../context/UserContext';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -13,6 +27,16 @@ const formatLongDate = (dateVal) => {
 
 export default function RegistrationStep4({ route, navigation }) {
     const { user } = useUser();
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // State to control the confirmation modal
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
@@ -119,7 +143,7 @@ export default function RegistrationStep4({ route, navigation }) {
                         style={[QuotationAllInStyle.proceedButton, { backgroundColor: '#28a745' }]}
                         onPress={handleOpenConfirmModal}
                     >
-                        <Text style={QuotationAllInStyle.proceedButtonText}>SUBMIT FINAL BOOKING</Text>
+                        <Text style={QuotationAllInStyle.proceedButtonText}>Submit Final Booking</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -131,7 +155,7 @@ export default function RegistrationStep4({ route, navigation }) {
                 </View>
             </ScrollView>
 
-            {/*  NEW: Proceed to Booking Modal matching the Web version  */}
+
             <Modal transparent animationType='fade' visible={isProceedModalOpen} onRequestClose={() => setIsProceedModalOpen(false)}>
                 <View style={ModalStyle.modalOverlay}>
                     <View style={[ModalStyle.modalBox, { width: '90%', paddingHorizontal: 20, paddingVertical: 25 }]}>

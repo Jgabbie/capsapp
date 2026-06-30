@@ -26,6 +26,22 @@ const QuotationFormStyle = StyleSheet.create({
         marginTop: 4,
         lineHeight: 18
     },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#305797',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+        marginBottom: 16,
+    },
+    backButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        marginLeft: 6,
+        fontSize: 14,
+    },
 
     // --- SECTIONS & CARDS ---
     section: {
@@ -132,6 +148,7 @@ const QuotationFormStyle = StyleSheet.create({
         flex: 1
     },
     packageDesc: {
+        textalign: "justify",
         fontFamily: "Roboto_400Regular",
         fontSize: 13,
         color: "#555",

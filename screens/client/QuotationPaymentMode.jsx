@@ -11,6 +11,20 @@ import Sidebar from '../../components/Sidebar';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
@@ -39,6 +53,16 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency, setupData } = route.params || {};
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');

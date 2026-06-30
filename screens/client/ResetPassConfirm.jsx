@@ -2,13 +2,20 @@ import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, Activi
 import React, { useState, useCallback } from 'react'
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { Ionicons } from '@expo/vector-icons' //  ADDED: Icon library
 
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api } from '../../utils/api'
+
+import {
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
 
 export default function ResetPassConfirm() {
     const cs = useNavigation()

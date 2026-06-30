@@ -2,8 +2,18 @@ import { View, Text, TouchableOpacity, ScrollView, ImageBackground } from 'react
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_400Regular,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -15,8 +25,12 @@ export default function PassportGuidance() {
     const [isSidebarVisible, setSidebarVisible] = useState(false)
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
     })
 
     if (!fontsLoaded) return null;

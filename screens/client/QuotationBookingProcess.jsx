@@ -7,6 +7,20 @@ import { Image } from 'expo-image';
 import Constants from 'expo-constants';
 import dayjs from 'dayjs';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import QuotationBookingProcessStyle from '../../styles/clientstyles/QuotationBookingProcessStyle';
 import ModalStyle from '../../styles/componentstyles/ModalStyle';
 import Header from '../../components/Header';
@@ -66,6 +80,16 @@ export default function QuotationBookingProcess() {
     const [packageData, setPackageData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Only prevent hardware back while this screen is focused
     useFocusEffect(
@@ -143,9 +167,6 @@ export default function QuotationBookingProcess() {
                         <Text style={QuotationBookingProcessStyle.mainTitle}>Booking Summary</Text>
                         <Text style={QuotationBookingProcessStyle.subtitle}>Kindly check the details of your booking before proceeding.</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setIsGoBackModalOpen(true)} style={QuotationBookingProcessStyle.backButton}>
-                        <Text style={QuotationBookingProcessStyle.backButtonText}>BACK</Text>
-                    </TouchableOpacity>
                 </View>
 
                 {loading ? (
@@ -215,9 +236,16 @@ export default function QuotationBookingProcess() {
                     </View>
                 </View>
 
-                <TouchableOpacity style={QuotationBookingProcessStyle.proceedButton} onPress={() => navigation.navigate('quotationincluexclu', { quotation })}>
-                    <Text style={QuotationBookingProcessStyle.proceedButtonText}>Itinerary, Inclusions & Exclusions</Text>
-                </TouchableOpacity>
+
+                <View style={QuotationBookingProcessStyle.actionContainer}>
+                    <TouchableOpacity style={QuotationBookingProcessStyle.proceedButton} onPress={() => navigation.navigate('quotationincluexclu', { quotation })}>
+                        <Text style={QuotationBookingProcessStyle.proceedButtonText}>Itinerary, Inclusions & Exclusions</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => setIsGoBackModalOpen(true)} style={QuotationBookingProcessStyle.backButton}>
+                        <Text style={QuotationBookingProcessStyle.backButtonText}>Back</Text>
+                    </TouchableOpacity>
+                </View>
 
                 <View style={{ height: 60 }} />
             </ScrollView>

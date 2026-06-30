@@ -16,11 +16,36 @@ import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import { generateBookingInvoicePdf } from "../../utils/bookingInvoicePdf";
 
+import {
+  useFonts,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
+
 export default function QuotationCheckout({ route, navigation }) {
   const { user } = useUser();
   const [quotation, setQuotation] = useState(route?.params?.quotation || null);
   const prefilledRegistration = route?.params?.prefilledRegistration;
   const startStep = route?.params?.startStep;
+
+  const [fontsLoaded] = useFonts({
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+  });
 
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [step, setStep] = useState(startStep === "invoice" ? "invoice" : "registration");

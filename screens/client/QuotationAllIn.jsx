@@ -4,9 +4,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Constants from "expo-constants";
-
-// --- OPTIMIZED IMAGE IMPORT ---
 import { Image } from 'expo-image';
+
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
 
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
@@ -31,6 +43,16 @@ export default function QuotationAllIn() {
     const route = useRoute();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Only intercept hardware back while this screen is focused
     useFocusEffect(

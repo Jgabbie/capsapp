@@ -65,3 +65,5 @@ const PaymentSuccessStyle = StyleSheet.create({
         fontSize: 13,
     }
 });
+
+export default PaymentSuccessStyle;

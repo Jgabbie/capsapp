@@ -15,12 +15,36 @@ import UserTransactionStyle from '../../styles/clientstyles/UserTransactionStyle
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function UserTransactions() {
     const cs = useNavigation()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [loading, setLoading] = useState(true)
     const [getTransac, setTransac] = useState([])
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('Status')

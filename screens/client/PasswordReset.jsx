@@ -2,8 +2,17 @@ import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, Activi
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
+
+import {
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from '@expo-google-fonts/roboto'
+
 import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 

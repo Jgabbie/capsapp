@@ -4,9 +4,33 @@ import * as Linking from 'expo-linking';
 import { API_BASE_URL } from '../../utils/api';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function VerifyEmail() {
     const navigation = useNavigation();
     const route = useRoute();
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'failed'
     const [message, setMessage] = useState('Verifying your account...');

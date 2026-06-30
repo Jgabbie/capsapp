@@ -163,13 +163,21 @@ const BookingReviewStyle = StyleSheet.create({
         color: "#ffffff",
     },
     backTextButton: {
+        backgroundColor: '#305797',
+        paddingVertical: 14,
+        borderRadius: 12,
         alignItems: 'center',
-        paddingVertical: 12,
+        marginBottom: 15,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     backText: {
-        fontFamily: "Montserrat_600SemiBold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 15,
-        color: "#6b7486",
+        color: "#ffffff",
     }
 });
 

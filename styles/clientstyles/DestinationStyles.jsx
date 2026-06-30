@@ -752,8 +752,8 @@ const DestinationStyles = StyleSheet.create({
   },
 
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 12,
+    fontFamily: "Montserrat_700Bold",
     color: "#305797"
   },
 
@@ -986,7 +986,7 @@ const DestinationStyles = StyleSheet.create({
 
   summaryWarning: {
     fontSize: 11,
-    color: "#b91c1c",
+    color: "#cf1322",
     textAlign: "center",
     marginTop: 12
   },
@@ -1613,7 +1613,7 @@ const DestinationStyles = StyleSheet.create({
 
   arrangementNote: {
     fontSize: 11,
-    color: '#d32f2f',
+    color: '#cf1322',
     marginTop: 8,
     fontStyle: 'italic',
     lineHeight: 16
@@ -1634,13 +1634,15 @@ const DestinationStyles = StyleSheet.create({
   },
 
   cancelArrangementButton: {
+    backgroundColor: "#d32f2f",
     paddingVertical: 12,
+    borderRadius: 8,
     alignItems: "center",
-    marginTop: 5
+    marginTop: 10
   },
 
   cancelArrangementText: {
-    color: "#d32f2f",
+    color: "#ffffff",
     fontWeight: "bold",
     fontSize: 14
   },
@@ -1767,7 +1769,7 @@ const DestinationStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#991b1b'
+    backgroundColor: '#d32f2f'
   },
 
   dateCancelText: {
@@ -1992,6 +1994,7 @@ const DestinationStyles = StyleSheet.create({
     justifyContent: 'center'
   },
   dateClearFiltersText: {
+    fontFamily: 'Montserrat_600SemiBold',
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold'

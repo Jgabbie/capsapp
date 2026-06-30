@@ -13,6 +13,20 @@ import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 import dayjs from 'dayjs'
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function UserBookings() {
     const navigation = useNavigation()
     const { user } = useUser()
@@ -20,6 +34,16 @@ export default function UserBookings() {
     const [loading, setLoading] = useState(true)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [bookings, setBookings] = useState([])
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Filter States
     const [searchText, setSearchText] = useState('')

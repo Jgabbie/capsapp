@@ -71,7 +71,7 @@ const ModalStyle = StyleSheet.create({
     modalButtonText: {
         color: "#fff",
         fontSize: 16,
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_600SemiBold"
     },
     otpInput: {
         fontSize: 20,

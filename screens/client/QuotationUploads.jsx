@@ -16,6 +16,20 @@ import { Image } from 'expo-image';
 import { useUser } from '../../context/UserContext';
 import { api, withUserHeader } from '../../utils/api';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 const formatDate = (date) => {
     if (!date) return "";
     return date.toISOString().split('T')[0];
@@ -89,6 +103,16 @@ export default function QuotationUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation } = route.params || {};
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Use fullQuotation if available, otherwise fall back to passed quotation
     const activeQuotation = fullQuotation || quotation;
