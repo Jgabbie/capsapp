@@ -6,6 +6,20 @@ import { Image } from 'expo-image';
 import { useIsFocused } from "@react-navigation/native";
 import { VideoView, useVideoPlayer } from 'expo-video';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -81,6 +95,16 @@ export default function PackageDetails({ route, navigation }) {
     const scrollViewRef = useRef(null);
     const carouselRef = useRef(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const [loading, setLoading] = useState(true);
     const [fullPkg, setFullPkg] = useState(null);
@@ -444,10 +468,12 @@ export default function PackageDetails({ route, navigation }) {
                     <View style={DestinationStyles.detailsHeader}>
                         <View style={DestinationStyles.titleRowHeader}>
                             <TouchableOpacity style={DestinationStyles.backButton} onPress={() => navigation.goBack()} >
+                                <Ionicons name="arrow-back" size={16} color="#fff" />
                                 <Text style={DestinationStyles.backText}>Back</Text>
                             </TouchableOpacity>
-                            <Text style={DestinationStyles.detailsTitle} numberOfLines={2}>{fullPkg.title}</Text>
                         </View>
+
+                        <Text style={DestinationStyles.detailsTitle} numberOfLines={2}>{fullPkg.title}</Text>
 
                         <View style={DestinationStyles.subtitleRow}>
                             <View style={DestinationStyles.durationContainer}>

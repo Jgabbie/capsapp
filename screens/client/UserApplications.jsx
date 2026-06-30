@@ -243,6 +243,7 @@ export default function UserApplications() {
                                                 }
                                             }}
                                         >
+                                            <Ionicons name="eye-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                                             <Text style={UserApplicationsStyle.viewButtonText}>View</Text>
                                         </TouchableOpacity>
                                     </View>

@@ -144,6 +144,9 @@ const UserApplicationsStyle = StyleSheet.create({
         marginTop: 2,
     },
     viewButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: "#305797",
         paddingHorizontal: 20,
         paddingVertical: 10,

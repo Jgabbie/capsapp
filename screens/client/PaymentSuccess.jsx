@@ -3,11 +3,35 @@ import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, StyleSheet } fro
 import { Ionicons } from '@expo/vector-icons';
 import PaymentSuccessStyle from '../../styles/clientstyles/PaymentSuccessStyle';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function PaymentSuccess({ route, navigation }) {
     // Timer state starting at 8 seconds
     const [countdown, setCountdown] = useState(8);
     //  NEW: Kill switch to stop the timer if the user navigates manually
     const [isActive, setIsActive] = useState(true);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     useEffect(() => {
         //  If the kill switch is flipped (user clicked a button), stop running this effect!

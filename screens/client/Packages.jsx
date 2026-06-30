@@ -3,6 +3,19 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions,
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { Image } from 'expo-image';
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
 
 import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
 import Sidebar from "../../components/Sidebar";
@@ -28,6 +41,16 @@ export default function Packages({ navigation, route }) { //  Add route here!
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     // Wishlist States
     const [wishlistedIds, setWishlistedIds] = useState(new Set());
@@ -467,13 +490,13 @@ export default function Packages({ navigation, route }) { //  Add route here!
 
                         {visibleCount > 10 && (
                             <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>
-                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>See less</Text>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto_400Regular' }}>See less</Text>
                             </TouchableOpacity>
                         )}
 
                         {visibleCount < filteredPackages.length && (
                             <TouchableOpacity onPress={handleLoadMore} style={{ alignSelf: 'center', marginVertical: 12 }}>
-                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto-Regular' }}>Load more</Text>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto_400Regular' }}>Load more</Text>
                             </TouchableOpacity>
                         )}
 

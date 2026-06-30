@@ -9,6 +9,20 @@ import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
@@ -81,6 +95,16 @@ export default function VisaProgress() {
     const route = useRoute()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const applicationId = route.params?.applicationId;
 
@@ -1361,10 +1385,12 @@ export default function VisaProgress() {
 
                 <View style={VisaProgressStyle.headerContainer}>
                     <TouchableOpacity onPress={() => cs.goBack()} style={VisaProgressStyle.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#1f2937" />
+                        <Ionicons name="arrow-back" size={16} color="#fff" />
+                        <Text style={VisaProgressStyle.backButtonText}>Back</Text>
                     </TouchableOpacity>
-                    <Text style={VisaProgressStyle.title}>Visa Application Details</Text>
                 </View>
+
+                <Text style={VisaProgressStyle.title}>Visa Application Details</Text>
 
                 {/* Application Info Card */}
                 <View style={VisaProgressStyle.card}>

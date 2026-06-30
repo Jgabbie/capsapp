@@ -10,19 +10,31 @@ const VisaProgressStyle = StyleSheet.create({
         paddingBottom: 40
     },
     headerContainer: {
-        marginBottom: 20,
         marginTop: 10,
         flexDirection: 'row',
         alignItems: 'center'
     },
     backButton: {
-        marginRight: 12,
-        padding: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#305797',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+        marginBottom: 16,
+    },
+    backButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 15,
+        marginLeft: 8,
     },
     title: {
         fontSize: 22,
         fontFamily: "Montserrat_700Bold",
         color: "#1f2937",
+        marginBottom: 10
     },
     card: {
         backgroundColor: "#fff",

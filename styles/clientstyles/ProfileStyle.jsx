@@ -296,19 +296,19 @@ const ProfileStyle = StyleSheet.create({
         borderColor: '#305797',
     },
     chipText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 13,
         color: '#4b5563',
     },
     chipTextSelected: {
         color: '#fff',
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_600SemiBold',
     },
     removedNote: {
         color: '#dc2626',
         fontSize: 12,
         marginTop: 6,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     roleSubtitle: {
         fontSize: 13,

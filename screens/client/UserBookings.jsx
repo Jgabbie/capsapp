@@ -336,9 +336,11 @@ export default function UserBookings() {
                                 </View>
                                 <View style={UserBookingsStyle.cardActions}>
                                     <TouchableOpacity style={UserBookingsStyle.viewButton} onPress={() => navigation.navigate('bookinginvoice', { booking: item })}>
-                                        <Text style={UserBookingsStyle.viewButtonText}>View Invoice</Text>
+                                        <Ionicons name="eye-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                                        <Text style={UserBookingsStyle.viewButtonText}>View</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={UserBookingsStyle.cancelButton} onPress={() => { setSelectedBookingId(item._id); setCancelPolicyModalOpen(true); }}>
+                                        <Ionicons name="close-circle-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                                         <Text style={UserBookingsStyle.cancelButtonText}>Cancel</Text>
                                     </TouchableOpacity>
                                 </View>

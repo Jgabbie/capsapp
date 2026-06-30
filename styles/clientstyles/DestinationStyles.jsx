@@ -61,15 +61,14 @@ const DestinationStyles = StyleSheet.create({
   },
 
   backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 10,
-    paddingTop: 8,
-    paddingBottom: 8,
-    paddingLeft: 14,
-    paddingRight: 14,
-    borderRadius: 20,
-    backgroundColor: "#305797",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#305797',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
 
   backText: {
@@ -424,8 +423,8 @@ const DestinationStyles = StyleSheet.create({
 
   viewDetailsText: {
     color: "#fff",
-    fontWeight: "600",
-    fontSize: 13
+    fontSize: 13,
+    fontFamily: 'Montserrat_600SemiBold'
   },
 
   detailsContainer: {
@@ -441,21 +440,19 @@ const DestinationStyles = StyleSheet.create({
   titleRowHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 5
   },
 
   detailsTitle: {
     fontSize: 24,
     fontWeight: "700",
     color: "#305797",
-    flex: 1
   },
 
   subtitleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-
+    marginTop: 8,
     marginBottom: 12
   },
 
@@ -598,8 +595,8 @@ const DestinationStyles = StyleSheet.create({
   },
 
   availabilityText: {
+    fontFamily: "Montserrat_600SemiBold",
     color: "#fff",
-    fontWeight: "700",
     fontSize: 14
   },
 

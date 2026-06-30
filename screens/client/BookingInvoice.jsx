@@ -9,6 +9,20 @@ import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import AdminSidebar from "../../components/AdminSidebar";
@@ -21,6 +35,16 @@ import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 export default function BookingInvoice({ route, navigation }) {
     const { user } = useUser();
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     const rawBooking = route?.params?.booking || null;
     const source = route?.params?.source || "user";

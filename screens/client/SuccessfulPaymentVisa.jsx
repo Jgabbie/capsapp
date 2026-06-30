@@ -5,10 +5,35 @@ import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 import SuccessfulPaymentVisaStyle from '../../styles/clientstyles/SuccessfulPaymentVisaStyle';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
+
 export default function SuccessfulPaymentVisa({ route, navigation }) {
     const { user } = useUser();
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     //show message function
     const showMessage = (message) => {

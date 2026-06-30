@@ -3,9 +3,33 @@ import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from 'react-nat
 import { Ionicons } from '@expo/vector-icons';
 import SuccessfulPaymentPassportStyle from '../../styles/clientstyles/SuccessfulPaymentPassportStyle';
 
+import {
+    useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+} from "@expo-google-fonts/roboto";
+
 export default function SuccessfulManualPaymentPassport({ navigation }) {
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
+
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
 
     useEffect(() => {
         if (!isActive) return;
