@@ -11,7 +11,9 @@ import {
   sendExpoPushNotification
 } from "../utils/sendExpoPushNotification.js";
 
-export const createUserNotification = async ({
+
+//create notification function
+const createUserNotification = async ({
   userId,
   title,
   message,
@@ -69,7 +71,7 @@ const PASSPORT_STATUS_DEADLINE_DAYS_MAP = {
 const PASSPORT_TERMINAL_STATUSES = new Set(['DFA Approved', 'Passport Released', 'Rejected']);
 
 
-//NORMALIZE DATE TO START OF DAY
+//normalize date function to start of day
 const normalizePassportDate = (value) => {
   if (!value) return null;
 
@@ -77,9 +79,9 @@ const normalizePassportDate = (value) => {
   return parsed.isValid() ? parsed.startOf('day') : null;
 };
 
-// Return the day the given status was set on the application (startOf day).
-// Falls back to updatedAt or createdAt when no explicit history entry exists.
-//GET THE STATUS SET DATE FROM THE APPLICATION
+//return the day the given status was set on the application (startOf day).
+//falls back to updatedAt or createdAt when no explicit history entry exists.
+//get the date when the status was set on the application
 const getStatusSetDateFromApplication = (application, status) => {
   if (!application) return null;
   const history = Array.isArray(application.statusHistory) ? application.statusHistory : [];
@@ -96,7 +98,7 @@ const getStatusSetDateFromApplication = (application, status) => {
 };
 
 
-//GETS THE STORED DEADLINE DATE FOR A PASSPORT APPLICATION STATUS
+//gets the stored deadline date for a given status from the application, if it exists. Returns null if no stored deadline is found.
 const getPassportStoredDeadlineDate = (application, status) => {
   if (!application || !status) return null;
 
@@ -123,7 +125,7 @@ const getPassportStoredDeadlineDate = (application, status) => {
 };
 
 
-//MAIN FUNCTION TO GET THE DEADLINE INFO FOR A PASSPORT APPLICATION
+//main function to get the deadline info for a passport application, including whether a warning should be sent or if the application is overdue. Returns null if no deadline applies.
 export const getPassportDeadlineInfo = (application, referenceDate = dayjs()) => {
   if (!application) return null;
 
@@ -186,9 +188,10 @@ export const getPassportDeadlineInfo = (application, referenceDate = dayjs()) =>
     };
   }
 
-  // Special-case: if the status is 'Documents Submitted' and the applicant (user)
+
+  // special-case: if the status is 'Documents Submitted' and the applicant (user)
   // is the one who completed that status, do not create a deadline or warning.
-  // This interprets "user complete the status" by checking the most recent
+  // this interprets "user complete the status" by checking the most recent
   // statusHistory entry for 'Documents Submitted' and comparing changedBy
   // to the application.userId.
   if (status === 'Documents Submitted') {
@@ -216,6 +219,8 @@ export const getPassportDeadlineInfo = (application, referenceDate = dayjs()) =>
     }
   }
 
+
+  // check if there's a stored deadline date for this status in the application
   const storedDeadlineDate = getPassportStoredDeadlineDate(application, status);
   if (storedDeadlineDate) {
     const warningDate = storedDeadlineDate.subtract(1, 'day').startOf('day');
@@ -284,7 +289,7 @@ export const getPassportDeadlineInfo = (application, referenceDate = dayjs()) =>
 };
 
 
-//
+//get the penalty deadline date for a passport application, if it exists, returns null if no penalty deadline is found.
 const getPassportPenaltyDeadlineDate = (application) => {
   if (!application) return null;
 
@@ -297,6 +302,8 @@ const getPassportPenaltyDeadlineDate = (application) => {
   return anchorDate ? anchorDate.add(PENALTY_PAYMENT_WINDOW_DAYS, 'day').startOf('day') : null;
 };
 
+
+//get the second chance deadline date for a passport application, if it exists, returns null if no second chance deadline is found.
 const getPassportSecondChanceDeadlineDate = (application) => {
   if (!application) return null;
 
@@ -308,7 +315,7 @@ const getPassportSecondChanceDeadlineDate = (application) => {
 };
 
 
-//SETS SECONDDEADLINE AND CHANGE THE "PAYMENT COMPLETED" DEADLINE TO THE SECOND CHANCE DEADLINE
+//set second chance for a passport application, if applicable, returns the updated application object.
 export const setPassportSecondChance = (application) => {
   if (!application) return application;
 
@@ -335,7 +342,7 @@ export const setPassportSecondChance = (application) => {
 };
 
 
-//SEND EMAIL AND NOTIFICATION IF THEIR APPLICATION IS ON PENALTY
+//send penalty notification to user for a passport application
 const sendPassportPenaltyNotification = async (application, deadlineInfo) => {
   if (!application || !deadlineInfo) {
     return { sent: false, application };
@@ -406,7 +413,7 @@ const sendPassportPenaltyNotification = async (application, deadlineInfo) => {
 };
 
 
-//REJECTS APPLICATION IF PENALTY DEADLINE IS OVERDUE WITHOUT PAYMENT OR IF SECOND CHANCE DEADLINE IS OVERDUE
+//reject passport application for a given deadline
 const rejectPassportApplicationForDeadline = async (application, deadlineInfo, reachedSecondDeadline = false) => {
   if (!application || !deadlineInfo) {
     return { rejected: false, application };
@@ -503,7 +510,7 @@ const rejectPassportApplicationForDeadline = async (application, deadlineInfo, r
 };
 
 
-//MARKS APPLICATION ON PENALTY IF DEADLINE IS OVERDUE AND PENALTY NOT YET APPLIED
+//mark passport application on penalty
 const markPassportApplicationOnPenalty = async (application, deadlineInfo = null) => {
   if (!application) {
     return { penalized: false, application };
@@ -556,7 +563,7 @@ const markPassportApplicationOnPenalty = async (application, deadlineInfo = null
 };
 
 
-//CHECKS DEADLINES AND APPLIES PENALTIES OR REJECTION IF NEEDED.
+//checks the passport application for any deadline-related actions (warning, penalty, rejection) and processes them accordingly. Returns an object indicating what action was taken.
 export const processPassportDeadlineAction = async (application) => {
   const deadlineInfo = getPassportDeadlineInfo(application);
 
@@ -607,7 +614,7 @@ export const decoratePassportApplication = (application) => {
 };
 
 
-//SENDS WARNING NOTIFICATION FOR APPLICATIONS APPROACHING DEADLINE (1 DAY BEFORE)
+//sends warning email to user for a passport application if the deadline is approaching. Returns an object indicating whether the warning was sent and the updated application.
 export const sendPassportDeadlineWarning = async (application) => {
   if (application?.onPenalty || application?.secondChance) {
     return { sent: false, application };
@@ -694,14 +701,16 @@ export const sendPassportDeadlineWarning = async (application) => {
 };
 
 
-
+// generate application number function
 const generateApplicationNumber = () => {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
   return `APP-PASS-${timestamp}${random}`;
 };
 
-export const applyPassport = async (req, res) => {
+
+//apply passport application function
+const applyPassport = async (req, res) => {
   try {
     const userId = req.userId;
     const { dfaLocation, preferredDate, preferredTime, applicationType } = req.body;
@@ -744,7 +753,9 @@ export const applyPassport = async (req, res) => {
   }
 };
 
-export const chooseAppointment = async (req, res) => {
+
+//choose appointment function
+const chooseAppointment = async (req, res) => {
   const { id } = req.params;
   const { date, time } = req.body;
 
@@ -798,7 +809,9 @@ export const chooseAppointment = async (req, res) => {
   }
 };
 
-export const updatePassportApplicationWithDocs = async (req, res) => {
+
+//update passport application with submitted documents function
+const updatePassportApplicationWithDocs = async (req, res) => {
   const { id } = req.params;
   const { submittedDocuments } = req.body;
   const userId = req.userId;
@@ -920,7 +933,9 @@ const buildProcessSteps = (application) => {
   return out;
 };
 
-export const getPassportApplications = async (req, res) => {
+
+//get all passport applications for the authenticated user
+const getPassportApplications = async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -944,7 +959,9 @@ export const getPassportApplications = async (req, res) => {
   }
 };
 
-export const getPassportApplicationById = async (req, res) => {
+
+//get passport application by id function
+const getPassportApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
     const application = await PassportModel.findById(id)
@@ -965,3 +982,11 @@ export const getPassportApplicationById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export {
+  getPassportApplications,
+  getPassportApplicationById,
+  applyPassport,
+  chooseAppointment,
+  updatePassportApplicationWithDocs,
+}

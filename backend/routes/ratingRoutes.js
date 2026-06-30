@@ -1,14 +1,5 @@
 import express from 'express';
-import { 
-    submitRating, 
-    getPackageRatings, 
-    getUserRatings, 
-    deleteRating, 
-    getAllRatings, 
-    updateRating, 
-    getAverageRating, 
-    getAverageRatings 
-} from '../controllers/ratingController.js';
+import * as ratingController from '../controllers/ratingController.js';
 
 const router = express.Router();
 
@@ -18,13 +9,13 @@ const adminOnly = (req, res, next) => {
     next();
 };
 
-router.post('/submit-rating', submitRating);
-router.get('/package/:packageId/ratings', getPackageRatings);
-router.get('/my-ratings', getUserRatings);
-router.delete('/:id', deleteRating);
-router.get('/all-ratings', adminOnly, getAllRatings);
-router.put('/:id', updateRating);
-router.get('/average-rating/:packageId', getAverageRating);
-router.get('/average-ratings', getAverageRatings);
+router.post('/submit-rating', ratingController.submitRating);
+router.get('/package/:packageId/ratings', ratingController.getPackageRatings);
+router.get('/my-ratings', ratingController.getUserRatings);
+router.delete('/:id', ratingController.deleteRating);
+router.get('/all-ratings', adminOnly, ratingController.getAllRatings);
+router.put('/:id', ratingController.updateRating);
+router.get('/average-rating/:packageId', ratingController.getAverageRating);
+router.get('/average-ratings', ratingController.getAverageRatings);
 
 export default router;

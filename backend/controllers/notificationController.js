@@ -5,7 +5,9 @@ import {
     createNotificationAndPush,
 } from "../services/notificationService.js";
 
-export const testDirectPush = async (req, res) => {
+
+//create notification function
+const testDirectPush = async (req, res) => {
     try {
         const userId = req.userId;
 
@@ -69,7 +71,9 @@ export const testDirectPush = async (req, res) => {
     }
 };
 
-export const registerPushToken = async (req, res) => {
+
+//get notifications for a user
+const registerPushToken = async (req, res) => {
     try {
         const userId = req.userId;
         const { token } = req.body;
@@ -151,7 +155,8 @@ export const registerPushToken = async (req, res) => {
 };
 
 
-export const createNotification = async (req, res) => {
+//create notification function
+const createNotification = async (req, res) => {
     const {
         userId,
         title,
@@ -192,8 +197,9 @@ export const createNotification = async (req, res) => {
     }
 };
 
+
 //get notifications for a user
-export const getUserNotifications = async (req, res) => {
+const getUserNotifications = async (req, res) => {
     const limit = Number.parseInt(req.query.limit, 10) || 20;
     try {
         const notifications = await Notification.find({ userId: req.userId })
@@ -206,7 +212,8 @@ export const getUserNotifications = async (req, res) => {
 };
 
 
-export const markNotificationRead = async (req, res) => {
+//mark notification as read function
+const markNotificationRead = async (req, res) => {
     const { id } = req.params;
     try {
         const notification = await Notification.findOneAndUpdate(
@@ -221,7 +228,9 @@ export const markNotificationRead = async (req, res) => {
     }
 };
 
-export const markAllRead = async (req, res) => {
+
+//mark all notifications as read function
+const markAllRead = async (req, res) => {
     try {
         await Notification.updateMany({ userId: req.userId, isRead: false }, { isRead: true });
         res.status(200).json({ message: 'Notifications marked as read' });
@@ -230,8 +239,9 @@ export const markAllRead = async (req, res) => {
     }
 };
 
-// NEW: Specifically for the Badge counter to show the TRUE total
-export const getUnreadCount = async (req, res) => {
+
+//get unread notification count function
+const getUnreadCount = async (req, res) => {
     try {
         const count = await Notification.countDocuments({
             userId: req.userId,
@@ -241,4 +251,14 @@ export const getUnreadCount = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Error counting notifications', error: error.message });
     }
+};
+
+export {
+    testDirectPush,
+    registerPushToken,
+    createNotification,
+    getUserNotifications,
+    markNotificationRead,
+    markAllRead,
+    getUnreadCount
 };

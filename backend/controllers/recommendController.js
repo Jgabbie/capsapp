@@ -19,6 +19,8 @@ const aiService = axios.create({
     }
 });
 
+
+//get fallback packages from database if AI service fails or returns empty
 const getFallbackPackages = async (limit = 5) => {
     return Package.find({})
         .sort({
@@ -30,6 +32,8 @@ const getFallbackPackages = async (limit = 5) => {
         .exec();
 };
 
+
+//normalize recommendation item to ensure consistent structure
 const normalizeRecommendation = (item) => {
     if (typeof item === 'string') {
         return {
@@ -48,7 +52,9 @@ const normalizeRecommendation = (item) => {
     };
 };
 
-export const getRecommendations = async (req, res) => {
+
+//get recommendations for a user function
+const getRecommendations = async (req, res) => {
     const userId = req.userId
         ? String(req.userId)
         : null;
@@ -274,11 +280,9 @@ export const getRecommendations = async (req, res) => {
     }
 };
 
-/**
- * Trigger manual model training/retraining
- * Called after significant user interactions or on a schedule
- */
-export const trainModels = async (req, res) => {
+
+//trigger AI model training function
+const trainModels = async (req, res) => {
     try {
         const response = await aiService.post('/train');
 
@@ -302,10 +306,9 @@ export const trainModels = async (req, res) => {
     }
 };
 
-/**
- * Check AI Service health and model status
- */
-export const checkHealth = async (req, res) => {
+
+//check AI service health function
+const checkHealth = async (req, res) => {
     try {
         const response = await aiService.get('/health');
 
@@ -332,3 +335,9 @@ export const checkHealth = async (req, res) => {
         });
     }
 };
+
+export {
+    checkHealth,
+    getRecommendations,
+    trainModels
+}

@@ -20,18 +20,24 @@ import {
     createNotificationAndPush,
 } from "../services/notificationService.js";
 
+
+//generate booking reference function
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
     return `BK-${timestamp}${random}`;
 };
 
+
+//generate transaction reference function
 const generateTransactionReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
     return `TX-${timestamp}${random}`;
 };
 
+
+//generate transaction invoice number function
 const generateTransactionInvoiceNumber = async (date = new Date()) => {
     const invoiceDate = dayjs(date);
     const startOfMonth = invoiceDate.startOf('month').toDate();
@@ -55,11 +61,8 @@ const generateTransactionInvoiceNumber = async (date = new Date()) => {
 
 
 
-
-
-
-//DELIVERY FEE
-export const createManualPaymentDeliveryFee = async (req, res) => {
+//manual payment for delivery fee function
+const createManualPaymentDeliveryFee = async (req, res) => {
     const userId = req.userId;
     try {
         const { applicationId, applicationNumber, amount, proofImage } = req.body;
@@ -149,9 +152,8 @@ export const createManualPaymentDeliveryFee = async (req, res) => {
 };
 
 
-
-//PASSPORT PENALTY FEE
-export const createManualPaymentPassportPenalty = async (req, res) => {
+//manual payment for passport penalty fee function
+const createManualPaymentPassportPenalty = async (req, res) => {
     const userId = req.userId;
     try {
         const { applicationId, applicationNumber, amount, proofImage } = req.body;
@@ -241,10 +243,8 @@ export const createManualPaymentPassportPenalty = async (req, res) => {
 };
 
 
-
-
-//VISA PENALTY FEE
-export const createManualPaymentVisaPenalty = async (req, res) => {
+//manual payment for visa penalty fee function
+const createManualPaymentVisaPenalty = async (req, res) => {
     const userId = req.userId;
     try {
         const { applicationId, applicationNumber, amount, proofImage } = req.body;
@@ -333,8 +333,8 @@ export const createManualPaymentVisaPenalty = async (req, res) => {
 };
 
 
-
-export const createManualPaymentPassport = async (req, res) => {
+//manual payment for passport application function
+const createManualPaymentPassport = async (req, res) => {
     const userId = req.userId;
     try {
         const { applicationId, applicationNumber, amount, proofImage } = req.body;
@@ -424,7 +424,8 @@ export const createManualPaymentPassport = async (req, res) => {
 };
 
 
-export const createManualPaymentVisa = async (req, res) => {
+//manual payment for visa application function
+const createManualPaymentVisa = async (req, res) => {
     const userId = req.userId;
 
     try {
@@ -516,8 +517,8 @@ export const createManualPaymentVisa = async (req, res) => {
 };
 
 
-
-export const createManualPayment = async (req, res) => {
+//manual payment for travel package function
+const createManualPayment = async (req, res) => {
     const userId = req.userId;
     try {
         const { packageId, travelDate, travelerTotal, amount, paymentType, proofImage, proofImageType, proofFileName, bookingDetails, bookingId } = req.body;
@@ -662,9 +663,8 @@ export const createManualPayment = async (req, res) => {
 };
 
 
-
-//MANUAL PAYMENT FOR DEPOSIT OR INSTALLMENTS
-export const createManualPaymentDeposit = async (req, res) => {
+//manual payment for deposit function
+const createManualPaymentDeposit = async (req, res) => {
     const userId = req.userId;
     try {
         const {
@@ -790,10 +790,8 @@ export const createManualPaymentDeposit = async (req, res) => {
 };
 
 
-
-
-//MANUAL PAYMENT FOR QUOTATION BOOKINGS
-export const createManualPaymentQuotation = async (req, res) => {
+//manual payment for quotation function
+const createManualPaymentQuotation = async (req, res) => {
     const userId = req.userId;
     try {
         const {
@@ -937,18 +935,8 @@ export const createManualPaymentQuotation = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-export const createCheckoutSession = async (req, res) => {
+//checkout session for booking payment
+const createCheckoutSession = async (req, res) => {
     const userId = req.userId;
     const { paymentPayload } = req.body;
 
@@ -1036,8 +1024,8 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 
-//DELIVERY FEE CHECKOUT SESSION
-export const createCheckoutSessionDeliveryFee = async (req, res) => {
+//checkout session for delivery fee payment
+const createCheckoutSessionDeliveryFee = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
 
@@ -1128,10 +1116,8 @@ export const createCheckoutSessionDeliveryFee = async (req, res) => {
 };
 
 
-
-
-//PASSPORT PENALTY FEE CHECKOUT SESSION
-export const createCheckoutSessionPassportPenalty = async (req, res) => {
+//checkout session for passport penalty fee payment
+const createCheckoutSessionPassportPenalty = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
 
@@ -1222,9 +1208,8 @@ export const createCheckoutSessionPassportPenalty = async (req, res) => {
 };
 
 
-
-//VISA PENALTY FEE CHECKOUT SESSION
-export const createCheckoutSessionVisaPenalty = async (req, res) => {
+//checkout session for visa penalty fee payment
+const createCheckoutSessionVisaPenalty = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
 
@@ -1315,16 +1300,8 @@ export const createCheckoutSessionVisaPenalty = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-export const createCheckoutSessionPassport = async (req, res) => {
+//checkout session for passport application payment
+const createCheckoutSessionPassport = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, packageName, successUrl, cancelUrl, paymentPayload, applicationId, applicationNumber } = req.body;
 
@@ -1415,8 +1392,8 @@ export const createCheckoutSessionPassport = async (req, res) => {
 };
 
 
-
-export const createCheckoutSessionVisa = async (req, res) => {
+//checkout session for visa application payment
+const createCheckoutSessionVisa = async (req, res) => {
     const { applicationId, applicationNumber, totalPrice } = req.body;
     const userId = req.userId;
 
@@ -1500,8 +1477,8 @@ export const createCheckoutSessionVisa = async (req, res) => {
 };
 
 
-
-export const createCheckoutSessionDeposit = async (req, res) => {
+//checkout session for deposit payment
+const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
 
     try {
@@ -1614,9 +1591,8 @@ export const createCheckoutSessionDeposit = async (req, res) => {
 }
 
 
-
-//CHECKOUT FOR QUOTATION BOOKINGS
-export const createCheckoutSessionQuotation = async (req, res) => {
+//checkout session for quotation payment
+const createCheckoutSessionQuotation = async (req, res) => {
     const userId = req.userId;
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -1731,30 +1707,11 @@ export const createCheckoutSessionQuotation = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //paymongo webhook handler
-export const handlePayMongoWebhook = async (req, res) => {
-    console.log(' Webhook HIT!');
+const handlePayMongoWebhook = async (req, res) => {
+    console.log('Webhook HIT!');
     res.status(200).send('OK'); // respond instantly
-    console.log(' RESPONSE SENT');
+    console.log('RESPONSE SENT');
 
     //check if secret key exists
     if (!process.env.PAYMONGO_WEBHOOK_SECRET) {
@@ -1838,9 +1795,9 @@ export const handlePayMongoWebhook = async (req, res) => {
                 );
                 sessionAttributes = sessionResponse?.data?.attributes;
                 metadata = sessionAttributes?.metadata || {};
-                console.log(' Session metadata:', metadata);
+                console.log('Session metadata:', metadata);
             } catch (err) {
-                console.error(' Failed to fetch session:', err.data || err.message);
+                console.error('Failed to fetch session:', err.data || err.message);
             }
         }
 
@@ -1855,6 +1812,8 @@ export const handlePayMongoWebhook = async (req, res) => {
 
         console.log('metadata:', metadata);
 
+
+        //visa application payment handling
         if (metadata.applicationId && metadata.applicationType === "Visa Application") {
             console.log(' Visa payment detected');
             const grossAmount =
@@ -1960,7 +1919,8 @@ export const handlePayMongoWebhook = async (req, res) => {
             return
         }
 
-        // if applicationId exists in metadata, we know this payment is for a passport application, so we create a transaction record linked to that application and send a notification to the user. We also send a confirmation email to the user about their passport payment. After handling the passport payment, we return early since we don't want to accidentally process it as a booking payment as well.
+
+        //passport application payment handling
         if (metadata.applicationId && metadata.applicationType === "Passport Application") {
             console.log(' Passport payment detected');
             const grossAmount =
@@ -2065,7 +2025,8 @@ export const handlePayMongoWebhook = async (req, res) => {
             return
         }
 
-        //INSTALLMENT PAYMENT --------------------------------------------------------------------------
+
+        //installment payment handling
         if (metadata.transactionType === "Installment Payment") {
             console.log(' Installment payment detected');
 
@@ -2168,7 +2129,8 @@ export const handlePayMongoWebhook = async (req, res) => {
             return
         }
 
-        //BOOKING PAYMENT ----------------------------------------------------------------------------------------
+
+        //booking payment handling
         // if packageId exists in metadata, we know this payment is for a tour package booking, so we either update an existing booking to "Successful" status or create a new booking if it doesn't exist. We also create a transaction record for this booking payment and send a notification to the user about their confirmed booking. Finally, we send a confirmation email to the user with the booking reference. After handling the booking payment, we return early since we've completed all necessary processing for this event.
         if (metadata.bookingId && metadata.transactionType === "Booking Payment") {
             console.log(' Booking payment detected');
@@ -2303,7 +2265,7 @@ export const handlePayMongoWebhook = async (req, res) => {
         }
 
 
-        //QUOTATION PAYMENT -----------------------------------------------------------------------------
+        //quotation booking payment handling
         if (metadata.bookingId && metadata.transactionType === "Quotation Payment") {
             console.log(' Quotation Booking payment detected');
             console.log('PackageId in metadata:', metadata.packageId);
@@ -2464,7 +2426,9 @@ export const handlePayMongoWebhook = async (req, res) => {
     }
 };
 
-export const createCheckoutToken = async (req, res) => {
+
+//create checkout token for payment
+const createCheckoutToken = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, amount, bookingId } = req.body;
 
@@ -2489,3 +2453,24 @@ export const createCheckoutToken = async (req, res) => {
 
     res.status(201).json({ token });
 };
+
+export {
+    createCheckoutSession,
+    createCheckoutSessionQuotation,
+    createManualPaymentQuotation,
+    createCheckoutSessionDeposit,
+    createCheckoutSessionPassport,
+    createCheckoutSessionVisa,
+    createCheckoutSessionPassportPenalty,
+    createCheckoutSessionVisaPenalty,
+    createCheckoutSessionDeliveryFee,
+    createManualPaymentDeposit,
+    createManualPayment,
+    createManualPaymentPassport,
+    createManualPaymentVisa,
+    createManualPaymentVisaPenalty,
+    createManualPaymentPassportPenalty,
+    createManualPaymentDeliveryFee,
+    handlePayMongoWebhook,
+    createCheckoutToken
+}

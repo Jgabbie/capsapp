@@ -1,24 +1,17 @@
 import express from 'express';
-import {
-    registerPushToken,
-    testDirectPush,
-    createNotification,
-    getUserNotifications,
-    markNotificationRead,
-    markAllRead,
-    getUnreadCount // Import the new count function
-} from '../controllers/notificationController.js';
+import * as notificationController from '../controllers/notificationController.js';
+
 import requireUser from '../middleware/requireUser.js';
 
 const router = express.Router();
 
 // NEW: Specifically for the Badge counter to show the TRUE total (e.g., 22)
-router.get('/unread-count', requireUser, getUnreadCount);
-router.get('/my', requireUser, getUserNotifications);
-router.post('/create', requireUser, createNotification);
-router.patch('/read-all', requireUser, markAllRead);
-router.patch('/:id/read', requireUser, markNotificationRead);
-router.post('/push-token', requireUser, registerPushToken);
-router.post('/test-direct-push', requireUser, testDirectPush);
+router.get('/unread-count', requireUser, notificationController.getUnreadCount);
+router.get('/my', requireUser, notificationController.getUserNotifications);
+router.post('/create', requireUser, notificationController.createNotification);
+router.patch('/read-all', requireUser, notificationController.markAllRead);
+router.patch('/:id/read', requireUser, notificationController.markNotificationRead);
+router.post('/push-token', requireUser, notificationController.registerPushToken);
+router.post('/test-direct-push', requireUser, notificationController.testDirectPush);
 
 export default router;

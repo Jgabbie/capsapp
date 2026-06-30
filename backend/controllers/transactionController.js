@@ -1,14 +1,18 @@
 import Transaction from "../models/transaction.js";
 import Booking from "../models/booking.js";
-import Package from "../models/package.js"; // IMPORT THIS: Now the controller knows what a Package is!
+import Package from "../models/package.js";
 import logAction from "../utils/logger.js";
 
+
+//generate unique transaction reference function
 const generateTransactionReference = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(1000 + Math.random() * 9000);
     return `TX-${timestamp}${random}`;
 };
 
+
+//create transaction function
 export const createTransaction = async (req, res) => {
     const userId = req.userId;
     const { bookingId, packageId, amount, method, status, packageName } = req.body;
@@ -40,7 +44,8 @@ export const createTransaction = async (req, res) => {
     }
 };
 
-// --- CLIENT: Get User's Own History ---
+
+//get user transactions function
 export const getUserTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({ userId: req.userId })
@@ -64,7 +69,8 @@ export const getUserTransactions = async (req, res) => {
     }
 };
 
-//GET TRANSACTIONS FOR APPLICATION (VISA/PASSPORT) --------------------------------------------------------------------------
+
+//get transactions for a specific application function
 export const getTransactionsForApplication = async (req, res) => {
     const userId = req.userId
     const { applicationId } = req.params
@@ -77,60 +83,9 @@ export const getTransactionsForApplication = async (req, res) => {
     }
 }
 
+export {
+    createTransaction,
+    getUserTransactions,
+    getTransactionsForApplication
+}
 
-
-export const getAllTransactions = async (req, res) => {
-    try {
-        const transactions = await Transaction.find({})
-            .populate('userId', 'username email')
-            .populate('packageId', 'packageName')
-            .sort({ createdAt: -1 });
-        return res.status(200).json(transactions);
-    } catch (error) {
-        return res.status(500).json({ message: "Failed to fetch transactions", error: error.message });
-    }
-};
-
-export const updateTransaction = async (req, res) => {
-    const { id } = req.params;
-    const { status, method, amount, packageName } = req.body;
-    try {
-        const updateFields = {
-            ...(status && { status }),
-            ...(method && { method }),
-            ...(typeof amount === 'number' && { amount }),
-            ...(packageName && { packageName })
-        };
-        const updatedTransaction = await Transaction.findByIdAndUpdate(
-            id,
-            updateFields,
-            { new: true }
-        );
-        if (!updatedTransaction) {
-            return res.status(404).json({ message: "Transaction not found" });
-        }
-
-        logAction('TRANSACTION_UPDATED', req.userId, { transactionId: id, status });
-
-        return res.status(200).json(updatedTransaction);
-    } catch (error) {
-        return res.status(500).json({ message: "Failed to update transaction", error: error.message });
-    }
-};
-
-export const deleteTransaction = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const deletedTransaction = await Transaction.findByIdAndDelete(id);
-        if (!deletedTransaction) {
-            return res.status(404).json({ message: "Transaction not found" });
-        }
-        if (typeof logAction === 'function') {
-            logAction('TRANSACTION_DELETED', req.userId, { transactionId: id });
-        }
-        return res.status(200).json({ message: "Transaction deleted successfully" });
-    } catch (error) {
-        logAction('TRANSACTION_DELETION_FAILED', req.userId, { transactionId: id, error: error.message });
-        return res.status(500).json({ message: "Failed to delete transaction", error: error.message });
-    }
-};

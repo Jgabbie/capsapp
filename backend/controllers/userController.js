@@ -19,6 +19,8 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
+
+//generate verification email template function
 const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
     return `
         <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
@@ -74,7 +76,8 @@ const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink)
     `;
 };
 
-// --- HELPER FUNCTION: Modern HTML Email Template (OTP) ---
+
+//generate OTP email template function
 const generateOTPEmailTemplate = (otp, type) => {
     const messageText = type === 'reset'
         ? "Reset your password using the OTP below"
@@ -103,6 +106,8 @@ const generateOTPEmailTemplate = (otp, type) => {
     });
 };
 
+
+//generate verification link function
 const createVerificationLink = async (user) => {
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = await bcrypt.hash(rawToken, 10);
@@ -133,6 +138,8 @@ const createVerificationLink = async (user) => {
     return { appDeepLink, webVerifyLink };
 };
 
+
+//generate login redirect HTML function
 const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUrl()) => `
     <html>
         <head>
@@ -150,6 +157,8 @@ const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUr
     </html>
 `;
 
+
+//send login OTP email function
 const sendLoginOtpEmail = async (user, rawOtp) => {
     const transporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
@@ -168,8 +177,9 @@ const sendLoginOtpEmail = async (user, rawOtp) => {
     await transporter.sendMail(mailOptions);
 };
 
-// CREATE USER
-export const createUser = async (req, res) => {
+
+//create user function
+const createUser = async (req, res) => {
     try {
         const { username, email, password, firstname, lastname, phonenum, phone, role, isVerified, isAccountVerified } = req.body;
 
@@ -222,8 +232,9 @@ export const createUser = async (req, res) => {
     }
 };
 
-// LOGIN USER
-export const loginUser = async (req, res) => {
+
+//login user function
+const loginUser = async (req, res) => {
     try {
         const { username, password } = req.body;
         const normalizedUsername = String(username || "").trim();
@@ -300,7 +311,9 @@ export const loginUser = async (req, res) => {
     }
 };
 
-export const getUsers = async (req, res) => {
+
+//get all users function
+const getUsers = async (req, res) => {
     try {
         const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
         res.json(users);
@@ -309,7 +322,9 @@ export const getUsers = async (req, res) => {
     }
 };
 
-export const getUserById = async (req, res) => {
+
+//get user by ID function
+const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
         if (!user) {
@@ -321,18 +336,9 @@ export const getUserById = async (req, res) => {
     }
 };
 
-export const deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedUser = await User.findByIdAndDelete(id);
-        if (!deletedUser) return res.status(404).json({ success: false, message: "User not found" });
-        res.status(200).json({ success: true, message: "User deleted" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
 
-export const updateUser = async (req, res) => {
+//update user function
+const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -357,7 +363,9 @@ export const updateUser = async (req, res) => {
     }
 };
 
-export const sendResetOtp = async (req, res) => {
+
+//request account verification function
+const sendResetOtp = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -388,7 +396,9 @@ export const sendResetOtp = async (req, res) => {
     }
 };
 
-export const checkResetOtp = async (req, res) => {
+
+//check reset OTP function
+const checkResetOtp = async (req, res) => {
     const { email, otp } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -407,7 +417,9 @@ export const checkResetOtp = async (req, res) => {
     }
 };
 
-export const resetPassword = async (req, res) => {
+
+//reset password function
+const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
     try {
         const user = await User.findOne({ resetOtp: token, resetOtpExpireAt: { $gt: Date.now() } });
@@ -428,7 +440,9 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-export const verifyEmailLink = async (req, res) => {
+
+//verify email link function
+const verifyEmailLink = async (req, res) => {
     const { email, token } = req.query;
 
     try {
@@ -464,7 +478,9 @@ export const verifyEmailLink = async (req, res) => {
     }
 };
 
-export const sendVerifyOtp = async (req, res) => {
+
+//resend verification link function
+const sendVerifyOtp = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -496,7 +512,9 @@ export const sendVerifyOtp = async (req, res) => {
     }
 };
 
-export const sendLoginOtp = async (req, res) => {
+
+//send login OTP function
+const sendLoginOtp = async (req, res) => {
     const { email } = req.body;
 
     try {
@@ -524,7 +542,9 @@ export const sendLoginOtp = async (req, res) => {
     }
 };
 
-export const verifyLoginOtp = async (req, res) => {
+
+//verify login OTP function
+const verifyLoginOtp = async (req, res) => {
     const { email, otp } = req.body;
 
     try {
@@ -573,7 +593,9 @@ export const verifyLoginOtp = async (req, res) => {
     }
 };
 
-export const verifyAccount = async (req, res) => {
+
+//verify account function
+const verifyAccount = async (req, res) => {
     const { email, otp } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -596,11 +618,15 @@ export const verifyAccount = async (req, res) => {
     }
 };
 
-export const redirectToApp = (req, res) => {
+
+//redirect to app function
+const redirectToApp = (req, res) => {
     res.send(buildLoginRedirectHtml("Opening Travex...", "Please wait while we redirect you to the Login screen."));
 };
 
-export const updateLoginOnce = async (req, res) => {
+
+//update loginOnce status function
+const updateLoginOnce = async (req, res) => {
     try {
         const user = await User.findById(req.userId);
 
@@ -615,8 +641,9 @@ export const updateLoginOnce = async (req, res) => {
     }
 };
 
-// CHECK IF PHONE NUMBER EXISTS
-export const checkPhoneNumberExists = async (req, res) => {
+
+//check if phone number exists function
+const checkPhoneNumberExists = async (req, res) => {
     try {
         const { phonenum } = req.params;
 
@@ -637,3 +664,22 @@ export const checkPhoneNumberExists = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export {
+    createUser,
+    getUsers,
+    loginUser,
+    updateUser,
+    getUserById,
+    sendResetOtp,
+    checkResetOtp,
+    resetPassword,
+    sendVerifyOtp,
+    verifyAccount,
+    verifyEmailLink,
+    sendLoginOtp,
+    verifyLoginOtp,
+    redirectToApp,
+    updateLoginOnce,
+    checkPhoneNumberExists
+}

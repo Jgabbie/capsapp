@@ -2,7 +2,9 @@ import Preferrences from "../models/preferrences.js";
 import logAction from "../utils/logger.js"; //  Tracking added!
 import { scheduleRetrain } from "../utils/recommendationRetrainQueue.js";
 
-export const savePreferrences = async (req, res) => {
+
+//save preferrences function
+const savePreferrences = async (req, res) => {
     try {
         const userId = req.userId;
         const { moods = [], tours = [], pace = [] } = req.body || {};
@@ -31,7 +33,9 @@ export const savePreferrences = async (req, res) => {
     }
 };
 
-export const getMyPreferrences = async (req, res) => {
+
+//get preferrences function
+const getMyPreferrences = async (req, res) => {
     try {
         const userId = req.userId;
         const pref = await Preferrences.findOne({ userId });
@@ -40,3 +44,8 @@ export const getMyPreferrences = async (req, res) => {
         res.status(500).json({ message: 'Get preferences failed: ' + e.message });
     }
 };
+
+export {
+    savePreferrences,
+    getMyPreferrences
+}

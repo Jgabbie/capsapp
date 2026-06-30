@@ -1,10 +1,12 @@
 import Log from '../models/log.js';
 import Audit from '../models/audit.js';
 
-export const getLogs = async (req, res) => {
+
+//get logs function
+const getLogs = async (req, res) => {
     try {
         const logs = await Log.find()
-            .populate('performedBy', 'username email role') 
+            .populate('performedBy', 'username email role')
             .sort({ timestamp: -1 });
 
         return res.status(200).json(logs);
@@ -13,7 +15,9 @@ export const getLogs = async (req, res) => {
     }
 };
 
-export const getAudits = async (req, res) => {
+
+//get audits function
+const getAudits = async (req, res) => {
     try {
         const audits = await Audit.find()
             .populate('performedBy', 'username email role')
@@ -24,3 +28,8 @@ export const getAudits = async (req, res) => {
         return res.status(500).json({ message: "Error fetching audits: " + error.message });
     }
 };
+
+export {
+    getLogs,
+    getAudits
+}

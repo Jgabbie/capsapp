@@ -13,7 +13,9 @@ import {
     sendExpoPushNotification
 } from "../utils/sendExpoPushNotification.js";
 
-export const createUserNotification = async ({
+
+//function to create user notification and send push notification
+const createUserNotification = async ({
     userId,
     title,
     message,
@@ -59,6 +61,7 @@ export const createUserNotification = async ({
     return notification;
 };
 
+
 // generate unique reference numbers
 const generateBookingReference = () => {
     const timestamp = Date.now().toString().slice(-6);
@@ -72,7 +75,9 @@ const generateCancellationReference = () => {
     return `CN-${timestamp}${random}`;
 }
 
-export const createBooking = async (req, res) => {
+
+//create booking function
+const createBooking = async (req, res) => {
     // Extracting from root request body
     // Handle both Web format (direct fields) and Mobile format (nested in bookingPayload)
     const rawBody = req.body.bookingPayload || req.body;
@@ -120,7 +125,8 @@ export const createBooking = async (req, res) => {
 };
 
 
-export const getUserBookings = async (req, res) => {
+//get user bookings function
+const getUserBookings = async (req, res) => {
     try {
         const userObjectId = new mongoose.Types.ObjectId(req.userId);
         const bookings = await Booking.find({ userId: userObjectId })
@@ -134,7 +140,9 @@ export const getUserBookings = async (req, res) => {
     }
 };
 
-export const getBookingsTotalBaseOnMonth = async (req, res) => {
+
+//get booking by ID function
+const getBookingsTotalBaseOnMonth = async (req, res) => {
     try {
         const { reference } = req.query || {};
 
@@ -197,7 +205,9 @@ export const getBookingsTotalBaseOnMonth = async (req, res) => {
     }
 };
 
-export const getInvoiceNumber = async (req, res) => {
+
+//get booking by ID function
+const getInvoiceNumber = async (req, res) => {
     const { reference } = req.params;
 
     try {
@@ -263,21 +273,9 @@ export const getInvoiceNumber = async (req, res) => {
     }
 };
 
-export const getAllBookings = async (_req, res) => {
-    try {
-        const bookings = await Booking.find()
-            .populate("packageId")
-            .populate("userId", "username email")
-            .sort({ createdAt: -1 });
 
-        return res.status(200).json(bookings);
-    } catch (error) {
-        return res.status(500).json({ message: "Error fetching all bookings", error: error.message });
-    }
-};
-
-
-export const cancelBooking = async (req, res) => {
+//get booking by ID function
+const cancelBooking = async (req, res) => {
     const { reason, comments, imageProof } = req.body;
     const userId = req.userId;
 
@@ -320,8 +318,8 @@ export const cancelBooking = async (req, res) => {
 };
 
 
-
-export const resubmitBookingDocuments = async (req, res) => {
+//resubmit booking documents function
+const resubmitBookingDocuments = async (req, res) => {
     const { id } = req.params
     const userId = req.userId
     const { passportFiles = [], photoFiles = [], visaFiles = [], travelers = [], travelerIndex } = req.body
@@ -399,10 +397,8 @@ export const resubmitBookingDocuments = async (req, res) => {
 }
 
 
-
-
-
-export const getBookingByReference = async (req, res) => {
+//get booking by reference function
+const getBookingByReference = async (req, res) => {
     const userId = req.userId;
     const { reference } = req.params;
 
@@ -427,7 +423,9 @@ export const getBookingByReference = async (req, res) => {
     }
 };
 
-export const verifyTokenCheckout = async (req, res) => {
+
+//verify token checkout function
+const verifyTokenCheckout = async (req, res) => {
     try {
         const { token } = req.body;
         const tokenCheckout = await TokenCheckout.findOne({ token });
@@ -440,3 +438,14 @@ export const verifyTokenCheckout = async (req, res) => {
         return res.status(500).json({ valid: false, message: 'Error verifying token', error: error.message });
     }
 };
+
+export {
+    createBooking,
+    cancelBooking,
+    getUserBookings,
+    getBookingsTotalBaseOnMonth,
+    getInvoiceNumber,
+    verifyTokenCheckout,
+    resubmitBookingDocuments,
+    getBookingByReference
+}

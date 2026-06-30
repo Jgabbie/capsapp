@@ -1,8 +1,8 @@
 import ServiceModel from "../models/service.js";
 
 
-
-export const getAllServices = async (_req, res) => {
+//get all visa services function
+const getAllServices = async (_req, res) => {
   try {
     const services = await ServiceModel.find({}).sort({ createdAt: -1 });
 
@@ -24,7 +24,9 @@ export const getAllServices = async (_req, res) => {
   }
 };
 
-export const getService = async (req, res) => {
+
+//get a single visa service by ID function
+const getService = async (req, res) => {
   try {
     const { id } = req.params;
     const service = await ServiceModel.findById(id);
@@ -49,3 +51,8 @@ export const getService = async (req, res) => {
     return res.status(500).json({ message: "Error retrieving service", error: error.message });
   }
 };
+
+export {
+  getAllServices,
+  getService
+}

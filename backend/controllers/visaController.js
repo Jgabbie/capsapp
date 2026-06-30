@@ -11,6 +11,8 @@ import {
   sendExpoPushNotification
 } from "../utils/sendExpoPushNotification.js";
 
+
+//send visa deadline warning function
 export const createUserNotification = async ({
   userId,
   title,
@@ -87,6 +89,8 @@ const VISA_STEPS_ORDER = [
   'Rejected'
 ];
 
+
+//build a map of visa status to total days from steps function
 const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
   const map = {};
   let total = 0;
@@ -107,6 +111,8 @@ const buildVisaStatusTotalDaysMapFromSteps = (steps = []) => {
   return map;
 };
 
+
+//get visa process steps from application function
 const getVisaProcessStepsFromApplication = (application) => {
   if (!application) return [];
 
@@ -117,6 +123,8 @@ const getVisaProcessStepsFromApplication = (application) => {
   return [];
 };
 
+
+//get visa document label function
 const getVisaDocumentLabel = (application, documentKey) => {
   if (!documentKey) return 'the selected document';
 
@@ -141,6 +149,8 @@ const getVisaDocumentLabel = (application, documentKey) => {
 
 const VISA_TERMINAL_STATUSES = new Set(['Documents Submitted', 'Processing by Embassy', 'Embassy Approved', 'DFA Approved', 'Passport Released', 'Rejected']);
 
+
+//get current visa status function
 const getCurrentVisaStatus = (application) => {
   if (!application) return '';
 
@@ -151,6 +161,8 @@ const getCurrentVisaStatus = (application) => {
   return String(application.status || '').trim();
 };
 
+
+//normalize visa date function
 const normalizeVisaDate = (value) => {
   if (!value) return null;
 
@@ -158,6 +170,8 @@ const normalizeVisaDate = (value) => {
   return parsed.isValid() ? parsed.startOf('day') : null;
 };
 
+
+//get visa process steps from service function
 const getVisaProcessStepsFromService = (application) => {
   if (!application) return [];
 
@@ -168,6 +182,8 @@ const getVisaProcessStepsFromService = (application) => {
   return [];
 };
 
+
+//build visa process steps for application function
 export const buildProcessSteps = (application, serviceProcessSteps = []) => {
   const out = {};
   if (!application) return out;
@@ -212,6 +228,8 @@ export const buildProcessSteps = (application, serviceProcessSteps = []) => {
   return out;
 };
 
+
+//get visa status set date function
 const getVisaStatusSetDate = (application, status) => {
   if (!application) return null;
 
@@ -230,6 +248,8 @@ const getVisaStatusSetDate = (application, status) => {
   return null;
 };
 
+
+//get visa stored deadline date function
 const getVisaStoredDeadlineDate = (application, status) => {
   if (!application || !status) return null;
 
@@ -255,6 +275,8 @@ const getVisaStoredDeadlineDate = (application, status) => {
   return null;
 };
 
+
+//get visa penalty deadline date function
 const getVisaPenaltyDeadlineDate = (application) => {
   if (!application) return null;
 
@@ -267,6 +289,8 @@ const getVisaPenaltyDeadlineDate = (application) => {
   return anchorDate ? anchorDate.add(PENALTY_PAYMENT_WINDOW_DAYS, 'day').startOf('day') : null;
 };
 
+
+//get visa second chance deadline date function
 const getVisaSecondChanceDeadlineDate = (application) => {
   if (!application) return null;
 
@@ -278,7 +302,7 @@ const getVisaSecondChanceDeadlineDate = (application) => {
 };
 
 
-//SETS SECONDDEADLINE AND CHANGE THE "PAYMENT COMPLETED" DEADLINE TO THE SECOND CHANCE DEADLINE
+//sets visa application to second chance function
 export const setVisaSecondChance = (application) => {
   if (!application) return application;
 
@@ -305,7 +329,7 @@ export const setVisaSecondChance = (application) => {
 };
 
 
-
+//get visa deadline info function
 export const getVisaDeadlineInfo = (
   application,
   referenceDate = dayjs()
@@ -457,6 +481,8 @@ export const getVisaDeadlineInfo = (
   };
 };
 
+
+//get visa deadline info function
 export const decorateVisaApplication = (application) => {
   if (!application) return application;
 
@@ -481,6 +507,8 @@ export const decorateVisaApplication = (application) => {
   };
 };
 
+
+//get visa deadline info function
 export const sendVisaDeadlineWarning = async (application) => {
   if (application?.onPenalty || application?.secondChance) {
     return { sent: false, application };
@@ -566,6 +594,8 @@ export const sendVisaDeadlineWarning = async (application) => {
   return { sent: true, application };
 };
 
+
+//append visa status history function
 const appendVisaStatusHistory = (application, status, changedBy, changedByName) => {
   if (!application) return;
 
@@ -581,6 +611,8 @@ const appendVisaStatusHistory = (application, status, changedBy, changedByName) 
   });
 };
 
+
+//send visa penalty notification function
 const sendVisaPenaltyNotification = async (application, deadlineInfo) => {
   if (!application || !deadlineInfo) {
     return { sent: false, application };
@@ -650,6 +682,8 @@ const sendVisaPenaltyNotification = async (application, deadlineInfo) => {
   return { sent: true, application };
 };
 
+
+//reject visa application for deadline function
 export const rejectVisaApplicationForDeadline = async (application, deadlineInfo, reachedSecondDeadline = false) => {
   if (!application) {
     return { rejected: false, application };
@@ -743,6 +777,8 @@ export const rejectVisaApplicationForDeadline = async (application, deadlineInfo
   return { rejected: true, application };
 };
 
+
+//mark visa application on penalty function
 const markVisaApplicationOnPenalty = async (application, deadlineInfo = null) => {
   if (!application) {
     return { penalized: false, application };
@@ -793,6 +829,7 @@ const markVisaApplicationOnPenalty = async (application, deadlineInfo = null) =>
 };
 
 
+//process visa deadline action function
 export const processVisaDeadlineAction = async (application) => {
   const deadlineInfo = getVisaDeadlineInfo(application);
   if (!deadlineInfo) {
@@ -823,10 +860,7 @@ export const processVisaDeadlineAction = async (application) => {
 };
 
 
-
-
-
-
+//generate visa application number function
 const generateApplicationNumber = () => {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
@@ -834,7 +868,8 @@ const generateApplicationNumber = () => {
 }
 
 
-export const applyVisa = async (req, res) => {
+//apply for visa function
+const applyVisa = async (req, res) => {
   const { serviceId, preferredDate, preferredTime, purposeOfTravel } = req.body;
   const userId = req.userId;
 
@@ -874,10 +909,7 @@ export const applyVisa = async (req, res) => {
       console.error('Failed to build/persist visa processSteps:', processStepsError);
     }
 
-
     logAction('VISA_APPLICATION_SUBMITTED', userId, { "Application Number": newApplication.applicationNumber });
-
-
     return res.status(201).json(newApplication);
   } catch (error) {
     return res.status(500).json({ message: "Error applying for visa", error: error.message });
@@ -885,8 +917,8 @@ export const applyVisa = async (req, res) => {
 };
 
 
-
-export const getUserVisaApplications = async (req, res) => {
+//get user visa applications function
+const getUserVisaApplications = async (req, res) => {
   try {
     const userId = req.userId;
     const applications = await VisaModel.find({ userId })
@@ -900,7 +932,9 @@ export const getUserVisaApplications = async (req, res) => {
   }
 };
 
-export const getVisaApplicationById = async (req, res) => {
+
+//get visa application by ID function
+const getVisaApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
     const application = await VisaModel.findById(id)
@@ -920,7 +954,9 @@ export const getVisaApplicationById = async (req, res) => {
   }
 };
 
-export const chooseAppointment = async (req, res) => {
+
+//choose appointment function
+const chooseAppointment = async (req, res) => {
   const { id } = req.params;
   const { date, time } = req.body;
 
@@ -974,7 +1010,9 @@ export const chooseAppointment = async (req, res) => {
   }
 };
 
-export const updateVisaApplicationWithDocs = async (req, res) => {
+
+//update visa application with documents function
+const updateVisaApplicationWithDocs = async (req, res) => {
   try {
     const userId = req.userId;
     const { id } = req.params;
@@ -1023,7 +1061,9 @@ export const updateVisaApplicationWithDocs = async (req, res) => {
   }
 };
 
-export const passportReleaseOption = async (req, res) => {
+
+//update passport release option function
+const passportReleaseOption = async (req, res) => {
   const { id } = req.params;
   const { option, deliveryAddress } = req.body;
 
@@ -1052,4 +1092,11 @@ export const passportReleaseOption = async (req, res) => {
   }
 }
 
-export { buildVisaStatusTotalDaysMapFromSteps };
+export {
+  applyVisa,
+  getUserVisaApplications,
+  getVisaApplicationById,
+  chooseAppointment,
+  updateVisaApplicationWithDocs,
+  passportReleaseOption
+};

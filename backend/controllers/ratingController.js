@@ -2,7 +2,9 @@ import Rating from '../models/rating.js';
 import mongoose from 'mongoose';
 import logAction from "../utils/logger.js";
 
-export const submitRating = async (req, res) => {
+
+//submit rating function
+const submitRating = async (req, res) => {
     const { packageId, rating, review } = req.body;
     const userId = req.userId || req.headers["x-user-id"]; // Fallback for mobile header
 
@@ -31,7 +33,7 @@ export const submitRating = async (req, res) => {
         });
 
         // Removed Socket.io emission since it's not strictly necessary for mobile basic saving
-        
+
         logAction('SUBMIT_RATING', userId, { "Rating Submitted": `${rating} Stars for Package ID: ${packageId}` });
         return res.status(201).json({
             message: "Rating submitted successfully",
@@ -45,7 +47,9 @@ export const submitRating = async (req, res) => {
     }
 };
 
-export const getPackageRatings = async (req, res) => {
+
+//get ratings for a specific package function
+const getPackageRatings = async (req, res) => {
     const { packageId } = req.params;
 
     try {
@@ -58,7 +62,9 @@ export const getPackageRatings = async (req, res) => {
     }
 };
 
-export const getUserRatings = async (req, res) => {
+
+//get ratings for a specific user function
+const getUserRatings = async (req, res) => {
     const userId = req.userId || req.headers["x-user-id"];
 
     try {
@@ -71,7 +77,9 @@ export const getUserRatings = async (req, res) => {
     }
 };
 
-export const deleteRating = async (req, res) => {
+
+//archive rating function
+const deleteRating = async (req, res) => {
     const { id } = req.params;
     const userId = req.userId || req.headers["x-user-id"];
 
@@ -91,7 +99,9 @@ export const deleteRating = async (req, res) => {
     }
 };
 
-export const updateRating = async (req, res) => {
+
+//update rating function
+const updateRating = async (req, res) => {
     const { id } = req.params;
     const { rating, review } = req.body;
     const userId = req.userId || req.headers["x-user-id"];
@@ -104,18 +114,20 @@ export const updateRating = async (req, res) => {
         if (!existingRating.userId || existingRating.userId.toString() !== userId) {
             return res.status(403).json({ message: "Forbidden" });
         }
-        
+
         existingRating.rating = rating;
         existingRating.review = review;
         await existingRating.save();
-        
+
         res.status(200).json({ message: "Rating updated successfully", rating: existingRating });
     } catch (error) {
         res.status(500).json({ message: "Error updating rating", error: error.message });
     }
 };
 
-export const getAllRatings = async (_req, res) => {
+
+//get all ratings function
+const getAllRatings = async (_req, res) => {
     try {
         const ratings = await Rating.find({})
             .populate('userId', 'username firstname lastname')
@@ -127,7 +139,9 @@ export const getAllRatings = async (_req, res) => {
     }
 };
 
-export const getAverageRating = async (req, res) => {
+
+//get average rating for a specific package function
+const getAverageRating = async (req, res) => {
     try {
         const { packageId } = req.params;
 
@@ -158,7 +172,9 @@ export const getAverageRating = async (req, res) => {
     }
 };
 
-export const getAverageRatings = async (_req, res) => {
+
+//get average ratings for all packages function
+const getAverageRatings = async (_req, res) => {
     try {
         const result = await Rating.aggregate([
             {
@@ -182,3 +198,14 @@ export const getAverageRatings = async (_req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+export {
+    submitRating,
+    getPackageRatings,
+    getUserRatings,
+    deleteRating,
+    getAllRatings,
+    updateRating,
+    getAverageRating,
+    getAverageRatings
+}

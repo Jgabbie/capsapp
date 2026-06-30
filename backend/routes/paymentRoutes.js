@@ -1,45 +1,26 @@
 import express from "express";
 import requireUser from "../middleware/requireUser.js";
-import {
-    createCheckoutSession,
-    createCheckoutSessionQuotation,
-    createManualPaymentQuotation,
-    createCheckoutSessionDeposit,
-    createCheckoutSessionPassport,
-    createCheckoutSessionVisa,
-    createCheckoutSessionPassportPenalty,
-    createCheckoutSessionVisaPenalty,
-    createCheckoutSessionDeliveryFee,
-    createManualPaymentDeposit,
-    createManualPayment,
-    createManualPaymentPassport,
-    createManualPaymentVisa,
-    createManualPaymentVisaPenalty,
-    createManualPaymentPassportPenalty,
-    createManualPaymentDeliveryFee,
-    handlePayMongoWebhook,
-    createCheckoutToken
-} from "../controllers/paymentController.js";
+import * as paymentController from "../controllers/paymentController.js";
 
 const router = express.Router();
 
-router.post("/create-checkout-token", requireUser, createCheckoutToken);
-router.post("/create-checkout-session", requireUser, createCheckoutSession);
-router.post("/create-checkout-session-quotation", requireUser, createCheckoutSessionQuotation);
-router.post("/create-checkout-session-passport", requireUser, createCheckoutSessionPassport);
-router.post("/create-checkout-session-visa", requireUser, createCheckoutSessionVisa);
-router.post("/create-checkout-session-passport-penalty", requireUser, createCheckoutSessionPassportPenalty);
-router.post("/create-checkout-session-visa-penalty", requireUser, createCheckoutSessionVisaPenalty);
-router.post("/create-checkout-session-delivery-fee", requireUser, createCheckoutSessionDeliveryFee);
-router.post("/create-checkout-session-deposit", requireUser, createCheckoutSessionDeposit);
-router.post("/manual-quotation", requireUser, createManualPaymentQuotation);
-router.post("/manual-deposit", requireUser, createManualPaymentDeposit);
-router.post("/manual-payment", requireUser, createManualPayment);
-router.post("/manual-passport", requireUser, createManualPaymentPassport);
-router.post("/manual-visa", requireUser, createManualPaymentVisa);
-router.post("/manual-visa-penalty", requireUser, createManualPaymentVisaPenalty);
-router.post("/manual-passport-penalty", requireUser, createManualPaymentPassportPenalty);
-router.post("/manual-delivery-fee", requireUser, createManualPaymentDeliveryFee);
-router.post("/webhook/paymongo", express.raw({ type: 'application/json' }), handlePayMongoWebhook);
+router.post("/create-checkout-token", requireUser, paymentController.createCheckoutToken);
+router.post("/create-checkout-session", requireUser, paymentController.createCheckoutSession);
+router.post("/create-checkout-session-quotation", requireUser, paymentController.createCheckoutSessionQuotation);
+router.post("/create-checkout-session-passport", requireUser, paymentController.createCheckoutSessionPassport);
+router.post("/create-checkout-session-visa", requireUser, paymentController.createCheckoutSessionVisa);
+router.post("/create-checkout-session-passport-penalty", requireUser, paymentController.createCheckoutSessionPassportPenalty);
+router.post("/create-checkout-session-visa-penalty", requireUser, paymentController.createCheckoutSessionVisaPenalty);
+router.post("/create-checkout-session-delivery-fee", requireUser, paymentController.createCheckoutSessionDeliveryFee);
+router.post("/create-checkout-session-deposit", requireUser, paymentController.createCheckoutSessionDeposit);
+router.post("/manual-quotation", requireUser, paymentController.createManualPaymentQuotation);
+router.post("/manual-deposit", requireUser, paymentController.createManualPaymentDeposit);
+router.post("/manual-payment", requireUser, paymentController.createManualPayment);
+router.post("/manual-passport", requireUser, paymentController.createManualPaymentPassport);
+router.post("/manual-visa", requireUser, paymentController.createManualPaymentVisa);
+router.post("/manual-visa-penalty", requireUser, paymentController.createManualPaymentVisaPenalty);
+router.post("/manual-passport-penalty", requireUser, paymentController.createManualPaymentPassportPenalty);
+router.post("/manual-delivery-fee", requireUser, paymentController.createManualPaymentDeliveryFee);
+router.post("/webhook/paymongo", express.raw({ type: 'application/json' }), paymentController.handlePayMongoWebhook);
 
 export default router;

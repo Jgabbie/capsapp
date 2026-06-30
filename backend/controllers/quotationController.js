@@ -2,15 +2,17 @@ import Quotation from "../models/quotation.js";
 import User from "../models/users.js";
 import logAction from "../utils/logger.js";
 
-// --- Utility: Generate QT- Reference Number ---
+
+//generate unique quotation reference
 const generateQuotationReference = () => {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
   return `QT-${timestamp}${random}`;
 };
 
-// --- CLIENT: Create New Request ---
-export const createQuotation = async (req, res) => {
+
+//create quotation function
+const createQuotation = async (req, res) => {
   const { packageId, quotationDetails, travelDetails } = req.body;
   const userId = req.userId;
 
@@ -37,8 +39,9 @@ export const createQuotation = async (req, res) => {
   }
 };
 
-// --- CLIENT: Fetch User's Own List ---
-export const getUserQuotations = async (req, res) => {
+
+//get all quotations for a user
+const getUserQuotations = async (req, res) => {
   try {
     const quotations = await Quotation.find({ userId: req.userId })
       .populate('packageId', 'packageName packageType packageInclusions packageExclusions packageItineraries packageItineraryImages packageRequiresVisa')
@@ -49,8 +52,9 @@ export const getUserQuotations = async (req, res) => {
   }
 };
 
-// --- CLIENT: Fetch Specific Quotation Details ---
-export const getQuotation = async (req, res) => {
+
+//get a single quotation by ID
+const getQuotation = async (req, res) => {
   try {
     const quotation = await Quotation.findById(req.params.id)
       .populate('packageId', 'packageName packageType packageInclusions packageExclusions packageItineraries packageItineraryImages packageRequiresVisa');
@@ -68,8 +72,9 @@ export const getQuotation = async (req, res) => {
   }
 };
 
-// --- CLIENT: Request Revision (Add Comments) ---
-export const requestRevision = async (req, res) => {
+
+//request revision for a quotation function
+const requestRevision = async (req, res) => {
   const { notes } = req.body;
 
   try {
@@ -115,8 +120,8 @@ export const requestRevision = async (req, res) => {
 };
 
 
-// --- CLIENT: General Update (If needed for quotation details) ---
-export const updateQuotation = async (req, res) => {
+//update quotation function
+const updateQuotation = async (req, res) => {
   const { quotationDetails, travelDetails } = req.body;
 
   try {
@@ -142,3 +147,12 @@ export const updateQuotation = async (req, res) => {
     return res.status(500).json({ message: "Error updating quotation", error: error.message });
   }
 };
+
+
+export {
+  createQuotation,
+  getUserQuotations,
+  getQuotation,
+  requestRevision,
+  updateQuotation
+}

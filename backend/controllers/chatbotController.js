@@ -81,6 +81,8 @@ const blockedPattern = new RegExp(`\\b(${blockedTerms.join('|')})\\b`, 'i');
 const containsBlockedContent = (text) => blockedPattern.test(normalizeText(text));
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+
+//format reply function
 const formatReply = (text, { packageNames = [], serviceNames = [] } = {}) => {
     if (!text) return text;
     let output = text;
@@ -94,6 +96,8 @@ const formatReply = (text, { packageNames = [], serviceNames = [] } = {}) => {
     return output;
 };
 
+
+//chunk text function
 const chunkText = (text, chunkSize = 1200, overlap = 200) => {
     const chunks = [];
     let start = 0;
@@ -110,6 +114,8 @@ const chunkText = (text, chunkSize = 1200, overlap = 200) => {
 
 const embeddingClient = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
+
+//get embedding function
 const getEmbedding = async (text) => {
     if (!embeddingClient) return null;
     const response = await embeddingClient.embeddings.create({
@@ -119,6 +125,8 @@ const getEmbedding = async (text) => {
     return response?.data?.[0]?.embedding || null;
 };
 
+
+//search knowledge function
 const searchKnowledge = async (queryEmbedding) => {
     if (!queryEmbedding) return [];
     return await KnowledgeChunk.aggregate([
@@ -139,6 +147,8 @@ const searchKnowledge = async (queryEmbedding) => {
     ]);
 };
 
+
+//build package context function
 const buildPackageContext = async (message) => {
     const normalized = normalizeText(message);
     const wantsPackages = /\b(package|packages|tour|tours|available|availability|price|rate|promo|deal)\b/.test(normalized);
@@ -159,6 +169,8 @@ const buildPackageContext = async (message) => {
     return { text, names: packages.map((pkg) => pkg.packageName).filter(Boolean) };
 };
 
+
+//build visa service context function
 const buildVisaServiceContext = async () => {
     const services = await ServiceModel.find({}, {
         visaName: 1, visaPrice: 1, visaRequirements: 1
@@ -173,7 +185,9 @@ const buildVisaServiceContext = async () => {
     return { text, names: services.map((service) => service.visaName).filter(Boolean) };
 };
 
-export const uploadKnowledge = async (req, res) => {
+
+//upload knowledge function
+const uploadKnowledge = async (req, res) => {
     try {
         if (!embeddingClient) return res.status(500).json({ error: 'OPENAI_API_KEY is required for embeddings.' });
         if (!req.file) return res.status(400).json({ error: 'No PDF file uploaded.' });
@@ -200,7 +214,7 @@ export const uploadKnowledge = async (req, res) => {
     }
 };
 
-export const knowledgeStatus = async (_req, res) => {
+const knowledgeStatus = async (_req, res) => {
     try {
         const count = await KnowledgeChunk.countDocuments();
         res.json({ chunks: count });
@@ -209,7 +223,9 @@ export const knowledgeStatus = async (_req, res) => {
     }
 };
 
-export const chatAction = async (req, res) => {
+
+//chat action function
+const chatAction = async (req, res) => {
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
         baseURL: "https://api.openai.com/v1",
@@ -289,3 +305,9 @@ export const chatAction = async (req, res) => {
         res.status(500).json({ error: 'The AI assistant is temporarily unavailable.' });
     }
 };
+
+export {
+    chatAction,
+    uploadKnowledge,
+    knowledgeStatus
+}

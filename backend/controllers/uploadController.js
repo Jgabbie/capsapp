@@ -1,6 +1,8 @@
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
+
+//upload buffer to cloudinary function
 const uploadBufferToCloudinary = (file, folder) => new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
         { folder, resource_type: 'auto' },
@@ -12,7 +14,9 @@ const uploadBufferToCloudinary = (file, folder) => new Promise((resolve, reject)
     streamifier.createReadStream(file.buffer).pipe(stream);
 });
 
-export const uploadReceiptProof = async (req, res) => {
+
+//upload receipt proof function
+const uploadReceiptProof = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
     try {
         const uploadResult = await uploadBufferToCloudinary(req.file, 'manual-deposits');
@@ -23,7 +27,9 @@ export const uploadReceiptProof = async (req, res) => {
     }
 };
 
-export const uploadBookingDocuments = async (req, res) => {
+
+//upload booking documents function
+const uploadBookingDocuments = async (req, res) => {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded.' });
     try {
         const uploadPromises = req.files.map(file =>
@@ -37,7 +43,9 @@ export const uploadBookingDocuments = async (req, res) => {
     }
 };
 
-export const uploadCancellationProof = async (req, res) => {
+
+//upload cancellation proof function
+const uploadCancellationProof = async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
     }
@@ -56,7 +64,9 @@ export const uploadCancellationProof = async (req, res) => {
     }
 };
 
-export const uploadProfileImage = async (req, res) => {
+
+//upload profile image function
+const uploadProfileImage = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
     try {
         const uploadResult = await uploadBufferToCloudinary(req.file, 'profile-images');
@@ -66,3 +76,10 @@ export const uploadProfileImage = async (req, res) => {
         res.status(500).json({ message: 'Upload failed', error: err.message });
     }
 };
+
+export {
+    uploadReceiptProof,
+    uploadBookingDocuments,
+    uploadCancellationProof,
+    uploadProfileImage
+}

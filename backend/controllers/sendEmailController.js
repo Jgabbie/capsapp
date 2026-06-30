@@ -4,10 +4,12 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { buildBrandedEmail } from '../utils/emailTemplate.js';
 
-// Setup directory paths to fetch the Logo from your frontend assets folder
+//setup directory paths to fetch the Logo from your frontend assets folder
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+//send contact email function
 export const sendContactEmail = async (req, res) => {
     const { name, email, subject, message } = req.body;
 
@@ -84,7 +86,11 @@ export const sendContactEmail = async (req, res) => {
         res.status(200).json({ success: true, message: 'Message sent successfully' });
 
     } catch (error) {
-        console.error('❌ Email error:', error.message);
+        console.error('Email error:', error.message);
         res.status(500).json({ message: 'Failed to send email', error: error.message });
     }
 };
+
+export {
+    sendContactEmail
+}
