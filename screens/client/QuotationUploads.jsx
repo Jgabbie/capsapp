@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { launchImageLibraryAsync, MediaTypeOptions } from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Linking from 'expo-linking';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
 
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
 import QuotationUploadsStyle from '../../styles/clientstyles/QuotationUploadsStyle';
@@ -15,6 +15,8 @@ import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
 import { useUser } from '../../context/UserContext';
 import { api, withUserHeader } from '../../utils/api';
+
+import dayjs from 'dayjs';
 
 import {
     useFonts,
@@ -34,7 +36,7 @@ import {
 //format date function
 const formatDate = (date) => {
     if (!date) return "";
-    return date.toISOString().split('T')[0];
+    return dayjs(date).format('YYYY-MM-DD');
 };
 
 
@@ -121,6 +123,7 @@ export default function QuotationUploads({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const { quotation } = route.params || {};
+    const [fullQuotation, setFullQuotation] = useState(quotation);
 
     //use fullQuotation if available, otherwise fall back to passed quotation
     const activeQuotation = fullQuotation || quotation;
@@ -194,9 +197,12 @@ export default function QuotationUploads({ route, navigation }) {
     const [uploads, setUploads] = useState({});
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
+    const [datePickerConfig, setDatePickerConfig] = useState({
+        index: 0,
+        type: 'birthdate',
+        currentDate: dayjs().format('YYYY-MM-DD')
+    });
     const [showVerifyModal, setShowVerifyModal] = useState(false);
-    const [fullQuotation, setFullQuotation] = useState(quotation);
 
 
     //adjust travelersData whenever travelerTypes or bookingType changes
@@ -360,38 +366,91 @@ export default function QuotationUploads({ route, navigation }) {
 
     //open date picker function
     const openDatePicker = (index, type) => {
-        const existingDateStr = travelersData[index][type];
+        const existingDate = travelersData[index]?.[type];
         const travelerType = travelerTypes[index];
+        const birthdayBounds = getBirthdayLimits(index);
+
         let initialDate;
-        if (existingDateStr) {
-            initialDate = new Date(existingDateStr);
-        } else if (type === 'birthdate' && travelerType === 'Adult') {
-            initialDate = new Date(2000, 0, 1);
+
+        if (existingDate) {
+            initialDate = formatDate(existingDate);
+        } else if (type === 'birthdate') {
+            if (travelerType === 'Adult') {
+                initialDate = '2000-01-01';
+            } else {
+                initialDate = formatDate(birthdayBounds.maxDate);
+            }
         } else {
-            initialDate = new Date();
+            initialDate = formatDate(minExpiryDate);
         }
-        setDatePickerConfig({ index, type, currentDate: initialDate });
+
+        setDatePickerConfig({
+            index,
+            type,
+            currentDate: initialDate
+        });
+
         setShowDatePicker(true);
     };
 
 
     //handle date selection from date picker
-    const onDateSelected = (event, selectedDate) => {
-        setShowDatePicker(Platform.OS === 'ios');
-        if (selectedDate) {
-            setDatePickerConfig(prev => ({ ...prev, currentDate: selectedDate }));
-            if (Platform.OS !== 'ios') {
-                updateTraveler(datePickerConfig.index, datePickerConfig.type, formatDate(selectedDate));
-            }
-        }
+    const selectPickerDate = (dateString) => {
+        setDatePickerConfig(prev => ({
+            ...prev,
+            currentDate: dateString
+        }));
     };
 
 
-    //confirm date selection for iOS
-    const confirmIOSDate = () => {
-        updateTraveler(datePickerConfig.index, datePickerConfig.type, formatDate(datePickerConfig.currentDate));
+    const closeDatePicker = () => {
         setShowDatePicker(false);
     };
+
+
+    const confirmPickerDate = () => {
+        if (!datePickerConfig.currentDate) return;
+
+        updateTraveler(
+            datePickerConfig.index,
+            datePickerConfig.type,
+            datePickerConfig.currentDate
+        );
+
+        setShowDatePicker(false);
+    };
+
+
+    const isBirthdatePicker =
+        datePickerConfig.type === 'birthdate';
+
+    const activeBirthdayBounds = isBirthdatePicker
+        ? getBirthdayLimits(datePickerConfig.index)
+        : null;
+
+    const activeMinimumDate = isBirthdatePicker
+        ? formatDate(activeBirthdayBounds?.minDate)
+        : formatDate(minExpiryDate);
+
+    const activeMaximumDate = isBirthdatePicker
+        ? formatDate(activeBirthdayBounds?.maxDate)
+        : undefined;
+
+    const activeSelectedDate =
+        datePickerConfig.currentDate ||
+        activeMinimumDate ||
+        dayjs().format('YYYY-MM-DD');
+
+    const activeTravelerType =
+        travelerTypes[datePickerConfig.index] || 'Traveler';
+
+    const datePickerTitle = isBirthdatePicker
+        ? `${activeTravelerType} Birthdate`
+        : 'Passport Expiry';
+
+    const datePickerSubtitle = isBirthdatePicker
+        ? `Choose a valid birthdate for this ${activeTravelerType.toLowerCase()}.`
+        : `The passport must expire on or after ${dayjs(activeMinimumDate).format('MMMM D, YYYY')}.`;
 
 
     //validate passport number format function
@@ -815,37 +874,176 @@ export default function QuotationUploads({ route, navigation }) {
             </Modal>
 
             {showDatePicker && (
-                Platform.OS === 'ios' ? (
-                    <Modal transparent={true} animationType="slide">
-                        <View style={BookingUploadsStyle.iosPickerContainer}>
-                            <View style={BookingUploadsStyle.iosPickerHeader}>
-                                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                                    <Text style={{ color: '#ef4444', fontSize: 16 }}>Cancel</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={confirmIOSDate}>
-                                    <Text style={{ color: '#305797', fontSize: 16, fontWeight: 'bold' }}>Done</Text>
+                <Modal
+                    visible
+                    transparent
+                    animationType="fade"
+                    statusBarTranslucent
+                    onRequestClose={closeDatePicker}
+                >
+                    <Pressable
+                        style={BookingUploadsStyle.dateModalOverlay}
+                        onPress={closeDatePicker}
+                    >
+                        <Pressable
+                            style={BookingUploadsStyle.dateModalCard}
+                            onPress={(event) => event.stopPropagation()}
+                        >
+                            <View style={BookingUploadsStyle.dateModalHeader}>
+                                <View style={BookingUploadsStyle.dateModalHeaderContent}>
+                                    <View style={BookingUploadsStyle.dateModalHeaderIcon}>
+                                        <Ionicons
+                                            name={
+                                                isBirthdatePicker
+                                                    ? 'calendar'
+                                                    : 'document-text'
+                                            }
+                                            size={21}
+                                            color="#305797"
+                                        />
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={BookingUploadsStyle.dateModalTitle}>
+                                            {datePickerTitle}
+                                        </Text>
+
+                                        <Text style={BookingUploadsStyle.dateModalSubtitle}>
+                                            {datePickerSubtitle}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={BookingUploadsStyle.dateModalCloseButton}
+                                    onPress={closeDatePicker}
+                                >
+                                    <Ionicons
+                                        name="close"
+                                        size={21}
+                                        color="#64748b"
+                                    />
                                 </TouchableOpacity>
                             </View>
-                            <DateTimePicker
-                                value={datePickerConfig.currentDate}
-                                mode="date"
-                                display="spinner"
-                                maximumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).maxDate : undefined}
-                                minimumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).minDate : (datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined)}
-                                onChange={onDateSelected}
+
+                            <Calendar
+                                key={`${datePickerConfig.index}-${datePickerConfig.type}-${activeSelectedDate}`}
+                                initialDate={activeSelectedDate}
+                                minDate={activeMinimumDate}
+                                maxDate={activeMaximumDate}
+                                onDayPress={({ dateString }) => {
+                                    selectPickerDate(dateString);
+                                }}
+                                markedDates={{
+                                    [activeSelectedDate]: {
+                                        selected: true,
+                                        selectedColor: '#305797',
+                                        selectedTextColor: '#ffffff'
+                                    }
+                                }}
+                                enableSwipeMonths
+                                hideExtraDays
+                                disableAllTouchEventsForDisabledDays
+                                renderArrow={(direction) => (
+                                    <View style={BookingUploadsStyle.dateCalendarArrow}>
+                                        <Ionicons
+                                            name={
+                                                direction === 'left'
+                                                    ? 'chevron-back'
+                                                    : 'chevron-forward'
+                                            }
+                                            size={18}
+                                            color="#305797"
+                                        />
+                                    </View>
+                                )}
+                                style={BookingUploadsStyle.dateCalendar}
+                                theme={{
+                                    backgroundColor: '#ffffff',
+                                    calendarBackground: '#ffffff',
+                                    textSectionTitleColor: '#94a3b8',
+                                    textDisabledColor: '#d1d5db',
+                                    dayTextColor: '#334155',
+                                    monthTextColor: '#1e293b',
+                                    selectedDayBackgroundColor: '#305797',
+                                    selectedDayTextColor: '#ffffff',
+                                    todayTextColor: '#305797',
+                                    arrowColor: '#305797',
+                                    textDayFontFamily: 'Roboto_400Regular',
+                                    textMonthFontFamily: 'Montserrat_700Bold',
+                                    textDayHeaderFontFamily: 'Roboto_500Medium',
+                                    textDayFontSize: 14,
+                                    textMonthFontSize: 16,
+                                    textDayHeaderFontSize: 12
+                                }}
                             />
-                        </View>
-                    </Modal>
-                ) : (
-                    <DateTimePicker
-                        value={datePickerConfig.currentDate}
-                        mode="date"
-                        display="default"
-                        maximumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).maxDate : undefined}
-                        minimumDate={datePickerConfig.type === 'birthdate' ? getBirthdayLimits(datePickerConfig.index).minDate : (datePickerConfig.type === 'passportExpiry' ? minExpiryDate : undefined)}
-                        onChange={onDateSelected}
-                    />
-                )
+
+                            <View style={BookingUploadsStyle.dateSelectedContainer}>
+                                <View style={BookingUploadsStyle.dateSelectedIcon}>
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={17}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={BookingUploadsStyle.dateSelectedLabel}>
+                                        {isBirthdatePicker
+                                            ? 'Selected birthdate'
+                                            : 'Selected expiry date'}
+                                    </Text>
+
+                                    <Text style={BookingUploadsStyle.dateSelectedValue}>
+                                        {dayjs(activeSelectedDate).format(
+                                            'MMMM D, YYYY'
+                                        )}
+                                    </Text>
+
+                                    {isBirthdatePicker && (
+                                        <Text style={BookingUploadsStyle.dateSelectedExtra}>
+                                            Age: {computeAge(activeSelectedDate)} years old
+                                        </Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            <Text style={BookingUploadsStyle.dateLimitNote}>
+                                {isBirthdatePicker
+                                    ? `Valid range: ${dayjs(activeMinimumDate).format('MMMM D, YYYY')} to ${dayjs(activeMaximumDate).format('MMMM D, YYYY')}`
+                                    : `Minimum expiry date: ${dayjs(activeMinimumDate).format('MMMM D, YYYY')}`}
+                            </Text>
+
+                            <View style={BookingUploadsStyle.dateModalActions}>
+                                <TouchableOpacity
+                                    style={BookingUploadsStyle.dateModalCancelButton}
+                                    onPress={closeDatePicker}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={BookingUploadsStyle.dateModalCancelText}>
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={BookingUploadsStyle.dateModalConfirmButton}
+                                    onPress={confirmPickerDate}
+                                    activeOpacity={0.75}
+                                >
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={18}
+                                        color="#ffffff"
+                                    />
+
+                                    <Text style={BookingUploadsStyle.dateModalConfirmText}>
+                                        Confirm Date
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Pressable>
+                    </Pressable>
+                </Modal>
             )}
 
             <Modal visible={showVerifyModal} transparent animationType="fade" onRequestClose={() => setShowVerifyModal(false)}>
