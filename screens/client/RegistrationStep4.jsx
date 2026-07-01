@@ -19,6 +19,8 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date function
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -26,8 +28,6 @@ const formatLongDate = (dateVal) => {
 };
 
 export default function RegistrationStep4({ route, navigation }) {
-    const { user } = useUser();
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -38,26 +38,32 @@ export default function RegistrationStep4({ route, navigation }) {
         Roboto_700Bold,
     });
 
-    // State to control the confirmation modal
+    const { user } = useUser();
+
+    //state to control the confirmation modal
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
 
-    // Catch all the data passed from Step 3
+    //catch all the data passed from Step 3
     const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
-    // Opens the modal instead of instantly navigating
+    //opens the modal instead of instantly navigating
     const handleOpenConfirmModal = () => {
         setIsProceedModalOpen(true);
     };
 
-    // Actual submission function when "Proceed" is clicked inside the modal
+    //actual submission function when "Proceed" is clicked inside the modal
     const confirmBooking = () => {
         setIsProceedModalOpen(false);
         navigation.navigate("paymentmode", {
             setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>

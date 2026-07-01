@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, Keyboard
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import FAQsStyle from '../../styles/clientstyles/FAQsStyle';
+
 import {
     useFonts,
     Montserrat_600SemiBold,
@@ -13,10 +17,6 @@ import {
     Roboto_400Regular,
     Roboto_500Medium
 } from '@expo-google-fonts/roboto';
-
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import FAQsStyle from '../../styles/clientstyles/FAQsStyle';
 
 const faqData = [
     {
@@ -67,13 +67,6 @@ const faqData = [
 ];
 
 export default function FAQs() {
-    const cs = useNavigation();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeCategory, setActiveCategory] = useState('All');
-    const [expandedIndex, setExpandedIndex] = useState(null);
-
     const [fontsLoaded] = useFonts({
         Montserrat_600SemiBold,
         Montserrat_700Bold,
@@ -81,11 +74,22 @@ export default function FAQs() {
         Roboto_500Medium
     });
 
+    const cs = useNavigation();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeCategory, setActiveCategory] = useState('All');
+    const [expandedIndex, setExpandedIndex] = useState(null);
+
+
+    //generate unique categories from the FAQ data and include an "All" option
     const categories = useMemo(() => {
         const unique = new Set(faqData.map((item) => item.category));
         return ['All', ...Array.from(unique)];
     }, []);
 
+
+    //filter the FAQ data based on the search term and active category, using useMemo for performance optimization
     const filteredFaqs = useMemo(() => {
         const term = searchTerm.trim().toLowerCase();
         return faqData.filter((item) => {
@@ -95,11 +99,17 @@ export default function FAQs() {
         });
     }, [activeCategory, searchTerm]);
 
+
+    //toggle the expanded state of an accordion item based on its index
     const toggleAccordion = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={FAQsStyle.container}>

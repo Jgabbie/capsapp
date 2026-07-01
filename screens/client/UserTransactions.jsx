@@ -30,12 +30,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function UserTransactions() {
-    const cs = useNavigation()
-    const { user } = useUser()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
-    const [loading, setLoading] = useState(true)
-    const [getTransac, setTransac] = useState([])
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -45,6 +39,12 @@ export default function UserTransactions() {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const cs = useNavigation()
+    const { user } = useUser()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [getTransac, setTransac] = useState([])
 
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('Status')
@@ -57,11 +57,15 @@ export default function UserTransactions() {
     const [isProofModalVisible, setProofModalVisible] = useState(false)
     const [isReceiptModalVisible, setReceiptModalVisible] = useState(false)
 
+
+    //function to get the current user's full name or username for display in the receipt
     const getCurrentUserFullName = () => {
         const fullName = `${user?.firstname || ''} ${user?.lastname || ''}`.trim();
         return fullName || user?.username || 'Customer';
     }
 
+
+    //compute available status options based on the transactions fetched, prioritizing common statuses
     const statusOptions = useMemo(() => {
         const priority = ['Successful', 'Pending', 'Failed', 'Cancelled'];
         const available = new Set();
@@ -76,10 +80,14 @@ export default function UserTransactions() {
         );
     }, [getTransac])
 
+
+    //format currency function to display amounts in Philippine Peso format
     const formatCurrency = (value) => {
         return `₱${Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
+
+    //get compact invoice number by removing prefixes and returning the last 4 digits of the reference if invoice number is not available
     const getCompactInvoiceNumber = (item) => {
         const invoice = String(item?.invoiceNumber || '').trim();
         if (invoice) return invoice.replace(/^INV[-\s]*/i, '');
@@ -88,6 +96,8 @@ export default function UserTransactions() {
         return digits ? digits.slice(-4) : '0000';
     };
 
+
+    //get trabsaction item label by checking application type, package name, or booking package name for display in the transaction list
     const getTransactionItemLabel = (item) => {
         const applicationType = String(item?.applicationType || '').trim();
         if (applicationType) return applicationType;
@@ -95,10 +105,14 @@ export default function UserTransactions() {
         return item?.bookingId?.packageId?.packageName || item?.packageName || item?.bookingId?.packageName || 'Tour Package';
     };
 
+
+    //get transaction item type by checking application type, package name, or booking package name for display in the transaction list
     const getItemType = (item) => {
         return getTransactionItemLabel(item);
     };
 
+
+    //useEffect to fetch transactions from the server when the component mounts or when the user ID changes
     useEffect(() => {
         const fetchTransactions = async () => {
             if (!user?._id) return;
@@ -116,6 +130,8 @@ export default function UserTransactions() {
         fetchTransactions()
     }, [user?._id])
 
+
+    //filter transaction function
     const filteredTransactions = useMemo(() => {
         return getTransac.filter((item) => {
             const text = searchText.toLowerCase();
@@ -136,11 +152,15 @@ export default function UserTransactions() {
         })
     }, [getTransac, searchText, statusFilter, dateFilter])
 
+
+    //handle date change for the date picker
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) setDateFilter(selectedDate);
     };
 
+
+    //get status style function that returns background and text colors based on the transaction status
     const getStatusStyle = (status) => {
         const normalized = String(status || 'Successful').trim();
         switch (normalized) {
@@ -155,16 +175,22 @@ export default function UserTransactions() {
         }
     };
 
+
+    //function to determine if the receipt can be viewed based on the transaction status
     const canViewReceipt = (status) => {
-        // Always allow viewing receipts, even when status is Pending or Failed
+        //always allow viewing receipts, even when status is Pending or Failed
         return true;
     };
 
+
+    //function to determine if the proof of payment can be viewed based on the transaction status and presence of proof image
     const sanitizeFileName = (value) => {
         const raw = String(value || 'receipt');
         return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
     };
 
+
+    //function to handle downloading the receipt as a PDF and sharing it, with detailed logging for errors
     const handleDownloadReceipt = async () => {
         if (!selectedTransaction) return;
         try {
@@ -175,13 +201,13 @@ export default function UserTransactions() {
                 : '--';
             const receiptAmount = formatCurrency(selectedTransaction.amount);
 
-            // compute status label/color for watermark in PDF
+            //compute status label/color for watermark in PDF
             const rawStatus = (selectedTransaction?.status || '').toString().toLowerCase();
             const isPaid = rawStatus === 'successful';
             const statusLabel = isPaid ? 'PAID' : (rawStatus === 'pending' || rawStatus === 'failed' ? 'NOT PAID' : (selectedTransaction?.status || '').toString().toUpperCase());
             const statusColor = isPaid ? '#389e0d' : '#cf1322';
 
-            // Load and convert logo image to base64 (non-fatal if it fails)
+            //load and convert logo image to base64 (non-fatal if it fails)
             let logoDataUri = '';
             try {
                 const logoAsset = Asset.fromModule(require('../../assets/images/LastPushLogo.png'));
@@ -365,23 +391,27 @@ export default function UserTransactions() {
         }
     };
 
+
+    //function to handle downloading the proof of payment image and sharing it, with detailed logging for errors
     const handleDownloadProof = async () => {
         if (!selectedTransaction?.proofImage) return;
         try {
             const url = selectedTransaction.proofImage;
             const fileExt = url.split('.').pop().split('?')[0] || 'jpg';
             const date = dayjs().format('MM-DD-YYYY');
-            //  FIXED: Specify exact filename for download 
+
             const fileUri = FileSystem.documentDirectory + `Proof-of-Payment_${selectedTransaction.reference}_${date}.${fileExt}`;
 
             const { uri } = await FileSystem.downloadAsync(url, fileUri);
             await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
         } catch (error) {
-            //  NEW: Add detailed logging to find the error 
             console.error("Download Image Error:", error.message);
             Alert.alert("Error", `Could not download image. Reason: ${error.message || 'Unknown'}`);
         }
     };
+
+
+
 
 
     return (

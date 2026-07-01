@@ -4,6 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { Image } from 'expo-image';
 
+import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import Chatbot from "../../components/Chatbot";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -18,13 +25,6 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
-import Sidebar from "../../components/Sidebar";
-import Header from "../../components/Header";
-import Chatbot from "../../components/Chatbot";
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-
 const { width } = Dimensions.get('window');
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
@@ -36,13 +36,7 @@ const showToast = (message) => {
     }
 };
 
-export default function Packages({ navigation, route }) { //  Add route here!
-    const { user, updateUser } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [packages, setPackages] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-
+export default function Packages({ navigation, route }) {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -53,11 +47,18 @@ export default function Packages({ navigation, route }) { //  Add route here!
         Roboto_700Bold,
     });
 
-    // Wishlist States
+
+    const { user, updateUser } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [packages, setPackages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    //wishlist States
     const [wishlistedIds, setWishlistedIds] = useState(new Set());
     const [wishlistEntryMap, setWishlistEntryMap] = useState(new Map());
 
-    // Filter States
+    //filter States
     const [searchText, setSearchText] = useState("");
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
     const [budgetRange, setBudgetRange] = useState([0, 300000]);
@@ -70,6 +71,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
     const [travelersValue, setTravelersValue] = useState("");
     const [visibleCount, setVisibleCount] = useState(10);
 
+
+    //get availability status based on slots
     const getAvailabilityStatus = (slots) => {
         if (slots === undefined || slots === null) return "Available";
         if (slots <= 0) return "Sold out";
@@ -77,7 +80,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         return "Available";
     };
 
-    //  CATCH FILTERS FROM HOME SCREEN 
+
+    //catch route params for filters if navigated from other screens 
     useEffect(() => {
         if (route?.params) {
             const p = route.params;
@@ -103,7 +107,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         }
     }, [route?.params]);
 
-    //  RESET FILTERS FUNCTION 
+
+    //reset all filters to default values
     const resetFilters = () => {
         setBudgetRange([0, 300000]);
         setMinBudgetInput('0');
@@ -116,7 +121,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         setSearchText('');
     };
 
-    // Reset filters when leaving the Packages screen so filters don't persist across navigation
+
+    //reset filters when navigating away from the screen
     useEffect(() => {
         const unsub = navigation.addListener('blur', () => {
             resetFilters();
@@ -124,6 +130,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         return unsub;
     }, [navigation]);
 
+
+    //fetch packages, ratings, and wishlist data from the API
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -221,6 +229,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         fetchData();
     }, [user?._id]);
 
+
+    //handle wishlist toggle for adding/removing packages from the user's wishlist
     const handleWishlistToggle = async (packageId) => {
         if (!user?._id) {
             showToast("Please log in to manage your wishlist.");
@@ -276,19 +286,24 @@ export default function Packages({ navigation, route }) { //  Add route here!
         }
     };
 
+
+    //generate unique tag options from the available packages for filtering
     const tagOptions = useMemo(() => {
         const unique = new Set();
         packages.forEach(p => p.packageTags?.forEach(t => unique.add(t)));
         return Array.from(unique);
     }, [packages]);
 
-    // CALCULATE MAX DAYS FROM AVAILABLE PACKAGES
+
+    // calculate the maximum days available from the packages for the days filter
     const maxDaysAvailable = useMemo(() => {
         if (packages.length === 0) return 10;
         const maxDays = Math.max(...packages.map(p => p.packageDuration || 0));
         return maxDays > 0 ? maxDays : 10;
     }, [packages]);
-    // UPDATE DAYS VALUE WHEN MAX DAYS CHANGES (e.g., after packages load)
+
+
+    //update the days filter if the maximum available days changes
     useEffect(() => {
         if (daysValue[0] > maxDaysAvailable) {
             setDaysValue([maxDaysAvailable]);
@@ -296,6 +311,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         }
     }, [maxDaysAvailable]);
 
+
+    //filter the packages based on search text, budget range, selected tags, tour type, days, and travelers
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
@@ -312,10 +329,14 @@ export default function Packages({ navigation, route }) { //  Add route here!
 
     const visiblePackages = useMemo(() => filteredPackages.slice(0, visibleCount), [filteredPackages, visibleCount]);
 
+
+    //update the visible count whenever the filtered packages change, resetting to show a maximum of 10 packages
     useEffect(() => {
         setVisibleCount(Math.min(10, filteredPackages.length));
     }, [filteredPackages]);
 
+
+    //handle changes to the budget input fields
     const handleBudgetInputChange = (type, value) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         if (type === 'min') {
@@ -329,6 +350,8 @@ export default function Packages({ navigation, route }) { //  Add route here!
         }
     };
 
+
+    //handle changes to the days input field, ensuring it remains within valid bounds
     const handleDaysInputChange = (value) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         setDaysInput(numericValue);
@@ -336,13 +359,20 @@ export default function Packages({ navigation, route }) { //  Add route here!
         if (num >= 1 && num <= maxDaysAvailable) setDaysValue([num]);
     };
 
+
+    //handle the "Load More" button click to show more packages, up to the total number of filtered packages
     const handleLoadMore = () => {
         setVisibleCount(prev => Math.min(prev + 10, filteredPackages.length));
     };
 
+
+    //handle the "See Less" button click to reduce the number of visible packages, but not below 10
     const handleSeeLess = () => {
         setVisibleCount(prev => Math.max(10, prev - 10));
     };
+
+
+
 
     return (
         <View style={{ flex: 1 }}>

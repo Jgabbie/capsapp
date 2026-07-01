@@ -23,10 +23,6 @@ import {
 } from '@expo-google-fonts/roboto';
 
 export default function UserApplications() {
-    const cs = useNavigation();
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-
     const [fontsLoaded] = useFonts({
         Montserrat_600SemiBold,
         Montserrat_700Bold,
@@ -34,6 +30,10 @@ export default function UserApplications() {
         Roboto_500Medium,
         Roboto_700Bold
     });
+
+    const cs = useNavigation();
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -43,6 +43,8 @@ export default function UserApplications() {
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showDateModal, setShowDateModal] = useState(false);
 
+
+    //fetch applications on component mount and when user changes
     useEffect(() => {
         const fetchApplications = async () => {
             if (!user?._id) return;
@@ -82,6 +84,8 @@ export default function UserApplications() {
         fetchApplications();
     }, [user?._id]);
 
+
+    //filter applications based on search text, status filter, and date filter
     const statusOptions = useMemo(() => {
         const uniqueStatuses = [...new Set(applications
             .map((app) => String(app.status || '').trim())
@@ -115,11 +119,15 @@ export default function UserApplications() {
         });
     }, [applications, searchText, statusFilter, applicationDateFilter]);
 
+
+    //date picker handler
     const handleDateChange = (day) => {
         setApplicationDateFilter(day.dateString);
         setShowDateModal(false);
     };
 
+
+    //get status style based on application status
     const getStatusStyle = (status) => {
         const s = String(status || '').toLowerCase();
         if (s.includes('submitted') || s.includes('pending')) return { bg: '#fffbe6', text: '#d48806' };
@@ -129,6 +137,10 @@ export default function UserApplications() {
     };
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={UserApplicationsStyle.container}>

@@ -48,12 +48,16 @@ const timeSlots = [
     "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"
 ];
 
+
+//get file extension from uri or filename, ignoring query params
 const getFileExtension = (value = '') => {
     const cleanValue = String(value).split('?')[0];
     const match = /\.([a-zA-Z0-9]+)$/.exec(cleanValue);
     return match ? match[1].toLowerCase() : '';
 };
 
+
+//get image mime type from asset object, with fallbacks for common image extensions
 const getImageMimeType = (asset = {}) => {
     if (asset.mimeType && String(asset.mimeType).includes('/')) {
         return asset.mimeType;
@@ -67,6 +71,8 @@ const getImageMimeType = (asset = {}) => {
     return 'image/jpeg';
 };
 
+
+//get image file name from asset object, with fallbacks for uri and default name
 const getImageFileName = (asset = {}) => {
     if (asset.fileName) return asset.fileName;
 
@@ -79,23 +85,23 @@ const getImageFileName = (asset = {}) => {
 
 const MAX_REQUIREMENT_FILE_SIZE = 3 * 1024 * 1024;
 
+
+//sanitize file name to remove invalid characters and replace spaces with underscores
 const sanitizeFileName = (value = 'document.pdf') => (
     String(value || 'document.pdf')
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
         .replace(/\s+/g, '_')
 );
 
+
+//get safe base name for pdf file, removing .pdf extension and sanitizing
 const getSafePdfBaseName = (value = 'document') => {
     const sanitized = sanitizeFileName(value);
     return sanitized.replace(/\.pdf$/i, '') || 'document';
 };
 
-export default function VisaProgress() {
-    const cs = useNavigation()
-    const route = useRoute()
-    const { user } = useUser()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
 
+export default function VisaProgress() {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -105,6 +111,11 @@ export default function VisaProgress() {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const cs = useNavigation()
+    const route = useRoute()
+    const { user } = useUser()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
 
     const applicationId = route.params?.applicationId;
 
@@ -134,10 +145,10 @@ export default function VisaProgress() {
     const [enlargedQR, setEnlargedQR] = useState(null);
     const [requirementPreview, setRequirementPreview] = useState(null);
 
-    // Additional local state used by helper functions
-    // alias for api used across file
+    //additional local state used by helper functions
+    //alias for api used across file
     const apiFetch = api;
-    // id alias
+    //id alias
     const id = applicationId;
 
     const [process, setProcess] = useState([]);
@@ -153,13 +164,14 @@ export default function VisaProgress() {
     const [pendingManualPayment, setPendingManualPayment] = useState(false);
     const [servicePendingManualPayment, setServicePendingManualPayment] = useState(false);
 
-    // Modal / UI flags used by functions
+    //modal / UI flags used by functions
     const [isConfirmDocumentsOpen, setIsConfirmDocumentsOpen] = useState(false);
     const [isDocumentsUploadedModalOpen, setIsDocumentsUploadedModalOpen] = useState(false);
     const [isDateSelectedModalOpen, setIsDateSelectedModalOpen] = useState(false);
     const [isPassportReleaseOptionSelectedModalOpen, setIsPassportReleaseOptionSelectedModalOpen] = useState(false);
 
-    // navigation alias used in some functions
+
+    //navigation alias used in some functions
     const navigate = (path) => {
         try {
             const routeName = typeof path === 'string' ? path.replace(/^\//, '') : path;
@@ -169,13 +181,16 @@ export default function VisaProgress() {
         }
     };
 
-    // simple notification shim using Alert
+
+    //simple notification shim using Alert
     const notification = {
         error: ({ message }) => Alert.alert('Error', String(message || '')),
         warning: ({ message }) => Alert.alert('Warning', String(message || '')),
         success: ({ message }) => Alert.alert('Success', String(message || '')),
     };
 
+
+    //show toast message for Android or notification for iOS
     const showToast = (message) => {
         if (Platform.OS === 'android') {
             ToastAndroid.show(String(message || ''), ToastAndroid.SHORT);
@@ -185,18 +200,21 @@ export default function VisaProgress() {
         notification.success({ message });
     };
 
+
     // keep compatibility with some code that uses `method` and `setMethod`
     const method = paymentMethod;
     const setMethod = setPaymentMethod;
 
-    // appointment selection state (some parts of the file use a different name)
+
+    //appointment selection state (some parts of the file use a different name)
     const [selectedSuggestedIndex, setSelectedSuggestedIndex] = useState(null);
     useEffect(() => {
         // keep both schedule selection states in sync
         if (selectedScheduleIndex !== null) setSelectedSuggestedIndex(selectedScheduleIndex);
     }, [selectedScheduleIndex]);
 
-    // derive status text used in several helpers (handle array or string)
+
+    //derive status text used in several helpers (handle array or string)
     const statusText = Array.isArray(application?.status) && application.status.length > 0
         ? application.status[application.status.length - 1]
         : (application?.status || application?.statusText || '');
@@ -207,7 +225,8 @@ export default function VisaProgress() {
         String(application?.suggestedAppointmentScheduleChosen?.time || '').trim()
     );
 
-    // keep steps derived from process to support legacy variable `steps`
+
+    //keep steps derived from process to support legacy variable `steps`
     useEffect(() => {
         setSteps(Array.isArray(process) ? process : []);
     }, [process]);
@@ -217,11 +236,12 @@ export default function VisaProgress() {
 
     const [confirmingSuggested, setConfirmingSuggested] = useState(false);
 
-    // selected appointment values
+    //selected appointment values
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
 
 
+    //handle custom date and time pickers
     const handleCustomDateChange = (event, date) => {
         setShowCustomDatePicker(false);
         if (date) setCustomPreferredDate(date);
@@ -232,6 +252,8 @@ export default function VisaProgress() {
         if (time) setCustomPreferredTime(time);
     };
 
+
+    //pick proof image from gallery
     const pickProofImage = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
@@ -250,11 +272,15 @@ export default function VisaProgress() {
         }
     };
 
+
+    //handle start payment, delegating to existing payment handler
     const handleStartPayment = async (paymentPurpose = 'visa') => {
         // Delegate to existing payment handler
         await handleSubmitPayment(paymentPurpose);
     };
 
+
+    //normalize picked document to ensure it has uri, name, type, and size
     const normalizePickedDocument = (asset = {}) => {
         const name = asset.name || asset.fileName || String(asset.uri || '').split('/').pop() || `document-${Date.now()}`;
         return {
@@ -265,6 +291,8 @@ export default function VisaProgress() {
         };
     };
 
+
+    //prepare local PDF for sharing, downloading if necessary, and returning a local URI
     const prepareLocalPdfForShare = async (file = {}) => {
         const sourceUri = file.uri || file.url;
         if (!sourceUri) return null;
@@ -291,6 +319,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    //pick requirement file (PDF or image) and store it in state, validating size
     const pickRequirementFile = async (key) => {
         try {
             const res = await DocumentPicker.getDocumentAsync({
@@ -331,6 +361,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    //render requirement item with label, file selection, and preview button
     const renderRequirementItem = (req, idx) => {
         const key = req.key || req.req || req.label || `requirement-${idx}`;
         const label = getRequirementLabel(key, idx);
@@ -374,6 +406,8 @@ export default function VisaProgress() {
         );
     };
 
+
+    //submit all selected files, validating required documents and file sizes, then upload to backend
     const submitAllSelectedFiles = async () => {
         if (!selectedFiles || Object.keys(selectedFiles).length === 0) {
             notification.warning({ message: 'No files selected' });
@@ -452,6 +486,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    // Normalize schedule slot data into a consistent format
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
             return { date: '', time: '' };
@@ -474,7 +510,8 @@ export default function VisaProgress() {
         return { date, time };
     };
 
-    // Normalize legacy process steps into an array for UI mapping
+
+    //normalize legacy process steps into an array for UI mapping
     const normalizeVisaProcessSteps = (raw) => {
         if (!raw) return [];
         if (Array.isArray(raw)) return raw;
@@ -488,26 +525,36 @@ export default function VisaProgress() {
         }
     };
 
+
+    //normalize legacy requirements into an array for UI mapping
     const normalizeResubmissionTarget = (target) => {
         if (!target) return null;
         return String(target).trim().toLowerCase();
     };
 
+
+    //check if a value is an image source (URL or data URI)
     const isImageSource = (val) => {
         if (!val) return false;
         return String(val).match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) !== null || String(val).startsWith('data:image');
     };
 
+
+    //check if a file object is an image based on its type or URI
     const isImageFile = (file = {}) => {
         const type = String(file.type || file.mimeType || '').toLowerCase();
         return type.startsWith('image/') || isImageSource(file.uri || file.url || file.name);
     };
 
+
+    //get uploaded document entries from application, handling legacy keys
     const getUploadedDocumentEntries = () => {
         const docs = application?.submittedDocuments || application?.submitted_documents || {};
         return Object.entries(docs || {});
     };
 
+
+    //open a document URL using Linking, with error handling
     const openDocument = async (url) => {
         if (!url) return;
         try {
@@ -517,6 +564,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    //preview a selected requirement file (image or PDF) in a modal, setting state for the preview
     const previewSelectedRequirementFile = async (fileOrUrl) => {
         const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
         const uri = file?.uri || file?.url;
@@ -543,6 +592,8 @@ export default function VisaProgress() {
         });
     };
 
+
+    //share requirement preview PDF using Sharing API or fallback to opening in browser
     const shareRequirementPreviewPdf = async () => {
         if (!requirementPreview?.uri) return;
 
@@ -573,6 +624,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    //retrieve resubmission targets from application, normalizing and deduplicating them
     const requestedResubmissionTargets = (() => {
         const targets = [];
 
@@ -603,6 +656,8 @@ export default function VisaProgress() {
             ? dayjs(application.suggestedAppointmentScheduleChosen.date)
             : null;
 
+
+    //get the date when the current status was set, checking status history and fallback to updatedAt or createdAt
     const getStatusSetDate = (app) => {
         if (!app) return null;
         const history = app.statusHistory;
@@ -620,6 +675,8 @@ export default function VisaProgress() {
         return null;
     };
 
+
+    //get step set date for a specific title from process steps or status history
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
 
@@ -641,7 +698,8 @@ export default function VisaProgress() {
         return null;
     };
 
-    // Get the most recent staff/admin who changed the status (if available)
+
+    //get the most recent staff/admin who changed the status (if available)
     const getManagerName = (app) => {
         try {
             if (!app) return null;
@@ -709,6 +767,8 @@ export default function VisaProgress() {
                 ? 'On Penalty'
                 : null;
 
+
+    //format remaining time until deadline, returning a string like "2 days left" or "Deadline overdue"
     const formatRemainingTime = (deadlineDate) => {
         if (!deadlineDate) return null;
         const daysLeft = deadlineDate.diff(dayjs(), 'day');
@@ -723,6 +783,8 @@ export default function VisaProgress() {
         }
     };
 
+
+    //check pending manual payments for penalty, regular payment, and delivery fee, updating state accordingly
     const checkPendingManualPayment = async () => {
         try {
             if (!user || !user._id) return;
@@ -760,7 +822,8 @@ export default function VisaProgress() {
         }
     };
 
-    //FETCH APPLICATION DETAILS
+
+    //fetch application details and service requirements
     useEffect(() => {
         if (!id || !user || !user._id) {
             return;
@@ -810,7 +873,6 @@ export default function VisaProgress() {
     }, [id, user]);
 
 
-    // FIND CURRENT STEP INDEX BASED ON APPLICATION STATUS
     const statusValue = statusText;
 
     const currentStep = statusValue
@@ -838,12 +900,15 @@ export default function VisaProgress() {
     const isDeliveryPaymentDisabled = deliveryFeePendingManualPayment;
     const isPenaltyPaymentDisabled = pendingManualPayment;
 
+
     useEffect(() => {
         if (isDeliveryFeeStage && isDeliveryFeeUnavailable && method === 'manual') {
             setMethod('paymongo');
         }
     }, [isDeliveryFeeStage, isDeliveryFeeUnavailable, method]);
 
+
+    //validate file size before upload, showing notification if too large
     const beforeUpload = (file) => {
         const isLt3M = file.size / 1024 / 1024 < 3;
         if (!isLt3M) {
@@ -853,8 +918,7 @@ export default function VisaProgress() {
     };
 
 
-
-    //SUBMIT DOCUMENTS
+    //submit documents
     const handleSubmitDocuments = async () => {
         if (uploading) {
             notification.warning({ message: "Please wait until uploads finish", placement: 'topRight' });
@@ -933,8 +997,7 @@ export default function VisaProgress() {
     };
 
 
-
-    // DYNAMIC UPLOAD HANDLER FOR REQUIREMENTS
+    // dynamically handle file list changes, ensuring only one file is kept and generating a preview URL if needed
     const handleUploadChange = ({ fileList: newFileList }) => {
         if (newFileList.length > 1) {
             newFileList = [newFileList[newFileList.length - 1]];
@@ -951,8 +1014,7 @@ export default function VisaProgress() {
     };
 
 
-
-    // HANDLE PAYMENT SUBMISSION
+    //handle payment submission
     const handleSubmitPayment = async (paymentPurpose = 'visa') => {
         const isDeliveryPayment = paymentPurpose === 'delivery';
         const isPenaltyPayment = paymentPurpose === 'penalty';
@@ -1101,7 +1163,8 @@ export default function VisaProgress() {
         }
     };
 
-    // HANDLE FILE PREVIEW (copied from PassportApplication)
+
+    //handle file preview
     const handlePreview = async (file) => {
         const src = typeof file === 'string'
             ? file
@@ -1113,12 +1176,14 @@ export default function VisaProgress() {
         notification.error({ message: 'Preview unavailable', placement: 'topRight' });
     };
 
-    // CONFIRM DOCUMENT SUBMISSION
+
+    //confirm submit documents modal open
     const confirmSubmitDocuments = () => {
         setIsConfirmDocumentsOpen(true);
     };
 
-    // HANDLE REQUIREMENT UPLOAD
+
+    //handle file upload for a specific requirement, generating a preview URL and updating state
     const handleUpload = (requirementKey) => async ({ file, onSuccess, onError }) => {
         setUploading(true);
         try {
@@ -1146,7 +1211,7 @@ export default function VisaProgress() {
         }
     };
 
-    // MAP REQUIREMENT KEYS TO LABELS FOR DISPLAY
+
     const allUploadRequirements = [...serviceRequirements, ...serviceAdditionalRequirements];
 
     const requirementLabelMap = allUploadRequirements.reduce((acc, req, idx) => {
@@ -1155,6 +1220,8 @@ export default function VisaProgress() {
         return acc;
     }, {});
 
+
+    //get the label for a requirement based on its key or fallback index, checking the label map and all requirements
     const getRequirementLabel = (key, fallbackIndex) => {
         if (requirementLabelMap[key]) {
             return requirementLabelMap[key];
@@ -1175,11 +1242,15 @@ export default function VisaProgress() {
         return key;
     };
 
+
+    //check if a resubmission target is requested, normalizing the target and checking against the requested targets
     const isRequestedResubmissionTarget = (target) => {
         if (!resubmissionRequested) return true;
         return requestedResubmissionTargets.includes(normalizeResubmissionTarget(target));
     };
 
+
+    //get resubmission target variants for matching, including normalized, compact, kebab-case, and snake_case forms
     const getResubmissionTargetVariants = (target) => {
         const normalized = normalizeResubmissionTarget(target);
         if (!normalized) return [];
@@ -1191,6 +1262,8 @@ export default function VisaProgress() {
         return [normalized, compact, kebab, snake];
     };
 
+
+    //is a requirement visible for resubmission based on requested targets and fallback index, checking variants for matching
     const isRequirementVisibleForResubmission = (req, fallbackIndex) => {
         if (!resubmissionRequested) return true;
 
@@ -1221,7 +1294,8 @@ export default function VisaProgress() {
 
     const visibleRequirements = [...visibleServiceRequirements, ...visibleAdditionalRequirements];
 
-    //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
+
+    //handle confirming a suggested appointment schedule, validating selection and sending the chosen date and time to the server
     const handleConfirmSuggested = async () => {
 
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
@@ -1276,7 +1350,7 @@ export default function VisaProgress() {
     };
 
 
-
+    //handle releasing the passport with the selected option, validating input and sending the choice to the server
     const handleReleaseOption = async () => {
         if (!passportReleaseOption) {
             notification.warning({ message: 'Please select a release option first.' });
@@ -1314,6 +1388,8 @@ export default function VisaProgress() {
 
     const savePassportReleaseOption = handleReleaseOption;
 
+
+    //disable dates for appointment selection, preventing weekends and dates within two weeks from today
     const disableDates = (current) => {
         const today = dayjs().startOf('day');
         const twoWeeksFromNow = today.add(14, 'day');
@@ -1327,6 +1403,9 @@ export default function VisaProgress() {
             )
         );
     };
+
+
+    //disable hours for appointment selection, allowing only 8 AM to 5 PM
     const disabledHours = () => {
         const hours = [];
         for (let i = 0; i < 24; i++) {
@@ -1338,7 +1417,7 @@ export default function VisaProgress() {
     }
 
 
-    //IF NO ID IN URL, GO BACK TO USER APPLICATIONS
+    //if no applicationId is present, navigate back to the home screen
     useEffect(() => {
         if (!applicationId) {
             navigate('/home');
@@ -1346,7 +1425,7 @@ export default function VisaProgress() {
     }, [applicationId, navigate]);
 
 
-    //UPLOAD DOCUMENTS SECTION STATUS CONDITION
+    //upload proof image for manual payment, generating a preview URL and updating state
     const normalizedStatus = Array.isArray(application?.status)
         ? String(application.status[application.status.length - 1] || '').toLowerCase()
         : String(application?.status || application?.statusText || '').toLowerCase();
@@ -1375,6 +1454,10 @@ export default function VisaProgress() {
             </View>
         );
     }
+
+
+
+
 
     return (
         <View style={VisaProgressStyle.container}>

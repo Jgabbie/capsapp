@@ -4,6 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 
+import * as ExpoNotifications from "expo-notifications";
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import NotificationStyle from '../../styles/clientstyles/NotificationStyle';
+import { api, withUserHeader } from '../../utils/api';
+import { useUser } from '../../context/UserContext';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -18,22 +25,8 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import * as ExpoNotifications from "expo-notifications";
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import NotificationStyle from '../../styles/clientstyles/NotificationStyle';
-import { api, withUserHeader } from '../../utils/api';
-import { useUser } from '../../context/UserContext';
-
 export default function Notifications() {
-    const navigation = useNavigation();
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [notifs, setNotifs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false); // Added for Pull-to-Refresh
-    const [search, setSearch] = useState("");
-
+    //fonts
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -44,6 +37,16 @@ export default function Notifications() {
         Roboto_700Bold,
     });
 
+    const navigation = useNavigation();
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [notifs, setNotifs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false); // Added for Pull-to-Refresh
+    const [search, setSearch] = useState("");
+
+
+    //fetch notifications
     const fetchNotifs = useCallback(async () => {
         try {
 
@@ -58,6 +61,8 @@ export default function Notifications() {
         }
     }, [user?._id]);
 
+
+    //set up notification listener to fetch notifications when a new notification is received
     useEffect(() => {
         const subscription =
             ExpoNotifications.addNotificationReceivedListener(
@@ -71,6 +76,8 @@ export default function Notifications() {
         };
     }, [fetchNotifs]);
 
+
+    //fetch notifications on component mount and when user changes
     useEffect(() => {
         if (user?._id) fetchNotifs();
     }, [fetchNotifs]);
@@ -80,12 +87,15 @@ export default function Notifications() {
         fetchNotifs();
     };
 
+
+    //unread count memoized to avoid unnecessary recalculations
     const unreadCount = useMemo(
         () => notifs.filter((item) => !item.isRead).length,
         [notifs]
     );
 
 
+    //mark all notifications as read
     const handleMarkAllRead = async () => {
         if (unreadCount === 0) return;
         try {
@@ -96,6 +106,8 @@ export default function Notifications() {
         }
     };
 
+
+    //mark a single notification as read and navigate to the appropriate screen based on the notification's link or metadata
     const handleMarkAsRead = async (item) => {
         const routeState = item?.metadata?.routeState;
 
@@ -152,12 +164,18 @@ export default function Notifications() {
         }
     };
 
+
+    //filter notifications based on search query, case-insensitive
     const filteredNotifs = useMemo(() => {
         return notifs.filter(n =>
             n.title.toLowerCase().includes(search.toLowerCase()) ||
             n.message.toLowerCase().includes(search.toLowerCase())
         );
     }, [notifs, search]);
+
+
+
+
 
     return (
         <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>

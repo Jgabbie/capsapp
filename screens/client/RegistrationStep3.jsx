@@ -18,6 +18,8 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date function
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -25,9 +27,6 @@ const formatLongDate = (dateVal) => {
 };
 
 export default function RegistrationStep3({ route, navigation }) {
-    const { user } = useUser();
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -38,14 +37,23 @@ export default function RegistrationStep3({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+
     const currentDateLong = formatLongDate(new Date());
 
+
+    //handle next function
     const handleNext = () => {
         // Move to the final Terms & Conditions step (Step 4)
         navigation.navigate("registrationstep4", {
             setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>

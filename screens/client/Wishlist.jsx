@@ -36,6 +36,7 @@ const getTravelSystemApiBase = () => {
     const host = hostUri.split(":")[0];
     return host ? `http://${host}:8000` : "http://10.0.2.2:8000";
 };
+
 const packageApiBase = getTravelSystemApiBase();
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 const toImageUrl = (source) => {
@@ -46,25 +47,6 @@ const toImageUrl = (source) => {
 };
 
 export default function Wishlist() {
-    const cs = useNavigation();
-    const { user } = useUser();
-
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [packages, setPackages] = useState([]);
-
-    // Modal States
-    const [modalVisible, setModalVisible] = useState(false);
-    const [itemToRemove, setItemToRemove] = useState(null);
-
-    // Filter States
-    const [searchText, setSearchText] = useState("");
-    const [activeDropdown, setActiveDropdown] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState("All");
-    const [selectedAvailability, setSelectedAvailability] = useState("All");
-    //  NEW: Price Slider State
-    const [priceRange, setPriceRange] = useState([0, 100000]);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -75,6 +57,25 @@ export default function Wishlist() {
         Roboto_700Bold
     });
 
+    const cs = useNavigation();
+    const { user } = useUser();
+
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [packages, setPackages] = useState([]);
+
+    //modal States
+    const [modalVisible, setModalVisible] = useState(false);
+    const [itemToRemove, setItemToRemove] = useState(null);
+
+    //filter States
+    const [searchText, setSearchText] = useState("");
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [selectedAvailability, setSelectedAvailability] = useState("All");
+
+    const [priceRange, setPriceRange] = useState([0, 100000]);
+
     const getAvailabilityStatus = (slots) => {
         if (slots === undefined || slots === null) return "Available";
         if (slots <= 0) return "Sold out";
@@ -82,6 +83,8 @@ export default function Wishlist() {
         return "Available";
     };
 
+
+    //fetch wishlist items when the component mounts or when the user changes
     useFocusEffect(
         useCallback(() => {
             const fetchWishlist = async () => {
@@ -131,11 +134,13 @@ export default function Wishlist() {
         }, [user?._id])
     );
 
-    // Dropdown Lists
+
+    //dropdown Lists
     const categoriesList = ["All", "Domestic", "International"];
     const availabilitiesList = ["All", "Available", "Few slots", "Sold out"];
 
-    // Filtering Logic
+
+    //filtering Logic
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
@@ -152,6 +157,8 @@ export default function Wishlist() {
         });
     }, [packages, searchText, selectedCategory, selectedAvailability, priceRange]);
 
+
+    //handle removing an item from the wishlist, sending a delete request to the server and updating local state
     const handleRemoveConfirm = async () => {
         if (!itemToRemove) return;
         try {
@@ -167,11 +174,17 @@ export default function Wishlist() {
         }
     };
 
+
+    //toggle dropdown visibility for category and availability filters
     const toggleDropdown = (type) => {
         setActiveDropdown(activeDropdown === type ? null : type);
     };
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>

@@ -18,9 +18,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function SuccessfulManualPaymentPassport({ navigation }) {
-    const [countdown, setCountdown] = useState(10);
-    const [isActive, setIsActive] = useState(true);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -30,6 +27,9 @@ export default function SuccessfulManualPaymentPassport({ navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const [countdown, setCountdown] = useState(10);
+    const [isActive, setIsActive] = useState(true);
 
     useEffect(() => {
         if (!isActive) return;
@@ -43,6 +43,10 @@ export default function SuccessfulManualPaymentPassport({ navigation }) {
         const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
         return () => clearInterval(timer);
     }, [countdown, isActive, navigation]);
+
+
+
+
 
     return (
         <SafeAreaView style={SuccessfulPaymentPassportStyle.container}>

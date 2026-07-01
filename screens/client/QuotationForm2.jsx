@@ -18,16 +18,16 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateVal).toLocaleDateString('en-US', options);
 };
 
-export default function QuotationForm2({ route, navigation }) {
-    const { user } = useUser();
-    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
 
+export default function QuotationForm2({ route, navigation }) {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -38,12 +38,14 @@ export default function QuotationForm2({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
+
     const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
 
     const packageName = quotation?.packageId?.packageName || 'N/A'
     const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
-
 
     const currentDateLong = formatLongDate(new Date());
 
@@ -67,11 +69,15 @@ export default function QuotationForm2({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
 
+
+    //validation functions for email
     const isValidEmail = (email) => {
         if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
     };
 
+
+    //validation function for contact number
     const isValidContact = (contact) => {
         if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
@@ -86,6 +92,8 @@ export default function QuotationForm2({ route, navigation }) {
     const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
     const contactHasError = !isValidContact(emergency.contact) && emergency.contact.length > 0;
 
+
+    //handle next button click, validate inputs and navigate to next form
     const handleNext = () => {
         if (!medicalData.dietary) return Alert.alert("Required", "Please select Y or N for Dietary requests.");
         if (medicalData.dietary === 'Y' && !medicalData.dietaryDetails.trim()) return Alert.alert("Required", "Please provide details for the Dietary request.");
@@ -110,6 +118,8 @@ export default function QuotationForm2({ route, navigation }) {
         navigation.navigate("quotationform3", { ...route.params, medicalData, emergency, quotation });
     };
 
+
+    //handle dropdown selection and update state accordingly
     const handleDropdownSelect = (value, field) => {
         const target = field || activeDropdown;
         if (target === 'dietary') {
@@ -136,6 +146,8 @@ export default function QuotationForm2({ route, navigation }) {
         setActiveDropdown(null);
     };
 
+
+    //render dropdown options based on the active dropdown field
     const renderDropdownOptions = () => {
         if (activeDropdown === 'emergencyTitle') {
             return (
@@ -175,6 +187,10 @@ export default function QuotationForm2({ route, navigation }) {
             </>
         );
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>

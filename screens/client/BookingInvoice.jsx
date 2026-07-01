@@ -35,8 +35,8 @@ import {
 
 
 export default function BookingInvoice({ route, navigation }) {
-    const { user } = useUser();
 
+    //fonts
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -46,6 +46,8 @@ export default function BookingInvoice({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
 
     const rawBooking = route?.params?.booking || null;
     const source = route?.params?.source || "user";
@@ -81,6 +83,8 @@ export default function BookingInvoice({ route, navigation }) {
     const bookingDetails = booking?.bookingDetails || {};
     const reference = booking?.reference || booking?.ref || booking?._id || "--";
 
+
+    //build invoice number function
     const buildInvoiceNumber = (allBookings, currentBooking) => {
         if (!currentBooking) return "";
         const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
@@ -123,6 +127,8 @@ export default function BookingInvoice({ route, navigation }) {
         return `${monthKey}${String(sequence).padStart(2, "0")}`;
     };
 
+
+    //get booking and transactions
     useEffect(() => {
         if (!reference || reference === "--") {
             setLoading(false);
@@ -185,6 +191,8 @@ export default function BookingInvoice({ route, navigation }) {
         fetchAllData();
     }, [reference, user?._id]);
 
+
+    //compute payment amounts and status
     const formatCurrency = (value) => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
     const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const formatPesoDisplay = (value) => `${formatPesoNumber(value)} PHP`;
@@ -206,6 +214,8 @@ export default function BookingInvoice({ route, navigation }) {
         (txn) => String(txn?.status || "").trim().toLowerCase() === "pending"
     );
 
+
+    //compute payment status and cancellation status
     const getPaymentStatus = () => {
         // For Balance section: Always show payment status, not cancellation status
         // Determine payment status based on amounts (ignore Cancelled/Cancellation Requested)
@@ -214,6 +224,8 @@ export default function BookingInvoice({ route, navigation }) {
         return { label: "Balance Due", color: "#d48806", bg: "#fffbe6" };
     };
 
+
+    //compute cancellation status
     const getCancellationStatus = () => {
         // Show cancellation/cancelled status in orange (matching web)
         const bookingStatus = String(booking?.status || booking?.computedStatus || "").trim();
@@ -239,6 +251,8 @@ export default function BookingInvoice({ route, navigation }) {
 
     const handleViewInvoice = () => setShowInvoiceModal(true);
 
+
+    //open document in browser
     const openDocumentInBrowser = async (url) => {
         if (!url) {
             Alert.alert('Unavailable', 'No document link is available for this traveler.');
@@ -253,6 +267,8 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //helper functions to check file types
     const isImageFile = (url) => {
         if (!url) return false;
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
@@ -316,7 +332,8 @@ export default function BookingInvoice({ route, navigation }) {
         return 2;
     };
 
-    //INSTALLMENT AND PAYMENT COMPUTATION LOGIC
+
+    //installment logic
     const runInstallmentLogic = (totalAmount, bookingDetailsParam, paidAmountParam = 0, baseDate = null) => {
         const finalTotalAmount = Number(totalAmount) || 0;
         const finalBaseDate = baseDate && dayjs(baseDate).isValid()
@@ -377,6 +394,8 @@ export default function BookingInvoice({ route, navigation }) {
         return { paymentSchedule, totalAmount: finalTotalAmount, subtotal: finalTotalAmount, nextUnpaid };
     };
 
+
+    //compute traveler counts by type and invoice items
     const travelerCountByType = travelersWithDocs.reduce(
         (acc, traveler) => {
             const type = String(traveler?.passengerType || '').toUpperCase();
@@ -440,12 +459,16 @@ export default function BookingInvoice({ route, navigation }) {
     const lastScheduleItem = paymentSchedule.length ? paymentSchedule[paymentSchedule.length - 1] : null;
     const dueDateDisplay = lastScheduleItem?.date || fallbackDueDateDisplay;
 
+
+    //format date safely
     const safeDate = (dateStr) => {
         if (!dateStr || dateStr === 'N/A' || dateStr === '') return 'N/A';
         const d = dayjs(dateStr);
         return d.isValid() ? d.format('MMM D, YYYY') : dateStr;
     };
 
+
+    //image/document upload and preview functions
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -456,6 +479,8 @@ export default function BookingInvoice({ route, navigation }) {
         if (!result.canceled) setProofImage(result.assets[0]);
     };
 
+
+    //document upload and preview functions for travelers
     const pickDocumentImage = async (travelerIndex, docType) => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -485,6 +510,8 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //preview document function
     const previewDocument = (file) => {
         if (!file?.uri) return;
         setDocumentPreview({
@@ -493,6 +520,8 @@ export default function BookingInvoice({ route, navigation }) {
         });
     };
 
+
+    //upload document function
     const uploadDocument = async (image) => {
         if (!image) return null;
 
@@ -518,6 +547,8 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //handle traveler document resubmission
     const handleSubmitTravelerResubmission = async (travelerIndex) => {
         if (!booking?._id) {
             Alert.alert('Error', 'Booking ID not found.');
@@ -605,6 +636,8 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //handle proceed click for payment
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
             Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
@@ -613,6 +646,8 @@ export default function BookingInvoice({ route, navigation }) {
         setIsProceedModalOpen(true);
     };
 
+
+    //execute payment flow
     const executePaymentFlow = async () => {
         setIsProceedModalOpen(false);
         setPaymentLoading(true);
@@ -678,11 +713,15 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //helper function to sanitize file names for PDF saving
     const sanitizeFileName = (value) => {
         const raw = String(value || 'booking-registration');
         return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
     };
 
+
+    //helper function to get logo data URI for PDF generation
     const getLogoDataUri = async () => {
         try {
             const logoAsset = Asset.fromModule(
@@ -715,6 +754,8 @@ export default function BookingInvoice({ route, navigation }) {
         }
     };
 
+
+    //helper function to save or share generated PDF
     const saveOrSharePdf = async ({
         sourceUri,
         fileName,
@@ -730,10 +771,6 @@ export default function BookingInvoice({ route, navigation }) {
             throw new Error(`Generated PDF does not exist: ${sourceUri}`);
         }
 
-        /*
-         * Android:
-         * Ask the user to choose a folder and save the PDF there.
-         */
         if (
             Platform.OS === 'android' &&
             FileSystem.StorageAccessFramework
@@ -787,10 +824,6 @@ export default function BookingInvoice({ route, navigation }) {
             }
         }
 
-        /*
-         * iOS or Android fallback:
-         * Copy the temporary PDF to a named cache file, then share it.
-         */
         const canShare = await Sharing.isAvailableAsync();
 
         if (!canShare) {
@@ -817,6 +850,8 @@ export default function BookingInvoice({ route, navigation }) {
         return namedPdfUri;
     };
 
+
+    //helper function to generate and download registration forms as PDF
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
 
@@ -1124,6 +1159,7 @@ export default function BookingInvoice({ route, navigation }) {
     };
 
 
+    //helper function to generate and download invoice as PDF
     const handleDownloadInvoice = async () => {
         try {
             const logoDataUri = await getLogoDataUri();
@@ -1562,6 +1598,9 @@ export default function BookingInvoice({ route, navigation }) {
             Alert.alert('Error', 'Failed to generate invoice PDF.');
         }
     };
+
+
+
 
     return (
         <SafeAreaView style={BookingInvoiceStyle.safeArea}>

@@ -1,20 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
-    ActivityIndicator,
-    Alert,
-    Modal,
-    Image,
-    TouchableWithoutFeedback,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
-import { Calendar } from 'react-native-calendars'; // Added Calendar for Date Filter
+import { Calendar } from 'react-native-calendars';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -37,9 +26,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function UserPackageQuotation() {
-    const navigation = useNavigation();
-    const { user } = useUser();
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -50,20 +36,24 @@ export default function UserPackageQuotation() {
         Roboto_700Bold,
     });
 
+    const navigation = useNavigation();
+    const { user } = useUser();
+
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [quotations, setQuotations] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Filtering States
+    //filtering States
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status");
     const [bookingDateFilter, setBookingDateFilter] = useState(null);
 
-    // Modal States
+    //modal States
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showDateModal, setShowDateModal] = useState(false);
 
-    // --- API LOGIC ---
+
+    //fetch quotations from the server for the logged-in user
     const fetchQuotations = async () => {
         if (!user?._id) return;
         setLoading(true);
@@ -81,7 +71,8 @@ export default function UserPackageQuotation() {
 
     useFocusEffect(useCallback(() => { fetchQuotations(); }, [user?._id]));
 
-    // --- HELPER LOGIC FOR TRAVELERS ---
+
+    //helper function to extract travelers object from various possible payload structures
     const getTravelersObject = (item) => {
         // Prefer mobile payload structure
         if (item?.travelDetails && item.travelDetails.travelers) return item.travelDetails.travelers;
@@ -93,6 +84,8 @@ export default function UserPackageQuotation() {
         return null;
     };
 
+
+    //calculate total number of travelers from the travelers object
     const calculateTotalTravelers = (item) => {
         const travelersValue = getTravelersObject(item);
         if (typeof travelersValue === 'number') return travelersValue;
@@ -104,12 +97,15 @@ export default function UserPackageQuotation() {
         return 0;
     };
 
+
+    //return the requested date for a quotation item, formatted as "MMM DD, YYYY"
     const getRequestedDateForItem = (item) => {
         // Return the date the quotation was requested (creation date)
         return dayjs(item.createdAt).format("MMM DD, YYYY");
     };
 
-    // --- FILTERING LOGIC ---
+
+    //filter quotations based on search text, status filter, and booking date filter
     const filteredQuotations = useMemo(() => {
         return quotations.filter((item) => {
             const text = searchText.trim().toLowerCase();
@@ -129,7 +125,8 @@ export default function UserPackageQuotation() {
         });
     }, [quotations, searchText, statusFilter, bookingDateFilter]);
 
-    // --- EXACT WEB STATUS COLORS (ANT DESIGN) ---
+
+    //status style mapping based on the quotation status
     const getStatusStyle = (status) => {
         const s = String(status || '').trim().toLowerCase();
         switch (s) {
@@ -154,20 +151,24 @@ export default function UserPackageQuotation() {
     const statusOptions = ["All", "Successful", "Pending", "Cancelled", "Approved", "Rejected", "Under Review", "Revision Requested"];
 
 
-
+    //date picker handler
     const handleDateChange = (day) => {
         setBookingDateFilter(day.dateString);
         setShowDateModal(false);
     };
 
 
-
+    //clear filters function to reset status and date filters
     const clearFilters = () => {
         setStatusFilter("Status");
         setBookingDateFilter(null);
     };
 
     const hasActiveFilters = (statusFilter !== "Status" && statusFilter !== "All") || bookingDateFilter;
+
+
+
+
 
     return (
         <View style={UserPackageQuotationStyle.container}>

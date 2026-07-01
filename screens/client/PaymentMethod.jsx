@@ -6,6 +6,15 @@ import * as Linking from 'expo-linking';
 import dayjs from "dayjs";
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
+import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
+import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -20,24 +29,9 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
-import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
-
 dayjs.extend(customParseFormat);
 
 export default function PaymentMethod({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
-    const [enlargedQR, setEnlargedQR] = useState(null);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -47,6 +41,12 @@ export default function PaymentMethod({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+    const [enlargedQR, setEnlargedQR] = useState(null);
 
     const params = route.params || {};
 
@@ -64,6 +64,8 @@ export default function PaymentMethod({ route, navigation }) {
     const [method, setMethod] = useState('paymongo');
     const [proofImage, setProofImage] = useState(null);
 
+
+    //pick image function
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -77,6 +79,8 @@ export default function PaymentMethod({ route, navigation }) {
         }
     };
 
+
+    //proceed function
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
             Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
@@ -85,6 +89,8 @@ export default function PaymentMethod({ route, navigation }) {
         setIsProceedModalOpen(true);
     };
 
+
+    //upload files function
     const uploadFilesToBackend = async (endpoint, formData) => {
         try {
             const response = await api.post(endpoint, formData, {
@@ -100,6 +106,8 @@ export default function PaymentMethod({ route, navigation }) {
         }
     };
 
+
+    //execute payment flow function
     const executePaymentFlow = async () => {
         setIsProceedModalOpen(false);
         setLoading(true);
@@ -197,7 +205,7 @@ export default function PaymentMethod({ route, navigation }) {
                 }
             }
 
-            // CREATING A BRAND NEW BOOKING
+
             else {
                 const safeAdultCount = parseInt(setupData?.travelerCounts?.adult) || (passengers ? passengers.length : 1);
                 const safeChildCount = parseInt(setupData?.travelerCounts?.child) || 0;
@@ -442,6 +450,9 @@ export default function PaymentMethod({ route, navigation }) {
             console.error("Booking Error: ", error.response?.data || error.message);
         }
     };
+
+
+
 
     return (
         <SafeAreaView style={PaymentStyle.safeArea}>

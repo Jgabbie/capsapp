@@ -21,10 +21,6 @@ import {
 } from '@expo-google-fonts/roboto';
 
 export default function UserPreference() {
-    const navigation = useNavigation();
-
-    const { user, setUser } = useUser();
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -34,12 +30,17 @@ export default function UserPreference() {
         Roboto_500Medium
     });
 
+    const navigation = useNavigation();
+
+    const { user, setUser } = useUser();
+
     const [moodOptions, setMoodOptions] = useState([]);
     const tourOptions = useMemo(() => ['Domestic', 'International'], []);
     const [isLoading, setIsLoading] = useState(false);
     const [selections, setSelections] = useState({ moods: [], tours: [], pace: [] });
 
-    // Fetch dynamic package tags exactly like the web does
+
+    //fetch dynamic package tags exactly like the web does
     useEffect(() => {
         const fetchTags = async () => {
             try {
@@ -52,6 +53,8 @@ export default function UserPreference() {
         fetchTags();
     }, []);
 
+
+    //toggle selection for moods and tours with limit checks
     const toggleSelection = (key, value, limit) => {
         setSelections((prev) => {
             const current = prev[key];
@@ -68,6 +71,8 @@ export default function UserPreference() {
     const totalMoodSelections = selections.moods.length;
     const canContinue = totalMoodSelections === 3 && selections.tours.length >= 1;
 
+
+    //show message function for both Android and iOS
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
             ToastAndroid.show(msg, ToastAndroid.SHORT);
@@ -76,6 +81,8 @@ export default function UserPreference() {
         }
     };
 
+
+    //handle continue button
     const handleContinue = async () => {
         if (!canContinue) return;
         setIsLoading(true);
@@ -106,6 +113,10 @@ export default function UserPreference() {
     };
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={UserPreferenceStyle.container}>

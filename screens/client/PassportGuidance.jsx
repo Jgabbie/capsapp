@@ -3,6 +3,11 @@ import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import Header from '../../components/Header'
+import Sidebar from '../../components/Sidebar'
+import Chatbot from '../../components/Chatbot'
+import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceStyle'
+
 import {
     Montserrat_400Regular,
     Montserrat_600SemiBold,
@@ -15,15 +20,7 @@ import {
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-import Header from '../../components/Header'
-import Sidebar from '../../components/Sidebar'
-import Chatbot from '../../components/Chatbot'
-import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceStyle'
-
 export default function PassportGuidance() {
-    const cs = useNavigation()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_600SemiBold,
@@ -32,6 +29,9 @@ export default function PassportGuidance() {
         Roboto_500Medium,
         Roboto_700Bold
     })
+
+    const cs = useNavigation()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
 
     if (!fontsLoaded) return null;
 

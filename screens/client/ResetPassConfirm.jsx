@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, Activi
 import React, { useState, useCallback } from 'react'
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
-import { Ionicons } from '@expo/vector-icons' //  ADDED: Icon library
+import { Ionicons } from '@expo/vector-icons'
 
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
@@ -11,6 +11,7 @@ import { api } from '../../utils/api'
 import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
+
 import {
     Roboto_400Regular,
     Roboto_500Medium,
@@ -18,11 +19,6 @@ import {
 } from '@expo-google-fonts/roboto'
 
 export default function ResetPassConfirm() {
-    const cs = useNavigation()
-    const route = useRoute()
-
-    const { token } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
         Roboto_400Regular,
@@ -30,18 +26,25 @@ export default function ResetPassConfirm() {
         Roboto_700Bold
     })
 
+    const cs = useNavigation()
+    const route = useRoute()
+
+    const { token } = route.params || {};
+
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [errorPassword, setErrorPassword] = useState("")
     const [errorConfirm, setErrorConfirm] = useState("")
 
-    //  NEW: States to track password visibility
+    //states to track password visibility
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const [loading, setLoading] = useState(false)
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
 
+
+    //prevent hardware back button from navigating back to the previous screen
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => true
@@ -53,6 +56,8 @@ export default function ResetPassConfirm() {
 
     if (!fontsLoaded) return null;
 
+
+    //function to show toast message for both android and ios
     const showMessage = (message) => {
         if (Platform.OS === "android") {
             ToastAndroid.show(message, ToastAndroid.LONG);
@@ -61,6 +66,8 @@ export default function ResetPassConfirm() {
         }
     }
 
+
+    //validation functions for password and confirm password
     const validatePassword = (val) => {
         if (!val) return "Password is required.";
         if (val.length < 8) return "Must be at least 8 characters.";
@@ -70,12 +77,16 @@ export default function ResetPassConfirm() {
         return "";
     }
 
+
+    //validation function for confirm password
     const validateConfirm = (val) => {
         if (!val) return "Confirm Password is required.";
         if (val !== password) return "Passwords do not match.";
         return "";
     }
 
+
+    //handle submit function to validate and send the new password
     const handleSubmit = async () => {
         const passErr = validatePassword(password)
         const confErr = validateConfirm(confirmPassword)
@@ -100,6 +111,10 @@ export default function ResetPassConfirm() {
             setLoading(false)
         }
     }
+
+
+
+
 
     return (
         <ImageBackground

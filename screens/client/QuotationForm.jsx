@@ -8,6 +8,13 @@ import dayjs from "dayjs";
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import Constants from "expo-constants";
 
+import QuotationFormStyle from "../../styles/clientstyles/QuotationFormStyle";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -22,16 +29,9 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import QuotationFormStyle from "../../styles/clientstyles/QuotationFormStyle";
-import ModalStyle from "../../styles/componentstyles/ModalStyle";
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-
 dayjs.extend(isSameOrBefore);
 
-// Utility for fetching images
+//utility for fetching images
 const getTravelSystemApiBase = () => {
     if (Platform.OS === "web") return "http://localhost:8000";
     const hostUri = Constants.expoConfig?.hostUri || "";
@@ -46,15 +46,13 @@ const toImageUrl = (source) => {
     return `${packageApiBase}/${value.replace(/^\/+/, "")}`;
 };
 
-// Time Picker Lists
+
+//time Picker Lists
 const hoursList = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
 const minutesList = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 const periodsList = ['AM', 'PM'];
 
 export default function QuotationForm({ route, navigation }) {
-    const { user } = useUser();
-    const today = dayjs();
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -65,14 +63,17 @@ export default function QuotationForm({ route, navigation }) {
         Roboto_700Bold,
     });
 
-    // Data Extraction
+    const { user } = useUser();
+    const today = dayjs();
+
+    //data Extraction
     const { pkg, packageId: routePackageId, id: routeId } = route.params || {};
     const finalPackageId = pkg?._id || pkg?.id || routePackageId || routeId;
 
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- PACKAGE DATA ---
+    //package data
     const hotels = pkg?.packageHotels || [];
     const airlines = pkg?.packageAirlines || [];
     const fixedItinerary = pkg?.packageItineraries || {};
@@ -88,7 +89,7 @@ export default function QuotationForm({ route, navigation }) {
     const minBudget = basePrice;
     const maxBudget = Math.max(120000, basePrice);
 
-    // Parse Fixed Itinerary
+    //parse Fixed Itinerary
     const fixedItineraryEntries = useMemo(() => {
         if (!fixedItinerary || typeof fixedItinerary !== 'object') return [];
         return Object.keys(fixedItinerary)
@@ -103,7 +104,7 @@ export default function QuotationForm({ route, navigation }) {
         return Array.from({ length: days }, (_, index) => `Day ${index + 1}`);
     }, [days]);
 
-    // --- FORM STATES ---
+    //form states
     const [packageCategory, setPackageCategory] = useState("All in Package");
     const [preferredAirlines, setPreferredAirlines] = useState("");
     const [preferredHotels, setPreferredHotels] = useState("");
@@ -112,7 +113,7 @@ export default function QuotationForm({ route, navigation }) {
     const [itineraryNotes, setItineraryNotes] = useState(itineraryLabels.map(() => ""));
     const [additionalComments, setAdditionalComments] = useState("");
 
-    // Custom airline and hotel inputs
+    //custom airline and hotel inputs
     const [customAirline, setCustomAirline] = useState("");
     const [showCustomAirlineInput, setShowCustomAirlineInput] = useState(false);
     const [customHotel, setCustomHotel] = useState("");
@@ -123,7 +124,7 @@ export default function QuotationForm({ route, navigation }) {
     const [childCount, setChildCount] = useState(0);
     const [infantCount, setInfantCount] = useState(0);
 
-    // Flight Details States
+    //flight Details States
     const [flightAirline, setFlightAirline] = useState("");
     const [flightDate, setFlightDate] = useState("");
     const [flightTime, setFlightTime] = useState("");
@@ -134,7 +135,7 @@ export default function QuotationForm({ route, navigation }) {
 
     const [errors, setErrors] = useState({});
 
-    // Selected slot capacity (from chosen preferred date). Default to 20 (web limit).
+    //selected slot capacity (from chosen preferred date). Default to 20 (web limit).
     const [selectedSlotCapacity, setSelectedSlotCapacity] = useState(20);
 
     const [isHotelModalOpen, setHotelModalOpen] = useState(false);
@@ -144,16 +145,18 @@ export default function QuotationForm({ route, navigation }) {
     const [isFlightTimeModalOpen, setFlightTimeModalOpen] = useState(false);
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
 
-    // Auto-adjust group minimum
+    //auto-adjust group minimum
     useEffect(() => {
         if (travelerType === 'group' && adultCount < 2) {
             setAdultCount(2);
         }
     }, [travelerType, adultCount]);
 
-    // Maximum allowed passengers: depends on selected slot capacity (default to 20 if none selected)
+    //maximum allowed passengers, it depends on selected slot capacity (default to 20 if none selected)
     const maxAllowed = useMemo(() => Number(selectedSlotCapacity || 20), [selectedSlotCapacity]);
 
+
+    //clamp traveler counts to the selected slot capacity, ensuring that the total number of travelers does not exceed the limit and adjusting individual counts accordingly
     const clampTravelerCountsToSlot = (nextLimit) => {
         const limit = Number(nextLimit) || 0;
 
@@ -183,6 +186,8 @@ export default function QuotationForm({ route, navigation }) {
         setInfantCount(nextInfant);
     };
 
+
+    //clamp traveler counts whenever the selected slot capacity changes, ensuring that the total number of travelers does not exceed the new limit
     const SectionHeader = ({ number, title, titleStyle }) => (
         <View style={QuotationFormStyle.sectionHeaderRow}>
             <View style={QuotationFormStyle.sectionBadge}>
@@ -195,7 +200,7 @@ export default function QuotationForm({ route, navigation }) {
     const notesSectionNumber = packageCategory === 'Land Arrangement' ? 5 : 4;
 
 
-    // --- VALIDATION LOGIC ---
+    //validate form inputs
     const validate = () => {
         let newErrors = {};
 
@@ -236,6 +241,8 @@ export default function QuotationForm({ route, navigation }) {
         return Object.keys(newErrors).length === 0;
     };
 
+
+    //submit quotation form
     const handleSubmit = async () => {
         if (!validate()) {
             Alert.alert("Missing Information", "Please fix the highlighted errors before submitting.");
@@ -308,10 +315,16 @@ export default function QuotationForm({ route, navigation }) {
         }
     };
 
+
+    //format date for display
     const formatDate = (dateString) => {
         if (!dateString) return "";
         return dayjs(dateString).format("MMM DD, YYYY");
     };
+
+
+
+
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>

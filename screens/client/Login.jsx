@@ -3,6 +3,12 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import { Ionicons } from '@expo/vector-icons'
+import LoginStyle from '../../styles/clientstyles/LoginStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
+import { api } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
+
 import {
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -15,16 +21,7 @@ import {
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-import { Ionicons } from '@expo/vector-icons'
-import LoginStyle from '../../styles/clientstyles/LoginStyle'
-import ModalStyle from '../../styles/componentstyles/ModalStyle'
-import { api } from '../../utils/api'
-import { useUser } from '../../context/UserContext'
-
 export default function Login() {
-    const cs = useNavigation()
-    const { setUser } = useUser()
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -33,6 +30,9 @@ export default function Login() {
         Roboto_500Medium,
         Roboto_700Bold
     })
+
+    const cs = useNavigation()
+    const { setUser } = useUser()
 
     const [loading, setLoading] = useState(false)
     const [getUsername, setUsername] = useState("")
@@ -47,6 +47,8 @@ export default function Login() {
     const [timer, setTimer] = useState(0)
     const [unverifiedEmail, setUnverifiedEmail] = useState("")
 
+
+    //prevent back button from closing the app while on the login screen
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => true
@@ -56,6 +58,8 @@ export default function Login() {
         }, [])
     )
 
+
+    // countdown timer for OTP resend
     useEffect(() => {
         let interval = null
         if (timer > 0) {
@@ -66,12 +70,16 @@ export default function Login() {
 
     if (!fontsLoaded) return null;
 
+
+    //function to normalize role strings for comparison
     const normalizeRole = (role) => {
         const normalized = String(role || "").trim().toLowerCase()
         if (normalized === "user" || normalized === "users") return "customer"
         return normalized
     }
 
+
+    //show message function for both Android and iOS
     const showMessage = (message) => {
         if (Platform.OS === "android") {
             ToastAndroid.show(message, ToastAndroid.SHORT);
@@ -80,6 +88,8 @@ export default function Login() {
         }
     }
 
+
+    //handle login function with OTP verification and role checks
     const handleLogin = async () => {
         const normalizedUsername = getUsername.trim();
         const normalizedPassword = getPassword;
@@ -150,6 +160,8 @@ export default function Login() {
         }
     }
 
+
+    //handle OTP verification function with role checks
     const handleVerifyOTP = async () => {
         if (otp.length !== 6) {
             setErrorOtp("OTP must be 6 digits.");
@@ -191,6 +203,8 @@ export default function Login() {
         }
     }
 
+
+    //handle resend OTP function with error handling
     const resendOTP = async () => {
         if (!unverifiedEmail) {
             setErrorOtp("No login session found to resend the OTP.");
@@ -218,6 +232,10 @@ export default function Login() {
             setLoading(false);
         }
     }
+
+
+
+
 
     return (
         <ImageBackground

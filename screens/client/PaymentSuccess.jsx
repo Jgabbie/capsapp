@@ -18,11 +18,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function PaymentSuccess({ route, navigation }) {
-    // Timer state starting at 8 seconds
-    const [countdown, setCountdown] = useState(8);
-    //  NEW: Kill switch to stop the timer if the user navigates manually
-    const [isActive, setIsActive] = useState(true);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -33,8 +28,14 @@ export default function PaymentSuccess({ route, navigation }) {
         Roboto_700Bold,
     });
 
+
+    //timer state starting at 10 seconds
+    const [countdown, setCountdown] = useState(10);
+    const [isActive, setIsActive] = useState(true);
+
+
+    //auto navigation effect that counts down from 10 seconds and navigates to the home screen when it reaches 0
     useEffect(() => {
-        //  If the kill switch is flipped (user clicked a button), stop running this effect!
         if (!isActive) return;
 
         // If countdown hits 0, auto-navigate to Home
@@ -52,6 +53,9 @@ export default function PaymentSuccess({ route, navigation }) {
         // Cleanup interval on unmount or re-render
         return () => clearInterval(timer);
     }, [countdown, isActive, navigation]);
+
+
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f4f8' }}>

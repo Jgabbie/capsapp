@@ -6,6 +6,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
 
+import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -19,10 +23,6 @@ import {
     Roboto_500Medium,
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
-
-import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
@@ -39,11 +39,6 @@ const getImageUrl = (img) => {
 };
 
 export default function QuotationAllIn() {
-    const navigation = useNavigation();
-    const route = useRoute();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -54,7 +49,12 @@ export default function QuotationAllIn() {
         Roboto_700Bold,
     });
 
-    // Only intercept hardware back while this screen is focused
+    const navigation = useNavigation();
+    const route = useRoute();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    //only intercept hardware back while this screen is focused
     useFocusEffect(
         useCallback(() => {
             const backAction = () => true; // prevent default hardware back behavior
@@ -63,10 +63,12 @@ export default function QuotationAllIn() {
         }, [])
     );
 
-    // Destructure passed data from PackageDetails/Date Modal
+
+    //destructure passed data from PackageDetails/Date Modal
     const { pkg, selectedDate, selectedDateSlots, selectedDatePrice, selectedDateRate } = route.params || {};
 
-    //  FIXED: Prefer the actual slot count passed from the date picker
+
+    //prefer the actual slot count passed from the date picker
     const getAvailableSlots = () => {
         const directSlotCount = Number(selectedDateSlots);
         if (Number.isFinite(directSlotCount) && directSlotCount > 0) return directSlotCount;
@@ -93,21 +95,21 @@ export default function QuotationAllIn() {
     const availableSlots = getAvailableSlots();
     const isGroupBookingDisabled = availableSlots < 2;
 
-    // 1. Local State for Selection
+    //local State for Selection
     const [selectedSoloGrouped, setSelectedSoloGrouped] = useState("solo");
     const [counts, setCounts] = useState({ adult: 2, child: 0, infant: 0 });
 
-    // 2. Calculation Logic (Exactly Matched to Web)
+    //calculation Logic
     const discountPercent = Number(pkg?.packageDiscountPercent || pkg?.discount || 0);
     const discountMultiplier = discountPercent > 0 ? 1 - (discountPercent / 100) : 1;
 
-    // Base rates INCLUDING the date surcharge BEFORE applying discounts
+    //base rates INCLUDING the date surcharge BEFORE applying discounts
     const basePackagePricePerPax = selectedDatePrice || pkg?.packagePricePerPax || pkg?.price || 0;
     const baseSoloRate = (pkg?.packageSoloRate || 0) + (selectedDateRate || 0);
     const baseChildRate = (pkg?.packageChildRate || 0) + (selectedDateRate || 0);
     const baseInfantRate = (pkg?.packageInfantRate || 0) + (selectedDateRate || 0);
 
-    // Apply the discount
+    //apply the discount
     const packagePricePerPax = basePackagePricePerPax * discountMultiplier;
     const soloRate = baseSoloRate * discountMultiplier;
     const childRate = baseChildRate * discountMultiplier;
@@ -119,9 +121,9 @@ export default function QuotationAllIn() {
     const maxChildren = pkg?.maxChildren || 10;
     const maxInfants = pkg?.maxInfants || 10;
 
-    //  Cap max travelers based on available slots
-    // With 2 slots: 2 adults, 0 children, 0 infants (locked)
-    // With 3 slots: 3 adults, 1 child max, 1 infant max, etc.
+    // cap max travelers based on available slots
+    // with 2 slots: 2 adults, 0 children, 0 infants (locked)
+    // with 3 slots: 3 adults, 1 child max, 1 infant max, etc.
     const maxTravelersFromSlots = availableSlots;
     const effectiveMaxAdults = Math.min(maxAdults, maxTravelersFromSlots);
     const effectiveMaxChildren = Math.min(maxChildren, Math.max(0, maxTravelersFromSlots - 2));
@@ -133,6 +135,8 @@ export default function QuotationAllIn() {
             : counts;
     }, [selectedSoloGrouped, counts]);
 
+
+    //set counts based on selection and available slots whenever the selection changes
     useEffect(() => {
         if (selectedSoloGrouped === 'solo') {
             setCounts({ adult: 1, child: 0, infant: 0 });
@@ -177,7 +181,8 @@ export default function QuotationAllIn() {
         });
     }, [selectedSoloGrouped, availableSlots, effectiveMaxAdults, effectiveMaxChildren, effectiveMaxInfants, maxTravelersFromSlots]);
 
-    //  NEW: Calculate Original Total (Before Discount)
+
+    //calculate Original Total (Before Discount)
     const originalTotalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return baseSoloRate;
         return (travelersCount.adult * basePackagePricePerPax) +
@@ -185,6 +190,8 @@ export default function QuotationAllIn() {
             (travelersCount.infant * baseInfantRate);
     }, [selectedSoloGrouped, travelersCount, basePackagePricePerPax, baseSoloRate, baseChildRate, baseInfantRate]);
 
+
+    //total amount after discount and date surcharge
     const totalAmount = useMemo(() => {
         if (selectedSoloGrouped === 'solo') return soloRate;
         return (travelersCount.adult * packagePricePerPax) +
@@ -194,11 +201,13 @@ export default function QuotationAllIn() {
 
     const totalTravelers = travelersCount.adult + travelersCount.child + travelersCount.infant;
 
-    // Get Airline & Hotel
+
+    // get Airline & Hotel
     const airlineDisplay = pkg?.packageAirlines?.[0]?.name || pkg?.packageAirlines?.[0] || 'N/A';
     const hotelDisplay = pkg?.packageHotels?.[0]?.name || pkg?.packageHotels?.[0] || 'N/A';
 
-    // 3. Handlers
+
+    //update counts function that ensures the total travelers do not exceed available slots and respects min/max constraints
     const updateCount = (type, action) => {
         setCounts(prev => {
             let newVal = action === 'inc' ? prev[type] + 1 : prev[type] - 1;
@@ -227,6 +236,8 @@ export default function QuotationAllIn() {
         });
     };
 
+
+    //proceed to booking review screen with all necessary data
     const handleProceed = () => {
         const { image, images, ...cleanPkg } = pkg; // Strip heavy images
 
@@ -247,6 +258,10 @@ export default function QuotationAllIn() {
 
         navigation.navigate("bookingreview", { setupData: bookingSetupData });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationAllInStyle.safeArea}>

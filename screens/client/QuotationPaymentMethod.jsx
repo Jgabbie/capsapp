@@ -29,12 +29,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function QuotationPaymentMethod({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
-    const [enlargedQR, setEnlargedQR] = useState(null);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -45,6 +39,12 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+    const [enlargedQR, setEnlargedQR] = useState(null);
+
     const { quotation, setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [method, setMethod] = useState('paymongo');
@@ -54,6 +54,8 @@ export default function QuotationPaymentMethod({ route, navigation }) {
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
     const travelDetails = latestPdfRevision?.travelDetails || {};
 
+
+    //pick image function for manual payment method
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -67,6 +69,8 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         }
     };
 
+
+    //handle proceed button click to validate if proof image is uploaded for manual payment method
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
             Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
@@ -75,6 +79,8 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         setIsProceedModalOpen(true);
     };
 
+
+    //upload files to backend function
     const uploadFilesToBackend = async (endpoint, formData) => {
         try {
             const response = await api.post(endpoint, formData, {
@@ -90,6 +96,8 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         }
     };
 
+
+    //payment function to handle both manual and online payment methods, including new and existing bookings
     const executePaymentFlow = async () => {
         setIsProceedModalOpen(false);
         setLoading(true);
@@ -397,6 +405,10 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             console.error("Booking Error: ", error.response?.data || error.message);
         }
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationPaymentStyle.safeArea}>

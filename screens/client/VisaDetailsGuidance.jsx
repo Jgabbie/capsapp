@@ -3,6 +3,14 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import { Ionicons } from '@expo/vector-icons'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import Header from '../../components/Header'
+import Sidebar from '../../components/Sidebar'
+import VisaDetailsGuidanceStyle from '../../styles/clientstyles/VisaDetailsGuidanceStyle'
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
+
 import {
     Montserrat_400Regular,
     Montserrat_600SemiBold,
@@ -14,14 +22,6 @@ import {
     Roboto_500Medium,
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
-
-import { Ionicons } from '@expo/vector-icons'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import Header from '../../components/Header'
-import Sidebar from '../../components/Sidebar'
-import VisaDetailsGuidanceStyle from '../../styles/clientstyles/VisaDetailsGuidanceStyle'
-import { api, withUserHeader } from '../../utils/api'
-import { useUser } from '../../context/UserContext'
 
 const timeSlots = [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
@@ -74,6 +74,15 @@ const JAPAN_FALLBACK_STEPS = [
 ]
 
 export default function VisaDetailsGuidance() {
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
+    })
+
     const cs = useNavigation()
     const route = useRoute()
     const { user } = useUser()
@@ -91,19 +100,14 @@ export default function VisaDetailsGuidance() {
     const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-    const [fontsLoaded] = useFonts({
-        Montserrat_400Regular,
-        Montserrat_600SemiBold,
-        Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
-    })
 
+    //load full service details if not already loaded
     useEffect(() => {
         setServiceDetails(selectedService)
     }, [selectedService])
 
+
+    //fetch full service details if not already loaded
     useEffect(() => {
         const loadServiceDetails = async () => {
             try {
@@ -122,17 +126,23 @@ export default function VisaDetailsGuidance() {
         loadServiceDetails()
     }, [selectedService?.visaItem, selectedService?._id, user?._id])
 
+
+    //compute service data to use, preferring full details if available
     const serviceData = useMemo(() => {
         if (serviceDetails && Object.keys(serviceDetails).length > 0) return serviceDetails
         return selectedService
     }, [serviceDetails, selectedService])
 
+
+    //get min date for date picker (14 days from today)
     const getMinDate = () => {
         const minDate = new Date();
         minDate.setDate(minDate.getDate() + 14);
         return minDate;
     };
 
+
+    //handle date change from date picker
     const onDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
@@ -148,6 +158,8 @@ export default function VisaDetailsGuidance() {
     const formatDate = (date) => date ? date.toISOString().split('T')[0] : 'Select date';
     const formatPeso = (value) => `${(Number(value) || 0).toLocaleString("en-PH")}`;
 
+
+    //submit visa application request to backend
     const submitApplication = async () => {
         if (!user?._id) {
             Alert.alert('Login required', 'Please login to submit your request.')
@@ -179,12 +191,14 @@ export default function VisaDetailsGuidance() {
         }
     }
 
+
+    //handle continue button on success modal
     const handleContinue = () => {
         setShowSuccessModal(false);
         cs.navigate('userapplications');
     }
 
-    // Filter required and optional requirements
+    //filter required and optional requirements
     const requiredRequirements = useMemo(() => {
         return (serviceData.visaRequirements || []).filter(item => {
             if (typeof item === 'object') {
@@ -194,6 +208,8 @@ export default function VisaDetailsGuidance() {
         });
     }, [serviceData.visaRequirements]);
 
+
+    //filter optional requirements
     const optionalRequirements = useMemo(() => {
         return (serviceData.visaRequirements || []).filter(item => {
             if (typeof item === 'object') {
@@ -203,6 +219,8 @@ export default function VisaDetailsGuidance() {
         });
     }, [serviceData.visaRequirements]);
 
+
+    //prepare step-by-step process from service data, with fallbacks for Japan visa
     const processSteps = useMemo(() => {
         const raw = serviceData?.visaProcessSteps
             || serviceData?.processSteps
@@ -242,6 +260,10 @@ export default function VisaDetailsGuidance() {
     };
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={VisaDetailsGuidanceStyle.container}>

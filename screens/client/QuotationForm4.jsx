@@ -20,6 +20,7 @@ import {
 } from "@expo-google-fonts/roboto";
 
 
+//format long date
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -27,9 +28,6 @@ const formatLongDate = (dateVal) => {
 };
 
 export default function QuotationForm4({ route, navigation }) {
-    const { user } = useUser();
-    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -40,20 +38,31 @@ export default function QuotationForm4({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
+
     const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const currentDateLong = formatLongDate(new Date());
 
+
+    //handle open confirm modal
     const handleOpenConfirmModal = () => {
         setIsProceedModalOpen(true);
     };
 
+
+    //confirm booking function to navigate to the payment mode screen with all the collected data
     const confirmBooking = () => {
         setIsProceedModalOpen(false);
         navigation.navigate("quotationpaymentmode", {
             quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency
         });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>

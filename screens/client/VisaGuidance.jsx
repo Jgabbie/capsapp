@@ -3,6 +3,13 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import { Ionicons } from '@expo/vector-icons'
+import Header from '../../components/Header'
+import Sidebar from '../../components/Sidebar'
+import Chatbot from '../../components/Chatbot'
+import VisaGuidanceStyle from '../../styles/clientstyles/VisaGuidanceStyle'
+import { api } from '../../utils/api'
+
 import {
     Montserrat_400Regular,
     Montserrat_600SemiBold,
@@ -15,20 +22,7 @@ import {
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-import { Ionicons } from '@expo/vector-icons'
-import Header from '../../components/Header'
-import Sidebar from '../../components/Sidebar'
-import Chatbot from '../../components/Chatbot'
-import VisaGuidanceStyle from '../../styles/clientstyles/VisaGuidanceStyle'
-import { api } from '../../utils/api'
-
 export default function VisaGuidance() {
-    const cs = useNavigation()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
-    const [services, setServices] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('')
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_600SemiBold,
@@ -38,6 +32,14 @@ export default function VisaGuidance() {
         Roboto_700Bold
     })
 
+    const cs = useNavigation()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [services, setServices] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState('')
+
+
+    //fetch visa services from backend on component mount
     useEffect(() => {
         const loadServices = async () => {
             try {
@@ -54,6 +56,8 @@ export default function VisaGuidance() {
         loadServices()
     }, [])
 
+
+    //filter services based on search query
     const filteredServices = useMemo(() => {
         if (!searchQuery) return services;
         return services.filter(service =>
@@ -63,6 +67,10 @@ export default function VisaGuidance() {
     }, [services, searchQuery]);
 
     if (!fontsLoaded) return null;
+
+
+
+
 
     return (
         <View style={VisaGuidanceStyle.container}>

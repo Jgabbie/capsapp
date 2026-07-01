@@ -30,11 +30,15 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format date function
 const formatDate = (date) => {
     if (!date) return "";
     return date.toISOString().split('T')[0];
 };
 
+
+//compute age function
 const computeAge = (birthDate) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);
@@ -51,6 +55,8 @@ const computeAge = (birthDate) => {
     return age < 0 ? null : age;
 };
 
+
+//get birthday bounds function
 const getBirthdayBounds = (travelerType) => {
     const today = new Date();
     const category = String(travelerType || '').toLowerCase();
@@ -94,16 +100,14 @@ const getBirthdayBounds = (travelerType) => {
     };
 };
 
+
+//check if traveler type is minor (child or infant)
 const isMinorTravelerType = (travelerType) => {
     const normalized = String(travelerType || '').toLowerCase();
     return normalized === 'child' || normalized === 'infant';
 };
 
 export default function QuotationUploads({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { quotation } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -114,7 +118,11 @@ export default function QuotationUploads({ route, navigation }) {
         Roboto_700Bold,
     });
 
-    // Use fullQuotation if available, otherwise fall back to passed quotation
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { quotation } = route.params || {};
+
+    //use fullQuotation if available, otherwise fall back to passed quotation
     const activeQuotation = fullQuotation || quotation;
 
     const counts = activeQuotation?.travelerCounts || { adult: 1, child: 0, infant: 0 };
@@ -125,12 +133,13 @@ export default function QuotationUploads({ route, navigation }) {
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
 
-    // Check visa requirement: either from packageRequiresVisa field OR if packageType is 'international'
+    //check visa requirement: either from packageRequiresVisa field OR if packageType is 'international'
     const rawVisaValue = activeQuotation?.packageId?.packageRequiresVisa ?? activeQuotation?.packageId?.requiresVisa ?? activeQuotation?.pkg?.requiresVisa ?? activeQuotation?.pkg?.packageRequiresVisa ?? activeQuotation?.pkg?.visaRequired;
     const isInternationalPackage = String(packageType).toLowerCase() === 'international';
     const requiresVisa = isInternationalPackage || rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
 
+    //compute traveler types array for easier mapping
     const travelerTypes = useMemo(() => {
         const types = [];
         for (let i = 0; i < counts.adult; i++) types.push('Adult');
@@ -139,12 +148,16 @@ export default function QuotationUploads({ route, navigation }) {
         return types;
     }, [counts]);
 
+
+    //get room options based on booking type
     const getRoomOptions = () => {
         if (bookingType === 'Solo Booking') return ['SINGLE'];
         return ['TWIN', 'DOUBLE', 'TRIPLE'];
     };
     const roomOptions = getRoomOptions();
 
+
+    //state for travelers data
     const [travelersData, setTravelersData] = useState(() => {
         return Array.from({ length: totalTravelers }).map((_, index) => {
             const travelerType = index < counts.adult ? 'Adult' : index < counts.adult + counts.child ? 'Child' : 'Infant';
@@ -185,8 +198,10 @@ export default function QuotationUploads({ route, navigation }) {
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [fullQuotation, setFullQuotation] = useState(quotation);
 
+
+    //adjust travelersData whenever travelerTypes or bookingType changes
     useEffect(() => {
-        // Only apply adjustments if necessary to avoid unnecessary re-renders or loops
+        //only apply adjustments if necessary to avoid unnecessary re-renders or loops
         setTravelersData(prevData => {
             if (!Array.isArray(prevData)) return prevData;
 
@@ -216,12 +231,16 @@ export default function QuotationUploads({ route, navigation }) {
         });
     }, [travelerTypes, bookingType]);
 
+
+    //update traveler data function
     const updateTraveler = (index, field, value) => {
         const newData = [...travelersData];
         newData[index][field] = value;
         setTravelersData(newData);
     };
 
+
+    //upload document to cloudinary function
     const uploadDocumentToCloudinary = async (uri, name, type, userId) => {
         const formData = new FormData();
         formData.append('files', {
@@ -242,6 +261,8 @@ export default function QuotationUploads({ route, navigation }) {
         return uploadedUrls[0] || null;
     };
 
+
+    //pick image or document function
     const pickImage = async (index, type) => {
         try {
             if (type === 'photo') {
@@ -328,12 +349,16 @@ export default function QuotationUploads({ route, navigation }) {
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
 
+
+    //get birthday limits for a specific traveler
     const getBirthdayLimits = (travelerIndex) => {
         const travelerType = travelerTypes[travelerIndex];
         const bounds = getBirthdayBounds(travelerType);
         return bounds;
     };
 
+
+    //open date picker function
     const openDatePicker = (index, type) => {
         const existingDateStr = travelersData[index][type];
         const travelerType = travelerTypes[index];
@@ -349,6 +374,8 @@ export default function QuotationUploads({ route, navigation }) {
         setShowDatePicker(true);
     };
 
+
+    //handle date selection from date picker
     const onDateSelected = (event, selectedDate) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
@@ -359,13 +386,19 @@ export default function QuotationUploads({ route, navigation }) {
         }
     };
 
+
+    //confirm date selection for iOS
     const confirmIOSDate = () => {
         updateTraveler(datePickerConfig.index, datePickerConfig.type, formatDate(datePickerConfig.currentDate));
         setShowDatePicker(false);
     };
 
+
+    //validate passport number format function
     const isValidPassportNumber = (passportNo) => /^P\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
 
+
+    //handle view PDF function
     const handleViewPDF = async (pdfUri) => {
         try {
             await Linking.openURL(pdfUri);
@@ -375,6 +408,8 @@ export default function QuotationUploads({ route, navigation }) {
         }
     };
 
+
+    //next button function
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
         const isComplete = Object.values(uploads).every(u => u.passport && u.photo);
@@ -411,10 +446,16 @@ export default function QuotationUploads({ route, navigation }) {
         setShowVerifyModal(true);
     };
 
+
+    //confirm continue function after verification
     const handleConfirmContinue = () => {
         setShowVerifyModal(false);
         navigation.navigate("quotationform1", { quotation: activeQuotation, travelerUploads: uploads, travelersData });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={BookingUploadsStyle.safeArea}>

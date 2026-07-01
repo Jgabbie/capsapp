@@ -28,13 +28,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function UserBookings() {
-    const navigation = useNavigation()
-    const { user } = useUser()
-    const [isSidebarVisible, setSidebarVisible] = useState(false)
-    const [loading, setLoading] = useState(true)
-    const [loadingCancel, setLoadingCancel] = useState(false)
-    const [bookings, setBookings] = useState([])
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -45,13 +38,20 @@ export default function UserBookings() {
         Roboto_700Bold,
     });
 
-    // Filter States
+    const navigation = useNavigation()
+    const { user } = useUser()
+    const [isSidebarVisible, setSidebarVisible] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [loadingCancel, setLoadingCancel] = useState(false)
+    const [bookings, setBookings] = useState([])
+
+    //filter States
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
     const [bookingDateFilter, setBookingDateFilter] = useState(null)
     const [travelDateFilter, setTravelDateFilter] = useState(null)
 
-    // Modal Visibility States
+    //modal Visibility States
     const [isStatusModalOpen, setStatusModalOpen] = useState(false)
     const [isBookingDateOpen, setBookingDateOpen] = useState(false)
     const [isTravelDateOpen, setTravelDateOpen] = useState(false)
@@ -66,6 +66,8 @@ export default function UserBookings() {
     const [cancelImage, setCancelImage] = useState(null)
     const [showCancelReasonDropdown, setShowCancelReasonDropdown] = useState(false)
 
+
+    //format status label to capitalize each word and remove extra spaces
     const formatStatusLabel = (value) => {
         return String(value || '')
             .trim()
@@ -75,6 +77,8 @@ export default function UserBookings() {
             .join(' ')
     }
 
+
+    //compute booking status based on backend status and paid amount
     const getComputedStatus = (booking) => {
         const rawStatus = booking.status || '';
         const formatted = formatStatusLabel(rawStatus);
@@ -99,6 +103,8 @@ export default function UserBookings() {
         return formatted || 'No Status';
     };
 
+
+    //get status style based on computed status for consistent UI
     const getStatusStyle = (status) => {
         const normalized = String(status || '').trim().toLowerCase();
         if (normalized === 'not paid') return { bg: '#fff1f0', text: '#cf1322' };
@@ -109,6 +115,8 @@ export default function UserBookings() {
         return { bg: '#f0f5ff', text: '#2f54eb' };
     };
 
+
+    //fetch bookings from backend and map them to include computed status, formatted dates, and traveler count
     const fetchBookings = async () => {
         if (!user?._id) return;
         try {
@@ -151,7 +159,6 @@ export default function UserBookings() {
                     }
                 }
 
-                // FIXED: Reads the Object format perfectly now
                 let computedTravelers = 1;
                 if (Array.isArray(b.travelers)) {
                     if (b.travelers.length > 0 && b.travelers[0].adult !== undefined) {
@@ -186,6 +193,8 @@ export default function UserBookings() {
 
     useFocusEffect(useCallback(() => { fetchBookings() }, [user?._id]))
 
+
+    //filter bookings based on search text, status filter, booking date filter, and travel date filter
     const filteredBookings = useMemo(() => {
         return bookings.filter((item) => {
             const needle = searchText.trim().toLowerCase();
@@ -208,6 +217,7 @@ export default function UserBookings() {
     }, [bookings, searchText, statusFilter, bookingDateFilter, travelDateFilter])
 
 
+    //image picker for cancellation proof
     const pickCancelImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -221,6 +231,8 @@ export default function UserBookings() {
         }
     };
 
+
+    //handle booking cancellation with validation for reason and image proof
     const handleCancelBooking = async () => {
         if (!cancelReason) {
             Alert.alert("Required", "Please select a cancellation reason.");
@@ -259,6 +271,10 @@ export default function UserBookings() {
             Alert.alert("Error", "Unable to cancel booking. Please try again.");
         }
     }
+
+
+
+
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>

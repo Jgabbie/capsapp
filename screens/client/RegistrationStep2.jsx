@@ -18,6 +18,8 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date fun
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -25,9 +27,6 @@ const formatLongDate = (dateVal) => {
 };
 
 export default function RegistrationStep2({ route, navigation }) {
-    const { user } = useUser();
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -38,9 +37,12 @@ export default function RegistrationStep2({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData: prevMedicalData, emergency: prevEmergency } = route.params || {};
+
     const currentDateLong = formatLongDate(new Date());
 
-    // --- State Management ---
+    //state for medical data and emergency contact, initialized with previous data if available
     const [medicalData, setMedicalData] = useState(
         prevMedicalData || {
             dietary: '',
@@ -61,12 +63,15 @@ export default function RegistrationStep2({ route, navigation }) {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
 
-    // --- Validation Logic ---
+
+    //valid email function
     const isValidEmail = (email) => {
         if (!email) return true;
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
     };
 
+
+    //valid contact function
     const isValidContact = (contact) => {
         if (!contact) return true;
         const digits = contact.replace(/\D/g, "");
@@ -81,7 +86,8 @@ export default function RegistrationStep2({ route, navigation }) {
     const emailHasError = !isValidEmail(emergency.email) && emergency.email.length > 0;
     const contactHasError = !isValidContact(emergency.contact) && emergency.contact.length > 0;
 
-    // --- Proceed Handler ---
+
+    //next function
     const handleNext = () => {
         if (!medicalData.dietary) return Alert.alert("Required", "Please select Y or N for Dietary requests.");
         if (medicalData.dietary === 'Y' && !medicalData.dietaryDetails.trim()) return Alert.alert("Required", "Please provide details for the Dietary request.");
@@ -106,7 +112,8 @@ export default function RegistrationStep2({ route, navigation }) {
         navigation.navigate("registrationstep3", { ...route.params, medicalData, emergency });
     };
 
-    // --- Dropdown Handlers ---
+
+    //dropdown select handler
     const handleDropdownSelect = (value, field) => {
         const target = field || activeDropdown;
         if (target === 'dietary') {
@@ -133,6 +140,8 @@ export default function RegistrationStep2({ route, navigation }) {
         setActiveDropdown(null);
     };
 
+
+    //render dropdown options based on the active dropdown
     const renderDropdownOptions = () => {
         if (activeDropdown === 'emergencyTitle') {
             return (
@@ -171,6 +180,10 @@ export default function RegistrationStep2({ route, navigation }) {
             </>
         );
     };
+
+
+
+
 
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>

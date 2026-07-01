@@ -8,6 +8,15 @@ import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
+import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
+import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -22,17 +31,8 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
-import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
-
-// Status color mapping for passport application statuses
+//status color mapping for passport application statuses
 const getStatusColor = (status) => {
     switch ((status || '').toLowerCase()) {
         case 'application submitted':
@@ -74,8 +74,6 @@ const PASSPORT_STEPS = [
 ];
 
 export default function PassportApplication() {
-    const route = useRoute();
-    const navigation = useNavigation();
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -86,6 +84,9 @@ export default function PassportApplication() {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const route = useRoute();
+    const navigation = useNavigation();
 
     const id = route?.params?.applicationId || null; // Use applicationId from route params
     const { user } = useUser();
@@ -102,6 +103,9 @@ export default function PassportApplication() {
 
     const [method, setMethod] = useState(null); // default selected payment method  
     const paymentMethod = method;
+
+
+    //function to normalize the picked document to a consistent format
     const normalizePickedDocument = (asset) => ({
         uri: asset.uri,
         name: asset.name || asset.fileName || `document-${Date.now()}`,
@@ -109,6 +113,8 @@ export default function PassportApplication() {
         size: asset.size,
     });
 
+
+    //function to pick a document for a specific key
     const pickDocumentForKey = async (key) => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
@@ -132,6 +138,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //function to remove a selected file for a specific key
     const removeSelectedFile = (key) => {
         setSelectedFiles(prev => {
             const next = { ...prev };
@@ -140,6 +148,8 @@ export default function PassportApplication() {
         });
     };
 
+
+    //function to handle the submission of all selected files
     const submitAllSelectedFiles = async () => {
         await handleSubmit();
     };
@@ -176,7 +186,7 @@ export default function PassportApplication() {
     const [requirementPreview, setRequirementPreview] = useState(null);
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
-    // Schedule selection state (for 'Others' custom date/time option)
+    //schedule selection state
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
     const [customPreferredDate, setCustomPreferredDate] = useState(null);
     const [customPreferredTime, setCustomPreferredTime] = useState(null);
@@ -184,6 +194,8 @@ export default function PassportApplication() {
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
 
+
+    //helper function to normalize schedule slot data
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') return { date: '', time: '' };
         const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
@@ -203,6 +215,8 @@ export default function PassportApplication() {
         return { date, time };
     };
 
+
+    //helper function to format time for display in a user-friendly format
     const formatTimeForDisplay = (time) => {
         if (!time) return 'No time provided';
 
@@ -219,16 +233,22 @@ export default function PassportApplication() {
         !isOthersSelected || (customPreferredDate && customPreferredTime)
     );
 
+
+    //handle changes from the custom date and time pickers
     const handleCustomDateChange = (_event, selectedDate) => {
         if (selectedDate) setCustomPreferredDate(selectedDate);
         if (Platform.OS !== 'ios') setShowCustomDatePicker(false);
     };
 
+
+    //handle changes from the custom time picker
     const handleCustomTimeChange = (_event, selectedTime) => {
         if (selectedTime) setCustomPreferredTime(selectedTime);
         if (Platform.OS !== 'ios') setShowCustomTimePicker(false);
     };
 
+
+    //function to confirm the selected appointment schedule, either from suggested options or custom date/time
     const handleConfirmSchedule = async () => {
         if (selectedScheduleIndex === null) {
             Alert.alert('Notice', 'Please select an appointment option first.');
@@ -273,6 +293,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //fetch application details and check for any pending manual payments when the component mounts or when the application ID or user ID changes
     useEffect(() => {
         if (!id || !user?._id) {
             return
@@ -291,7 +313,8 @@ export default function PassportApplication() {
             }
         };
 
-        //PENDING MANUAL PAYEMENTS
+
+        //check for pending payments
         const checkPendingManualPayment = async () => {
             try {
                 const transactionsRes = await api.get(`/transaction/application/${id}`, withUserHeader(user._id));
@@ -322,6 +345,8 @@ export default function PassportApplication() {
         checkPendingManualPayment();
     }, [id, user?._id]);
 
+
+    //helper function to normalize resubmission targets for consistent handling
     const normalizeResubmissionTarget = (target) => {
         switch (target) {
             case 'birthCertificate':
@@ -334,6 +359,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //compute the list of requested resubmission targets based on the application data
     const requestedResubmissionTargets = (() => {
         const targets = [];
 
@@ -354,6 +381,8 @@ export default function PassportApplication() {
         return [...new Set(targets)];
     })();
 
+
+    //determine if a resubmission has been requested based on the application status and the presence of requested resubmission targets
     const resubmissionRequested = Boolean(
         application &&
         (application.status || '').toLowerCase() === 'payment completed' &&
@@ -362,6 +391,8 @@ export default function PassportApplication() {
 
     const isRequestedResubmissionTarget = (target) => !resubmissionRequested || requestedResubmissionTargets.includes(target);
 
+
+    //helper function to check if a file has been selected for a specific target
     const hasSelectedFileForTarget = (target) => {
         switch (target) {
             case 'birthCertificate':
@@ -375,6 +406,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //helper function to get the set date for a specific step title from the application's status history
     const getStepSetDateForTitle = (app, title) => {
         if (!app || !title) return null;
         const history = app.statusHistory;
@@ -389,7 +422,8 @@ export default function PassportApplication() {
         return null;
     };
 
-    // Helper function to format remaining time display
+
+    //helper function to format remaining time display
     const formatRemainingTime = (deadlineDate) => {
         if (!deadlineDate) return null;
         const daysLeft = deadlineDate.diff(dayjs(), 'day');
@@ -404,7 +438,8 @@ export default function PassportApplication() {
         }
     };
 
-    // Find the current step index based on status
+
+    //find the current step index based on status
     const currentStep = application
         ? Math.max(
             0,
@@ -414,7 +449,8 @@ export default function PassportApplication() {
         )
         : 0;
 
-    // Build timeline for progress tracker (uses backend-decorated processSteps when available)
+
+    //build timeline for progress tracker (uses backend-decorated processSteps when available)
     const stepTimeline = PASSPORT_STEPS.map((s, idx) => {
         const title = String(s.title || '').trim();
         const proc = application?.processSteps?.[title] || {};
@@ -437,7 +473,8 @@ export default function PassportApplication() {
         };
     });
 
-    // Get deadline and set date from processSteps object
+
+    //get deadline and set date from processSteps object
     const getProcessStepInfo = (stepTitle) => {
         if (!application?.processSteps || !application.processSteps[stepTitle]) {
             return { setDate: null, deadlineDate: null };
@@ -449,7 +486,8 @@ export default function PassportApplication() {
         };
     };
 
-    // Compute status set date and deadline for client view
+
+    //compute status set date and deadline for client view
     const statusDeadlineDaysMap = {
         'Payment Completed': 5,
     };
@@ -464,6 +502,8 @@ export default function PassportApplication() {
         ? application.suggestedAppointmentSchedules
         : [];
 
+
+    //function to get the most relevant date for a specific status, checking status history and other date fields
     const getStatusSetDate = (app) => {
         if (!app) return null;
         const history = app.statusHistory;
@@ -481,10 +521,14 @@ export default function PassportApplication() {
         return null;
     };
 
+
+    //function to open a document URL in the default browser or app
     const openDocument = (url) => {
         if (url) Linking.openURL(url).catch(err => console.error("Couldn't open document", err));
     };
 
+
+    //function to share the requirement preview PDF or open it in a new tab if sharing is not available
     const shareRequirementPreviewPdf = async () => {
         if (!requirementPreview?.uri) return;
 
@@ -514,6 +558,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //function to preview a file (image or document) in a modal
     const previewFile = (fileOrUrl) => {
         const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
         const uri = file?.uri || file?.url;
@@ -537,6 +583,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //function to determine if a given file or URL is an image based on its extension or MIME type
     const isImageSource = (fileOrUrl) => {
         const value = typeof fileOrUrl === 'string'
             ? fileOrUrl
@@ -545,6 +593,8 @@ export default function PassportApplication() {
         return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(value) || String(fileOrUrl?.mimeType || '').startsWith('image/') || /\bimage\//i.test(String(fileOrUrl?.mimeType || ''));
     };
 
+
+    //function to get the list of uploaded document entries (key-value pairs) from the application data
     const getUploadedDocumentEntries = () => {
         const docs = {
             birthCertificate: application?.submittedDocuments?.birthCertificate,
@@ -555,12 +605,16 @@ export default function PassportApplication() {
         return Object.entries(docs).filter(([, value]) => Boolean(value));
     };
 
+
+    //function to get the list of uploaded document entries (key-value pairs) from the application data
     const passportRequirements = [
         { key: 'birthCertificate', label: 'PSA Birth Certificate' },
         { key: 'applicationForm', label: 'Application Form' },
         { key: 'govId', label: 'Government-issued ID' },
     ];
 
+
+    //function to build a full name from a user object
     const buildFullName = (user) => {
         if (!user) return null;
         const first = user.firstname || user.firstName || user.givenName || '';
@@ -569,7 +623,8 @@ export default function PassportApplication() {
         return full || (user.username ? String(user.username).trim() : null);
     };
 
-    // Get the most recent staff/admin who changed the status (if available)
+
+    //get the most recent staff/admin who changed the status (if available)
     const getManagerRef = (app) => {
         try {
             if (!app) return { id: null, name: null };
@@ -609,6 +664,8 @@ export default function PassportApplication() {
     const managerRefName = managerRef?.name || null;
     const [managerLookup, setManagerLookup] = useState({ id: null, name: null });
 
+
+    //fetch the manager's name if only the ID is available, and cache it in state
     useEffect(() => {
         let isActive = true;
 
@@ -672,7 +729,8 @@ export default function PassportApplication() {
 
     const [hasProcessedRejection, setHasProcessedRejection] = useState(false);
 
-    // Auto-reject application if deadline is passed
+
+    //auto-reject application if deadline is passed
     useEffect(() => {
         if (!application || !statusDeadlineDate || hasProcessedRejection) return;
 
@@ -701,6 +759,7 @@ export default function PassportApplication() {
             updateStatus();
         }
     }, [statusDeadlineDate, application, hasProcessedRejection, id]);
+
 
     //for payment
     const pickProofImage = async () => {
@@ -733,6 +792,8 @@ export default function PassportApplication() {
         }
     };
 
+
+    //handle changes in the file upload component, ensuring only one file is kept and generating a preview URL if necessary
     const handleUploadChange = ({ fileList: newFileList }) => {
         if (newFileList.length > 1) {
             newFileList = [newFileList[newFileList.length - 1]];
@@ -749,7 +810,7 @@ export default function PassportApplication() {
     };
 
 
-    //SUBMIT PAYMENT
+    //submit payment
     const handleSubmitPayment = async () => {
         const isPenalty = application?.onPenalty === true || application?.penaltyOn === true;
 
@@ -857,6 +918,8 @@ export default function PassportApplication() {
 
     const handleStartPayment = handleSubmitPayment;
 
+
+    //function to render the upload card for a specific document requirement, showing the selected file, upload status, and options to change or remove the file
     const renderRequirementUploadCard = (doc) => {
         const selectedFile = selectedFiles[doc.key];
         const uploadedUrl = uploadedDocuments[doc.key] || application?.submittedDocuments?.[doc.key];
@@ -923,7 +986,8 @@ export default function PassportApplication() {
         );
     };
 
-    //RENDER UPLOAD DOCUMENTS
+
+    //render a read-only view for an uploaded file
     const renderReadOnlyFile = (url, label) => {
         // Check if the URL contains '.pdf' (case insensitive)
         const isPdf = typeof url === 'string' && url.toLowerCase().split(/[?#]/)[0].endsWith('.pdf');
@@ -958,6 +1022,7 @@ export default function PassportApplication() {
     };
 
 
+    //function to get the most relevant file for previewing based on the document key, checking selected files, uploaded documents, and application data
     const getRequirementPreviewFile = (key) => {
         const submittedDocuments = application?.submittedDocuments || application?.documents || {};
 
@@ -975,7 +1040,8 @@ export default function PassportApplication() {
 
     const uploadedDocuments = application?.submittedDocuments || application?.documents || {};
 
-    //HANDLE PREVIEW FOR UPLOADED FILES
+
+    //handle previewing a file, opening it in a new tab or window if possible, or showing an alert if preview is unavailable
     const handlePreview = (file) => {
         const src = typeof file === 'string'
             ? file
@@ -987,7 +1053,8 @@ export default function PassportApplication() {
         Alert.alert('Error', 'Preview unavailable');
     };
 
-    //ADD PREVIEW URL TO FILES FOR UPLOADED DOCUMENTS
+
+    //add preview URLs to files in the list if they don't already have one, using the origin file object to create a temporary URL
     const withPreview = (newList) =>
         newList.map((file) => {
             if (!file.preview && file.originFileObj) {
@@ -996,6 +1063,8 @@ export default function PassportApplication() {
             return file;
         });
 
+
+    //validate file size before upload, ensuring it is less than 3MB and alerting the user if it exceeds this limit
     const beforeRequirementUpload = (file) => {
         const isLt3M = file.size / 1024 / 1024 < 3;
         if (!isLt3M) {
@@ -1004,7 +1073,8 @@ export default function PassportApplication() {
         return isLt3M || Upload.LIST_IGNORE;
     };
 
-    //HANDLE SUBMISSION OF UPLOADED DOCUMENTS
+
+    //handle the submission of uploaded documents, ensuring all required files are present and valid before sending them to the server
     const handleSubmit = async () => {
         if (uploading || uploadingAll) {
             Alert.alert('Warning', "Please wait until uploads finish");
@@ -1124,7 +1194,8 @@ export default function PassportApplication() {
         }
     };
 
-    //HANDLE CONFIRMATION OF SUGGESTED APPOINTMENT
+
+    //handle confirmation of a suggested appointment schedule, validating the selection and sending it to the server
     const handleConfirmSuggested = async () => {
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
             Alert.alert('Notice', 'Please select an appointment option first.');
@@ -1179,6 +1250,7 @@ export default function PassportApplication() {
     };
 
 
+    //function to disable dates in the date picker, preventing selection of weekends and dates within the next two weeks
     const disableDates = (current) => {
         const today = dayjs().startOf('day');
         const twoWeeksFromNow = today.add(14, 'day');
@@ -1192,6 +1264,8 @@ export default function PassportApplication() {
             )
         );
     };
+
+    //function to disable hours in the time picker, allowing only business hours (8 AM to 5 PM) to be selected
     const disabledHours = () => {
         const hours = [];
         for (let i = 0; i < 24; i++) {
@@ -1210,7 +1284,7 @@ export default function PassportApplication() {
     ];
 
 
-    //IF NO ID IN URL, GO BACK TO USER APPLICATIONS
+    //if no application ID is provided, navigate back to the home screen
     useEffect(() => {
         if (!id) {
             navigation.navigate('Home');
@@ -1218,7 +1292,7 @@ export default function PassportApplication() {
     }, [id, navigation]);
 
 
-    //UPLOAD DOCUMENTS SECTION STATUS CONDITION
+    //upload status and penalty logic
     const status = application?.status?.toLowerCase();
     const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
     const hasSecondChance = application?.secondChance === true;
@@ -1227,6 +1301,7 @@ export default function PassportApplication() {
     const shouldShow =
         status === 'payment completed' ||
         application?.secondChance === true;
+
 
     if (loading) {
         return (
@@ -1247,6 +1322,7 @@ export default function PassportApplication() {
             </View>
         );
     }
+
 
 
 

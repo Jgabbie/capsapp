@@ -29,6 +29,8 @@ const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-U
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
 
+
+//parse dates
 const parseDateStringSafe = (dateStr) => {
     if (!dateStr) return null;
     try {
@@ -49,11 +51,8 @@ const parseDateStringSafe = (dateStr) => {
     return null;
 };
 
-export default function QuotationPaymentMode({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency, setupData } = route.params || {};
 
+export default function QuotationPaymentMode({ route, navigation }) {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -63,6 +62,10 @@ export default function QuotationPaymentMode({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { quotation, travelerUploads, passengers, leadGuestInfo, medicalData, emergency, setupData } = route.params || {};
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
@@ -84,10 +87,11 @@ export default function QuotationPaymentMode({ route, navigation }) {
     }, [quotation]);
 
 
+    //fetch invoice number
     useEffect(() => {
         const fetchInvoiceNumber = async () => {
             try {
-                // Try to use the same controller logic as BookingInvoice: allow passing a reference
+                //try to use the same controller logic as BookingInvoice: allow passing a reference
                 const reference = setupData?.reference || setupData?.ref || "--";
                 const config = { ...(withUserHeader(user?._id) || {}), params: reference && reference !== "--" ? { reference } : {} };
                 const invoiceRes = await api.get('/booking/bookings-total-month', config);
@@ -98,7 +102,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
                     return;
                 }
 
-                // If controller didn't return a prebuilt invoiceNumber, construct using sequence/total
+                //ff controller didn't return a prebuilt invoiceNumber, construct using sequence/total
                 const total = Number(invoiceRes.data?.totalBookings || 0);
                 const createdAtValue = setupData?.createdAt || setupData?.bookingDate || new Date();
                 const monthKey = dayjs(createdAtValue).format('MM');
@@ -118,6 +122,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
     }, [user?._id, setupData]);
 
 
+    //build invoice number function
     const buildInvoiceNumber = (allBookings, currentBooking) => {
         if (!currentBooking) return "";
         const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
@@ -161,6 +166,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
     };
 
 
+    //compute payment schedule
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;
@@ -205,6 +211,8 @@ export default function QuotationPaymentMode({ route, navigation }) {
         return { schedule, depositAmount };
     }, [frequency, travelerTotal, totalAmount, quotation]);
 
+
+    //proceed function
     const handleProceed = () => {
         const amountToPay = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
         navigation.navigate("quotationpaymentmethod", {
@@ -224,6 +232,10 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
     const packageTitleDisplay = quotation?.pkg?.title || quotation?.pkg?.packageName || 'TOUR PACKAGE';
     const displayTravelDate = quotation?.selectedDate ? quotation.selectedDate : (quotation?.travelDate?.startDate ? `${dayjs(quotation.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(quotation.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationPaymentStyle.safeArea}>

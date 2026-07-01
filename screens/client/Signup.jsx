@@ -11,18 +11,16 @@ import {
     Montserrat_500Medium,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
+
 import {
     Roboto_400Regular,
     Roboto_500Medium,
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-// IMPORT OUR SMART API INSTEAD OF RAW AXIOS!
 import { api } from '../../utils/api'
 
 export default function Signup() {
-    const cs = useNavigation()
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -32,16 +30,20 @@ export default function Signup() {
         Roboto_700Bold
     })
 
+    const cs = useNavigation()
+
     const [modalVisible, setModalVisible] = useState(false)
     const [loading, setLoading] = useState(false)
 
-    // Visibility toggles for passwords
+    //visibility toggles for passwords
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-    // State for backend general errors (like "Email already exists")
+    //state for backend general errors (like "Email already exists")
     const [backendError, setBackendError] = useState("")
 
+
+    //prevent hardware back button from navigating back to the previous screen
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => true
@@ -75,12 +77,16 @@ export default function Signup() {
         return null;
     }
 
+
+    //helper function to convert names to proper case and remove invalid characters
     const toProperCase = (value) => {
         return value.toLowerCase().split(' ').map(word =>
             word.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('-')
         ).join(' ');
     }
 
+
+    //validation function for each field
     const validateField = (field, value) => {
         let errorMsg = "";
         switch (field) {
@@ -129,6 +135,8 @@ export default function Signup() {
         return errorMsg;
     }
 
+
+    //handler for input changes, applies validation and formatting
     const changeHandler = (field, value) => {
         let finalValue = value;
 
@@ -157,6 +165,8 @@ export default function Signup() {
         setBackendError("");
     }
 
+
+    //signup function to handle form submission, validation, and API call
     const handleSignup = async () => {
         const newErrors = {};
         let hasError = false;
@@ -180,10 +190,6 @@ export default function Signup() {
         try {
             const fullPhoneNumber = user.phonenum.replace(/\D/g, "");
 
-            //  USES OUR SMART 'API' VARIABLE INSTEAD OF RAW AXIOS!
-            // Uses our smart 'api' variable instead of hardcoded 10.0.2.2
-            // Note: Since your old code went to /api/create-user and our api.js base URL ends with /api, 
-            // we just need to append /create-user here.
             const response = await api.post('/users/create-user', {
                 username: user.username,
                 firstname: user.firstname,
@@ -204,6 +210,10 @@ export default function Signup() {
             setLoading(false);
         }
     }
+
+
+
+
 
     return (
         <ImageBackground

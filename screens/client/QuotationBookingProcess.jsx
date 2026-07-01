@@ -7,6 +7,13 @@ import { Image } from 'expo-image';
 import Constants from 'expo-constants';
 import dayjs from 'dayjs';
 
+import QuotationBookingProcessStyle from '../../styles/clientstyles/QuotationBookingProcessStyle';
+import ModalStyle from '../../styles/componentstyles/ModalStyle';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from '../../utils/api';
+import { useUser } from '../../context/UserContext';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -21,15 +28,10 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import QuotationBookingProcessStyle from '../../styles/clientstyles/QuotationBookingProcessStyle';
-import ModalStyle from '../../styles/componentstyles/ModalStyle';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import { api, withUserHeader } from '../../utils/api';
-import { useUser } from '../../context/UserContext';
-
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
+
+//get image url function that handles local and remote images, including placeholder for missing images
 const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/800x500?text=No+Image';
     if (img.startsWith('http') || img.startsWith('data:')) return img;
@@ -39,6 +41,8 @@ const getImageUrl = (img) => {
     return `http://${host}:8000/${String(img).replace(/^\/+/, '')}`;
 };
 
+
+//format travel dates function that handles various formats of travel date data, including arrays, objects, and single dates
 const formatTravelDates = (details) => {
     const value = details?.travelDates || details?.preferredDates || details?.travelDate || details?.preferredDate;
     if (!value) return 'Not set';
@@ -58,6 +62,8 @@ const formatTravelDates = (details) => {
     return dayjs(value).isValid() ? dayjs(value).format('MMM DD, YYYY') : String(value);
 };
 
+
+//format travelers function that handles various formats of traveler data, including numbers, objects, and missing data
 const formatTravelers = (travelers) => {
     if (!travelers) return 'N/A';
     if (typeof travelers === 'number') return `Adult: ${travelers}`;
@@ -71,16 +77,8 @@ const formatTravelers = (travelers) => {
     return parts.join(', ');
 };
 
-export default function QuotationBookingProcess() {
-    const navigation = useNavigation();
-    const route = useRoute();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { user } = useUser();
-    const [quotation, setQuotation] = useState(route.params?.quotation || null);
-    const [packageData, setPackageData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
 
+export default function QuotationBookingProcess() {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -91,7 +89,16 @@ export default function QuotationBookingProcess() {
         Roboto_700Bold,
     });
 
-    // Only prevent hardware back while this screen is focused
+    const navigation = useNavigation();
+    const route = useRoute();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { user } = useUser();
+    const [quotation, setQuotation] = useState(route.params?.quotation || null);
+    const [packageData, setPackageData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
+
+    //only prevent hardware back while this screen is focused
     useFocusEffect(
         useCallback(() => {
             const backAction = () => true; // consume the event
@@ -100,9 +107,12 @@ export default function QuotationBookingProcess() {
         }, [])
     );
 
-    // Expecting quotation data passed from UserQuotationRequest
+
+    //expecting quotation data passed from UserQuotationRequest
     const quotationId = route.params?.quotationId || route.params?.id || route.params?.quotation?._id;
 
+
+    //fetch quotation and package data
     useEffect(() => {
         const fetchData = async () => {
             if (!quotationId || !user?._id) {
@@ -154,6 +164,9 @@ export default function QuotationBookingProcess() {
     const totalAmount = Number(
         details.totalPrice
     );
+
+
+
 
     return (
         <SafeAreaView style={QuotationBookingProcessStyle.safeArea}>

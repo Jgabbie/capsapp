@@ -2,19 +2,6 @@ import { View, Text, TextInput, TouchableOpacity, Image, Modal, ScrollView, Plat
 import React, { useState, useEffect } from 'react'
 import { useFonts } from 'expo-font'
 
-import {
-    Montserrat_400Regular,
-    Montserrat_500Medium,
-    Montserrat_600SemiBold,
-    Montserrat_700Bold
-} from "@expo-google-fonts/montserrat"
-
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from "@expo-google-fonts/roboto"
-
 import { Ionicons } from "@expo/vector-icons"
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -29,6 +16,19 @@ import { api, withUserHeader } from '../../utils/api'
 import { extractPackageTags } from '../../utils/packageTags'
 import { useUser } from '../../context/UserContext'
 
+import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold
+} from "@expo-google-fonts/montserrat"
+
+import {
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold
+} from "@expo-google-fonts/roboto"
+
 export default function Profile() {
 
     const [fontsLoaded] = useFonts({
@@ -41,20 +41,21 @@ export default function Profile() {
         Roboto_700Bold
     })
 
-
-    // User, sidebar and edit states
+    //user, sidebar and edit states
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [editing, setEditing] = useState(false)
 
-    // Modals & Pickers
+
+    //modals & Pickers
     const [confirmModalVisible, setConfirmModalVisible] = useState(false)
     const [successModalVisible, setSuccessModalVisible] = useState(false)
     const [genderModalVisible, setGenderModalVisible] = useState(false)
     const [nationalityModalVisible, setNationalityModalVisible] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false)
 
-    // User data states
+
+    //user data states
     const [profileImage, setProfileImage] = useState('')
     const [selectedReviewToDelete, setSelectedReviewToDelete] = useState(null)
     const [userData, setUserData] = useState({
@@ -71,7 +72,8 @@ export default function Profile() {
         isAccountVerified: false
     })
 
-    //Original data for canceling edits and error states
+
+    //original data for canceling edits and error states
     const [originalData, setOriginalData] = useState({})
     const [errors, setErrors] = useState({
         firstname: "",
@@ -80,12 +82,14 @@ export default function Profile() {
         phonenum: ""
     })
 
-    //Recent bookings
+
+    //recent bookings
     const [recentBookings, setRecentBookings] = useState([])
     const [recentReviews, setRecentReviews] = useState([])
     const [loadingExtra, setLoadingExtra] = useState(false)
 
-    //Preferences states
+
+    //preferences states
     const [moodOptions, setMoodOptions] = useState([])
     const tourOptions = ['Domestic', 'International']
     const [preferences, setPreferences] = useState({ moods: [], tours: [] })
@@ -95,7 +99,8 @@ export default function Profile() {
     const [removedTagWarning, setRemovedTagWarning] = useState(false)
     const [deleteReviewModalVisible, setDeleteReviewModalVisible] = useState(false)
 
-    // Fetch user data
+
+    //fetch user data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -177,9 +182,8 @@ export default function Profile() {
         fetchDashboardData();
     }, [user?._id]);
 
-    // If available mood options change (e.g. a tag was removed from packages),
-    // drop any saved mood selections that no longer exist so the user can
-    // reselect valid tags.
+
+    //check if the saved moods are available or existing
     useEffect(() => {
         if (!Array.isArray(moodOptions) || moodOptions.length === 0) return;
 
@@ -198,6 +202,7 @@ export default function Profile() {
     }, [moodOptions]);
 
 
+    //show toast message for android and alert for ios
     const showMessage = (msg) => {
         if (Platform.OS === 'android') {
             ToastAndroid.show(msg, ToastAndroid.SHORT)
@@ -207,12 +212,14 @@ export default function Profile() {
     }
 
 
-
+    //convert string to proper case
     const toProperCase = (value) =>
         value.toLowerCase().split(" ").map(word =>
             word.split("-").map(part => part.charAt(0).toUpperCase() + part.slice(1)).join("-")
         ).join(" ");
 
+
+    //validation function for user data fields
     const validate = (field, value) => {
         if (field === "firstname") {
             if (value === "") return "First name is required.";
@@ -237,11 +244,15 @@ export default function Profile() {
         return "";
     };
 
+
+    //handler for updating user data and errors
     const valueHandler = (field, value) => {
         setUserData(prev => ({ ...prev, [field]: value }));
         setErrors(prev => ({ ...prev, [field]: validate(field, value) }));
     };
 
+
+    //format phone number to 0977 049 3211 format
     const formatPhone = (val) => {
         let cleanVal = val.replace("+63", "")
         let value = cleanVal.replace(/\D/g, "");
@@ -254,11 +265,15 @@ export default function Profile() {
         valueHandler("phonenum", formatted);
     }
 
+
+    //get initials for profile image placeholder
     const getInitials = () => {
         const currentUsername = userData.username?.trim() || user?.username?.trim() || "";
         return currentUsername ? currentUsername.charAt(0).toUpperCase() : "U";
     }
 
+
+    //image picker for profile image
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissionResult.granted === false) {
@@ -285,6 +300,8 @@ export default function Profile() {
         }
     }
 
+
+    //upload files function
     const uploadFilesToBackend = async (endpoint, formData) => {
         const response = await api.post(endpoint, formData, {
             headers: {
@@ -296,6 +313,8 @@ export default function Profile() {
         return response.data;
     };
 
+
+    //upload profile image function
     const uploadProfileImageToBackend = async (asset) => {
         if (!asset?.uri) return null;
 
@@ -316,6 +335,8 @@ export default function Profile() {
         return res?.url || res?.data?.url;
     };
 
+
+    //date picker handler for birthdate
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
@@ -324,6 +345,8 @@ export default function Profile() {
         }
     };
 
+
+    //save profile changes function
     const handleSavePress = () => {
         const nextErrors = {
             firstname: validate('firstname', userData.firstname),
@@ -341,6 +364,8 @@ export default function Profile() {
         setConfirmModalVisible(true)
     }
 
+
+    //confirm save function that uploads profile image if changed and updates user data
     const confirmSave = async () => {
         try {
             let profileImageUrl = typeof profileImage === 'string' ? profileImage : null;
@@ -377,13 +402,16 @@ export default function Profile() {
         }
     }
 
+
+    //cancel edit function that resets user data to original and clears errors
     const cancelEdit = () => {
         setUserData(originalData)
         setErrors({ firstname: "", lastname: "", email: "", phonenum: "" })
         setEditing(false)
     }
 
-    //  preference handlers
+
+    //preference handlers
     const togglePreference = (key, value, limit) => {
         if (!editingPreferences) return;
         setPreferences(prev => {
@@ -399,6 +427,8 @@ export default function Profile() {
         });
     };
 
+
+    //save preferences function
     const savePreferences = async () => {
         setSavingPreferences(true);
         try {
@@ -416,11 +446,15 @@ export default function Profile() {
         }
     };
 
+
+    //cancel preferences edit function that resets preferences to original
     const cancelPreferencesEdit = () => {
         setPreferences(originalPreferences);
         setEditingPreferences(false);
     };
 
+
+    //get status style for bookings and reviews
     const getStatusStyle = (status) => {
         const s = String(status).toLowerCase();
         if (s === 'fully paid' || s.includes('fully paid') || s === 'full paid') return { bg: '#f6ffed', text: '#52c41a' };
@@ -431,11 +465,15 @@ export default function Profile() {
         return { bg: '#e5e7eb', text: '#4b5563' };
     };
 
+
+    //delete review handlers
     const handleDeleteReviewPress = (review) => {
         setSelectedReviewToDelete(review)
         setDeleteReviewModalVisible(true)
     }
 
+
+    //confirm delete review function that sends a delete request to the server and updates the recent reviews state
     const confirmDeleteReview = async () => {
         if (!selectedReviewToDelete?._id && !selectedReviewToDelete?.id) return;
 
@@ -458,7 +496,7 @@ export default function Profile() {
         }
     }
 
-    //Date Birth restrictions
+    //date Birth restrictions
     const defaultBirthDate = new Date(2000, 0, 1);
 
     const maxBirthDate = new Date();
@@ -466,7 +504,7 @@ export default function Profile() {
 
     if (!fontsLoaded) return null;
 
-    //List of Nationalities
+    //list of Nationalities
     const nationalities = [
         'Afghan',
         'Albanian',

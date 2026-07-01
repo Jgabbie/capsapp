@@ -19,12 +19,16 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date function for display
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateVal).toLocaleDateString('en-US', options);
 };
 
+
+//calculate age function from birthdate string
 const calculateAge = (birthdateString) => {
     if (!birthdateString || birthdateString.length < 10) return "";
     const today = new Date();
@@ -37,6 +41,8 @@ const calculateAge = (birthdateString) => {
     return age.toString();
 };
 
+
+//determine age category based on age number
 const determineAgeCategory = (age) => {
     const ageNum = parseInt(age);
     if (isNaN(ageNum)) return "";
@@ -46,6 +52,8 @@ const determineAgeCategory = (age) => {
     return "";
 }
 
+
+//format passport number for display, ensuring it starts with 'P' and is uppercase
 const formatPassportDisplay = (passportNo) => {
     if (!passportNo) return '';
 
@@ -55,8 +63,12 @@ const formatPassportDisplay = (passportNo) => {
     return cleaned.startsWith('P') ? cleaned : `P${cleaned}`;
 };
 
+
+//build passenger passport display value based on domestic status
 const buildPassengerPassport = (passportNo, isDomestic) => (isDomestic ? 'N/A' : formatPassportDisplay(passportNo));
 
+
+//assign rooms to travelers based on their room type and ensure proper numbering for multiple rooms of the same type
 const assignRooms = (travelers) => {
     if (!travelers || travelers.length === 0) return [];
 
@@ -94,9 +106,6 @@ const assignRooms = (travelers) => {
 };
 
 export default function RegistrationStep1({ route, navigation }) {
-    const { user } = useUser();
-    const { setupData, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
-
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -108,6 +117,9 @@ export default function RegistrationStep1({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const { setupData, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
+
     const totalCount = (setupData?.travelerCounts?.adult || 0) +
         (setupData?.travelerCounts?.child || 0) +
         (setupData?.travelerCounts?.infant || 0);
@@ -117,6 +129,8 @@ export default function RegistrationStep1({ route, navigation }) {
 
     const [fullUserData, setFullUserData] = useState(null);
 
+
+    //fetch full user profile data when the component mounts or when the user ID changes
     useEffect(() => {
         const fetchFullProfile = async () => {
             if (user?._id) {
@@ -140,6 +154,8 @@ export default function RegistrationStep1({ route, navigation }) {
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
 
+
+    //initialize passengers state based on travelersData or create empty passenger objects if travelersData is not available
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
             const assignedRooms = assignRooms(travelersData);
@@ -172,6 +188,8 @@ export default function RegistrationStep1({ route, navigation }) {
     const [showTitleDropdown, setShowTitleDropdown] = useState(false);
     const currentDateLong = formatLongDate(new Date());
 
+
+    //update lead guest info and passengers state when fullUserData or travelersData changes
     useEffect(() => {
         if (fullUserData) {
             setLeadGuestInfo(prev => ({
@@ -208,6 +226,8 @@ export default function RegistrationStep1({ route, navigation }) {
         }
     }, [fullUserData, userTitle, userContact, userAddress, travelersData, isDomestic]);
 
+
+    //check if any passenger has incomplete information based on domestic status
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
         if (isDomestic) {
@@ -217,6 +237,8 @@ export default function RegistrationStep1({ route, navigation }) {
         }
     });
 
+
+    //next function to validate lead guest info and passengers before navigating to the next step
     const handleNext = () => {
         if (!leadGuestInfo.title || !leadGuestInfo.contact || !leadGuestInfo.address) {
             Alert.alert("Missing Information", "Please complete all Lead Guest fields.");
@@ -253,6 +275,10 @@ export default function RegistrationStep1({ route, navigation }) {
             emergency: savedEmergency
         });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={RegistrationFormStyle.safeArea}>

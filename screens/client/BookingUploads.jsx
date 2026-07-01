@@ -6,6 +6,15 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Linking from 'expo-linking';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
+import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import { Image } from 'expo-image';
+import { useUser } from '../../context/UserContext';
+import { api, withUserHeader } from '../../utils/api';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -20,21 +29,16 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
-import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import { Image } from 'expo-image';
-import { useUser } from '../../context/UserContext';
-import { api, withUserHeader } from '../../utils/api';
 
+
+//format date to YYYY-MM-DD
 const formatDate = (date) => {
     if (!date) return "";
     return date.toISOString().split('T')[0];
 };
 
-//  CALCULATE AGE FROM BIRTHDATE
+
+//calculate age based on birthdate
 const computeAge = (birthDate) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);
@@ -51,7 +55,8 @@ const computeAge = (birthDate) => {
     return age < 0 ? null : age;
 };
 
-//  GET BIRTHDAY BOUNDS (MIN AND MAX DATES) BASED ON TRAVELER TYPE
+
+//get min and max birthdate based on traveler type
 const getBirthdayBounds = (travelerType) => {
     const today = new Date();
     const category = String(travelerType || '').toLowerCase();
@@ -96,17 +101,14 @@ const getBirthdayBounds = (travelerType) => {
     };
 };
 
-//  CHECK IF TRAVELER TYPE IS MINOR (CHILD OR INFANT)
+
+//check if traveler type is minor (child or infant)
 const isMinorTravelerType = (travelerType) => {
     const normalized = String(travelerType || '').toLowerCase();
     return normalized === 'child' || normalized === 'infant';
 };
 
 export default function BookingUploads({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { setupData } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -117,18 +119,23 @@ export default function BookingUploads({ route, navigation }) {
         Roboto_700Bold,
     });
 
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { setupData } = route.params || {};
+
     const counts = setupData?.travelerCounts || { adult: 1, child: 0, infant: 0 };
     const totalTravelers = counts.adult + counts.child + counts.infant;
     const bookingType = setupData?.bookingType || 'Solo Booking';
 
-    //  THE FIX: Web-Synced Domestic Logic
-    // We check both paths just in case the data structure shifted during navigation
+    //check both paths just in case the data structure shifted during navigation
     const packageType = setupData?.packageType || setupData?.pkg?.packageType || '';
     const isDomestic = String(packageType).toLowerCase().includes('domestic');
     const travelDocumentLabel = isDomestic ? 'Valid ID' : 'Passport';
     const rawVisaValue = setupData?.pkg?.requiresVisa ?? setupData?.pkg?.packageRequiresVisa ?? setupData?.pkg?.visaRequired;
     const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
+
+    //memoized traveler types array to avoid recalculating on every render
     const travelerTypes = useMemo(() => {
         const types = [];
         for (let i = 0; i < counts.adult; i++) types.push('Adult');
@@ -137,13 +144,17 @@ export default function BookingUploads({ route, navigation }) {
         return types;
     }, [counts]);
 
+
+    //get room options based on booking type
     const getRoomOptions = () => {
         if (bookingType === 'Solo Booking') return ['SINGLE'];
         // Grouped booking: Always show TWIN, DOUBLE, TRIPLE
         return ['TWIN', 'DOUBLE', 'TRIPLE'];
     };
+
     const roomOptions = getRoomOptions();
 
+    //initialize travelers data with default values based on booking type and traveler type
     const [travelersData, setTravelersData] = useState(() => {
         return Array.from({ length: totalTravelers }).map((_, index) => {
             const travelerType = index < counts.adult ? 'Adult' : index < counts.adult + counts.child ? 'Child' : 'Infant';
@@ -184,7 +195,7 @@ export default function BookingUploads({ route, navigation }) {
     const [datePickerConfig, setDatePickerConfig] = useState({ index: 0, type: 'birthdate', currentDate: new Date() });
     const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-    //  ENFORCE N/A ROOM TYPE FOR CHILD/INFANT AND TWIN AS DEFAULT FOR ADULTS IN GROUP BOOKING
+    //enforce room type rules based on traveler type and booking type whenever travelerTypes or bookingType changes
     useEffect(() => {
         setTravelersData(prevData =>
             prevData.map((traveler, index) => {
@@ -206,12 +217,16 @@ export default function BookingUploads({ route, navigation }) {
         );
     }, [travelerTypes, bookingType]);
 
+
+    //update traveler data when a field changes
     const updateTraveler = (index, field, value) => {
         const newData = [...travelersData];
         newData[index][field] = value;
         setTravelersData(newData);
     };
 
+
+    //upload document to cloudinary and return the uploaded URL
     const uploadDocumentToCloudinary = async (uri, name, type, userId) => {
         const formData = new FormData();
         formData.append('files', {
@@ -232,6 +247,8 @@ export default function BookingUploads({ route, navigation }) {
         return uploadedUrls[0] || null;
     };
 
+
+    //pick image or document for a traveler and upload it to cloudinary, then update the uploads state
     const pickImage = async (index, type) => {
         try {
             if (type === 'photo') {
@@ -318,13 +335,16 @@ export default function BookingUploads({ route, navigation }) {
     const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
     const minExpiryDate = new Date(minExpiryYear, 0, 1);
 
-    //  GET BIRTHDAY BOUNDS FOR CURRENT TRAVELER IN DATE PICKER
+
+    //get birthday limits for a traveler based on their type (Adult, Child, Infant)
     const getBirthdayLimits = (travelerIndex) => {
         const travelerType = travelerTypes[travelerIndex];
         const bounds = getBirthdayBounds(travelerType);
         return bounds;
     };
 
+
+    //open date picker for a specific traveler and field (birthdate or passportExpiry)
     const openDatePicker = (index, type) => {
         const existingDateStr = travelersData[index][type];
         const travelerType = travelerTypes[index];
@@ -340,6 +360,8 @@ export default function BookingUploads({ route, navigation }) {
         setShowDatePicker(true);
     };
 
+
+    //handle date selection from the date picker and update the corresponding traveler's data
     const onDateSelected = (event, selectedDate) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
@@ -350,6 +372,8 @@ export default function BookingUploads({ route, navigation }) {
         }
     };
 
+
+    //confirm date selection on iOS and update the traveler's data
     const confirmIOSDate = () => {
         updateTraveler(datePickerConfig.index, datePickerConfig.type, formatDate(datePickerConfig.currentDate));
         setShowDatePicker(false);
@@ -357,6 +381,8 @@ export default function BookingUploads({ route, navigation }) {
 
     const isValidPassportNumber = (passportNo) => /^P\d{7}[A-Z]$/.test(String(passportNo || '').trim().toUpperCase());
 
+
+    //handle viewing PDF documents by opening the URL in the default browser or PDF viewer
     const handleViewPDF = async (pdfUri) => {
         try {
             await Linking.openURL(pdfUri);
@@ -366,6 +392,8 @@ export default function BookingUploads({ route, navigation }) {
         }
     };
 
+
+    //handle "Next" button press: validate uploads and traveler data before proceeding to the next screen
     const handleNext = () => {
         const uploadedCount = Object.keys(uploads).length;
         const isComplete = Object.values(uploads).every(u => u.passport && u.photo);
@@ -402,10 +430,16 @@ export default function BookingUploads({ route, navigation }) {
         setShowVerifyModal(true);
     };
 
+
+    //handle confirmation from the verification modal and navigate to the next screen with the collected data
     const handleConfirmContinue = () => {
         setShowVerifyModal(false);
         navigation.navigate("registrationstep1", { setupData, travelerUploads: uploads, travelersData });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={BookingUploadsStyle.safeArea}>

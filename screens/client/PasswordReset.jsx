@@ -3,6 +3,10 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
+import { api } from '../../utils/api'
+
 import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
@@ -13,20 +17,16 @@ import {
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-import PasswordResetStyle from '../../styles/clientstyles/PasswordResetStyle'
-import ModalStyle from '../../styles/componentstyles/ModalStyle'
-
-import { api } from '../../utils/api'
 
 export default function PasswordReset() {
-    const cs = useNavigation()
-
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
         Roboto_400Regular,
         Roboto_500Medium,
         Roboto_700Bold
     })
+
+    const cs = useNavigation()
 
     const [email, setEmail] = useState("")
     const [errorEmail, setErrorEmail] = useState("")
@@ -37,6 +37,8 @@ export default function PasswordReset() {
     const [errorOtp, setErrorOtp] = useState("")
     const [timer, setTimer] = useState(0)
 
+
+    //prevent hardware back button from closing the app while on this screen
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => true
@@ -46,6 +48,8 @@ export default function PasswordReset() {
         }, [])
     )
 
+
+    //useEffect to handle the countdown timer for OTP resend functionality, decrementing the timer every second until it reaches zero
     useEffect(() => {
         let interval = null
         if (timer > 0) {
@@ -56,12 +60,16 @@ export default function PasswordReset() {
 
     if (!fontsLoaded) return null;
 
+
+    //validate email input, ensuring it is not empty and follows a standard email format
     const validateEmail = (val) => {
         if (!val) return "Email is required.";
         if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) return "Invalid email address.";
         return "";
     }
 
+
+    //handle sending OTP to the provided email, validating the email first and managing loading state and error handling
     const handleSendOTP = async () => {
         const error = validateEmail(email)
         setErrorEmail(error)
@@ -79,6 +87,8 @@ export default function PasswordReset() {
         }
     }
 
+
+    //handle verifying the OTP entered by the user, checking its length and sending it to the server for validation, navigating to the password reset confirmation screen upon success
     const handleVerifyOTP = async () => {
         if (otp.length !== 6) {
             setErrorOtp("OTP must be 6 digits.");
@@ -99,6 +109,8 @@ export default function PasswordReset() {
         }
     }
 
+
+    //resend OTP to the user's email, resetting the timer and providing feedback via a toast notification
     const resendOTP = async () => {
         try {
             await api.post('/users/auth/send-reset-otp', { email })
@@ -108,6 +120,10 @@ export default function PasswordReset() {
             ToastAndroid.show("Failed to resend OTP", ToastAndroid.SHORT)
         }
     }
+
+
+
+
 
     return (
         <ImageBackground

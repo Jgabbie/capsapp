@@ -21,8 +21,8 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function BookingReview({ route, navigation }) {
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
+    //fonts
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -33,23 +33,26 @@ export default function BookingReview({ route, navigation }) {
         Roboto_700Bold,
     });
 
-    // Get the data passed from QuotationAllIn
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+
+    //get the data passed from QuotationAllIn
     const { setupData } = route.params || {};
     const pkg = setupData?.pkg || {};
 
-    // Properly check for "Yes", "true", or boolean true
+    //properly check for "Yes", "true", or boolean true
     const rawVisaValue = pkg?.requiresVisa ?? pkg?.packageRequiresVisa ?? pkg?.visaRequired;
     const requiresVisa = rawVisaValue === true || String(rawVisaValue).toLowerCase() === 'yes' || String(rawVisaValue).toLowerCase() === 'true';
 
-    // Check if it's a domestic package to dynamically change the button text
+    //check if it's a domestic package to dynamically change the button text
     const isDomestic = String(pkg?.packageType || '').toLowerCase().includes('domestic');
     const documentLabel = isDomestic ? 'Valid ID' : 'Passport';
 
-    // Extract itinerary images
+    //extract itinerary images
     const itineraryImages = pkg?.packageItineraryImages || {};
 
 
-    // Helper function to get image URL for a day
+    //helper function to get image URL for a day
     const getImageForDay = (dayLabel) => {
         if (!dayLabel || !itineraryImages) {
             return null;
@@ -94,10 +97,16 @@ export default function BookingReview({ route, navigation }) {
         return null;
     };
 
+
+    //helper function to handle "Next" button press
     const handleNext = () => {
         // Move to Screen 3: Uploads
         navigation.navigate("bookinguploads", { setupData });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={BookingReviewStyle.safeArea}>

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Linking, SafeAreaView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import AboutUsStyle from '../../styles/clientstyles/AboutUsStyle';
+
 import {
     useFonts,
     Montserrat_700Bold
@@ -10,12 +14,9 @@ import {
     Roboto_500Medium
 } from '@expo-google-fonts/roboto';
 
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import AboutUsStyle from '../../styles/clientstyles/AboutUsStyle';
+
 
 export default function AboutUs() {
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     //fonts
     const [fontsLoaded] = useFonts({
@@ -23,6 +24,8 @@ export default function AboutUs() {
         Roboto_400Regular,
         Roboto_500Medium
     });
+
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     //links
     const facebookLink = 'https://www.facebook.com/mrctravelandtour';
@@ -32,14 +35,15 @@ export default function AboutUs() {
         Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
     };
 
-    // UPDATED: Map Search Query vs Display Text
+
+    // map search function
     const openMaps = () => {
-        // This is the exact string Google Maps needs to find the pin
         const mapQuery = "Valley 1, M&RC TRAVEL AND TOURS, Finasia Homes, 1 Cor Fatima Street, San Antonio Ave, Parañaque, Metro Manila";
-        // Formatted the URL correctly to trigger a map search
         const url = `https://maps.google.com/?q=${encodeURIComponent(mapQuery)}`;
         Linking.openURL(url).catch(err => console.error("Couldn't open Google Maps", err));
     };
+
+
 
     if (!fontsLoaded) return null;
 

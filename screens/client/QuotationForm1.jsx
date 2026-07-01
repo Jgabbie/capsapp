@@ -19,12 +19,16 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
+
+//format long date for display
 const formatLongDate = (dateVal) => {
     if (!dateVal) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateVal).toLocaleDateString('en-US', options);
 };
 
+
+//calculate age based on birthdate string, returning an empty string if the input is invalid or incomplete
 const calculateAge = (birthdateString) => {
     if (!birthdateString || birthdateString.length < 10) return "";
     const today = new Date();
@@ -37,6 +41,8 @@ const calculateAge = (birthdateString) => {
     return age.toString();
 };
 
+
+//format passport number for display, ensuring it starts with 'P' and is in uppercase, or returning 'N/A' if the input is invalid
 const formatPassportDisplay = (passportNo) => {
     if (!passportNo) return '';
 
@@ -46,6 +52,8 @@ const formatPassportDisplay = (passportNo) => {
     return cleaned.startsWith('P') ? cleaned : `P${cleaned}`;
 };
 
+
+//assign room numbers to travelers based on their room type, ensuring that the room numbers are sequential and do not exceed the maximum allowed for each room type
 const assignRooms = (travelers) => {
     if (!travelers || travelers.length === 0) return [];
 
@@ -79,7 +87,18 @@ const assignRooms = (travelers) => {
     });
 };
 
+
 export default function QuotationForm1({ route, navigation }) {
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold,
+    });
+
     const { user } = useUser();
     const { quotation, travelerUploads, travelersData, medicalData: savedMedicalData, emergency: savedEmergency } = route.params || {};
 
@@ -97,6 +116,8 @@ export default function QuotationForm1({ route, navigation }) {
 
     const [fullUserData, setFullUserData] = useState(null);
 
+
+    //fetch full user profile data
     useEffect(() => {
         const fetchFullProfile = async () => {
             if (user?._id) {
@@ -120,6 +141,8 @@ export default function QuotationForm1({ route, navigation }) {
     const isContactLocked = !!userContact;
     const isAddressLocked = !!userAddress;
 
+
+    //initialize passengers state based on travelersData, assigning room numbers and formatting passport information, or creating default empty passenger objects if no travelersData is provided
     const [passengers, setPassengers] = useState(() => {
         if (travelersData && travelersData.length > 0) {
             const assignedRooms = assignRooms(travelersData);
@@ -150,6 +173,8 @@ export default function QuotationForm1({ route, navigation }) {
     const [showTitleDropdown, setShowTitleDropdown] = useState(false);
     const currentDateLong = formatLongDate(new Date());
 
+
+    //update lead guest info and passengers state when full user data or travelersData changes
     useEffect(() => {
         if (fullUserData) {
             setLeadGuestInfo(prev => ({
@@ -182,6 +207,8 @@ export default function QuotationForm1({ route, navigation }) {
         }
     }, [fullUserData, userTitle, userContact, userAddress, travelersData, isDomestic]);
 
+
+    //check if any passenger has incomplete information
     const isTableIncomplete = passengers.some(p => {
         const missingBasicInfo = !p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age;
         if (isDomestic) {
@@ -191,6 +218,8 @@ export default function QuotationForm1({ route, navigation }) {
         }
     });
 
+
+    //next function
     const handleNext = () => {
         if (!leadGuestInfo.title || !leadGuestInfo.contact || !leadGuestInfo.address) {
             Alert.alert("Missing Information", "Please complete all Lead Guest fields.");
@@ -227,6 +256,10 @@ export default function QuotationForm1({ route, navigation }) {
             emergency: savedEmergency
         });
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationFormStepStyle.safeArea}>

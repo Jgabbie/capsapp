@@ -20,10 +20,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function SuccessfulPaymentPassport({ route, navigation }) {
-    const { user } = useUser();
-    const [countdown, setCountdown] = useState(10);
-    const [isActive, setIsActive] = useState(true);
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -33,6 +29,11 @@ export default function SuccessfulPaymentPassport({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
+    const [countdown, setCountdown] = useState(10);
+    const [isActive, setIsActive] = useState(true);
+
 
     //show message function
     const showMessage = (message) => {
@@ -44,7 +45,7 @@ export default function SuccessfulPaymentPassport({ route, navigation }) {
     };
 
     useEffect(() => {
-        // Extract token from deep link or navigation params
+        //extract token from deep link or navigation params
         const token = route.params?.token;
 
         if (token && user?._id) {

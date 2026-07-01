@@ -4,6 +4,16 @@ import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import { Image } from 'expo-image';
+
+import Chatbot from '../../components/Chatbot'
+import HomeStyle from '../../styles/clientstyles/HomeStyle'
+import Sidebar from '../../components/Sidebar'
+import Header from '../../components/Header'
+
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
+
 import {
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -16,21 +26,10 @@ import {
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
 
-import { Image } from 'expo-image';
-
-import Chatbot from '../../components/Chatbot'
-import HomeStyle from '../../styles/clientstyles/HomeStyle'
-import Sidebar from '../../components/Sidebar'
-import Header from '../../components/Header'
-
-import { api, withUserHeader } from '../../utils/api'
-import { useUser } from '../../context/UserContext'
-
 const { width } = Dimensions.get("window");
 
 
-
-
+// BannerCard component for displaying package information in a card format
 const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
     const imageSource = item.images && item.images.length > 0
         ? item.images[0]
@@ -96,6 +95,15 @@ const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
 
 
 export default function Home({ route }) {
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
+    })
+
     const cs = useNavigation()
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
@@ -159,6 +167,8 @@ export default function Home({ route }) {
 
     const scaleValue = useRef(new Animated.Value(0)).current;
 
+
+    //handle the visibility of the sidebar when the user interacts with the header
     useEffect(() => {
         if (route?.params?.showPreferenceModal) {
             setPostPrefModalVisible(true);
@@ -166,6 +176,7 @@ export default function Home({ route }) {
     }, [route?.params?.showPreferenceModal]);
 
 
+    //animate the featured package modal when it becomes visible
     useEffect(() => {
         if (featuredModalVisible) {
             scaleValue.setValue(0); // Reset to 0
@@ -178,15 +189,8 @@ export default function Home({ route }) {
         }
     }, [featuredModalVisible]);
 
-    const [fontsLoaded] = useFonts({
-        Montserrat_400Regular,
-        Montserrat_500Medium,
-        Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
-    })
 
+    //automatically cycle through the carousel items every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveCarouselIndex((prevIndex) => {
@@ -199,13 +203,16 @@ export default function Home({ route }) {
         return () => clearInterval(interval);
     }, []);
 
-    // Keeps the timer in sync if the user swipes manually!
+
+    //keeps the timer in sync if the user swipes manually!
     const handleCarouselScroll = (event) => {
         const scrollPosition = event.nativeEvent.contentOffset.x;
         const index = Math.round(scrollPosition / (width - 30));
         setActiveCarouselIndex(index);
     };
 
+
+    //refresh the packages and ratings when the user pulls down to refresh the home screen
     const onRefresh = async () => {
         setRefreshing(true);
         try {
@@ -287,7 +294,7 @@ export default function Home({ route }) {
     };
 
 
-
+    //fetch packages and ratings when the home screen is first loaded, and also fetch user data and wishlist if the user is logged in
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -377,7 +384,8 @@ export default function Home({ route }) {
         fetchData()
     }, [user?._id])
 
-    // Fetch personalized recommendations
+
+    //fetch personalized recs
     useEffect(() => {
         const fetchRecommendations = async () => {
             try {
@@ -426,7 +434,7 @@ export default function Home({ route }) {
     }, [user?._id, loading]);
 
 
-    //Fetch popular packages with fallback
+    //fetch popular packages with fallback
     const fetchPopularPackages = async () => {
         setPopularLoading(true);
         try {
@@ -468,6 +476,8 @@ export default function Home({ route }) {
         (pkg) => String(pkg.packageType).toLowerCase() === 'international'
     )
 
+
+    //get featured package function
     const getFeaturedPackage = () => {
         if (packages.length === 0) return null;
         const sorted = [...packages].sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -477,8 +487,7 @@ export default function Home({ route }) {
     };
 
 
-
-    // Show featured modal on focus (when returning to home screen)
+    //show featured modal on focus (when returning to home screen)
     useFocusEffect(
         React.useCallback(() => {
             if (packages.length > 0 && !postPrefModalVisible) {
@@ -492,6 +501,8 @@ export default function Home({ route }) {
         }, [packages, postPrefModalVisible])
     );
 
+
+    //handle view package button in featured modal
     const handleViewPackage = () => {
         if (!featuredPackage) return;
         setFeaturedModalVisible(false);
@@ -502,7 +513,7 @@ export default function Home({ route }) {
     };
 
 
-
+    //toggle wishlist for featured package
     const toggleFeaturedWishlist = async () => {
         if (!user?._id || !featuredPackage) return;
         const pkgId = featuredPackage._id;
@@ -531,6 +542,7 @@ export default function Home({ route }) {
     };
 
 
+    //handle email input change for contact form, ensuring no spaces and validating against the user's email
     const handleEmailChange = (text) => {
         const cleanedText = text.replace(/\s/g, '');
         setContactEmail(cleanedText);
@@ -544,6 +556,8 @@ export default function Home({ route }) {
         }
     }
 
+
+    //handle contact form submission, ensuring the email matches the user's email and sending the data to the backend
     const handleContactSubmit = async () => {
         if (!user || contactEmail.toLowerCase() !== user.email.toLowerCase()) {
             setEmailError('Please use the email associated with your account.');
@@ -579,6 +593,9 @@ export default function Home({ route }) {
     const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
 
     if (!fontsLoaded) return null;
+
+
+
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f5f7fa' }} >

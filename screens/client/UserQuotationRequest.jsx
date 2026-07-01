@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  Linking,
-  Modal,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Linking, Modal, } from "react-native";
 import dayjs from "dayjs";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -34,11 +24,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function UserQuotationRequest({ route, navigation }) {
-  const [isSidebarVisible, setSidebarVisible] = useState(false);
-  const [quotation, setQuotation] = useState(null);
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -49,7 +34,12 @@ export default function UserQuotationRequest({ route, navigation }) {
     Roboto_700Bold,
   });
 
-  // Modal States
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const [quotation, setQuotation] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  //modal States
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -63,6 +53,8 @@ export default function UserQuotationRequest({ route, navigation }) {
     quotation?.status === "Approved" ||
     quotation?.status === "Rejected";
 
+
+  //fetch quotation details from the server using the quotationId and user._id
   const fetchQuotation = async () => {
     if (!quotationId || !user?._id) return;
     setLoading(true);
@@ -77,10 +69,14 @@ export default function UserQuotationRequest({ route, navigation }) {
     }
   };
 
+
+  //fetch quotation when the component mounts or when quotationId or user._id changes
   useEffect(() => {
     fetchQuotation();
   }, [quotationId, user?._id]);
 
+
+  //handle opening PDF links in the device's default browser or PDF viewer
   const handleOpenPDF = async (url) => {
     try {
       const supported = await Linking.canOpenURL(url);
@@ -94,6 +90,8 @@ export default function UserQuotationRequest({ route, navigation }) {
     }
   };
 
+
+  //handle request revision function that sends the notes to the server and shows a modal on success
   const handleRequestRevision = async () => {
     if (!notes.trim() || notes.length > 200) {
       return Alert.alert("Validation", "Please provide notes for revision (max 200 characters).");
@@ -115,6 +113,8 @@ export default function UserQuotationRequest({ route, navigation }) {
     }
   };
 
+
+  //handle accept quotation function that checks if a PDF revision exists and opens a confirmation modal
   const handleAcceptQuotation = () => {
     if (!quotation?.pdfRevisions?.length) {
       return Alert.alert("Hold on", "Wait for the admin to upload a price quotation first.");
@@ -122,6 +122,8 @@ export default function UserQuotationRequest({ route, navigation }) {
     setIsAcceptModalOpen(true);
   };
 
+
+  //handle final proceed function that closes the modal and navigates to the booking process screen with the quotation data
   const handleFinalProceed = () => {
     setIsAcceptModalOpen(false);
     // Navigate to the booking process screen for quotations
@@ -130,6 +132,8 @@ export default function UserQuotationRequest({ route, navigation }) {
     });
   };
 
+
+  //get status color function that returns background and text colors based on the quotation status
   const getStatusColor = (status) => {
     const s = String(status || '').trim().toLowerCase();
     switch (s) {
@@ -163,6 +167,10 @@ export default function UserQuotationRequest({ route, navigation }) {
   const sStyle = getStatusColor(quotation.status);
   const latestRevision = quotation?.pdfRevisions?.filter(rev => rev?.url).slice(-1)[0];
   const displayPackageName = quotation?.packageName || quotation?.packageId?.packageName || "Tour Package";
+
+
+
+
 
   return (
     <View style={styles.mainContainer}>

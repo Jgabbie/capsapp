@@ -19,9 +19,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function VerifyEmail() {
-    const navigation = useNavigation();
-    const route = useRoute();
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -32,10 +29,15 @@ export default function VerifyEmail() {
         Roboto_700Bold,
     });
 
+    const navigation = useNavigation();
+    const route = useRoute();
+
     const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'failed'
     const [message, setMessage] = useState('Verifying your account...');
     const [debugInfo, setDebugInfo] = useState('');
 
+
+    //useEffect to handle email verification when the component mounts or when the route changes
     useEffect(() => {
         let isMounted = true;
 
@@ -109,6 +111,10 @@ export default function VerifyEmail() {
             subscription.remove();
         };
     }, [navigation, route]);
+
+
+
+
 
     return (
         <View style={styles.container}>

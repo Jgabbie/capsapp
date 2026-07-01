@@ -21,12 +21,6 @@ import {
 } from "@expo-google-fonts/roboto";
 
 export default function QuotationIncluExclu({ route, navigation }) {
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { quotation } = route.params || {};
-    const pkg = quotation?.packageId || quotation?.pkg || {};
-    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
-    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -36,6 +30,13 @@ export default function QuotationIncluExclu({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { quotation } = route.params || {};
+    const pkg = quotation?.packageId || quotation?.pkg || {};
+    const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
+    const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
 
     const inclusions = Array.isArray(latestPdfRevision?.travelDetails.inclusions)
         ? latestPdfRevision.travelDetails.inclusions
@@ -50,34 +51,34 @@ export default function QuotationIncluExclu({ route, navigation }) {
         ? itinerarySource.map((items, index) => [`Day ${index + 1}`, items])
         : Object.entries(itinerarySource);
 
-    // Extract itinerary images
+    //extract itinerary images
     const itineraryImages = pkg?.packageItineraryImages || {};
 
 
-    // Helper function to get image URL for a day
+    //get image for a given day label
     const getImageForDay = (dayLabel) => {
         if (!dayLabel || !itineraryImages) {
             return null;
         }
-        // Try exact match first
+
         if (itineraryImages[dayLabel]) {
             return itineraryImages[dayLabel];
         }
-        // Try lowercase
+
         const lowercase = dayLabel.toLowerCase();
         if (itineraryImages[lowercase]) {
             return itineraryImages[lowercase];
         }
-        // Try removing spaces
+
         const noSpaces = dayLabel.replace(/\s+/g, '');
         if (itineraryImages[noSpaces]) {
             return itineraryImages[noSpaces];
         }
-        // Try lowercase no spaces
+
         if (itineraryImages[noSpaces.toLowerCase()]) {
             return itineraryImages[noSpaces.toLowerCase()];
         }
-        // Try numeric day (Day 1 -> 1)
+
         const dayMatch = dayLabel.match(/\d+/);
         if (dayMatch) {
             const dayNum = dayMatch[0];
@@ -93,6 +94,10 @@ export default function QuotationIncluExclu({ route, navigation }) {
         }
         return null;
     };
+
+
+
+
 
     return (
         <SafeAreaView style={QuotationIncluExcluStyle.safeArea}>

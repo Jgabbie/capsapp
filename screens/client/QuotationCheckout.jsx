@@ -1,15 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
-  Alert,
-  Linking,
-  Platform,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Linking, Platform } from "react-native";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
@@ -32,11 +22,6 @@ import {
 
 
 export default function QuotationCheckout({ route, navigation }) {
-  const { user } = useUser();
-  const [quotation, setQuotation] = useState(route?.params?.quotation || null);
-  const prefilledRegistration = route?.params?.prefilledRegistration;
-  const startStep = route?.params?.startStep;
-
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -46,6 +31,11 @@ export default function QuotationCheckout({ route, navigation }) {
     Roboto_500Medium,
     Roboto_700Bold,
   });
+
+  const { user } = useUser();
+  const [quotation, setQuotation] = useState(route?.params?.quotation || null);
+  const prefilledRegistration = route?.params?.prefilledRegistration;
+  const startStep = route?.params?.startStep;
 
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [step, setStep] = useState(startStep === "invoice" ? "invoice" : "registration");
@@ -59,6 +49,8 @@ export default function QuotationCheckout({ route, navigation }) {
     phone: prefilledRegistration?.phone || "",
   });
 
+
+  //extract query parameters from the URL for web platform to handle payment callbacks and prefill registration data
   const callbackParams = useMemo(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") {
       return { status: "", checkoutToken: "", quotationId: "" };
@@ -72,11 +64,15 @@ export default function QuotationCheckout({ route, navigation }) {
     };
   }, []);
 
+
+  //calculate total price based on quotation data, defaulting to 29000 if not available
   const totalPrice = useMemo(() => {
     const fromTravelDetails = Number(quotation?.travelDetails?.budgetRange?.[1] || 0);
     return fromTravelDetails > 0 ? fromTravelDetails : 29000;
   }, [quotation]);
 
+
+  //prepare invoice data for PDF generation and display, including company info, customer info, booking details, and totals
   const invoiceData = useMemo(() => {
     const travelers = Number(quotation?.travelDetails?.travelers || 1);
     const safeTravelers = travelers > 0 ? travelers : 1;
@@ -128,6 +124,8 @@ export default function QuotationCheckout({ route, navigation }) {
 
   const formatCurrency = (value) => `PHP ${Number(value || 0).toFixed(2)}`;
 
+
+  //show alert message for both web and mobile platforms, using window.alert for web and Alert.alert for mobile
   const showMessage = (title, body) => {
     if (Platform.OS === "web" && typeof window !== "undefined") {
       window.alert(`${title}\n\n${body}`);
@@ -136,6 +134,8 @@ export default function QuotationCheckout({ route, navigation }) {
     Alert.alert(title, body);
   };
 
+
+  //generate invoice PDF and set the URL for web or data URI for mobile platforms, handling errors gracefully
   useEffect(() => {
     if (step !== "invoice") return;
 
@@ -152,6 +152,8 @@ export default function QuotationCheckout({ route, navigation }) {
     }
   }, [step, invoiceData]);
 
+
+  //fetch quotation data if not already available, using the quotationId from route params or callback params, and handle errors gracefully
   useEffect(() => {
     const fallbackQuotationId = route?.params?.quotationId;
     const targetQuotationId = quotation?._id || fallbackQuotationId || callbackParams.quotationId;
@@ -173,6 +175,8 @@ export default function QuotationCheckout({ route, navigation }) {
     fetchQuotationFromId();
   }, [route?.params?.quotationId, callbackParams.quotationId, quotation, user?._id]);
 
+
+  //handle payment callback for web platform, finalizing booking and transaction, updating quotation status, and navigating to user bookings upon success or showing error messages upon failure
   useEffect(() => {
     if (Platform.OS !== "web") return;
     if (!callbackParams.status || hasHandledPaymentCallback) return;
@@ -273,6 +277,8 @@ export default function QuotationCheckout({ route, navigation }) {
     user?.username,
   ]);
 
+
+  //show loading state if quotation data is not yet available, indicating that the quotation is being fetched
   if (!quotation) {
     return (
       <View style={styles.centered}>
@@ -281,6 +287,8 @@ export default function QuotationCheckout({ route, navigation }) {
     );
   }
 
+
+  //finalize booking by creating a checkout token, initiating a checkout session, and redirecting the user to the payment gateway, handling errors gracefully
   const finalizeBooking = async () => {
     const actingUserId = user?._id || quotation?.userId;
     if (!actingUserId) {
@@ -337,6 +345,10 @@ export default function QuotationCheckout({ route, navigation }) {
       showMessage("Error", error.response?.data?.message || "Unable to proceed to payment");
     }
   };
+
+
+
+
 
   return (
     <View style={{ flex: 1 }}>

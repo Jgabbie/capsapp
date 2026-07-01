@@ -6,6 +6,13 @@ import { Image } from 'expo-image';
 import { useIsFocused } from "@react-navigation/native";
 import { VideoView, useVideoPlayer } from 'expo-video';
 
+import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import { api, withUserHeader } from "../../utils/api";
+import { useUser } from "../../context/UserContext";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -20,28 +27,27 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import DestinationStyles from "../../styles/clientstyles/DestinationStyles";
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import { api, withUserHeader } from "../../utils/api";
-import { useUser } from "../../context/UserContext";
-import ModalStyle from "../../styles/componentstyles/ModalStyle";
-
 const { width } = Dimensions.get('window');
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
 
+
+//format date functions for short and full date formats
 const formatShortDate = (dateString) => {
     if (!dateString) return "";
     const options = { month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
+
+//format date function for full date format
 const formatFullDate = (dateString) => {
     if (!dateString) return "";
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
+
+//get image url function to handle local and remote images
 const getImageUrl = (img) => {
     if (!img) return "https://via.placeholder.com/800x500?text=No+Image";
     if (img.startsWith("http") || img.startsWith("data:")) return img;
@@ -54,6 +60,8 @@ const getImageUrl = (img) => {
     return `http://${host}:8000/${img.replace(/^\/+/, "")}`;
 };
 
+
+//check if a booking is fully paid based on its status and payment details
 const isFullyPaidBooking = (booking, packageId) => {
     const bookingPkgId = booking.packageId?._id || booking.packageId;
     if (String(bookingPkgId) !== String(packageId)) return false;
@@ -68,6 +76,8 @@ const isFullyPaidBooking = (booking, packageId) => {
     return totalPrice > 0 && paidAmount >= totalPrice;
 };
 
+
+//component to handle video playback for package videos
 function PackageVideo({ source }) {
     const player = useVideoPlayer(source, (player) => {
         player.loop = true;
@@ -89,13 +99,9 @@ function PackageVideo({ source }) {
     );
 }
 
-export default function PackageDetails({ route, navigation }) {
-    const { user } = useUser();
-    const isScreenFocused = useIsFocused();
-    const scrollViewRef = useRef(null);
-    const carouselRef = useRef(null);
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
+
+export default function PackageDetails({ route, navigation }) {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -105,6 +111,12 @@ export default function PackageDetails({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
+    const isScreenFocused = useIsFocused();
+    const scrollViewRef = useRef(null);
+    const carouselRef = useRef(null);
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [fullPkg, setFullPkg] = useState(null);
@@ -150,6 +162,8 @@ export default function PackageDetails({ route, navigation }) {
     const passedPkg = route?.params?.pkg;
     const packageId = route?.params?.id || passedPkg?._id || passedPkg?.id;
 
+
+    //fetch reviews data for the package
     const fetchReviewsData = async () => {
         try {
             const reviewResponse = await api.get(`/rating/package/${packageId}/ratings`, withUserHeader(user?._id));
@@ -159,6 +173,8 @@ export default function PackageDetails({ route, navigation }) {
         }
     };
 
+
+    //fetch booking status to check if the user has a fully paid booking for this package
     const fetchBookingStatus = async () => {
         try {
             if (!user?._id || !packageId) return;
@@ -180,6 +196,8 @@ export default function PackageDetails({ route, navigation }) {
         }
     };
 
+
+    //load package data and reviews when the component mounts or when the packageId or user changes
     useEffect(() => {
         const loadData = async () => {
             let currentPkg = passedPkg;
@@ -249,7 +267,8 @@ export default function PackageDetails({ route, navigation }) {
         loadData();
     }, [packageId, user?._id]);
 
-    // Auto-Scrolling Image Carousel Logic
+
+    //auto-Scrolling Image Carousel Logic
     useEffect(() => {
         if (!fullPkg?.images || fullPkg.images.length <= 1) return;
         const interval = setInterval(() => {
@@ -262,7 +281,8 @@ export default function PackageDetails({ route, navigation }) {
         return () => clearInterval(interval);
     }, [fullPkg?.images]);
 
-    // Initialize per-day indices when package data loads
+
+    //initialize per-day indices when package data loads
     useEffect(() => {
         if (!fullPkg) return;
         const itinerary = fullPkg.packageItineraries || {};
@@ -271,7 +291,8 @@ export default function PackageDetails({ route, navigation }) {
         setDayImageIndices(init);
     }, [fullPkg]);
 
-    // Auto-scroll for each day's itinerary carousel (cycles every 5s)
+
+    //auto-scroll for each day's itinerary carousel (cycles every 5s)
     useEffect(() => {
         if (!fullPkg) return;
         const itinerary = fullPkg.packageItineraries || {};
@@ -301,7 +322,8 @@ export default function PackageDetails({ route, navigation }) {
         return () => clearInterval(interval);
     }, [fullPkg]);
 
-    // Ratings Logic
+
+    //review and ratings functions
     const averageRating = useMemo(() => {
         if (!reviews.length) return 0;
         const total = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
@@ -327,7 +349,8 @@ export default function PackageDetails({ route, navigation }) {
         });
     }, [reviews, user]);
 
-    // Handlers
+
+    //check availability of a specific date in the package's specific dates
     const handlePrimaryAction = () => {
         if (!user) {
             Alert.alert("Login Required", "Please login to proceed.");
@@ -343,6 +366,8 @@ export default function PackageDetails({ route, navigation }) {
 
     };
 
+
+    //wishlist handling function
     const handleWishlistAdd = async () => {
         if (!user) {
             Alert.alert("Login Required", "Please login to save to your wishlist.");
@@ -368,6 +393,8 @@ export default function PackageDetails({ route, navigation }) {
         }
     };
 
+
+    //edit review function
     const handleEditClick = () => {
         setReviewForm({ rating: userReview.rating, comment: userReview.review });
         setIsEditingReview(true);
@@ -376,6 +403,8 @@ export default function PackageDetails({ route, navigation }) {
         }, 100);
     };
 
+
+    //submit or update a review for the package
     const handleSubmitReview = async () => {
         if (!user) {
             Alert.alert("Login Required", "Please login to submit a review.");
@@ -413,6 +442,8 @@ export default function PackageDetails({ route, navigation }) {
         }
     };
 
+
+    //delete review function
     const handleDeleteReview = async () => {
         if (!userReview) return;
         setIsSubmittingReview(true);
@@ -456,6 +487,9 @@ export default function PackageDetails({ route, navigation }) {
     const cancellationPolicy = "All tour packages will not be converted to any travel funds in case the tour will not push through whether it be government mandated, due to natural calamities, etc. Tour package purchase is non-refundable, non-reroutable, non-rebookable, and non-transferable unless otherwise stated and is due to natural calamities and force majeur that is beyond our control otherwise NON-REFUNDABLE.";
 
     const isWishlisted = fullPkg && wishlistedIds.has(String(fullPkg.id));
+
+
+
 
     return (
         <View style={DestinationStyles.detailsContainer}>

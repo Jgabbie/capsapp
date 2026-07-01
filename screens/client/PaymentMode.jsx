@@ -3,6 +3,14 @@ import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Moda
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from "dayjs";
 
+import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
+import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import { api, withUserHeader } from '../../utils/api';
+import { useUser } from '../../context/UserContext';
+
 import {
     useFonts,
     Montserrat_400Regular,
@@ -17,19 +25,11 @@ import {
     Roboto_700Bold,
 } from "@expo-google-fonts/roboto";
 
-import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
-import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
-import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
-import { api, withUserHeader } from '../../utils/api';
-import { useUser } from '../../context/UserContext';
-
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
 const formatPesoDisplay = (value) => `PHP ${formatPesoNumber(value)}`;
 
-//  NEW: Custom Date Parser to bypass Hermes "Invalid Date" bug
+//  Custom Date Parser to bypass Hermes "Invalid Date" bug
 const parseDateStringSafe = (dateStr) => {
     if (!dateStr) return null;
 
@@ -64,10 +64,6 @@ const parseDateStringSafe = (dateStr) => {
 };
 
 export default function PaymentMode({ route, navigation }) {
-    const { user } = useUser();
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
-
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,
@@ -77,6 +73,10 @@ export default function PaymentMode({ route, navigation }) {
         Roboto_500Medium,
         Roboto_700Bold,
     });
+
+    const { user } = useUser();
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
@@ -94,6 +94,8 @@ export default function PaymentMode({ route, navigation }) {
 
     const totalAmount = setupData?.totalPrice || 0;
 
+
+    //fetch monthly invoice number
     useEffect(() => {
         const fetchInvoiceNumber = async () => {
             try {
@@ -127,6 +129,8 @@ export default function PaymentMode({ route, navigation }) {
         fetchInvoiceNumber();
     }, [user?._id, setupData]);
 
+
+    //build invoice number function
     const buildInvoiceNumber = (allBookings, currentBooking) => {
         if (!currentBooking) return "";
         const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
@@ -169,7 +173,8 @@ export default function PaymentMode({ route, navigation }) {
         return `${monthKey}${String(sequence).padStart(2, "0")}`;
     };
 
-    //  BULLETPROOF SCHEDULE LOGIC
+
+    //schdule data computation
     const scheduleData = useMemo(() => {
         const getFrequencyWeeks = (val) => {
             if (val === 'Every week') return 1;
@@ -230,6 +235,8 @@ export default function PaymentMode({ route, navigation }) {
         return { schedule, depositAmount };
     }, [frequency, travelerTotal, totalAmount, setupData]);
 
+
+    //proceed function
     const handleProceed = () => {
         const amountToPay = paymentType === 'deposit' ? scheduleData.depositAmount : totalAmount;
 
@@ -301,6 +308,9 @@ export default function PaymentMode({ route, navigation }) {
     const displayTravelDate = setupData?.selectedDate
         ? setupData.selectedDate
         : (setupData?.travelDate?.startDate ? `${dayjs(setupData.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(setupData.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
+
+
+
 
     return (
         <SafeAreaView style={PaymentStyle.safeArea}>

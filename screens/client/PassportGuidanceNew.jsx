@@ -3,6 +3,15 @@ import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
+import { Ionicons } from '@expo/vector-icons'
+import DateTimePicker from '@react-native-community/datetimepicker'
+
+import Header from '../../components/Header'
+import Sidebar from '../../components/Sidebar'
+import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceStyle'
+import { api, withUserHeader } from '../../utils/api'
+import { useUser } from '../../context/UserContext'
+
 import {
     Montserrat_400Regular,
     Montserrat_600SemiBold,
@@ -14,15 +23,6 @@ import {
     Roboto_500Medium,
     Roboto_700Bold
 } from '@expo-google-fonts/roboto'
-
-import { Ionicons } from '@expo/vector-icons'
-import DateTimePicker from '@react-native-community/datetimepicker'
-
-import Header from '../../components/Header'
-import Sidebar from '../../components/Sidebar'
-import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceStyle'
-import { api, withUserHeader } from '../../utils/api'
-import { useUser } from '../../context/UserContext'
 
 const dfaLocations = [
     'DFA Aseana (Paranaque)',
@@ -60,6 +60,15 @@ const steps = [
 ];
 
 export default function PassportGuidanceNew() {
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_600SemiBold,
+        Montserrat_700Bold,
+        Roboto_400Regular,
+        Roboto_500Medium,
+        Roboto_700Bold
+    })
+
     const cs = useNavigation()
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
@@ -74,21 +83,16 @@ export default function PassportGuidanceNew() {
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-    const [fontsLoaded] = useFonts({
-        Montserrat_400Regular,
-        Montserrat_600SemiBold,
-        Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
-    })
 
+    //get the minimum date for the date picker, which is 14 days from today
     const getMinDate = () => {
         const minDate = new Date();
         minDate.setDate(minDate.getDate() + 14);
         return minDate;
     };
 
+
+    //handle date change from the date picker, ensuring that the selected date is a weekday
     const onDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
@@ -103,6 +107,8 @@ export default function PassportGuidanceNew() {
 
     const formatDate = (date) => date ? date.toISOString().split('T')[0] : 'Select date';
 
+
+    //submit the passport application
     const submitApplication = async () => {
         if (!user?._id) {
             Alert.alert('Login required', 'Please login to submit your request.')
@@ -136,6 +142,9 @@ export default function PassportGuidanceNew() {
     }
 
     if (!fontsLoaded) return null;
+
+
+
 
     return (
         <View style={PassportGuidanceStyle.container}>
