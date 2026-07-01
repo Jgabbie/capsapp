@@ -88,10 +88,10 @@ export default function SuccessfulPaymentVisa({ route, navigation }) {
 
                 <View style={SuccessfulPaymentVisaStyle.buttonRow}>
                     <TouchableOpacity
-                        style={SuccessfulPaymentVisaStyle.buttonSecondary}
+                        style={SuccessfulPaymentVisaStyle.buttonPrimary}
                         onPress={() => { setIsActive(false); navigation.navigate('userapplications'); }}
                     >
-                        <Text style={SuccessfulPaymentVisaStyle.buttonTextSecondary}>View Applications</Text>
+                        <Text style={SuccessfulPaymentVisaStyle.buttonTextPrimary}>View Applications</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity

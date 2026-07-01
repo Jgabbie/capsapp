@@ -67,10 +67,10 @@ export default function SuccessfulManualPaymentPassport({ navigation }) {
 
                 <View style={SuccessfulPaymentPassportStyle.buttonRow}>
                     <TouchableOpacity
-                        style={SuccessfulPaymentPassportStyle.buttonSecondary}
+                        style={SuccessfulPaymentPassportStyle.buttonPrimary}
                         onPress={() => { setIsActive(false); navigation.navigate('userapplications'); }}
                     >
-                        <Text style={SuccessfulPaymentPassportStyle.buttonTextSecondary}>View Applications</Text>
+                        <Text style={SuccessfulPaymentPassportStyle.buttonTextPrimary}>View Applications</Text>
                     </TouchableOpacity>
                 </View>
             </View>
