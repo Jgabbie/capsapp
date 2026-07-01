@@ -1,8 +1,8 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform, Pressable } from 'react-native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation } from '@react-navigation/native'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import { Calendar } from 'react-native-calendars'
 import dayjs from 'dayjs'
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -49,6 +49,7 @@ export default function UserTransactions() {
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('Status')
     const [dateFilter, setDateFilter] = useState(null)
+    const [pendingDateFilter, setPendingDateFilter] = useState(null)
 
     const [isStatusModalVisible, setStatusModalVisible] = useState(false)
     const [showDatePicker, setShowDatePicker] = useState(false)
@@ -145,8 +146,9 @@ export default function UserTransactions() {
             const matchesStatus = statusFilter === 'Status' || statusFilter === 'All Status' ||
                 item.status === statusFilter;
 
-            const matchesDate = !dateFilter ||
-                new Date(item.createdAt).toDateString() === dateFilter.toDateString();
+            const matchesDate =
+                !dateFilter ||
+                dayjs(item.createdAt).format('YYYY-MM-DD') === dateFilter;
 
             return matchesSearch && matchesStatus && matchesDate;
         })
@@ -154,9 +156,27 @@ export default function UserTransactions() {
 
 
     //handle date change for the date picker
-    const handleDateChange = (event, selectedDate) => {
+    const openTransactionDatePicker = () => {
+        setPendingDateFilter(
+            dateFilter || dayjs().format('YYYY-MM-DD')
+        );
+
+        setShowDatePicker(true);
+    };
+
+
+    const closeTransactionDatePicker = () => {
+        setPendingDateFilter(dateFilter);
         setShowDatePicker(false);
-        if (selectedDate) setDateFilter(selectedDate);
+    };
+
+
+    const applyTransactionDateFilter = () => {
+        if (pendingDateFilter) {
+            setDateFilter(pendingDateFilter);
+        }
+
+        setShowDatePicker(false);
     };
 
 
@@ -452,12 +472,25 @@ export default function UserTransactions() {
                         </View>
 
                         <View style={{ flex: 1 }}>
-                            <Text style={UserTransactionStyle.filterLabel}>Date</Text>
-                            <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setShowDatePicker(true)}>
+                            <Text style={UserTransactionStyle.filterLabel}>
+                                Date
+                            </Text>
+
+                            <TouchableOpacity
+                                style={UserTransactionStyle.dropdownButton}
+                                onPress={openTransactionDatePicker}
+                            >
                                 <Text style={UserTransactionStyle.dropdownText}>
-                                    {dateFilter ? dayjs(dateFilter).format('MMM D, YYYY') : 'Date'}
+                                    {dateFilter
+                                        ? dayjs(dateFilter).format('MMM D, YYYY')
+                                        : 'Date'}
                                 </Text>
-                                <Ionicons name="calendar-outline" size={12} color="#305797" />
+
+                                <Ionicons
+                                    name="calendar-outline"
+                                    size={12}
+                                    color="#305797"
+                                />
                             </TouchableOpacity>
                         </View>
 
@@ -578,16 +611,170 @@ export default function UserTransactions() {
                 </TouchableOpacity>
             </Modal>
 
-            {
-                showDatePicker && (
-                    <DateTimePicker
-                        value={dateFilter || new Date()}
-                        mode="date"
-                        display="default"
-                        onChange={handleDateChange}
-                    />
-                )
-            }
+            {showDatePicker && (
+                <Modal
+                    visible
+                    transparent
+                    animationType="fade"
+                    statusBarTranslucent
+                    onRequestClose={closeTransactionDatePicker}
+                >
+                    <Pressable
+                        style={UserTransactionStyle.dateModalOverlay}
+                        onPress={closeTransactionDatePicker}
+                    >
+                        <Pressable
+                            style={UserTransactionStyle.dateModalCard}
+                            onPress={(event) => event.stopPropagation()}
+                        >
+                            <View style={UserTransactionStyle.dateModalHeader}>
+                                <View style={UserTransactionStyle.dateModalHeaderContent}>
+                                    <View style={UserTransactionStyle.dateModalHeaderIcon}>
+                                        <Ionicons
+                                            name="calendar"
+                                            size={21}
+                                            color="#305797"
+                                        />
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={UserTransactionStyle.dateModalTitle}>
+                                            Transaction Date
+                                        </Text>
+
+                                        <Text style={UserTransactionStyle.dateModalSubtitle}>
+                                            Choose the date the transaction was created.
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={UserTransactionStyle.dateModalCloseButton}
+                                    onPress={closeTransactionDatePicker}
+                                >
+                                    <Ionicons
+                                        name="close"
+                                        size={21}
+                                        color="#64748b"
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
+                            <Calendar
+                                initialDate={
+                                    pendingDateFilter ||
+                                    dateFilter ||
+                                    dayjs().format('YYYY-MM-DD')
+                                }
+                                onDayPress={({ dateString }) => {
+                                    setPendingDateFilter(dateString);
+                                }}
+                                markedDates={{
+                                    [
+                                        pendingDateFilter ||
+                                        dateFilter ||
+                                        dayjs().format('YYYY-MM-DD')
+                                    ]: {
+                                        selected: true,
+                                        selectedColor: '#305797',
+                                        selectedTextColor: '#ffffff'
+                                    }
+                                }}
+                                enableSwipeMonths
+                                hideExtraDays
+                                renderArrow={(direction) => (
+                                    <View style={UserTransactionStyle.dateCalendarArrow}>
+                                        <Ionicons
+                                            name={
+                                                direction === 'left'
+                                                    ? 'chevron-back'
+                                                    : 'chevron-forward'
+                                            }
+                                            size={18}
+                                            color="#305797"
+                                        />
+                                    </View>
+                                )}
+                                style={UserTransactionStyle.dateCalendar}
+                                theme={{
+                                    backgroundColor: '#ffffff',
+                                    calendarBackground: '#ffffff',
+
+                                    textSectionTitleColor: '#94a3b8',
+                                    textDisabledColor: '#d1d5db',
+                                    dayTextColor: '#334155',
+                                    monthTextColor: '#1e293b',
+
+                                    selectedDayBackgroundColor: '#305797',
+                                    selectedDayTextColor: '#ffffff',
+                                    todayTextColor: '#305797',
+                                    arrowColor: '#305797',
+
+                                    textDayFontFamily: 'Roboto_400Regular',
+                                    textMonthFontFamily: 'Montserrat_700Bold',
+                                    textDayHeaderFontFamily: 'Roboto_500Medium',
+
+                                    textDayFontSize: 14,
+                                    textMonthFontSize: 16,
+                                    textDayHeaderFontSize: 12
+                                }}
+                            />
+
+                            <View style={UserTransactionStyle.dateSelectedContainer}>
+                                <View style={UserTransactionStyle.dateSelectedIcon}>
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={17}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View>
+                                    <Text style={UserTransactionStyle.dateSelectedLabel}>
+                                        Selected date
+                                    </Text>
+
+                                    <Text style={UserTransactionStyle.dateSelectedValue}>
+                                        {dayjs(
+                                            pendingDateFilter ||
+                                            dateFilter ||
+                                            dayjs().format('YYYY-MM-DD')
+                                        ).format('MMMM D, YYYY')}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={UserTransactionStyle.dateModalActions}>
+                                <TouchableOpacity
+                                    style={UserTransactionStyle.dateModalCancelButton}
+                                    onPress={closeTransactionDatePicker}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={UserTransactionStyle.dateModalCancelText}>
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={UserTransactionStyle.dateModalConfirmButton}
+                                    onPress={applyTransactionDateFilter}
+                                    activeOpacity={0.75}
+                                >
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={18}
+                                        color="#ffffff"
+                                    />
+
+                                    <Text style={UserTransactionStyle.dateModalConfirmText}>
+                                        Apply Filter
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Pressable>
+                    </Pressable>
+                </Modal>
+            )}
 
             <Modal visible={isProofModalVisible} animationType="fade" transparent={true}>
                 <View style={UserTransactionStyle.receiptModalOverlay}>

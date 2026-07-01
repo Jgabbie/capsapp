@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -47,6 +47,7 @@ export default function UserPackageQuotation() {
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status");
     const [bookingDateFilter, setBookingDateFilter] = useState(null);
+    const [pendingBookingDate, setPendingBookingDate] = useState(null);
 
     //modal States
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -152,8 +153,26 @@ export default function UserPackageQuotation() {
 
 
     //date picker handler
-    const handleDateChange = (day) => {
-        setBookingDateFilter(day.dateString);
+    const openDatePicker = () => {
+        setPendingBookingDate(
+            bookingDateFilter || dayjs().format('YYYY-MM-DD')
+        );
+
+        setShowDateModal(true);
+    };
+
+
+    const closeDatePicker = () => {
+        setPendingBookingDate(bookingDateFilter);
+        setShowDateModal(false);
+    };
+
+
+    const applyDateFilter = () => {
+        if (pendingBookingDate) {
+            setBookingDateFilter(pendingBookingDate);
+        }
+
         setShowDateModal(false);
     };
 
@@ -171,17 +190,19 @@ export default function UserPackageQuotation() {
 
 
     return (
-        <View style={UserPackageQuotationStyle.container}>
+        <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={UserPackageQuotationStyle.container}
+                contentContainerStyle={{ paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
                 <Text style={UserPackageQuotationStyle.title}>My Quotation Requests</Text>
                 <Text style={UserPackageQuotationStyle.subtitle}>Review your customized package quotation requests.</Text>
 
-                {/* --- FILTER ROW --- */}
                 <View style={UserPackageQuotationStyle.filterSection}>
-
                     <View style={{ flex: 1 }}>
                         <Text style={UserPackageQuotationStyle.filterLabel}>Status</Text>
                         <View style={UserPackageQuotationStyle.searchBar}>
@@ -227,11 +248,29 @@ export default function UserPackageQuotation() {
                         <View style={{ flex: 1 }}>
                             <Text style={UserPackageQuotationStyle.filterLabel}>Date</Text>
                             <View style={UserPackageQuotationStyle.dropdownGroup}>
-                                <TouchableOpacity style={UserPackageQuotationStyle.dropdownButton} onPress={() => setShowDateModal(true)}>
-                                    <Text style={[UserPackageQuotationStyle.dropdownText, bookingDateFilter && UserPackageQuotationStyle.dropdownTextSelected]} numberOfLines={1}>
-                                        {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM DD, YYYY') : "Requested Date"}
+                                <TouchableOpacity
+                                    style={UserPackageQuotationStyle.dropdownButton}
+                                    onPress={openDatePicker}
+                                >
+                                    <Text
+                                        style={[
+                                            UserPackageQuotationStyle.dropdownText,
+                                            bookingDateFilter &&
+                                            UserPackageQuotationStyle.dropdownTextSelected
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {bookingDateFilter
+                                            ? dayjs(bookingDateFilter).format('MMM DD, YYYY')
+                                            : "Requested Date"}
                                     </Text>
-                                    <Ionicons name="calendar-outline" size={14} color={bookingDateFilter ? "#305797" : "#999"} style={UserPackageQuotationStyle.dropdownIcon} />
+
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={14}
+                                        color={bookingDateFilter ? "#305797" : "#999"}
+                                        style={UserPackageQuotationStyle.dropdownIcon}
+                                    />
                                 </TouchableOpacity>
                                 {bookingDateFilter && (
                                     <TouchableOpacity onPress={() => setBookingDateFilter(null)} style={{ marginLeft: 6 }}>
@@ -320,7 +359,7 @@ export default function UserPackageQuotation() {
                 <View style={{ height: 40 }} />
             </ScrollView>
 
-            {/* --- STATUS FILTER MODAL (Centered like web UI) --- */}
+
             <Modal
                 visible={showStatusModal}
                 transparent
@@ -360,27 +399,164 @@ export default function UserPackageQuotation() {
                 </TouchableOpacity>
             </Modal>
 
-            {/* --- DATE PICKER MODAL --- */}
-            <Modal visible={showDateModal} transparent animationType="fade">
-                <TouchableOpacity style={UserPackageQuotationStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDateModal(false)}>
-                    <TouchableWithoutFeedback>
-                        <View style={UserPackageQuotationStyle.modalContainer}>
-                            <View style={UserPackageQuotationStyle.modalHeaderRow}>
-                                <Text style={UserPackageQuotationStyle.modalTitleText}>Booking Date</Text>
-                                <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                                    <Ionicons name="close" size={22} color="#999" />
-                                </TouchableOpacity>
+            <Modal
+                visible={showDateModal}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeDatePicker}
+            >
+                <Pressable
+                    style={UserPackageQuotationStyle.modalOverlay}
+                    onPress={closeDatePicker}
+                >
+                    <Pressable
+                        style={UserPackageQuotationStyle.modalCard}
+                        onPress={(event) => event.stopPropagation()}
+                    >
+                        <View style={UserPackageQuotationStyle.header}>
+                            <View style={UserPackageQuotationStyle.headerContent}>
+                                <View style={UserPackageQuotationStyle.headerIcon}>
+                                    <Ionicons
+                                        name="calendar"
+                                        size={21}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={UserPackageQuotationStyle.titleModal}>
+                                        Requested Date
+                                    </Text>
+
+                                    <Text style={UserPackageQuotationStyle.subtitleModal}>
+                                        Choose the date the quotation was requested.
+                                    </Text>
+                                </View>
                             </View>
-                            <Calendar
-                                onDayPress={handleDateChange}
-                                theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
-                            />
+
+                            <TouchableOpacity
+                                style={UserPackageQuotationStyle.closeButton}
+                                onPress={closeDatePicker}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
                         </View>
-                    </TouchableWithoutFeedback>
-                </TouchableOpacity>
+
+                        <Calendar
+                            initialDate={
+                                pendingBookingDate ||
+                                bookingDateFilter ||
+                                dayjs().format('YYYY-MM-DD')
+                            }
+                            onDayPress={({ dateString }) => {
+                                setPendingBookingDate(dateString);
+                            }}
+                            markedDates={{
+                                [
+                                    pendingBookingDate ||
+                                    bookingDateFilter ||
+                                    dayjs().format('YYYY-MM-DD')
+                                ]: {
+                                    selected: true,
+                                    selectedColor: '#305797',
+                                    selectedTextColor: '#ffffff'
+                                }
+                            }}
+                            enableSwipeMonths
+                            hideExtraDays
+                            renderArrow={(direction) => (
+                                <View style={UserPackageQuotationStyle.arrow}>
+                                    <Ionicons
+                                        name={
+                                            direction === 'left'
+                                                ? 'chevron-back'
+                                                : 'chevron-forward'
+                                        }
+                                        size={18}
+                                        color="#305797"
+                                    />
+                                </View>
+                            )}
+                            style={UserPackageQuotationStyle.calendar}
+                            theme={{
+                                backgroundColor: '#ffffff',
+                                calendarBackground: '#ffffff',
+                                textSectionTitleColor: '#94a3b8',
+                                textDisabledColor: '#d1d5db',
+                                dayTextColor: '#334155',
+                                monthTextColor: '#1e293b',
+                                selectedDayBackgroundColor: '#305797',
+                                selectedDayTextColor: '#ffffff',
+                                todayTextColor: '#305797',
+                                arrowColor: '#305797',
+                                textDayFontFamily: 'Roboto_400Regular',
+                                textMonthFontFamily: 'Montserrat_700Bold',
+                                textDayHeaderFontFamily: 'Roboto_500Medium',
+                                textDayFontSize: 14,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 12
+                            }}
+                        />
+
+                        <View style={UserPackageQuotationStyle.selectedDateContainer}>
+                            <View style={UserPackageQuotationStyle.selectedDateIcon}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={17}
+                                    color="#305797"
+                                />
+                            </View>
+
+                            <View>
+                                <Text style={UserPackageQuotationStyle.selectedDateLabel}>
+                                    Selected date
+                                </Text>
+
+                                <Text style={UserPackageQuotationStyle.selectedDateValue}>
+                                    {dayjs(
+                                        pendingBookingDate ||
+                                        bookingDateFilter ||
+                                        dayjs().format('YYYY-MM-DD')
+                                    ).format('MMMM D, YYYY')}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={UserPackageQuotationStyle.actions}>
+                            <TouchableOpacity
+                                style={UserPackageQuotationStyle.cancelButton}
+                                onPress={closeDatePicker}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={UserPackageQuotationStyle.cancelText}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={UserPackageQuotationStyle.confirmButton}
+                                onPress={applyDateFilter}
+                                activeOpacity={0.75}
+                            >
+                                <Ionicons
+                                    name="checkmark"
+                                    size={18}
+                                    color="#ffffff"
+                                />
+
+                                <Text style={UserPackageQuotationStyle.confirmText}>
+                                    Apply Filter
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
             </Modal>
-
-
 
         </View>
     );

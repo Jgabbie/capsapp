@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, TouchableWithoutFeedback, Image } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, TouchableWithoutFeedback, Image, Pressable } from 'react-native'
 import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -45,11 +45,16 @@ export default function UserBookings() {
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [bookings, setBookings] = useState([])
 
+
+
     //filter States
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
     const [bookingDateFilter, setBookingDateFilter] = useState(null)
     const [travelDateFilter, setTravelDateFilter] = useState(null)
+
+    const [pendingBookingDate, setPendingBookingDate] = useState(null)
+    const [pendingTravelDate, setPendingTravelDate] = useState(null)
 
     //modal Visibility States
     const [isStatusModalOpen, setStatusModalOpen] = useState(false)
@@ -65,6 +70,50 @@ export default function UserBookings() {
     const [cancelComments, setCancelComments] = useState('')
     const [cancelImage, setCancelImage] = useState(null)
     const [showCancelReasonDropdown, setShowCancelReasonDropdown] = useState(false)
+
+
+    //open and close booking date picker modals with pending date state management
+    const openBookingDatePicker = () => {
+        setPendingBookingDate(
+            bookingDateFilter || dayjs().format('YYYY-MM-DD')
+        )
+
+        setBookingDateOpen(true)
+    }
+
+    const closeBookingDatePicker = () => {
+        setPendingBookingDate(bookingDateFilter)
+        setBookingDateOpen(false)
+    }
+
+    const applyBookingDateFilter = () => {
+        if (pendingBookingDate) {
+            setBookingDateFilter(pendingBookingDate)
+        }
+
+        setBookingDateOpen(false)
+    }
+
+    const openTravelDatePicker = () => {
+        setPendingTravelDate(
+            travelDateFilter || dayjs().format('YYYY-MM-DD')
+        )
+
+        setTravelDateOpen(true)
+    }
+
+    const closeTravelDatePicker = () => {
+        setPendingTravelDate(travelDateFilter)
+        setTravelDateOpen(false)
+    }
+
+    const applyTravelDateFilter = () => {
+        if (pendingTravelDate) {
+            setTravelDateFilter(pendingTravelDate)
+        }
+
+        setTravelDateOpen(false)
+    }
 
 
     //format status label to capitalize each word and remove extra spaces
@@ -316,21 +365,41 @@ export default function UserBookings() {
 
                         <View style={{ flex: 1 }}>
                             <Text style={UserBookingsStyle.filterLabel}>Booking Date</Text>
-                            <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setBookingDateOpen(true)}>
+                            <TouchableOpacity
+                                style={UserBookingsStyle.dropdownButton}
+                                onPress={openBookingDatePicker}
+                            >
                                 <Text style={UserBookingsStyle.dropdownText}>
-                                    {bookingDateFilter ? dayjs(bookingDateFilter).format('MMM D') : 'Booking Date'}
+                                    {bookingDateFilter
+                                        ? dayjs(bookingDateFilter).format('MMM D')
+                                        : 'Booking Date'}
                                 </Text>
-                                <Ionicons name="calendar-outline" size={12} color="#305797" />
+
+                                <Ionicons
+                                    name="calendar-outline"
+                                    size={12}
+                                    color="#305797"
+                                />
                             </TouchableOpacity>
                         </View>
 
                         <View style={{ flex: 1 }}>
                             <Text style={UserBookingsStyle.filterLabel}>Travel Date</Text>
-                            <TouchableOpacity style={UserBookingsStyle.dropdownButton} onPress={() => setTravelDateOpen(true)}>
+                            <TouchableOpacity
+                                style={UserBookingsStyle.dropdownButton}
+                                onPress={openTravelDatePicker}
+                            >
                                 <Text style={UserBookingsStyle.dropdownText}>
-                                    {travelDateFilter ? dayjs(travelDateFilter).format('MMM D') : 'Travel Date'}
+                                    {travelDateFilter
+                                        ? dayjs(travelDateFilter).format('MMM D')
+                                        : 'Travel Date'}
                                 </Text>
-                                <Ionicons name="airplane-outline" size={12} color="#305797" />
+
+                                <Ionicons
+                                    name="airplane-outline"
+                                    size={12}
+                                    color="#305797"
+                                />
                             </TouchableOpacity>
                         </View>
 
@@ -420,32 +489,318 @@ export default function UserBookings() {
                 </TouchableOpacity>
             </Modal>
 
-            <Modal visible={isBookingDateOpen} transparent animationType="fade">
-                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setBookingDateOpen(false)}>
-                    <TouchableWithoutFeedback>
-                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
-                            <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Booking Date</Text>
-                            <Calendar
-                                onDayPress={(day) => { setBookingDateFilter(day.dateString); setBookingDateOpen(false); }}
-                                theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
-                            />
+            <Modal
+                visible={isBookingDateOpen}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeBookingDatePicker}
+            >
+                <Pressable
+                    style={ModalStyle.modalOverlay}
+                    onPress={closeBookingDatePicker}
+                >
+                    <Pressable
+                        style={UserBookingsStyle.modalCard}
+                        onPress={(event) => event.stopPropagation()}
+                    >
+                        <View style={UserBookingsStyle.header}>
+                            <View style={UserBookingsStyle.headerContent}>
+                                <View style={UserBookingsStyle.headerIcon}>
+                                    <Ionicons
+                                        name="calendar"
+                                        size={21}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={UserBookingsStyle.titleModal}>
+                                        Booking Date
+                                    </Text>
+
+                                    <Text style={UserBookingsStyle.subtitleModal}>
+                                        Choose the date the booking was created
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                style={UserBookingsStyle.closeButton}
+                                onPress={closeBookingDatePicker}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
                         </View>
-                    </TouchableWithoutFeedback>
-                </TouchableOpacity>
+
+                        <Calendar
+                            initialDate={
+                                pendingBookingDate ||
+                                bookingDateFilter ||
+                                dayjs().format('YYYY-MM-DD')
+                            }
+                            onDayPress={({ dateString }) => {
+                                setPendingBookingDate(dateString)
+                            }}
+                            markedDates={{
+                                [pendingBookingDate ||
+                                    bookingDateFilter ||
+                                    dayjs().format('YYYY-MM-DD')]: {
+                                    selected: true,
+                                    selectedColor: '#305797',
+                                    selectedTextColor: '#ffffff'
+                                }
+                            }}
+                            enableSwipeMonths
+                            hideExtraDays
+                            renderArrow={(direction) => (
+                                <View style={UserBookingsStyle.arrow}>
+                                    <Ionicons
+                                        name={
+                                            direction === 'left'
+                                                ? 'chevron-back'
+                                                : 'chevron-forward'
+                                        }
+                                        size={18}
+                                        color="#305797"
+                                    />
+                                </View>
+                            )}
+                            style={UserBookingsStyle.calendar}
+                            theme={{
+                                backgroundColor: '#ffffff',
+                                calendarBackground: '#ffffff',
+                                textSectionTitleColor: '#94a3b8',
+                                textDisabledColor: '#d1d5db',
+                                dayTextColor: '#334155',
+                                monthTextColor: '#1e293b',
+                                selectedDayBackgroundColor: '#305797',
+                                selectedDayTextColor: '#ffffff',
+                                todayTextColor: '#305797',
+                                arrowColor: '#305797',
+                                textDayFontFamily: 'Roboto_400Regular',
+                                textMonthFontFamily: 'Montserrat_700Bold',
+                                textDayHeaderFontFamily: 'Roboto_500Medium',
+                                textDayFontSize: 14,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 12
+                            }}
+                        />
+
+                        <View style={UserBookingsStyle.selectedDateContainer}>
+                            <View style={UserBookingsStyle.selectedDateIcon}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={17}
+                                    color="#305797"
+                                />
+                            </View>
+
+                            <View>
+                                <Text style={UserBookingsStyle.selectedDateLabel}>
+                                    Selected date
+                                </Text>
+
+                                <Text style={UserBookingsStyle.selectedDateValue}>
+                                    {dayjs(
+                                        pendingBookingDate ||
+                                        bookingDateFilter ||
+                                        dayjs().format('YYYY-MM-DD')
+                                    ).format('MMMM D, YYYY')}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={UserBookingsStyle.actions}>
+                            <TouchableOpacity
+                                style={UserBookingsStyle.cancelButtonModal}
+                                onPress={closeBookingDatePicker}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={UserBookingsStyle.cancelTextModal}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={UserBookingsStyle.confirmButton}
+                                onPress={applyBookingDateFilter}
+                                activeOpacity={0.75}
+                            >
+                                <Ionicons
+                                    name="checkmark"
+                                    size={18}
+                                    color="#ffffff"
+                                />
+
+                                <Text style={UserBookingsStyle.confirmText}>
+                                    Apply Filter
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
             </Modal>
 
-            <Modal visible={isTravelDateOpen} transparent animationType="fade">
-                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setTravelDateOpen(false)}>
-                    <TouchableWithoutFeedback>
-                        <View style={[ModalStyle.modalBox, { width: '90%', padding: 15 }]}>
-                            <Text style={[ModalStyle.modalTitle, { marginBottom: 15 }]}>Travel Date</Text>
-                            <Calendar
-                                onDayPress={(day) => { setTravelDateFilter(day.dateString); setTravelDateOpen(false); }}
-                                theme={{ selectedDayBackgroundColor: '#305797', todayTextColor: '#305797', arrowColor: '#305797' }}
-                            />
+            <Modal
+                visible={isTravelDateOpen}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeTravelDatePicker}
+            >
+                <Pressable
+                    style={ModalStyle.modalOverlay}
+                    onPress={closeTravelDatePicker}
+                >
+                    <Pressable
+                        style={UserBookingsStyle.modalCard}
+                        onPress={(event) => event.stopPropagation()}
+                    >
+                        <View style={UserBookingsStyle.header}>
+                            <View style={UserBookingsStyle.headerContent}>
+                                <View style={UserBookingsStyle.headerIcon}>
+                                    <Ionicons
+                                        name="airplane"
+                                        size={21}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={UserBookingsStyle.titleModal}>
+                                        Travel Date
+                                    </Text>
+
+                                    <Text style={UserBookingsStyle.subtitleModal}>
+                                        Choose a date included in the travel schedule.
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                style={UserBookingsStyle.closeButton}
+                                onPress={closeTravelDatePicker}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
                         </View>
-                    </TouchableWithoutFeedback>
-                </TouchableOpacity>
+
+                        <Calendar
+                            initialDate={
+                                pendingTravelDate ||
+                                travelDateFilter ||
+                                dayjs().format('YYYY-MM-DD')
+                            }
+                            onDayPress={({ dateString }) => {
+                                setPendingTravelDate(dateString)
+                            }}
+                            markedDates={{
+                                [pendingTravelDate ||
+                                    travelDateFilter ||
+                                    dayjs().format('YYYY-MM-DD')]: {
+                                    selected: true,
+                                    selectedColor: '#305797',
+                                    selectedTextColor: '#ffffff'
+                                }
+                            }}
+                            enableSwipeMonths
+                            hideExtraDays
+                            renderArrow={(direction) => (
+                                <View style={UserBookingsStyle.arrow}>
+                                    <Ionicons
+                                        name={
+                                            direction === 'left'
+                                                ? 'chevron-back'
+                                                : 'chevron-forward'
+                                        }
+                                        size={18}
+                                        color="#305797"
+                                    />
+                                </View>
+                            )}
+                            style={UserBookingsStyle.calendar}
+                            theme={{
+                                backgroundColor: '#ffffff',
+                                calendarBackground: '#ffffff',
+                                textSectionTitleColor: '#94a3b8',
+                                textDisabledColor: '#d1d5db',
+                                dayTextColor: '#334155',
+                                monthTextColor: '#1e293b',
+                                selectedDayBackgroundColor: '#305797',
+                                selectedDayTextColor: '#ffffff',
+                                todayTextColor: '#305797',
+                                arrowColor: '#305797',
+                                textDayFontFamily: 'Roboto_400Regular',
+                                textMonthFontFamily: 'Montserrat_700Bold',
+                                textDayHeaderFontFamily: 'Roboto_500Medium',
+                                textDayFontSize: 14,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 12
+                            }}
+                        />
+
+                        <View style={UserBookingsStyle.selectedDateContainer}>
+                            <View style={UserBookingsStyle.selectedDateIcon}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={17}
+                                    color="#305797"
+                                />
+                            </View>
+
+                            <View>
+                                <Text style={UserBookingsStyle.selectedDateLabel}>
+                                    Selected date
+                                </Text>
+
+                                <Text style={UserBookingsStyle.selectedDateValue}>
+                                    {dayjs(
+                                        pendingTravelDate ||
+                                        travelDateFilter ||
+                                        dayjs().format('YYYY-MM-DD')
+                                    ).format('MMMM D, YYYY')}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={UserBookingsStyle.actions}>
+                            <TouchableOpacity
+                                style={UserBookingsStyle.cancelButtonModal}
+                                onPress={closeTravelDatePicker}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={UserBookingsStyle.cancelTextModal}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={UserBookingsStyle.confirmButton}
+                                onPress={applyTravelDateFilter}
+                                activeOpacity={0.75}
+                            >
+                                <Ionicons
+                                    name="checkmark"
+                                    size={18}
+                                    color="#ffffff"
+                                />
+
+                                <Text style={UserBookingsStyle.confirmText}>
+                                    Apply Filter
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
             </Modal>
 
             <Modal transparent visible={isCancelPolicyModalOpen} animationType="fade">

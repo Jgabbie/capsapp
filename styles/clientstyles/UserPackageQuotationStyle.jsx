@@ -4,7 +4,7 @@ const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
-    flex: 1,
+    padding: 15,
     backgroundColor: "#f5f7fa", // Web-like background
   },
   title: {
@@ -177,13 +177,12 @@ export default StyleSheet.create({
     fontFamily: "Roboto_400Regular",
   },
 
-  // --- MODAL STYLES (Matched to Web Look) ---
+
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 20,
   },
   modalContainer: {
     backgroundColor: '#fff',
@@ -256,4 +255,160 @@ export default StyleSheet.create({
     color: '#305797',
     fontFamily: 'Montserrat_600SemiBold',
   },
+
+
+  modalCard: {
+    width: '92%',
+    maxWidth: 430,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 18,
+    elevation: 12,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 8
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 16
+  },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12
+  },
+
+  headerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12
+  },
+
+  headerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: '#edf3fc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+
+  titleModal: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 17,
+    color: '#1e293b'
+  },
+
+  subtitleModal: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 3
+  },
+
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+
+  calendar: {
+    borderWidth: 1,
+    borderColor: '#e8edf4',
+    borderRadius: 18,
+    paddingBottom: 6,
+    overflow: 'hidden'
+  },
+
+  arrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#edf3fc',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+
+  selectedDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f5fc',
+    borderWidth: 1,
+    borderColor: '#dce7f7',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginTop: 14
+  },
+
+  selectedDateIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10
+  },
+
+  selectedDateLabel: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 11,
+    color: '#64748b'
+  },
+
+  selectedDateValue: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#305797',
+    marginTop: 1
+  },
+
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16
+  },
+
+  cancelButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#d8dee8',
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+
+  cancelText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 13,
+    color: '#64748b'
+  },
+
+  confirmButton: {
+    flex: 1.4,
+    minHeight: 48,
+    borderRadius: 13,
+    backgroundColor: '#305797',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+    elevation: 2
+  },
+
+  confirmText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 13,
+    color: '#ffffff'
+  }
 });

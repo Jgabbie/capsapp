@@ -6,14 +6,30 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         padding: 20,
         backgroundColor: "#f5f7fa"
     },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#305797',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+        marginBottom: 16,
+    },
+    backButtonText: {
+        color: '#fff',
+        fontFamily: 'Montserrat_600SemiBold',
+        marginLeft: 6,
+        fontSize: 14,
+    },
     headerContainer: {
         marginBottom: 24,
         marginTop: 10,
     },
     title: {
-        fontSize: 22, 
+        fontSize: 22,
         fontFamily: "Montserrat_700Bold",
-        color: "#305797", 
+        color: "#305797",
         marginBottom: 6
     },
     subtitle: {
@@ -275,6 +291,178 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 14
+    },
+
+
+
+    dateModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    dateModalCard: {
+        width: '92%',
+        maxWidth: 430,
+        backgroundColor: '#ffffff',
+        borderRadius: 24,
+        padding: 18,
+        elevation: 12,
+        shadowColor: '#000000',
+        shadowOffset: {
+            width: 0,
+            height: 8
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 16
+    },
+
+    dateModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 12
+    },
+
+    dateModalHeaderContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 12
+    },
+
+    dateModalHeaderIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 13,
+        backgroundColor: '#edf3fc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12
+    },
+
+    dateModalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 17,
+        color: '#1e293b'
+    },
+
+    dateModalSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 12,
+        color: '#64748b',
+        marginTop: 3
+    },
+
+    dateModalCloseButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#f1f5f9',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    dateCalendar: {
+        borderWidth: 1,
+        borderColor: '#e8edf4',
+        borderRadius: 18,
+        paddingBottom: 6,
+        overflow: 'hidden'
+    },
+
+    dateCalendarArrow: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        backgroundColor: '#edf3fc',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    dateSelectedContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f5fc',
+        borderWidth: 1,
+        borderColor: '#dce7f7',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        marginTop: 14
+    },
+
+    dateSelectedIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10
+    },
+
+    dateSelectedLabel: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#64748b'
+    },
+
+    dateSelectedValue: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 14,
+        color: '#305797',
+        marginTop: 1
+    },
+
+    dateAvailabilityNote: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#64748b',
+        textAlign: 'center',
+        marginTop: 10
+    },
+
+    dateModalActions: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 16
+    },
+
+    dateModalCancelButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 13,
+        borderWidth: 1,
+        borderColor: '#d8dee8',
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    dateModalCancelText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#64748b'
+    },
+
+    dateModalConfirmButton: {
+        flex: 1.4,
+        minHeight: 48,
+        borderRadius: 13,
+        backgroundColor: '#305797',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 7,
+        elevation: 2
+    },
+
+    dateModalConfirmText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#ffffff'
     }
 });
 

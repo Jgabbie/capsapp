@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
@@ -40,6 +40,7 @@ export default function UserApplications() {
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState('Status');
     const [applicationDateFilter, setApplicationDateFilter] = useState(null);
+    const [pendingApplicationDate, setPendingApplicationDate] = useState(null);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showDateModal, setShowDateModal] = useState(false);
 
@@ -121,8 +122,26 @@ export default function UserApplications() {
 
 
     //date picker handler
-    const handleDateChange = (day) => {
-        setApplicationDateFilter(day.dateString);
+    const openApplicationDatePicker = () => {
+        setPendingApplicationDate(
+            applicationDateFilter || dayjs().format('YYYY-MM-DD')
+        );
+
+        setShowDateModal(true);
+    };
+
+
+    const closeApplicationDatePicker = () => {
+        setPendingApplicationDate(applicationDateFilter);
+        setShowDateModal(false);
+    };
+
+
+    const applyApplicationDateFilter = () => {
+        if (pendingApplicationDate) {
+            setApplicationDateFilter(pendingApplicationDate);
+        }
+
         setShowDateModal(false);
     };
 
@@ -193,12 +212,19 @@ export default function UserApplications() {
                                 <Text style={UserApplicationsStyle.filterLabel}>Date</Text>
                                 <TouchableOpacity
                                     style={UserApplicationsStyle.dropdownButton}
-                                    onPress={() => setShowDateModal(true)}
+                                    onPress={openApplicationDatePicker}
                                 >
                                     <Text style={UserApplicationsStyle.dropdownText}>
-                                        {applicationDateFilter ? dayjs(applicationDateFilter).format('MMM DD') : 'Application Date'}
+                                        {applicationDateFilter
+                                            ? dayjs(applicationDateFilter).format('MMM DD')
+                                            : 'Application Date'}
                                     </Text>
-                                    <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
+
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={14}
+                                        color="#9ca3af"
+                                    />
                                 </TouchableOpacity>
                             </View>
 
@@ -331,36 +357,165 @@ export default function UserApplications() {
                 visible={showDateModal}
                 transparent
                 animationType="fade"
-                onRequestClose={() => setShowDateModal(false)}
+                statusBarTranslucent
+                onRequestClose={closeApplicationDatePicker}
             >
-                <TouchableOpacity
-                    style={UserApplicationsStyle.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowDateModal(false)}
+                <Pressable
+                    style={UserApplicationsStyle.dateModalOverlay}
+                    onPress={closeApplicationDatePicker}
                 >
-                    <TouchableWithoutFeedback>
-                        <View style={UserApplicationsStyle.modalContainer}>
-                            <View style={UserApplicationsStyle.modalHeaderRow}>
-                                <Text style={UserApplicationsStyle.modalTitleText}>Application Date</Text>
-                                <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                                    <Ionicons name="close" size={22} color="#9ca3af" />
-                                </TouchableOpacity>
+                    <Pressable
+                        style={UserApplicationsStyle.dateModalCard}
+                        onPress={(event) => event.stopPropagation()}
+                    >
+                        <View style={UserApplicationsStyle.dateModalHeader}>
+                            <View style={UserApplicationsStyle.dateModalHeaderContent}>
+                                <View style={UserApplicationsStyle.dateModalHeaderIcon}>
+                                    <Ionicons
+                                        name="calendar"
+                                        size={21}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={UserApplicationsStyle.dateModalTitle}>
+                                        Application Date
+                                    </Text>
+
+                                    <Text style={UserApplicationsStyle.dateModalSubtitle}>
+                                        Choose the date the application was created.
+                                    </Text>
+                                </View>
                             </View>
-                            <Calendar
-                                onDayPress={handleDateChange}
-                                markedDates={applicationDateFilter ? {
-                                    [applicationDateFilter]: { selected: true, selectedColor: '#305797' },
-                                } : {}}
-                                theme={{
-                                    selectedDayBackgroundColor: '#305797',
-                                    todayTextColor: '#305797',
-                                    arrowColor: '#305797',
-                                }}
-                            />
+
+                            <TouchableOpacity
+                                style={UserApplicationsStyle.dateModalCloseButton}
+                                onPress={closeApplicationDatePicker}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
                         </View>
-                    </TouchableWithoutFeedback>
-                </TouchableOpacity>
+
+                        <Calendar
+                            initialDate={
+                                pendingApplicationDate ||
+                                applicationDateFilter ||
+                                dayjs().format('YYYY-MM-DD')
+                            }
+                            onDayPress={({ dateString }) => {
+                                setPendingApplicationDate(dateString);
+                            }}
+                            markedDates={{
+                                [
+                                    pendingApplicationDate ||
+                                    applicationDateFilter ||
+                                    dayjs().format('YYYY-MM-DD')
+                                ]: {
+                                    selected: true,
+                                    selectedColor: '#305797',
+                                    selectedTextColor: '#ffffff'
+                                }
+                            }}
+                            enableSwipeMonths
+                            hideExtraDays
+                            renderArrow={(direction) => (
+                                <View style={UserApplicationsStyle.dateCalendarArrow}>
+                                    <Ionicons
+                                        name={
+                                            direction === 'left'
+                                                ? 'chevron-back'
+                                                : 'chevron-forward'
+                                        }
+                                        size={18}
+                                        color="#305797"
+                                    />
+                                </View>
+                            )}
+                            style={UserApplicationsStyle.dateCalendar}
+                            theme={{
+                                backgroundColor: '#ffffff',
+                                calendarBackground: '#ffffff',
+
+                                textSectionTitleColor: '#94a3b8',
+                                textDisabledColor: '#d1d5db',
+                                dayTextColor: '#334155',
+                                monthTextColor: '#1e293b',
+
+                                selectedDayBackgroundColor: '#305797',
+                                selectedDayTextColor: '#ffffff',
+                                todayTextColor: '#305797',
+                                arrowColor: '#305797',
+
+                                textDayFontFamily: 'Roboto_400Regular',
+                                textMonthFontFamily: 'Montserrat_700Bold',
+                                textDayHeaderFontFamily: 'Roboto_500Medium',
+
+                                textDayFontSize: 14,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 12
+                            }}
+                        />
+
+                        <View style={UserApplicationsStyle.dateSelectedContainer}>
+                            <View style={UserApplicationsStyle.dateSelectedIcon}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={17}
+                                    color="#305797"
+                                />
+                            </View>
+
+                            <View>
+                                <Text style={UserApplicationsStyle.dateSelectedLabel}>
+                                    Selected date
+                                </Text>
+
+                                <Text style={UserApplicationsStyle.dateSelectedValue}>
+                                    {dayjs(
+                                        pendingApplicationDate ||
+                                        applicationDateFilter ||
+                                        dayjs().format('YYYY-MM-DD')
+                                    ).format('MMMM D, YYYY')}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={UserApplicationsStyle.dateModalActions}>
+                            <TouchableOpacity
+                                style={UserApplicationsStyle.dateModalCancelButton}
+                                onPress={closeApplicationDatePicker}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={UserApplicationsStyle.dateModalCancelText}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={UserApplicationsStyle.dateModalConfirmButton}
+                                onPress={applyApplicationDateFilter}
+                                activeOpacity={0.75}
+                            >
+                                <Ionicons
+                                    name="checkmark"
+                                    size={18}
+                                    color="#ffffff"
+                                />
+
+                                <Text style={UserApplicationsStyle.dateModalConfirmText}>
+                                    Apply Filter
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
             </Modal>
+
         </View>
     );
 }

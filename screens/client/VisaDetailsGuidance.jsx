@@ -1,15 +1,18 @@
-import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Modal, ActivityIndicator, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Modal, ActivityIndicator, Linking, Pressable } from 'react-native'
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
 import { Ionicons } from '@expo/vector-icons'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import Header from '../../components/Header'
+import { Calendar } from 'react-native-calendars'
+
 import Sidebar from '../../components/Sidebar'
 import VisaDetailsGuidanceStyle from '../../styles/clientstyles/VisaDetailsGuidanceStyle'
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
+
+import dayjs from 'dayjs'
 
 import {
     Montserrat_400Regular,
@@ -92,6 +95,7 @@ export default function VisaDetailsGuidance() {
     const [serviceDetails, setServiceDetails] = useState(selectedService)
 
     const [preferredDate, setPreferredDate] = useState(null)
+    const [pendingPreferredDate, setPendingPreferredDate] = useState(null)
     const [preferredTime, setPreferredTime] = useState(null)
     const [purpose, setPurpose] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -134,28 +138,64 @@ export default function VisaDetailsGuidance() {
     }, [serviceDetails, selectedService])
 
 
-    //get min date for date picker (14 days from today)
-    const getMinDate = () => {
-        const minDate = new Date();
-        minDate.setDate(minDate.getDate() + 14);
-        return minDate;
-    };
+    const minimumAppointmentDate = dayjs()
+        .add(14, 'day')
+        .format('YYYY-MM-DD')
 
 
-    //handle date change from date picker
-    const onDateChange = (event, selectedDate) => {
-        setShowDatePicker(false);
-        if (selectedDate) {
-            const dayOfWeek = selectedDate.getDay();
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
-                Alert.alert("Invalid Date", "Appointments are only available from Monday to Friday.");
-                return;
-            }
-            setPreferredDate(selectedDate);
+    const openPreferredDatePicker = () => {
+        setPendingPreferredDate(
+            preferredDate || minimumAppointmentDate
+        )
+
+        setShowDatePicker(true)
+    }
+
+
+    const closePreferredDatePicker = () => {
+        setPendingPreferredDate(preferredDate)
+        setShowDatePicker(false)
+    }
+
+
+    const selectPreferredDate = (dateString) => {
+        const selectedDay = dayjs(dateString).day()
+
+        if (selectedDay === 0 || selectedDay === 6) {
+            Alert.alert(
+                'Invalid Date',
+                'Appointments are only available from Monday to Friday.'
+            )
+            return
         }
-    };
 
-    const formatDate = (date) => date ? date.toISOString().split('T')[0] : 'Select date';
+        setPendingPreferredDate(dateString)
+    }
+
+
+    const applyPreferredDate = () => {
+        if (!pendingPreferredDate) return
+
+        const selectedDay = dayjs(pendingPreferredDate).day()
+
+        if (selectedDay === 0 || selectedDay === 6) {
+            Alert.alert(
+                'Invalid Date',
+                'Appointments are only available from Monday to Friday.'
+            )
+            return
+        }
+
+        setPreferredDate(pendingPreferredDate)
+        setShowDatePicker(false)
+    }
+
+
+    const formatDate = (date) => {
+        return date || 'Select date'
+    }
+
+
     const formatPeso = (value) => `${(Number(value) || 0).toLocaleString("en-PH")}`;
 
 
@@ -176,7 +216,7 @@ export default function VisaDetailsGuidance() {
 
             const payload = {
                 serviceId: selectedService.visaItem || selectedService._id,
-                preferredDate: formatDate(preferredDate),
+                preferredDate,
                 preferredTime,
                 purposeOfTravel: purpose
             };
@@ -272,8 +312,9 @@ export default function VisaDetailsGuidance() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
                 <View style={VisaDetailsGuidanceStyle.headerContainer}>
-                    <TouchableOpacity onPress={() => cs.goBack()} style={{ marginBottom: 10 }}>
-                        <Ionicons name="arrow-back" size={24} color="#1f2937" />
+                    <TouchableOpacity onPress={() => cs.goBack()} style={VisaDetailsGuidanceStyle.backButton}>
+                        <Ionicons name="arrow-back" size={16} color="#fff" />
+                        <Text style={VisaDetailsGuidanceStyle.backButtonText}>Back</Text>
                     </TouchableOpacity>
                     <Text style={VisaDetailsGuidanceStyle.title}>Visa Application Assistance</Text>
                     <Text style={VisaDetailsGuidanceStyle.subtitle}>Choose a visa service, review the requirements, and submit your preferred schedule.</Text>
@@ -423,17 +464,47 @@ export default function VisaDetailsGuidance() {
                         </Text>
                     </View>
 
-                    <Text style={VisaDetailsGuidanceStyle.formLabel}>Preferred date</Text>
-                    <TouchableOpacity style={VisaDetailsGuidanceStyle.inputContainer} onPress={() => setShowDatePicker(true)}>
-                        <Text style={[VisaDetailsGuidanceStyle.inputText, !preferredDate && VisaDetailsGuidanceStyle.inputTextPlaceholder]}>
-                            {formatDate(preferredDate)}
+                    <Text style={VisaDetailsGuidanceStyle.formLabel}>
+                        Preferred date
+                    </Text>
+
+                    <TouchableOpacity
+                        style={VisaDetailsGuidanceStyle.inputContainer}
+                        onPress={openPreferredDatePicker}
+                        activeOpacity={0.75}
+                    >
+                        <Text
+                            style={[
+                                VisaDetailsGuidanceStyle.inputText,
+                                !preferredDate &&
+                                VisaDetailsGuidanceStyle.inputTextPlaceholder
+                            ]}
+                        >
+                            {preferredDate
+                                ? dayjs(preferredDate).format('MMMM D, YYYY')
+                                : 'Select date'}
                         </Text>
+
                         {preferredDate ? (
-                            <TouchableOpacity onPress={() => setPreferredDate(null)}>
-                                <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                            <TouchableOpacity
+                                onPress={(event) => {
+                                    event.stopPropagation()
+                                    setPreferredDate(null)
+                                    setPendingPreferredDate(null)
+                                }}
+                            >
+                                <Ionicons
+                                    name="close-circle"
+                                    size={20}
+                                    color="#9ca3af"
+                                />
                             </TouchableOpacity>
                         ) : (
-                            <Ionicons name="calendar-outline" size={20} color="#9ca3af" />
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#9ca3af"
+                            />
                         )}
                     </TouchableOpacity>
 
@@ -473,9 +544,175 @@ export default function VisaDetailsGuidance() {
             </ScrollView>
 
             {/* --- MODALS --- */}
-            {showDatePicker && (
-                <DateTimePicker value={preferredDate || getMinDate()} mode="date" minimumDate={getMinDate()} onChange={onDateChange} />
-            )}
+            <Modal
+                visible={showDatePicker}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closePreferredDatePicker}
+            >
+                <Pressable
+                    style={VisaDetailsGuidanceStyle.dateModalOverlay}
+                    onPress={closePreferredDatePicker}
+                >
+                    <Pressable
+                        style={VisaDetailsGuidanceStyle.dateModalCard}
+                        onPress={(event) => event.stopPropagation()}
+                    >
+                        <View style={VisaDetailsGuidanceStyle.dateModalHeader}>
+                            <View style={VisaDetailsGuidanceStyle.dateModalHeaderContent}>
+                                <View style={VisaDetailsGuidanceStyle.dateModalHeaderIcon}>
+                                    <Ionicons
+                                        name="calendar"
+                                        size={21}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View style={{ flex: 1 }}>
+                                    <Text style={VisaDetailsGuidanceStyle.dateModalTitle}>
+                                        Preferred Date
+                                    </Text>
+
+                                    <Text style={VisaDetailsGuidanceStyle.dateModalSubtitle}>
+                                        Appointments are available Monday to Friday.
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                style={VisaDetailsGuidanceStyle.dateModalCloseButton}
+                                onPress={closePreferredDatePicker}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Calendar
+                            initialDate={
+                                pendingPreferredDate ||
+                                preferredDate ||
+                                minimumAppointmentDate
+                            }
+                            minDate={minimumAppointmentDate}
+                            onDayPress={({ dateString }) => {
+                                selectPreferredDate(dateString)
+                            }}
+                            markedDates={{
+                                [
+                                    pendingPreferredDate ||
+                                    preferredDate ||
+                                    minimumAppointmentDate
+                                ]: {
+                                    selected: true,
+                                    selectedColor: '#305797',
+                                    selectedTextColor: '#ffffff'
+                                }
+                            }}
+                            enableSwipeMonths
+                            hideExtraDays
+                            disableAllTouchEventsForDisabledDays
+                            renderArrow={(direction) => (
+                                <View style={VisaDetailsGuidanceStyle.dateCalendarArrow}>
+                                    <Ionicons
+                                        name={
+                                            direction === 'left'
+                                                ? 'chevron-back'
+                                                : 'chevron-forward'
+                                        }
+                                        size={18}
+                                        color="#305797"
+                                    />
+                                </View>
+                            )}
+                            style={VisaDetailsGuidanceStyle.dateCalendar}
+                            theme={{
+                                backgroundColor: '#ffffff',
+                                calendarBackground: '#ffffff',
+
+                                textSectionTitleColor: '#94a3b8',
+                                textDisabledColor: '#d1d5db',
+                                dayTextColor: '#334155',
+                                monthTextColor: '#1e293b',
+
+                                selectedDayBackgroundColor: '#305797',
+                                selectedDayTextColor: '#ffffff',
+                                todayTextColor: '#305797',
+                                arrowColor: '#305797',
+
+                                textDayFontFamily: 'Roboto_400Regular',
+                                textMonthFontFamily: 'Montserrat_700Bold',
+                                textDayHeaderFontFamily: 'Roboto_500Medium',
+
+                                textDayFontSize: 14,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 12
+                            }}
+                        />
+
+                        <View style={VisaDetailsGuidanceStyle.dateSelectedContainer}>
+                            <View style={VisaDetailsGuidanceStyle.dateSelectedIcon}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={17}
+                                    color="#305797"
+                                />
+                            </View>
+
+                            <View>
+                                <Text style={VisaDetailsGuidanceStyle.dateSelectedLabel}>
+                                    Selected date
+                                </Text>
+
+                                <Text style={VisaDetailsGuidanceStyle.dateSelectedValue}>
+                                    {dayjs(
+                                        pendingPreferredDate ||
+                                        preferredDate ||
+                                        minimumAppointmentDate
+                                    ).format('MMMM D, YYYY')}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <Text style={VisaDetailsGuidanceStyle.dateAvailabilityNote}>
+                            Earliest available date:{' '}
+                            {dayjs(minimumAppointmentDate).format('MMMM D, YYYY')}
+                        </Text>
+
+                        <View style={VisaDetailsGuidanceStyle.dateModalActions}>
+                            <TouchableOpacity
+                                style={VisaDetailsGuidanceStyle.dateModalCancelButton}
+                                onPress={closePreferredDatePicker}
+                                activeOpacity={0.75}
+                            >
+                                <Text style={VisaDetailsGuidanceStyle.dateModalCancelText}>
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={VisaDetailsGuidanceStyle.dateModalConfirmButton}
+                                onPress={applyPreferredDate}
+                                activeOpacity={0.75}
+                            >
+                                <Ionicons
+                                    name="checkmark"
+                                    size={18}
+                                    color="#ffffff"
+                                />
+
+                                <Text style={VisaDetailsGuidanceStyle.dateModalConfirmText}>
+                                    Confirm Date
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
+            </Modal>
 
             <Modal visible={showTimePickerModal} transparent animationType="fade">
                 <TouchableOpacity style={VisaDetailsGuidanceStyle.modalOverlay} activeOpacity={1} onPress={() => setShowTimePickerModal(false)}>
