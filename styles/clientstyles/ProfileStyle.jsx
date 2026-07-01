@@ -317,6 +317,161 @@ const ProfileStyle = StyleSheet.create({
         textAlign: "center",
         marginTop: -10,  // This pulls it up closer to the name
         marginBottom: 20 // Pushes the Personal Info card down a bit
+    },
+
+    datePickerModal: {
+        width: '92%',
+        maxWidth: 430,
+        backgroundColor: '#ffffff',
+        borderRadius: 24,
+        padding: 18,
+        elevation: 12,
+        shadowColor: '#000000',
+        shadowOffset: {
+            width: 0,
+            height: 8
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 16
+    },
+
+    datePickerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 12
+    },
+
+    datePickerHeaderContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 12
+    },
+
+    datePickerIconContainer: {
+        width: 42,
+        height: 42,
+        borderRadius: 13,
+        backgroundColor: '#edf3fc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12
+    },
+
+    datePickerModalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 17,
+        color: '#1e293b'
+    },
+
+    datePickerModalSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 12,
+        color: '#64748b',
+        marginTop: 3
+    },
+
+    datePickerCloseButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#f1f5f9',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    calendarContainer: {
+        borderWidth: 1,
+        borderColor: '#e8edf4',
+        borderRadius: 18,
+        paddingBottom: 6,
+        overflow: 'hidden'
+    },
+
+    calendarArrow: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        backgroundColor: '#edf3fc',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    selectedDateContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f5fc',
+        borderWidth: 1,
+        borderColor: '#dce7f7',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        marginTop: 14
+    },
+
+    selectedDateIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10
+    },
+
+    selectedDateLabel: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 11,
+        color: '#64748b'
+    },
+
+    selectedDateValue: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 14,
+        color: '#305797',
+        marginTop: 1
+    },
+
+    datePickerActions: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 16
+    },
+
+    datePickerCancelButton: {
+        flex: 1,
+        minHeight: 48,
+        borderRadius: 13,
+        borderWidth: 1,
+        borderColor: '#d8dee8',
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    datePickerCancelText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#64748b'
+    },
+
+    datePickerConfirmButton: {
+        flex: 1.4,
+        minHeight: 48,
+        borderRadius: 13,
+        backgroundColor: '#305797',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 7,
+        elevation: 2
+    },
+
+    datePickerConfirmText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 13,
+        color: '#ffffff'
     }
 });
 

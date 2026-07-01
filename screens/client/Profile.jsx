@@ -1,10 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity, Image, Modal, ScrollView, Platform, ToastAndroid, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Image, Modal, ScrollView, Platform, ToastAndroid, Alert, ActivityIndicator, Pressable } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useFonts } from 'expo-font'
 
 import { Ionicons } from "@expo/vector-icons"
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import { Calendar } from 'react-native-calendars'
 import dayjs from 'dayjs'
 
 import Sidebar from '../../components/Sidebar'
@@ -53,7 +54,7 @@ export default function Profile() {
     const [genderModalVisible, setGenderModalVisible] = useState(false)
     const [nationalityModalVisible, setNationalityModalVisible] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false)
-
+    const [pendingBirthdate, setPendingBirthdate] = useState('')
 
     //user data states
     const [profileImage, setProfileImage] = useState('')
@@ -496,11 +497,34 @@ export default function Profile() {
         }
     }
 
-    //date Birth restrictions
-    const defaultBirthDate = new Date(2000, 0, 1);
+    // Date of birth restrictions
+    const defaultBirthDate = '2000-01-01'
 
-    const maxBirthDate = new Date();
-    maxBirthDate.setFullYear(maxBirthDate.getFullYear() - 18);
+    const maxBirthDate = dayjs()
+        .subtract(18, 'year')
+        .format('YYYY-MM-DD')
+
+    const openBirthdatePicker = () => {
+        const initialDate =
+            userData.birthdate && dayjs(userData.birthdate).isValid()
+                ? userData.birthdate
+                : defaultBirthDate
+
+        setPendingBirthdate(initialDate)
+        setShowDatePicker(true)
+    }
+
+    const confirmBirthdate = () => {
+        if (!pendingBirthdate) return
+
+        valueHandler('birthdate', pendingBirthdate)
+        setShowDatePicker(false)
+    }
+
+    const closeBirthdatePicker = () => {
+        setPendingBirthdate('')
+        setShowDatePicker(false)
+    }
 
     if (!fontsLoaded) return null;
 
@@ -740,24 +764,190 @@ export default function Profile() {
                     </TouchableOpacity>
 
                     <Text style={ProfileStyle.profileLabel}>Date of Birth</Text>
+
                     <TouchableOpacity
-                        style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]}
-                        disabled={!editing} onPress={() => setShowDatePicker(true)}
+                        style={[
+                            ProfileStyle.profileInputs,
+                            ProfileStyle.dropdownButton,
+                            !editing && ProfileStyle.profileInputsDisabled
+                        ]}
+                        disabled={!editing}
+                        onPress={openBirthdatePicker}
+                        activeOpacity={0.7}
                     >
-                        <Text style={[ProfileStyle.datePickerText, { color: userData.birthdate ? '#333' : '#a0a0a0' }]}>
-                            {userData.birthdate || "Select birthdate"}
+                        <Text
+                            style={[
+                                ProfileStyle.datePickerText,
+                                {
+                                    color: userData.birthdate ? '#333' : '#a0a0a0'
+                                }
+                            ]}
+                        >
+                            {userData.birthdate
+                                ? dayjs(userData.birthdate).format('MMMM D, YYYY')
+                                : 'Select birthdate'}
                         </Text>
-                        <Ionicons name="calendar-outline" size={16} color={editing ? "#305797" : "#a0a0a0"} />
+
+                        <Ionicons
+                            name="calendar-outline"
+                            size={19}
+                            color={editing ? '#305797' : '#a0a0a0'}
+                        />
                     </TouchableOpacity>
 
                     {showDatePicker && (
-                        <DateTimePicker
-                            value={userData.birthdate ? new Date(userData.birthdate) : defaultBirthDate}
-                            mode="date"
-                            display="default"
-                            maximumDate={maxBirthDate}
-                            onChange={handleDateChange}
-                        />
+                        <Modal
+                            visible
+                            transparent
+                            animationType="fade"
+                            statusBarTranslucent
+                            onRequestClose={closeBirthdatePicker}
+                        >
+                            <Pressable
+                                style={ModalStyle.modalOverlay}
+                                onPress={closeBirthdatePicker}
+                            >
+                                <Pressable
+                                    style={ProfileStyle.datePickerModal}
+                                    onPress={(event) => event.stopPropagation()}
+                                >
+                                    <View style={ProfileStyle.datePickerHeader}>
+                                        <View style={ProfileStyle.datePickerHeaderContent}>
+                                            <View style={ProfileStyle.datePickerIconContainer}>
+                                                <Ionicons
+                                                    name="calendar"
+                                                    size={21}
+                                                    color="#305797"
+                                                />
+                                            </View>
+
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={ProfileStyle.datePickerModalTitle}>
+                                                    Select Date of Birth
+                                                </Text>
+
+                                                <Text style={ProfileStyle.datePickerModalSubtitle}>
+                                                    You must be at least 18 years old.
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <TouchableOpacity
+                                            style={ProfileStyle.datePickerCloseButton}
+                                            onPress={closeBirthdatePicker}
+                                        >
+                                            <Ionicons
+                                                name="close"
+                                                size={21}
+                                                color="#64748b"
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <Calendar
+                                        initialDate={pendingBirthdate || defaultBirthDate}
+                                        maxDate={maxBirthDate}
+                                        onDayPress={({ dateString }) => {
+                                            setPendingBirthdate(dateString)
+                                        }}
+                                        markedDates={{
+                                            [pendingBirthdate]: {
+                                                selected: true,
+                                                selectedColor: '#305797',
+                                                selectedTextColor: '#ffffff'
+                                            }
+                                        }}
+                                        enableSwipeMonths
+                                        hideExtraDays
+                                        disableAllTouchEventsForDisabledDays
+                                        renderArrow={(direction) => (
+                                            <View style={ProfileStyle.calendarArrow}>
+                                                <Ionicons
+                                                    name={
+                                                        direction === 'left'
+                                                            ? 'chevron-back'
+                                                            : 'chevron-forward'
+                                                    }
+                                                    size={18}
+                                                    color="#305797"
+                                                />
+                                            </View>
+                                        )}
+                                        style={ProfileStyle.calendarContainer}
+                                        theme={{
+                                            backgroundColor: '#ffffff',
+                                            calendarBackground: '#ffffff',
+
+                                            textSectionTitleColor: '#94a3b8',
+                                            textDisabledColor: '#d1d5db',
+                                            dayTextColor: '#334155',
+                                            monthTextColor: '#1e293b',
+
+                                            selectedDayBackgroundColor: '#305797',
+                                            selectedDayTextColor: '#ffffff',
+                                            todayTextColor: '#305797',
+                                            arrowColor: '#305797',
+
+                                            textDayFontFamily: 'Roboto_400Regular',
+                                            textMonthFontFamily: 'Montserrat_700Bold',
+                                            textDayHeaderFontFamily: 'Roboto_500Medium',
+
+                                            textDayFontSize: 14,
+                                            textMonthFontSize: 16,
+                                            textDayHeaderFontSize: 12
+                                        }}
+                                    />
+
+                                    <View style={ProfileStyle.selectedDateContainer}>
+                                        <View style={ProfileStyle.selectedDateIcon}>
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={17}
+                                                color="#305797"
+                                            />
+                                        </View>
+
+                                        <View>
+                                            <Text style={ProfileStyle.selectedDateLabel}>
+                                                Selected date
+                                            </Text>
+
+                                            <Text style={ProfileStyle.selectedDateValue}>
+                                                {dayjs(pendingBirthdate).format('MMMM D, YYYY')}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={ProfileStyle.datePickerActions}>
+                                        <TouchableOpacity
+                                            style={ProfileStyle.datePickerCancelButton}
+                                            onPress={closeBirthdatePicker}
+                                            activeOpacity={0.75}
+                                        >
+                                            <Text style={ProfileStyle.datePickerCancelText}>
+                                                Cancel
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={ProfileStyle.datePickerConfirmButton}
+                                            onPress={confirmBirthdate}
+                                            activeOpacity={0.75}
+                                        >
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={18}
+                                                color="#ffffff"
+                                            />
+
+                                            <Text style={ProfileStyle.datePickerConfirmText}>
+                                                Confirm Date
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </Pressable>
+                            </Pressable>
+                        </Modal>
                     )}
 
                     <Text style={ProfileStyle.profileLabel}>Nationality</Text>
