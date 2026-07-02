@@ -11,7 +11,6 @@ import * as ImagePicker from 'expo-image-picker';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
-import AdminSidebar from "../../components/AdminSidebar";
 import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
 import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import { api, withUserHeader } from "../../utils/api";
@@ -52,7 +51,6 @@ export default function BookingInvoice({ route, navigation }) {
     const rawBooking = route?.params?.booking || null;
     const source = route?.params?.source || "user";
     const role = String(user?.role || "").trim().toLowerCase();
-    const isAdminView = source === "admin" || role === "admin";
 
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [booking, setBooking] = useState(rawBooking);
@@ -1606,11 +1604,9 @@ export default function BookingInvoice({ route, navigation }) {
         <SafeAreaView style={BookingInvoiceStyle.safeArea}>
             <StatusBar barStyle="dark-content" />
             <Header openSidebar={() => setSidebarVisible(true)} />
-            {isAdminView ? (
-                <AdminSidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
-            ) : (
-                <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
-            )}
+
+            <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
+
 
             {loading ? (
                 <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} />

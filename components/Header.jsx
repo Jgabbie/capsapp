@@ -4,11 +4,18 @@ import { useNavigation } from '@react-navigation/native'
 import HeaderStyle from '../styles/componentstyles/HeaderStyle'
 import { useUser } from '../context/UserContext'
 import { api, withUserHeader } from '../utils/api'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function Header({ openSidebar }) {
     const cs = useNavigation()
     const { user } = useUser()
     const [unreadCount, setUnreadCount] = useState(0)
+
+    const [profileImageError, setProfileImageError] = useState(false)
+
+    useEffect(() => {
+        setProfileImageError(false)
+    }, [user?.profileImage])
 
     const fetchUnread = async () => {
         if (!user?._id) return;
@@ -36,10 +43,6 @@ export default function Header({ openSidebar }) {
 
         return unsubscribe;
     }, [user?._id, cs]);
-
-    const profileImageSource = user?.profileImage
-        ? { uri: user.profileImage }
-        : require('../assets/images/profile_icon.png')
 
     return (
         <View style={HeaderStyle.headerContainer}>
@@ -78,10 +81,22 @@ export default function Header({ openSidebar }) {
                     )}
                 </TouchableOpacity>
 
-                <Image
-                    source={profileImageSource}
-                    style={[HeaderStyle.profileIcon, { borderRadius: 50 }]}
-                />
+                <View style={HeaderStyle.profileIconContainer}>
+                    {user?.profileImage && !profileImageError ? (
+                        <Image
+                            source={{ uri: user.profileImage }}
+                            style={HeaderStyle.profileIcon}
+                            resizeMode="cover"
+                            onError={() => setProfileImageError(true)}
+                        />
+                    ) : (
+                        <Ionicons
+                            name="person-circle"
+                            size={50}
+                            color="#305797"
+                        />
+                    )}
+                </View>
             </View>
         </View>
     )

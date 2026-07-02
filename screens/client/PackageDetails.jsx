@@ -696,7 +696,7 @@ export default function PackageDetails({ route, navigation }) {
                                         <View key={i} style={DestinationStyles.recentReviewContainer}>
                                             <View style={DestinationStyles.reviewHeaderRow}>
                                                 <Image
-                                                    source={r.userId?.profileImage ? getImageUrl(r.userId.profileImage) : require('../../assets/images/profile_icon60.png')}
+                                                    source={r.userId?.profileImage ? getImageUrl(r.userId.profileImage) : require('../../assets/images/user-circle-svgrepo-com.svg')}
                                                     style={DestinationStyles.reviewProfileImg}
                                                     contentFit="cover"
                                                 />

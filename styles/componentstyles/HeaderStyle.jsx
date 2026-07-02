@@ -30,9 +30,19 @@ const HeaderStyle = StyleSheet.create({
         alignItems: "center",
         position: "relative"
     },
+    profileIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 22.5,
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        backgroundColor: "#F2F2F2"
+    },
+
     profileIcon: {
-        width: 45,
-        height: 45,
+        width: "100%",
+        height: "100%",
         borderRadius: 22.5
     },
     bellButton: {

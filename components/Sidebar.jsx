@@ -23,7 +23,7 @@ export default function Sidebar({ visible, onClose }) {
 
     const profileImageSource = user?.profileImage
         ? { uri: user.profileImage }
-        : require('../assets/images/profile_icon60.png')
+        : require('../assets/images/user-circle-svgrepo-com.svg')
 
     const transactionFilledSvg = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg fill="#ffffff" height="800px" width="800px" version="1.1" id="Filled_Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve" stroke="#ffffff">
