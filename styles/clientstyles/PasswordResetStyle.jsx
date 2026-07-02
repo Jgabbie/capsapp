@@ -54,7 +54,7 @@ const PasswordResetStyle = StyleSheet.create({
     fieldError: {
         color: "#ff1616",
         fontFamily: "Roboto_400Regular",
-        fontSize: 16,
+        fontSize: 12,
         marginLeft: 25,
         marginBottom: 0,
         marginTop: 3,
@@ -80,9 +80,9 @@ const PasswordResetStyle = StyleSheet.create({
         marginBottom: 20
     },
     linkText: {
-        fontSize: 16,
+        fontSize: 13,
         color: "#305797",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Roboto_500Medium",
     },
     // --- OTP Specific Styles ---
     otpInput: {

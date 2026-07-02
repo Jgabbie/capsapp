@@ -42,6 +42,9 @@ export default function Signup() {
     //state for backend general errors (like "Email already exists")
     const [backendError, setBackendError] = useState("")
 
+    const [termsModalVisible, setTermsModalVisible] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+
 
     //prevent hardware back button from navigating back to the previous screen
     useFocusEffect(
@@ -71,6 +74,7 @@ export default function Signup() {
         phonenum: "",
         password: "",
         confirmpassword: "",
+        terms: "",
     })
 
     if (!fontsLoaded) {
@@ -176,6 +180,13 @@ export default function Signup() {
             newErrors[field] = errorMsg;
             if (errorMsg) hasError = true;
         });
+
+        if (!acceptedTerms) {
+            newErrors.terms = "Please agree to the Terms and Conditions.";
+            hasError = true;
+        } else {
+            newErrors.terms = "";
+        }
 
         setErrors(newErrors);
         setBackendError("");
@@ -344,6 +355,63 @@ export default function Signup() {
                         {/* BACKEND ERROR DISPLAY (Username/Email taken) */}
                         {backendError ? <Text style={SignupStyle.generalError}>{backendError}</Text> : null}
 
+                        {/* TERMS AND CONDITIONS */}
+                        <View style={SignupStyle.termsContainer}>
+                            <View style={SignupStyle.termsRow}>
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    style={SignupStyle.termsCheckboxTouch}
+                                    onPress={() => {
+                                        const nextValue = !acceptedTerms;
+
+                                        setAcceptedTerms(nextValue);
+
+                                        if (nextValue) {
+                                            setErrors(prev => ({
+                                                ...prev,
+                                                terms: ""
+                                            }));
+                                        }
+                                    }}
+                                >
+                                    <View
+                                        style={[
+                                            SignupStyle.termsCheckbox,
+                                            acceptedTerms && SignupStyle.termsCheckboxChecked,
+                                            errors.terms && SignupStyle.termsCheckboxError
+                                        ]}
+                                    >
+                                        {acceptedTerms && (
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={14}
+                                                color="#ffffff"
+                                            />
+                                        )}
+                                    </View>
+                                </TouchableOpacity>
+
+                                <Text style={SignupStyle.termsText}>
+                                    I agree to the
+                                </Text>
+
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    onPress={() => setTermsModalVisible(true)}
+                                >
+                                    <Text style={SignupStyle.termsLink}>
+                                        Terms and Conditions
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={SignupStyle.termsErrorContainer}>
+                                <Text style={SignupStyle.termsError}>
+                                    {errors.terms || ""}
+                                </Text>
+                            </View>
+                        </View>
+
                         {/* LINKS & BUTTON */}
                         <View style={SignupStyle.signupLinksContainer}>
                             <Text onPress={() => {
@@ -364,7 +432,10 @@ export default function Signup() {
                                     phonenum: "",
                                     password: "",
                                     confirmpassword: "",
+                                    terms: "",
                                 });
+                                setAcceptedTerms(false);
+                                setTermsModalVisible(false);
                                 setBackendError("");
                                 cs.navigate("login");
                             }} style={SignupStyle.signupLinks}>Already have an account? Login</Text>
@@ -423,13 +494,139 @@ export default function Signup() {
                                     phonenum: "",
                                     password: "",
                                     confirmpassword: "",
+                                    terms: "",
                                 });
                                 setBackendError("");
+                                setAcceptedTerms(false);
+                                setTermsModalVisible(false);
                                 cs.navigate("login")
                             }}
                         >
                             <Text style={ModalStyle.modalButtonText}>Go Login</Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+
+            <Modal
+                transparent
+                animationType="fade"
+                visible={termsModalVisible}
+                onRequestClose={() => setTermsModalVisible(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={SignupStyle.termsModalBox}>
+                        <Text style={SignupStyle.termsModalTitle}>
+                            Terms and Conditions
+                        </Text>
+
+                        <ScrollView
+                            style={SignupStyle.termsModalScroll}
+                            contentContainerStyle={SignupStyle.termsModalContent}
+                            showsVerticalScrollIndicator={true}
+                            nestedScrollEnabled
+                        >
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                1. Acceptance of Terms
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                By creating or accessing an account with M&RC
+                                Travel and Tours, you agree to comply with these
+                                Terms and Conditions.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                2. Account Information
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                You are responsible for providing accurate account
+                                information and keeping your login credentials secure.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                3. Booking and Payment
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                All bookings are subject to availability. Prices,
+                                deposits, payment deadlines, and cancellation policies
+                                may vary depending on the selected travel package or
+                                service.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                4. Cancellations and Refunds
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                Cancellation and refund eligibility will depend on the
+                                applicable package, airline, hotel, embassy, or service
+                                provider policy.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                5. User Responsibilities
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                Users must submit complete and valid information and
+                                documents. M&RC Travel and Tours will not be responsible
+                                for delays caused by incomplete, inaccurate, or expired
+                                documents.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                6. Privacy
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                Personal information will be collected and processed
+                                only for account management, booking, payment, travel
+                                documentation, and related services.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                7. Changes to the Terms
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                M&RC Travel and Tours may update these Terms and
+                                Conditions when necessary. Continued use of the platform
+                                means that you accept the updated terms.
+                            </Text>
+                        </ScrollView>
+
+                        <View style={SignupStyle.termsModalFooter}>
+                            <TouchableOpacity
+                                style={SignupStyle.termsCloseButton}
+                                onPress={() => setTermsModalVisible(false)}
+                            >
+                                <Text style={SignupStyle.termsButtonText}>
+                                    Close
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={SignupStyle.termsAgreeButton}
+                                onPress={() => {
+                                    setAcceptedTerms(true);
+
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        terms: ""
+                                    }));
+
+                                    setTermsModalVisible(false);
+                                }}
+                            >
+                                <Text style={SignupStyle.termsButtonText}>
+                                    I Agree
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

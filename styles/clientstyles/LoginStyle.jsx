@@ -83,7 +83,8 @@ const LoginStyle = StyleSheet.create({
     errorMessage: {
         color: "#ff1616",
         alignSelf: 'flex-start',
-        marginBottom: 10
+        marginBottom: 10,
+        fontSize: 12,
     },
     // --- Links Container (Signup & Forgot Pass) ---
     loginLinksContainer: {
@@ -94,7 +95,8 @@ const LoginStyle = StyleSheet.create({
         marginBottom: 20,
     },
     loginLinks: {
-        fontSize: 16,
+        fontFamily: "Roboto_500Medium",
+        fontSize: 13,
         color: "#305797",
     },
     loginLinksDivider: {
@@ -149,8 +151,8 @@ const LoginStyle = StyleSheet.create({
         marginBottom: 10,
     },
     errorText: {
-        color: '#ef4444',
-        fontSize: 16,
+        color: '#ff1616',
+        fontSize: 12,
         textAlign: 'left',
         fontFamily: 'Roboto_400Regular',
     },
