@@ -814,19 +814,19 @@ export default function Home({ route }) {
                         <Text style={HomeStyle.servicesHeader}>THE <Text style={{ color: '#305797' }}>SERVICES</Text> WE OFFER</Text>
                         <View style={HomeStyle.servicesGrid}>
                             <View style={HomeStyle.serviceItem}>
-                                <Image source={require('../../assets/images/Packages_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Image source={require('../../assets/images/map-marker-alt-svgrepo-com.svg')} style={HomeStyle.serviceIcon} contentFit="contain" />
                                 <Text style={HomeStyle.serviceTitle}>Tour Packages</Text>
                             </View>
                             <View style={HomeStyle.serviceItem}>
-                                <Image source={require('../../assets/images/Passport_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Image source={require('../../assets/images/passport-svgrepo-com.svg')} style={HomeStyle.serviceIcon} contentFit="contain" />
                                 <Text style={HomeStyle.serviceTitle}>Passport Assistance</Text>
                             </View>
                             <View style={HomeStyle.serviceItem}>
-                                <Image source={require('../../assets/images/Visa_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Image source={require('../../assets/images/stamp-svgrepo-com.svg')} style={HomeStyle.serviceIcon} contentFit="contain" />
                                 <Text style={HomeStyle.serviceTitle}>Visa Assistance</Text>
                             </View>
                             <View style={HomeStyle.serviceItem}>
-                                <Image source={require('../../assets/images/Quotation_Logo.png')} style={HomeStyle.serviceIcon} contentFit="contain" />
+                                <Image source={require('../../assets/images/file-signature-svgrepo-com.svg')} style={HomeStyle.serviceIcon} contentFit="contain" />
                                 <Text style={HomeStyle.serviceTitle}>Quotations</Text>
                             </View>
                         </View>
