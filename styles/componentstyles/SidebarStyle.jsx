@@ -37,13 +37,13 @@ const SidebarStyle = StyleSheet.create({
         color: '#fff',
         fontFamily: 'Roboto_400Regular',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 14,
     },
     userHandle: {
         color: '#fff',
         fontFamily: 'Roboto_400Regular',
         fontWeight: 'normal',
-        fontSize: 14
+        fontSize: 12
     },
     divider: {
         height: 2,
@@ -79,6 +79,21 @@ const SidebarStyle = StyleSheet.create({
         fontSize: 16,
         marginLeft: 12,
         width: '100%',
+    },
+    profileImgContainer: {
+        width: 55,
+        height: 55,
+        borderRadius: 27.5,
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        backgroundColor: "rgba(255, 255, 255, 0.15)"
+    },
+
+    profileImg: {
+        width: "100%",
+        height: "100%",
+        borderRadius: 27.5
     },
 })
 

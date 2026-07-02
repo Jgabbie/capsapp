@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
@@ -18,12 +18,14 @@ export default function Sidebar({ visible, onClose }) {
     const [modalVisible, setModalVisible] = useState(false)
     const { user, clearUser } = useUser()
 
+    const [profileImageError, setProfileImageError] = useState(false)
+
+    useEffect(() => {
+        setProfileImageError(false)
+    }, [user?.profileImage])
+
     const displayName = user?.username || 'Guest User'
     const displayEmail = user?.email || 'No email'
-
-    const profileImageSource = user?.profileImage
-        ? { uri: user.profileImage }
-        : require('../assets/images/user-circle-svgrepo-com.svg')
 
     const transactionFilledSvg = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg fill="#ffffff" height="800px" width="800px" version="1.1" id="Filled_Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve" stroke="#ffffff">
@@ -83,10 +85,22 @@ export default function Sidebar({ visible, onClose }) {
 
                     {/* --- STICKY TOP SECTION --- */}
                     <View style={SidebarStyle.profileSection}>
-                        <Image
-                            source={profileImageSource}
-                            style={SidebarStyle.profileImg}
-                        />
+                        <View style={SidebarStyle.profileImgContainer}>
+                            {user?.profileImage && !profileImageError ? (
+                                <Image
+                                    source={{ uri: user.profileImage }}
+                                    style={SidebarStyle.profileImg}
+                                    resizeMode="cover"
+                                    onError={() => setProfileImageError(true)}
+                                />
+                            ) : (
+                                <Ionicons
+                                    name="person-circle"
+                                    size={55}
+                                    color="#FFFFFF"
+                                />
+                            )}
+                        </View>
                         <View style={SidebarStyle.nameContainer}>
                             <Text style={SidebarStyle.userName}>{displayName}</Text>
                             <Text style={SidebarStyle.userHandle}>{displayEmail}</Text>
