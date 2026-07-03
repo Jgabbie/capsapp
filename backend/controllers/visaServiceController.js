@@ -9,6 +9,7 @@ const getAllServices = async (_req, res) => {
     const servicesPayload = services.map(service => ({
       visaItem: service._id, // Web uses visaItem for the ID
       visaName: service.visaName,
+      visaImage: service.visaImage,
       visaDescription: service.visaDescription,
       visaPrice: service.visaPrice,
       visaRequirements: service.visaRequirements,
@@ -39,6 +40,7 @@ const getService = async (req, res) => {
       visaName: service.visaName,
       visaDescription: service.visaDescription,
       visaPrice: service.visaPrice,
+      visaImage: service.visaImage,
       visaRequirements: service.visaRequirements,
       visaAdditionalRequirements: service.visaAdditionalRequirements || [],
       visaProcessSteps: service.visaProcessSteps,

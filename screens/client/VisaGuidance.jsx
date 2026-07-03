@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, ImageBackground } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, ImageBackground, Image } from 'react-native'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -124,17 +124,55 @@ export default function VisaGuidance() {
                             key={item.visaItem || item._id || index}
                             activeOpacity={0.85}
                             style={VisaGuidanceStyle.card}
-                            onPress={() => cs.navigate("visadetailsguidance", { service: item })}
+                            onPress={() =>
+                                cs.navigate("visadetailsguidance", {
+                                    service: item
+                                })
+                            }
                         >
+                            {item.visaImage ? (
+                                <Image
+                                    source={{ uri: item.visaImage }}
+                                    style={VisaGuidanceStyle.cardImage}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={VisaGuidanceStyle.cardImagePlaceholder}>
+                                    <Ionicons
+                                        name="image-outline"
+                                        size={32}
+                                        color="#94a3b8"
+                                    />
+
+                                    <Text style={VisaGuidanceStyle.cardImagePlaceholderText}>
+                                        No image available
+                                    </Text>
+                                </View>
+                            )}
+
                             <View style={VisaGuidanceStyle.cardContent}>
-                                <Text style={VisaGuidanceStyle.visaTitle}>{item.visaName}</Text>
-                                <Text style={VisaGuidanceStyle.description}>
+                                <Text
+                                    style={VisaGuidanceStyle.visaTitle}
+                                    numberOfLines={2}
+                                >
+                                    {item.visaName}
+                                </Text>
+
+                                <Text
+                                    style={VisaGuidanceStyle.description}
+                                    numberOfLines={4}
+                                >
                                     {item.visaDescription}
                                 </Text>
 
                                 <View style={VisaGuidanceStyle.cardFooter}>
-                                    <Text style={VisaGuidanceStyle.price}>₱ {item.visaPrice}</Text>
-                                    <Text style={VisaGuidanceStyle.applyText}>Apply</Text>
+                                    <Text style={VisaGuidanceStyle.price}>
+                                        ₱ {Number(item.visaPrice || 0).toLocaleString()}
+                                    </Text>
+
+                                    <Text style={VisaGuidanceStyle.applyText}>
+                                        Apply
+                                    </Text>
                                 </View>
                             </View>
                         </TouchableOpacity>

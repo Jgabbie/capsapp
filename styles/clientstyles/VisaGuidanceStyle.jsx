@@ -77,15 +77,48 @@ const VisaGuidanceStyle = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
-        padding: 16,
+        borderColor: "#e5e7eb",
+        overflow: "hidden",
+
         ...Platform.select({
-            ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
-            android: { elevation: 2 }
+            ios: {
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 2
+                },
+                shadowOpacity: 0.05,
+                shadowRadius: 4
+            },
+            android: {
+                elevation: 2
+            }
         })
     },
+
+    cardImage: {
+        width: "100%",
+        height: 190,
+        backgroundColor: "#eef2f7"
+    },
+
+    cardImagePlaceholder: {
+        width: "100%",
+        height: 190,
+        backgroundColor: "#eef2f7",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8
+    },
+
+    cardImagePlaceholderText: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 13,
+        color: "#64748b"
+    },
+
     cardContent: {
-        flex: 1,
+        padding: 16
     },
     visaTitle: {
         fontSize: 18,
