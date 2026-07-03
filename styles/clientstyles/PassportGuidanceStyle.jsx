@@ -83,11 +83,23 @@ const PassportGuidanceStyle = StyleSheet.create({
             android: { elevation: 2 }
         })
     },
+    selectionTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 8
+    },
+
+    selectionIcon: {
+        width: 30,
+        height: 30,
+        flexShrink: 0
+    },
     selectionTitle: {
         fontSize: 18,
         fontFamily: "Montserrat_600SemiBold",
         color: "#1f2937",
-        marginBottom: 8
+        marginBottom: 0
     },
     selectionDesc: {
         fontSize: 14,

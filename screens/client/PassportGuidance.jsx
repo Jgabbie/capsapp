@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, ScrollView, ImageBackground } from 'react-native'
 import React, { useState } from 'react'
+import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
@@ -63,7 +64,17 @@ export default function PassportGuidance() {
                     onPress={() => cs.navigate("passportguidancenew")}
                     activeOpacity={0.7}
                 >
-                    <Text style={PassportGuidanceStyle.selectionTitle}>New Passport</Text>
+                    <View style={PassportGuidanceStyle.selectionTitleRow}>
+                        <Image
+                            source={require('../../assets/images/plus-circle-svgrepo-com.svg')}
+                            style={PassportGuidanceStyle.selectionIcon}
+                            resizeMode="contain"
+                        />
+
+                        <Text style={PassportGuidanceStyle.selectionTitle}>
+                            New Passport
+                        </Text>
+                    </View>
                     <Text style={PassportGuidanceStyle.selectionDesc}>Apply for a passport for first-time applicants.</Text>
                     <View style={PassportGuidanceStyle.selectionFooter}>
                         <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
@@ -76,7 +87,16 @@ export default function PassportGuidance() {
                     onPress={() => cs.navigate("passportguidancerenew")}
                     activeOpacity={0.7}
                 >
-                    <Text style={PassportGuidanceStyle.selectionTitle}>Renew Passport</Text>
+                    <View style={PassportGuidanceStyle.selectionTitleRow}>
+                        <Image
+                            source={require('../../assets/images/refresh-f-svgrepo-com.svg')}
+                            style={PassportGuidanceStyle.selectionIcon}
+                            resizeMode="contain"
+                        />
+                        <Text style={PassportGuidanceStyle.selectionTitle}>
+                            Renew Passport
+                        </Text>
+                    </View>
                     <Text style={PassportGuidanceStyle.selectionDesc}>Renew your existing passport quickly.</Text>
                     <View style={PassportGuidanceStyle.selectionFooter}>
                         <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
