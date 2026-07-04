@@ -892,7 +892,7 @@ export default function QuotationForm({ route, navigation }) {
                 </TouchableOpacity>
             </Modal>
 
-            {/*  NEW SUCCESS MODAL (WEB DESIGN MATCH)  */}
+            {/*  NEW SUCCESS MODAL */}
             <Modal visible={isSuccessModalVisible} transparent animationType="fade">
                 <View style={ModalStyle.modalOverlay}>
                     <View style={[ModalStyle.modalBox, { width: '90%', padding: 25, alignItems: 'center', borderRadius: 12 }]}>
@@ -905,6 +905,8 @@ export default function QuotationForm({ route, navigation }) {
                         >
                             <Ionicons name="close" size={24} color="#888" />
                         </TouchableOpacity>
+
+                        <View style={QuotationFormStyle.modalIconContainer}><Ionicons name="checkmark" size={32} color="#059669" /></View>
 
                         <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 22, color: "#305797", textAlign: "center", marginTop: 20, marginBottom: 12 }}>
                             Quotation Request Submitted

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet, Pressable } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,7 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import dayjs from "dayjs";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -128,6 +128,7 @@ export default function VisaProgress() {
 
     const [selectedScheduleIndex, setSelectedScheduleIndex] = useState(null);
     const [customPreferredDate, setCustomPreferredDate] = useState(null);
+    const [pendingCustomPreferredDate, setPendingCustomPreferredDate] = useState(null);
     const [customPreferredTime, setCustomPreferredTime] = useState(null);
     const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
@@ -242,9 +243,90 @@ export default function VisaProgress() {
 
 
     //handle custom date and time pickers
-    const handleCustomDateChange = (event, date) => {
+    const rawMinimumCustomDate = dayjs()
+        .add(14, 'day')
+        .startOf('day');
+
+
+    const getNextAvailableWeekday = (date) => {
+        let nextDate = dayjs(date);
+
+        while (nextDate.day() === 0 || nextDate.day() === 6) {
+            nextDate = nextDate.add(1, 'day');
+        }
+
+        return nextDate.format('YYYY-MM-DD');
+    };
+
+
+    const minimumCustomDate =
+        rawMinimumCustomDate.format('YYYY-MM-DD');
+
+
+    const earliestAvailableCustomDate =
+        getNextAvailableWeekday(rawMinimumCustomDate);
+
+
+    const openCustomDatePicker = () => {
+        setPendingCustomPreferredDate(
+            customPreferredDate
+                ? dayjs(customPreferredDate).format('YYYY-MM-DD')
+                : earliestAvailableCustomDate
+        );
+
+        setShowCustomDatePicker(true);
+    };
+
+
+    const closeCustomDatePicker = () => {
+        setPendingCustomPreferredDate(
+            customPreferredDate
+                ? dayjs(customPreferredDate).format('YYYY-MM-DD')
+                : null
+        );
+
         setShowCustomDatePicker(false);
-        if (date) setCustomPreferredDate(date);
+    };
+
+
+    const selectCustomPreferredDate = (dateString) => {
+        const selectedDate = dayjs(dateString);
+
+        if (selectedDate.day() === 0 || selectedDate.day() === 6) {
+            Alert.alert(
+                'Invalid Date',
+                'Appointments are only available from Monday to Friday.'
+            );
+            return;
+        }
+
+        setPendingCustomPreferredDate(dateString);
+    };
+
+
+    const applyCustomPreferredDate = () => {
+        if (!pendingCustomPreferredDate) return;
+
+        const selectedDate = dayjs(pendingCustomPreferredDate);
+
+        if (selectedDate.isBefore(rawMinimumCustomDate, 'day')) {
+            Alert.alert(
+                'Invalid Date',
+                'The appointment must be scheduled at least 14 days from today.'
+            );
+            return;
+        }
+
+        if (selectedDate.day() === 0 || selectedDate.day() === 6) {
+            Alert.alert(
+                'Invalid Date',
+                'Appointments are only available from Monday to Friday.'
+            );
+            return;
+        }
+
+        setCustomPreferredDate(pendingCustomPreferredDate);
+        setShowCustomDatePicker(false);
     };
 
     const handleCustomTimeChange = (event, time) => {
@@ -2179,12 +2261,12 @@ export default function VisaProgress() {
                                         <Text style={VisaProgressStyle.optionTagText}>Others</Text>
                                     </View>
                                     <Text style={VisaProgressStyle.optionDate}>Enter your preferred date and time</Text>
-                                    <Text style={VisaProgressStyle.optionTime}>Pick both values from the native date and time pickers.</Text>
+                                    <Text style={VisaProgressStyle.optionTime}>Select your preferred appointment date and time.</Text>
 
                                     {isOthersSelected && (
                                         <View style={{ marginTop: 14 }}>
                                             <TouchableOpacity
-                                                onPress={() => setShowCustomDatePicker(true)}
+                                                onPress={openCustomDatePicker}
                                                 style={{
                                                     borderWidth: 1,
                                                     borderColor: '#d1d5db',
@@ -2299,20 +2381,181 @@ export default function VisaProgress() {
                     </View>
                 </View>
 
-                <Modal visible={showCustomDatePicker} transparent animationType="fade" onRequestClose={() => setShowCustomDatePicker(false)}>
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowCustomDatePicker(false)}>
-                        <TouchableWithoutFeedback>
-                            <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                                <DateTimePicker
-                                    value={customPreferredDate || dayjs().add(14, 'days').toDate()}
-                                    mode="date"
-                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                    minimumDate={dayjs().add(14, 'days').toDate()}
-                                    onChange={handleCustomDateChange}
-                                />
+                <Modal
+                    visible={showCustomDatePicker}
+                    transparent
+                    animationType="fade"
+                    statusBarTranslucent
+                    onRequestClose={closeCustomDatePicker}
+                >
+                    <Pressable
+                        style={VisaProgressStyle.dateModalOverlay}
+                        onPress={closeCustomDatePicker}
+                    >
+                        <Pressable
+                            style={VisaProgressStyle.dateModalCard}
+                            onPress={(event) => event.stopPropagation()}
+                        >
+                            <View style={VisaProgressStyle.dateModalHeader}>
+                                <View style={VisaProgressStyle.dateModalHeaderContent}>
+                                    <View style={VisaProgressStyle.dateModalHeaderIcon}>
+                                        <Ionicons
+                                            name="calendar"
+                                            size={21}
+                                            color="#305797"
+                                        />
+                                    </View>
+
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={VisaProgressStyle.dateModalTitle}>
+                                            Preferred Date
+                                        </Text>
+
+                                        <Text style={VisaProgressStyle.dateModalSubtitle}>
+                                            Appointments are available Monday to Friday.
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={VisaProgressStyle.dateModalCloseButton}
+                                    onPress={closeCustomDatePicker}
+                                >
+                                    <Ionicons
+                                        name="close"
+                                        size={21}
+                                        color="#64748b"
+                                    />
+                                </TouchableOpacity>
                             </View>
-                        </TouchableWithoutFeedback>
-                    </TouchableOpacity>
+
+                            <Calendar
+                                key={
+                                    pendingCustomPreferredDate ||
+                                    customPreferredDate ||
+                                    earliestAvailableCustomDate
+                                }
+                                initialDate={
+                                    pendingCustomPreferredDate ||
+                                    customPreferredDate ||
+                                    earliestAvailableCustomDate
+                                }
+                                minDate={minimumCustomDate}
+                                onDayPress={({ dateString }) => {
+                                    selectCustomPreferredDate(dateString);
+                                }}
+                                markedDates={{
+                                    [
+                                        pendingCustomPreferredDate ||
+                                        customPreferredDate ||
+                                        earliestAvailableCustomDate
+                                    ]: {
+                                        selected: true,
+                                        selectedColor: '#305797',
+                                        selectedTextColor: '#ffffff'
+                                    }
+                                }}
+                                enableSwipeMonths
+                                hideExtraDays
+                                disableAllTouchEventsForDisabledDays
+                                renderArrow={(direction) => (
+                                    <View style={VisaProgressStyle.dateCalendarArrow}>
+                                        <Ionicons
+                                            name={
+                                                direction === 'left'
+                                                    ? 'chevron-back'
+                                                    : 'chevron-forward'
+                                            }
+                                            size={18}
+                                            color="#305797"
+                                        />
+                                    </View>
+                                )}
+                                style={VisaProgressStyle.dateCalendar}
+                                theme={{
+                                    backgroundColor: '#ffffff',
+                                    calendarBackground: '#ffffff',
+
+                                    textSectionTitleColor: '#94a3b8',
+                                    textDisabledColor: '#d1d5db',
+                                    dayTextColor: '#334155',
+                                    monthTextColor: '#1e293b',
+
+                                    selectedDayBackgroundColor: '#305797',
+                                    selectedDayTextColor: '#ffffff',
+                                    todayTextColor: '#305797',
+                                    arrowColor: '#305797',
+
+                                    textDayFontFamily: 'Roboto_400Regular',
+                                    textMonthFontFamily: 'Montserrat_700Bold',
+                                    textDayHeaderFontFamily: 'Roboto_500Medium',
+
+                                    textDayFontSize: 14,
+                                    textMonthFontSize: 16,
+                                    textDayHeaderFontSize: 12
+                                }}
+                            />
+
+                            <View style={VisaProgressStyle.dateSelectedContainer}>
+                                <View style={VisaProgressStyle.dateSelectedIcon}>
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={17}
+                                        color="#305797"
+                                    />
+                                </View>
+
+                                <View>
+                                    <Text style={VisaProgressStyle.dateSelectedLabel}>
+                                        Selected date
+                                    </Text>
+
+                                    <Text style={VisaProgressStyle.dateSelectedValue}>
+                                        {dayjs(
+                                            pendingCustomPreferredDate ||
+                                            customPreferredDate ||
+                                            earliestAvailableCustomDate
+                                        ).format('MMMM D, YYYY')}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <Text style={VisaProgressStyle.dateAvailabilityNote}>
+                                Earliest available weekday:{' '}
+                                {dayjs(earliestAvailableCustomDate).format(
+                                    'MMMM D, YYYY'
+                                )}
+                            </Text>
+
+                            <View style={VisaProgressStyle.dateModalActions}>
+                                <TouchableOpacity
+                                    style={VisaProgressStyle.dateModalCancelButton}
+                                    onPress={closeCustomDatePicker}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={VisaProgressStyle.dateModalCancelText}>
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={VisaProgressStyle.dateModalConfirmButton}
+                                    onPress={applyCustomPreferredDate}
+                                    activeOpacity={0.75}
+                                >
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={18}
+                                        color="#ffffff"
+                                    />
+
+                                    <Text style={VisaProgressStyle.dateModalConfirmText}>
+                                        Confirm Date
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Pressable>
+                    </Pressable>
                 </Modal>
 
                 <Modal visible={showCustomTimePicker} transparent animationType="fade" onRequestClose={() => setShowCustomTimePicker(false)}>

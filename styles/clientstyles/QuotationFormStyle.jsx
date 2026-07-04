@@ -148,7 +148,7 @@ const QuotationFormStyle = StyleSheet.create({
         flex: 1
     },
     packageDesc: {
-        textalign: "justify",
+        textAlign: "justify",
         fontFamily: "Roboto_400Regular",
         fontSize: 13,
         color: "#555",
@@ -394,6 +394,15 @@ const QuotationFormStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         color: "#fff",
         fontSize: 15
+    },
+    modalIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#d1fae5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10
     }
 });
 
