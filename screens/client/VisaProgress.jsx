@@ -1584,12 +1584,16 @@ export default function VisaProgress() {
                 withUserHeader(user._id)
             );
 
+            const refreshed = await apiFetch.get(
+                `/visa/applications/${id}`,
+                withUserHeader(user._id)
+            );
+
+            setApplication(refreshed?.data || refreshed);
+
             setDeliveryAddress("")
             setShowClaimPreferenceSuccessModal(true);
-            try {
-                const refreshed = await apiFetch.get(`/visa/applications/${id}`, withUserHeader(user._id));
-                setApplication(refreshed);
-            } catch (e) { console.error(e); }
+
         } catch (error) {
             console.error(error);
             notification.error({ message: 'Failed to update release option.' });
