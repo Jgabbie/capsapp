@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform, Pressable } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform, Pressable, BackHandler } from 'react-native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Calendar } from 'react-native-calendars'
 import dayjs from 'dayjs'
 import * as Print from 'expo-print';
@@ -41,6 +41,26 @@ export default function UserTransactions() {
     });
 
     const cs = useNavigation()
+
+
+    useFocusEffect(
+        React.useCallback(() => {
+            cs.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [cs])
+    );
+
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [loading, setLoading] = useState(true)

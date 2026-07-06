@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated, RefreshControl } from 'react-native'
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ImageBackground, Alert, Dimensions, Animated, RefreshControl, BackHandler } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -105,6 +105,25 @@ export default function Home({ route }) {
     })
 
     const cs = useNavigation()
+
+    useFocusEffect(
+        React.useCallback(() => {
+            cs.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [cs])
+    );
+
     const { user, updateUser } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
 

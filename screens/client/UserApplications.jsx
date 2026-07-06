@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, Pressable, BackHandler } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { Calendar } from 'react-native-calendars';
@@ -32,6 +32,26 @@ export default function UserApplications() {
     });
 
     const cs = useNavigation();
+
+
+    useFocusEffect(
+        React.useCallback(() => {
+            cs.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [cs])
+    );
+
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 

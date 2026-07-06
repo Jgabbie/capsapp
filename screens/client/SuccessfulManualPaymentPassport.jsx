@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SuccessfulPaymentPassportStyle from '../../styles/clientstyles/SuccessfulPaymentPassportStyle';
 
@@ -30,6 +31,24 @@ export default function SuccessfulManualPaymentPassport({ navigation }) {
 
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
+
+    useFocusEffect(
+        useCallback(() => {
+            navigation.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [navigation])
+    );
 
     useEffect(() => {
         if (!isActive) return;

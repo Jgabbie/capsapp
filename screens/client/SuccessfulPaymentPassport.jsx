@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ToastAndroid, Alert, Platform } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ToastAndroid, Alert, Platform, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
@@ -33,6 +34,24 @@ export default function SuccessfulPaymentPassport({ route, navigation }) {
     const { user } = useUser();
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
+
+    useFocusEffect(
+        useCallback(() => {
+            navigation.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [navigation])
+    );
 
 
     //show message function
