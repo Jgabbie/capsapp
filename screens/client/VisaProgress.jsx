@@ -101,6 +101,60 @@ const getSafePdfBaseName = (value = 'document') => {
 };
 
 
+//get status Colors
+const getStatusColors = (status) => {
+    switch (String(status || '').trim().toLowerCase()) {
+        // Yellow
+        case 'application submitted':
+        case 'documents submitted':
+            return {
+                backgroundColor: '#FEF3C7',
+                textColor: '#92400E',
+                borderColor: '#F59E0B',
+            };
+
+        // Green
+        case 'application approved':
+        case 'payment completed':
+        case 'documents approved':
+        case 'dfa approved':
+        case 'embassy approved':
+        case 'passport released':
+            return {
+                backgroundColor: '#DCFCE7',
+                textColor: '#166534',
+                borderColor: '#22C55E',
+            };
+
+        // Blue
+        case 'documents uploaded':
+        case 'documents received':
+        case 'processing by dfa':
+        case 'processing by embassy':
+            return {
+                backgroundColor: '#DBEAFE',
+                textColor: '#1D4ED8',
+                borderColor: '#3B82F6',
+            };
+
+        // Red for rejected status
+        case 'rejected':
+            return {
+                backgroundColor: '#FEE2E2',
+                textColor: '#B91C1C',
+                borderColor: '#EF4444',
+            };
+
+        default:
+            return {
+                backgroundColor: '#F3F4F6',
+                textColor: '#4B5563',
+                borderColor: '#D1D5DB',
+            };
+    }
+};
+
+
 export default function VisaProgress() {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -220,6 +274,7 @@ export default function VisaProgress() {
         ? application.status[application.status.length - 1]
         : (application?.status || application?.statusText || '');
     const appStatus = statusText || '';
+    const currentStatusColors = getStatusColors(appStatus);
     const normalizedAppStatus = String(appStatus || '').toLowerCase();
     const hasChosenSuggestedSchedule = Boolean(
         String(application?.suggestedAppointmentScheduleChosen?.date || '').trim() ||
@@ -569,24 +624,99 @@ export default function VisaProgress() {
     };
 
 
+    //format appointment time into 12-hour format with AM/PM, handling various input formats
+    const formatAppointmentTime = (value) => {
+        if (!value) return '';
+
+        // Handles Date objects
+        if (value instanceof Date) {
+            return dayjs(value).format('hh:mm A');
+        }
+
+        const rawValue = String(value).trim().toUpperCase();
+
+        // Already uses 12-hour format, such as 8:30 AM
+        const twelveHourMatch = rawValue.match(
+            /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i
+        );
+
+        if (twelveHourMatch) {
+            const hour = Number(twelveHourMatch[1]);
+            const minute = Number(twelveHourMatch[2]);
+            const period = twelveHourMatch[3].toUpperCase();
+
+            if (
+                hour >= 1 &&
+                hour <= 12 &&
+                minute >= 0 &&
+                minute <= 59
+            ) {
+                return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+            }
+        }
+
+        // Converts 24-hour values, such as 13:30, into 01:30 PM
+        const twentyFourHourMatch = rawValue.match(
+            /^(\d{1,2}):(\d{2})(?::\d{2})?$/
+        );
+
+        if (twentyFourHourMatch) {
+            const hour = Number(twentyFourHourMatch[1]);
+            const minute = Number(twentyFourHourMatch[2]);
+
+            if (
+                hour >= 0 &&
+                hour <= 23 &&
+                minute >= 0 &&
+                minute <= 59
+            ) {
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const twelveHour = hour % 12 || 12;
+
+                return `${String(twelveHour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+            }
+        }
+
+        const parsedTime = dayjs(value);
+
+        return parsedTime.isValid()
+            ? parsedTime.format('hh:mm A')
+            : rawValue;
+    };
+
+
     // Normalize schedule slot data into a consistent format
     const normalizeScheduleSlot = (slot) => {
         if (!slot || typeof slot !== 'object') {
             return { date: '', time: '' };
         }
 
-        const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
-        const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
+        const rawDate =
+            slot.date ||
+            slot.preferredDate ||
+            slot.appointmentDate ||
+            slot.scheduleDate ||
+            '';
+
+        const rawTime =
+            slot.time ||
+            slot.preferredTime ||
+            slot.appointmentTime ||
+            slot.scheduleTime ||
+            '';
 
         const parsedDate = rawDate ? dayjs(rawDate) : null;
-        const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
+
+        const date = parsedDate?.isValid()
+            ? parsedDate.format('YYYY-MM-DD')
+            : String(rawDate || '');
 
         let time = '';
+
         if (rawTime) {
-            const parsedTime = dayjs(String(rawTime), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
-            time = parsedTime.isValid() ? parsedTime.format('HH:mm') : String(rawTime);
+            time = formatAppointmentTime(rawTime);
         } else if (parsedDate?.isValid()) {
-            time = parsedDate.format('HH:mm');
+            time = parsedDate.format('hh:mm A');
         }
 
         return { date, time };
@@ -1395,7 +1525,7 @@ export default function VisaProgress() {
             }
 
             dateToSend = dayjs(customPreferredDate).format('YYYY-MM-DD');
-            timeToSend = customPreferredTime;
+            timeToSend = formatAppointmentTime(customPreferredTime);
 
         } else if (typeof selectedSuggestedIndex === 'number') {
             const selected = normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedSuggestedIndex]);
@@ -1406,7 +1536,7 @@ export default function VisaProgress() {
             }
 
             dateToSend = dayjs(selected.date).format('YYYY-MM-DD');
-            timeToSend = selected.time;
+            timeToSend = formatAppointmentTime(selected.time);
         }
 
         try {
@@ -1615,8 +1745,27 @@ export default function VisaProgress() {
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Status</Text>
-                        <View style={VisaProgressStyle.statusTag}>
-                            <Text style={VisaProgressStyle.statusText}>{appStatus}</Text>
+
+                        <View
+                            style={[
+                                VisaProgressStyle.statusTag,
+                                {
+                                    backgroundColor: currentStatusColors.backgroundColor,
+                                    borderColor: currentStatusColors.borderColor,
+                                    borderWidth: 1,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    VisaProgressStyle.statusText,
+                                    {
+                                        color: currentStatusColors.textColor,
+                                    },
+                                ]}
+                            >
+                                {appStatus}
+                            </Text>
                         </View>
                     </View>
 

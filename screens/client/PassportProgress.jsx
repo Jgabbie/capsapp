@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import dayjs from "dayjs";
 import { Calendar } from 'react-native-calendars';
 
@@ -73,6 +74,61 @@ const PASSPORT_STEPS = [
     { title: 'Passport Released', description: 'Passport Released' },
 ];
 
+const MAX_REQUIREMENT_FILE_SIZE = 3 * 1024 * 1024;
+
+//get status colors
+const getStatusColors = (status) => {
+    switch (String(status || '').trim().toLowerCase()) {
+        // Yellow
+        case 'application submitted':
+        case 'documents submitted':
+            return {
+                backgroundColor: '#FEF3C7',
+                textColor: '#92400E',
+                borderColor: '#F59E0B',
+            };
+
+        // Green
+        case 'application approved':
+        case 'payment completed':
+        case 'documents approved':
+        case 'dfa approved':
+        case 'embassy approved':
+        case 'passport released':
+            return {
+                backgroundColor: '#DCFCE7',
+                textColor: '#166534',
+                borderColor: '#22C55E',
+            };
+
+        // Blue
+        case 'documents uploaded':
+        case 'documents received':
+        case 'processing by dfa':
+        case 'processing by embassy':
+            return {
+                backgroundColor: '#DBEAFE',
+                textColor: '#1D4ED8',
+                borderColor: '#3B82F6',
+            };
+
+        // Red for rejected status
+        case 'rejected':
+            return {
+                backgroundColor: '#FEE2E2',
+                textColor: '#B91C1C',
+                borderColor: '#EF4444',
+            };
+
+        default:
+            return {
+                backgroundColor: '#F3F4F6',
+                textColor: '#4B5563',
+                borderColor: '#D1D5DB',
+            };
+    }
+};
+
 export default function PassportApplication() {
 
     const [fontsLoaded] = useFonts({
@@ -106,11 +162,21 @@ export default function PassportApplication() {
 
 
     //function to normalize the picked document to a consistent format
-    const normalizePickedDocument = (asset) => ({
+    const normalizePickedDocument = (asset, resolvedSize = null) => ({
         uri: asset.uri,
-        name: asset.name || asset.fileName || `document-${Date.now()}`,
-        type: asset.mimeType || asset.type || 'application/octet-stream',
-        size: asset.size,
+        name:
+            asset.name ||
+            asset.fileName ||
+            `document-${Date.now()}`,
+        type:
+            asset.mimeType ||
+            asset.type ||
+            'application/octet-stream',
+        size:
+            Number(asset.size) ||
+            Number(asset.fileSize) ||
+            Number(resolvedSize) ||
+            0,
     });
 
 
@@ -128,13 +194,75 @@ export default function PassportApplication() {
             }
 
             const asset = result.assets[0];
+
+            if (!asset?.uri) {
+                Alert.alert(
+                    'Error',
+                    'Could not read the selected file. Please try again.'
+                );
+                return;
+            }
+
+            let fileSize =
+                Number(asset.size) ||
+                Number(asset.fileSize) ||
+                0;
+
+            // Some Android document providers do not return asset.size.
+            if (!fileSize) {
+                try {
+                    const fileInfo = await FileSystem.getInfoAsync(asset.uri, {
+                        size: true,
+                    });
+
+                    if (fileInfo.exists) {
+                        fileSize = Number(fileInfo.size) || 0;
+                    }
+                } catch (fileInfoError) {
+                    console.error(
+                        'Could not determine document size:',
+                        fileInfoError
+                    );
+                }
+            }
+
+            if (!fileSize) {
+                showFileValidationModal(
+                    'File Size Unavailable',
+                    'The size of this file could not be determined. Please select another file.'
+                );
+                return;
+            }
+
+            if (fileSize > MAX_REQUIREMENT_FILE_SIZE) {
+                const selectedSizeInMB = (
+                    fileSize /
+                    (1024 * 1024)
+                ).toFixed(2);
+
+                showFileValidationModal(
+                    'File Too Large',
+                    `${file.name || 'The selected file'} is ${fileSizeInMB} MB. The maximum allowed size is 3 MB.`
+                );
+                return;
+            }
+
+            const normalizedFile = normalizePickedDocument(
+                asset,
+                fileSize
+            );
+
             setSelectedFiles(prev => ({
                 ...prev,
-                [key]: normalizePickedDocument(asset),
+                [key]: normalizedFile,
             }));
         } catch (error) {
             console.error('Failed to pick document:', error);
-            Alert.alert('Error', 'Could not open the file picker.');
+
+            Alert.alert(
+                'Error',
+                'Could not open the file picker.'
+            );
         }
     };
 
@@ -196,21 +324,125 @@ export default function PassportApplication() {
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
 
 
+    const [fileValidationModal, setFileValidationModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+    });
+
+
+    //function to show the file validation modal with a specific title and message
+    const showFileValidationModal = (title, message) => {
+        setFileValidationModal({
+            visible: true,
+            title,
+            message,
+        });
+    };
+
+
+    //close the file validation modal and reset its state
+    const closeFileValidationModal = () => {
+        setFileValidationModal({
+            visible: false,
+            title: '',
+            message: '',
+        });
+    };
+
+
+    //format appointment time into 12-hour format with AM/PM, handling various input formats
+    const formatAppointmentTime = (value) => {
+        if (!value) return '';
+
+        // Handles Date objects
+        if (value instanceof Date) {
+            return dayjs(value).format('hh:mm A');
+        }
+
+        const rawValue = String(value).trim().toUpperCase();
+
+        // Already uses 12-hour format, such as 8:30 AM
+        const twelveHourMatch = rawValue.match(
+            /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i
+        );
+
+        if (twelveHourMatch) {
+            const hour = Number(twelveHourMatch[1]);
+            const minute = Number(twelveHourMatch[2]);
+            const period = twelveHourMatch[3].toUpperCase();
+
+            if (
+                hour >= 1 &&
+                hour <= 12 &&
+                minute >= 0 &&
+                minute <= 59
+            ) {
+                return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+            }
+        }
+
+        // Converts 24-hour values, such as 13:30, into 01:30 PM
+        const twentyFourHourMatch = rawValue.match(
+            /^(\d{1,2}):(\d{2})(?::\d{2})?$/
+        );
+
+        if (twentyFourHourMatch) {
+            const hour = Number(twentyFourHourMatch[1]);
+            const minute = Number(twentyFourHourMatch[2]);
+
+            if (
+                hour >= 0 &&
+                hour <= 23 &&
+                minute >= 0 &&
+                minute <= 59
+            ) {
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const twelveHour = hour % 12 || 12;
+
+                return `${String(twelveHour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+            }
+        }
+
+        const parsedTime = dayjs(value);
+
+        return parsedTime.isValid()
+            ? parsedTime.format('hh:mm A')
+            : rawValue;
+    };
+
     //helper function to normalize schedule slot data
     const normalizeScheduleSlot = (slot) => {
-        if (!slot || typeof slot !== 'object') return { date: '', time: '' };
-        const rawDate = slot.date || slot.preferredDate || slot.appointmentDate || slot.scheduleDate || '';
-        const rawTime = slot.time || slot.preferredTime || slot.appointmentTime || slot.scheduleTime || '';
+        if (!slot || typeof slot !== 'object') {
+            return { date: '', time: '' };
+        }
+
+        const rawDate =
+            slot.date ||
+            slot.preferredDate ||
+            slot.appointmentDate ||
+            slot.scheduleDate ||
+            '';
+
+        const rawTime =
+            slot.time ||
+            slot.preferredTime ||
+            slot.appointmentTime ||
+            slot.scheduleTime ||
+            '';
 
         const parsedDate = rawDate ? dayjs(rawDate) : null;
-        const date = parsedDate?.isValid() ? parsedDate.format('YYYY-MM-DD') : String(rawDate || '');
+
+        const date = parsedDate?.isValid()
+            ? parsedDate.format('YYYY-MM-DD')
+            : String(rawDate || '');
 
         let time = '';
+
         if (rawTime) {
-            const parsedTime = dayjs(String(rawTime), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
-            time = parsedTime.isValid() ? parsedTime.format('HH:mm') : String(rawTime);
+            time = formatAppointmentTime(rawTime);
         } else if (parsedDate?.isValid()) {
-            time = parsedDate.format('HH:mm');
+            time = parsedDate.format('hh:mm A');
         }
 
         return { date, time };
@@ -219,14 +451,7 @@ export default function PassportApplication() {
 
     //helper function to format time for display in a user-friendly format
     const formatTimeForDisplay = (time) => {
-        if (!time) return 'No time provided';
-
-        const parsedTime = dayjs(String(time), ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'HH:mm:ss'], true);
-        if (parsedTime.isValid()) {
-            return parsedTime.format('hh:mm A');
-        }
-
-        return String(time);
+        return formatAppointmentTime(time) || 'No time provided';
     };
 
     const isOthersSelected = selectedScheduleIndex === 'others';
@@ -339,7 +564,7 @@ export default function PassportApplication() {
         const selected = isOthersOption
             ? {
                 date: customPreferredDate ? dayjs(customPreferredDate).format('YYYY-MM-DD') : '',
-                time: customPreferredTime || ''
+                time: formatAppointmentTime(customPreferredTime)
             }
             : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
 
@@ -784,6 +1009,7 @@ export default function PassportApplication() {
     const currentStatusSetDate = getStatusSetDate(application);
     const statusSetDate = currentStatusSetDate; // alias for compatibility with other components
     const appStatus = (application?.status || '').toString();
+    const currentStatusColors = getStatusColors(appStatus);
     const hasSuggestedAppointmentScheduleChosen = Boolean(
         String(application?.suggestedAppointmentScheduleChosen?.date || '').trim() ||
         String(application?.suggestedAppointmentScheduleChosen?.time || '').trim()
@@ -1144,22 +1370,60 @@ export default function PassportApplication() {
         });
 
 
-    //validate file size before upload, ensuring it is less than 3MB and alerting the user if it exceeds this limit
-    const beforeRequirementUpload = (file) => {
-        const isLt3M = file.size / 1024 / 1024 < 3;
-        if (!isLt3M) {
-            Alert.alert('Error', 'Image/PDF must be smaller than 3MB!');
-        }
-        return isLt3M || Upload.LIST_IGNORE;
-    };
-
-
     //handle the submission of uploaded documents, ensuring all required files are present and valid before sending them to the server
     const handleSubmit = async () => {
         if (uploading || uploadingAll) {
             Alert.alert('Warning', "Please wait until uploads finish");
             return;
         }
+
+
+        const selectedFileEntries = Object.entries(selectedFiles);
+
+        for (const [key, file] of selectedFileEntries) {
+            if (!file) continue;
+
+            let fileSize = Number(file.size) || 0;
+
+            if (!fileSize && file.uri) {
+                try {
+                    const fileInfo = await FileSystem.getInfoAsync(file.uri, {
+                        size: true,
+                    });
+
+                    if (fileInfo.exists) {
+                        fileSize = Number(fileInfo.size) || 0;
+                    }
+                } catch (fileInfoError) {
+                    console.error(
+                        `Could not check file size for ${key}:`,
+                        fileInfoError
+                    );
+                }
+            }
+
+            if (!fileSize) {
+                Alert.alert(
+                    'File Size Unavailable',
+                    `${file.name || 'A selected file'} could not be validated. Please select it again.`
+                );
+                return;
+            }
+
+            if (fileSize > MAX_REQUIREMENT_FILE_SIZE) {
+                const fileSizeInMB = (
+                    fileSize /
+                    (1024 * 1024)
+                ).toFixed(2);
+
+                showFileValidationModal(
+                    'File Too Large',
+                    `The selected file is ${selectedSizeInMB} MB. The maximum allowed size is 3 MB.`
+                );
+                return;
+            }
+        }
+
 
         if (!resubmissionRequested) {
             if (!selectedFiles.birthCertificate || !selectedFiles.applicationForm || !selectedFiles.govId) {
@@ -1292,10 +1556,12 @@ export default function PassportApplication() {
             }
 
             dateToSend = dayjs(customPreferredDate).format('YYYY-MM-DD');
-            timeToSend = customPreferredTime;
+            timeToSend = formatAppointmentTime(customPreferredTime);
 
         } else if (typeof selectedSuggestedIndex === 'number') {
-            const selected = application.suggestedAppointmentSchedules[selectedSuggestedIndex];
+            const selected = normalizeScheduleSlot(
+                application.suggestedAppointmentSchedules[selectedSuggestedIndex]
+            );
 
             if (!selected?.date || !selected?.time) {
                 Alert.alert('Error', 'Selected option is missing date or time.');
@@ -1303,7 +1569,7 @@ export default function PassportApplication() {
             }
 
             dateToSend = dayjs(selected.date).format('YYYY-MM-DD');
-            timeToSend = selected.time;
+            timeToSend = formatAppointmentTime(selected.time);
         }
 
         try {
@@ -1465,8 +1731,27 @@ export default function PassportApplication() {
 
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Status</Text>
-                        <View style={PassportProgressStyle.statusTag}>
-                            <Text style={PassportProgressStyle.statusText}>{appStatus}</Text>
+
+                        <View
+                            style={[
+                                PassportProgressStyle.statusTag,
+                                {
+                                    backgroundColor: currentStatusColors.backgroundColor,
+                                    borderColor: currentStatusColors.borderColor,
+                                    borderWidth: 1,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    PassportProgressStyle.statusText,
+                                    {
+                                        color: currentStatusColors.textColor,
+                                    },
+                                ]}
+                            >
+                                {appStatus}
+                            </Text>
                         </View>
                     </View>
 
@@ -2430,6 +2715,101 @@ export default function PassportApplication() {
             </Modal>
 
 
+            {/* validation modal */}
+            <Modal
+                visible={fileValidationModal.visible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeFileValidationModal}
+            >
+                <TouchableOpacity
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: 20,
+                    }}
+                    activeOpacity={1}
+                    onPress={closeFileValidationModal}
+                >
+                    <TouchableWithoutFeedback>
+                        <View
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: 20,
+                                padding: 24,
+                                alignItems: 'center',
+                                width: '85%',
+                                maxWidth: 360,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: 60,
+                                    height: 60,
+                                    borderRadius: 30,
+                                    backgroundColor: '#FEE2E2',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginBottom: 16,
+                                }}
+                            >
+                                <Ionicons
+                                    name="alert-circle-outline"
+                                    size={34}
+                                    color="#DC2626"
+                                />
+                            </View>
+
+                            <Text
+                                style={{
+                                    fontFamily: 'Montserrat_700Bold',
+                                    fontSize: 18,
+                                    color: '#1f2937',
+                                    marginBottom: 8,
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {fileValidationModal.title}
+                            </Text>
+
+                            <Text
+                                style={{
+                                    fontFamily: 'Roboto_400Regular',
+                                    fontSize: 14,
+                                    color: '#6b7280',
+                                    textAlign: 'center',
+                                    marginBottom: 20,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                {fileValidationModal.message}
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={closeFileValidationModal}
+                                style={{
+                                    backgroundColor: '#305797',
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    paddingHorizontal: 32,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#fff',
+                                        fontFamily: 'Montserrat_600SemiBold',
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    Got It
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
 
         </View>
     );
