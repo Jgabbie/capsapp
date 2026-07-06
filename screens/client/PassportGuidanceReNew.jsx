@@ -89,10 +89,46 @@ const requirements = [
 ];
 
 const steps = [
-    { title: "Choose a DFA site", desc: "Select your preferred location and appointment date." },
-    { title: "Prepare renewal documents", desc: "Bring your old passport and updated IDs." },
-    { title: "Visit DFA on schedule", desc: "Submit requirements and complete biometrics." },
-    { title: "Receive your new passport", desc: "Track release updates after processing." },
+    {
+        title: "Application Submitted",
+        desc: "Your passport application has been successfully submitted."
+    },
+    {
+        title: "Application Approved",
+        desc: "Your application has been reviewed and approved."
+    },
+    {
+        title: "Payment Completed",
+        desc: "The required passport assistance fee has been paid."
+    },
+    {
+        title: "Documents Uploaded",
+        desc: "The required application documents have been uploaded."
+    },
+    {
+        title: "Documents Approved",
+        desc: "Your uploaded documents have been reviewed and approved."
+    },
+    {
+        title: "Documents Received",
+        desc: "Your physical documents have been received."
+    },
+    {
+        title: "Documents Submitted",
+        desc: "Your documents have been submitted for processing."
+    },
+    {
+        title: "Processing By DFA",
+        desc: "Your passport application is currently being processed by DFA."
+    },
+    {
+        title: "DFA Approved",
+        desc: "Your passport application has been approved by DFA."
+    },
+    {
+        title: "Passport Released",
+        desc: "Your passport is ready for release or delivery."
+    }
 ];
 
 export default function PassportGuidanceReNew() {
