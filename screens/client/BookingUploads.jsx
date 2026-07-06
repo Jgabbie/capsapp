@@ -199,7 +199,41 @@ export default function BookingUploads({ route, navigation }) {
         type: 'birthdate',
         currentDate: dayjs().format('YYYY-MM-DD')
     });
+
     const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'success',
+    });
+
+
+    //show custom alert modal
+    const showAlertModal = (
+        title,
+        message,
+        type = 'success'
+    ) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+            type,
+        });
+    };
+
+
+    //close custom alert modal
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
 
     //enforce room type rules based on traveler type and booking type whenever travelerTypes or bookingType changes
     useEffect(() => {
@@ -291,7 +325,11 @@ export default function BookingUploads({ route, navigation }) {
                     }));
                 } catch (fileError) {
                     console.error('Document picker error:', fileError);
-                    Alert.alert('Error', 'Failed to pick file. Please try again.');
+                    showAlertModal(
+                        'Error',
+                        'Failed to pick file. Please try again.',
+                        'error'
+                    );
                 }
             } else {
                 try {
@@ -327,12 +365,20 @@ export default function BookingUploads({ route, navigation }) {
                     }));
                 } catch (fileError) {
                     console.error('Document picker error:', fileError);
-                    Alert.alert('Error', 'Failed to pick file. Please try again.');
+                    showAlertModal(
+                        'Error',
+                        'Failed to pick file. Please try again.',
+                        'error'
+                    );
                 }
             }
         } catch (error) {
             console.error('Error in pickImage:', error);
-            Alert.alert('Error', 'An error occurred. Please try again.');
+            showAlertModal(
+                'Error',
+                'An error occurred. Please try again.',
+                'error'
+            );
         }
     };
 
@@ -446,7 +492,11 @@ export default function BookingUploads({ route, navigation }) {
             await Linking.openURL(pdfUri);
         } catch (error) {
             console.error('Error opening PDF:', error);
-            Alert.alert('Error', 'Failed to open PDF. Please try again.');
+            showAlertModal(
+                'Error',
+                'Failed to open PDF. Please try again.',
+                'error'
+            );
         }
     };
 
@@ -457,16 +507,21 @@ export default function BookingUploads({ route, navigation }) {
         const isComplete = Object.values(uploads).every(u => u.passport && u.photo);
 
         if (uploadedCount < totalTravelers || !isComplete) {
-            Alert.alert("Missing Documents", `Please upload both ${travelDocumentLabel} and 2x2 Photo for all travelers.`);
+            showAlertModal(
+                'Missing Documents',
+                `Please upload both ${travelDocumentLabel} and 2x2 Photo for all travelers.`,
+                'warning'
+            );
             return;
         }
 
         if (!isDomestic) {
             const invalidPassportIndex = travelersData.findIndex(traveler => !isValidPassportNumber(traveler.passportNo));
             if (invalidPassportIndex !== -1) {
-                Alert.alert(
-                    "Invalid Passport Number",
-                    "Passport number must start with P, followed by 7 digits, and end with a letter (e.g. P1234567A)"
+                showAlertModal(
+                    'Invalid Passport Number',
+                    'Passport number must start with P, followed by 7 digits, and end with a letter (e.g. P1234567A).',
+                    'warning'
                 );
                 return;
             }
@@ -480,7 +535,11 @@ export default function BookingUploads({ route, navigation }) {
             });
 
             if (missingVisaIndex !== -1) {
-                Alert.alert('Missing Visa', 'Please upload the visa document for travelers who have a visa.');
+                showAlertModal(
+                    'Missing Visa',
+                    'Please upload the visa document for travelers who have a visa.',
+                    'warning'
+                );
                 return;
             }
         }
@@ -1058,6 +1117,130 @@ export default function BookingUploads({ route, navigation }) {
                         </View>
                     </View>
                 </TouchableOpacity>
+            </Modal>
+
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 25,
+                    }}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={{
+                            width: '100%',
+                            maxWidth: 340,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 22,
+                            paddingHorizontal: 26,
+                            paddingTop: 24,
+                            paddingBottom: 22,
+                            alignItems: 'center',
+                        }}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : alertModal.type === 'info'
+                                                ? '#dbeafe'
+                                                : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : alertModal.type === 'info'
+                                                ? 'information-outline'
+                                                : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : alertModal.type === 'info'
+                                                ? '#305797'
+                                                : '#059669'
+                                }
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Roboto_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
         </SafeAreaView>
     );

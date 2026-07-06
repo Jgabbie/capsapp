@@ -50,6 +50,38 @@ export default function QuotationPaymentMethod({ route, navigation }) {
     const [method, setMethod] = useState('paymongo');
     const [proofImage, setProofImage] = useState(null);
 
+
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'success',
+    });
+
+
+    //show custom alert modal
+    const showAlertModal = (
+        title,
+        message,
+        type = 'success'
+    ) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+            type,
+        });
+    };
+
+
+    //close custom alert modal
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
     const pdfRevisions = Array.isArray(quotation?.pdfRevisions) ? quotation.pdfRevisions : [];
     const latestPdfRevision = pdfRevisions.length > 0 ? pdfRevisions[pdfRevisions.length - 1] : null;
     const travelDetails = latestPdfRevision?.travelDetails || {};
@@ -73,7 +105,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
     //handle proceed button click to validate if proof image is uploaded for manual payment method
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
-            Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
+            showAlertModal(
+                'Missing Proof',
+                'Please upload a photo of your deposit slip.',
+                'warning'
+            );
             return;
         }
         setIsProceedModalOpen(true);
@@ -104,10 +140,17 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
         try {
             const isExistingBooking = !!route.params.existingBookingId;
-            const targetPackageId = quotation?.packageId._id || 'N/A'
+            const targetPackageId =
+                quotation?.packageId?._id ||
+                quotation?.packageId ||
+                null;
 
             if (!targetPackageId) {
-                Alert.alert("Error", "Package ID is missing. Cannot proceed.");
+                showAlertModal(
+                    'Error',
+                    'Package ID is missing. Cannot proceed.',
+                    'error'
+                );
                 setLoading(false);
                 return;
             }
@@ -401,7 +444,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         } catch (error) {
             setLoading(false);
             const errMsg = error.response?.data?.message || error.message || "Failed to process booking.";
-            Alert.alert("Booking Error", errMsg);
+            showAlertModal(
+                'Booking Error',
+                errMsg,
+                'error'
+            );
             console.error("Booking Error: ", error.response?.data || error.message);
         }
     };
@@ -546,21 +593,21 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             </ScrollView>
 
             <Modal visible={isProceedModalOpen} transparent animationType="fade">
-                <View style={localStyles.modalOverlay}>
-                    <View style={localStyles.modalBox}>
-                        <TouchableOpacity style={localStyles.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
+                <View style={QuotationPaymentStyle.modalOverlay}>
+                    <View style={QuotationPaymentStyle.modalBox}>
+                        <TouchableOpacity style={QuotationPaymentStyle.closeIcon} onPress={() => setIsProceedModalOpen(false)}>
                             <Ionicons name="close" size={24} color="#9ca3af" />
                         </TouchableOpacity>
 
-                        <Text style={localStyles.modalTitle}>Proceed to Payment</Text>
-                        <Text style={localStyles.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
+                        <Text style={QuotationPaymentStyle.modalTitle}>Proceed to Payment</Text>
+                        <Text style={QuotationPaymentStyle.modalSubtitle}>Are you sure you want to proceed with the payment?</Text>
 
-                        <View style={localStyles.modalButtonRow}>
-                            <TouchableOpacity style={localStyles.proceedBtn} onPress={executePaymentFlow}>
-                                <Text style={localStyles.proceedBtnText}>Proceed</Text>
+                        <View style={QuotationPaymentStyle.modalButtonRow}>
+                            <TouchableOpacity style={QuotationPaymentStyle.proceedBtn} onPress={executePaymentFlow}>
+                                <Text style={QuotationPaymentStyle.proceedBtnText}>Proceed</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={localStyles.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
-                                <Text style={localStyles.cancelBtnText}>Cancel</Text>
+                            <TouchableOpacity style={QuotationPaymentStyle.cancelBtn} onPress={() => setIsProceedModalOpen(false)}>
+                                <Text style={QuotationPaymentStyle.cancelBtnText}>Cancel</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -568,11 +615,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             </Modal>
 
             <Modal visible={loading} transparent animationType="fade">
-                <View style={localStyles.loadingOverlay}>
-                    <View style={localStyles.loadingCard}>
+                <View style={QuotationPaymentStyle.loadingOverlay}>
+                    <View style={QuotationPaymentStyle.loadingCard}>
                         <ActivityIndicator size="large" color="#305797" />
-                        <Text style={localStyles.loadingText}>Processing payment...</Text>
-                        <Text style={localStyles.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                        <Text style={QuotationPaymentStyle.loadingText}>Processing payment...</Text>
+                        <Text style={QuotationPaymentStyle.loadingSubtext}>Please do not close the app or tap anything.</Text>
                     </View>
                 </View>
             </Modal>
@@ -590,23 +637,81 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={QuotationPaymentStyle.alertOverlay}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={QuotationPaymentStyle.alertCard}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={[
+                                QuotationPaymentStyle.alertIconContainer,
+                                {
+                                    backgroundColor:
+                                        alertModal.type === 'error'
+                                            ? '#fee2e2'
+                                            : alertModal.type === 'warning'
+                                                ? '#fef3c7'
+                                                : alertModal.type === 'info'
+                                                    ? '#dbeafe'
+                                                    : '#d1fae5',
+                                }
+                            ]}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : alertModal.type === 'info'
+                                                ? 'information-outline'
+                                                : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : alertModal.type === 'info'
+                                                ? '#305797'
+                                                : '#059669'
+                                }
+                            />
+                        </View>
+
+                        <Text style={QuotationPaymentStyle.alertTitle}>
+                            {alertModal.title}
+                        </Text>
+
+                        <Text style={QuotationPaymentStyle.alertMessage}>
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={QuotationPaymentStyle.alertButton}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text style={QuotationPaymentStyle.alertButtonText}>
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }
 
-const localStyles = StyleSheet.create({
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-    modalBox: { width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 24, paddingTop: 35, alignItems: 'center', elevation: 5 },
-    closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
-    modalTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 22, color: '#305797', marginBottom: 12 },
-    modalSubtitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25 },
-    modalButtonRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', gap: 12 },
-    proceedBtn: { flex: 1, backgroundColor: '#305797', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    proceedBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
-    cancelBtn: { flex: 1, backgroundColor: '#9f2b46', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-    cancelBtnText: { fontFamily: 'Montserrat_600SemiBold', color: '#fff', fontSize: 14 },
-    loadingOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-    loadingCard: { width: '100%', backgroundColor: '#fff', borderRadius: 16, paddingVertical: 28, paddingHorizontal: 22, alignItems: 'center', elevation: 6 },
-    loadingText: { marginTop: 14, fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#305797', textAlign: 'center' },
-    loadingSubtext: { marginTop: 6, fontFamily: 'Roboto_400Regular', fontSize: 13, color: '#64748b', textAlign: 'center' }
-});

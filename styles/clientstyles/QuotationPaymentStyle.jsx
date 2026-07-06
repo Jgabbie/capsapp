@@ -205,7 +205,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     scheduleInfoContainer: {
-        flex: 1, 
+        flex: 1,
         paddingRight: 10,
     },
     scheduleLabel: {
@@ -468,7 +468,7 @@ const QuotationPaymentStyle = StyleSheet.create({
     methodGridCardSelected: {
         borderColor: '#305797',
         borderWidth: 2,
-        backgroundColor: '#f4f8ff', 
+        backgroundColor: '#f4f8ff',
     },
     methodRadioHeader: {
         alignItems: 'center',
@@ -684,7 +684,178 @@ const QuotationPaymentStyle = StyleSheet.create({
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 14,
         color: '#64748b',
-    }
+    },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20
+    },
+
+    modalBox: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        paddingTop: 35,
+        alignItems: 'center',
+        elevation: 5
+    },
+
+    closeIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        padding: 5
+    },
+
+    modalTitle: {
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 22,
+        color: '#305797',
+        marginBottom: 12
+    },
+
+    modalSubtitle: {
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 14,
+        color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 25
+    },
+
+    modalButtonRow: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'space-between',
+        gap: 12
+    },
+
+    proceedBtn: {
+        flex: 1,
+        backgroundColor: '#305797',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center'
+    },
+
+    proceedBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14
+    },
+
+    cancelBtn: {
+        flex: 1,
+        backgroundColor: '#9f2b46',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center'
+    },
+
+    cancelBtnText: {
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#fff',
+        fontSize: 14
+    },
+
+    loadingOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24
+    },
+
+    loadingCard: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        paddingVertical: 28,
+        paddingHorizontal: 22,
+        alignItems: 'center',
+        elevation: 6
+    },
+
+    loadingText: {
+        marginTop: 14,
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 18,
+        color: '#305797',
+        textAlign: 'center'
+    },
+
+    loadingSubtext: {
+        marginTop: 6,
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 13,
+        color: '#64748b',
+        textAlign: 'center'
+    },
+
+    alertOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 25,
+    },
+
+    alertCard: {
+        width: '100%',
+        maxWidth: 340,
+        backgroundColor: '#ffffff',
+        borderRadius: 22,
+        paddingHorizontal: 26,
+        paddingTop: 24,
+        paddingBottom: 22,
+        alignItems: 'center',
+        elevation: 8,
+    },
+
+    alertIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 18,
+    },
+
+    alertTitle: {
+        color: '#1f2937',
+        fontFamily: 'Montserrat_700Bold',
+        fontSize: 18,
+        lineHeight: 24,
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+
+    alertMessage: {
+        color: '#6b7280',
+        fontFamily: 'Roboto_400Regular',
+        fontSize: 14,
+        lineHeight: 21,
+        textAlign: 'center',
+        marginBottom: 22,
+    },
+
+    alertButton: {
+        minWidth: 110,
+        backgroundColor: '#305797',
+        borderRadius: 10,
+        paddingHorizontal: 28,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+
+    alertButtonText: {
+        color: '#ffffff',
+        fontFamily: 'Montserrat_600SemiBold',
+        fontSize: 14,
+    },
 });
 
 export default QuotationPaymentStyle;

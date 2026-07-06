@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, StyleSheet, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PaymentSuccessStyle from '../../styles/clientstyles/PaymentSuccessStyle';
 
@@ -32,6 +33,24 @@ export default function PaymentSuccess({ route, navigation }) {
     //timer state starting at 10 seconds
     const [countdown, setCountdown] = useState(10);
     const [isActive, setIsActive] = useState(true);
+
+    useFocusEffect(
+        useCallback(() => {
+            navigation.setOptions({
+                gestureEnabled: false,
+                headerBackVisible: false,
+            });
+
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            );
+
+            return () => {
+                backHandler.remove();
+            };
+        }, [navigation])
+    );
 
 
     //auto navigation effect that counts down from 10 seconds and navigates to the home screen when it reaches 0

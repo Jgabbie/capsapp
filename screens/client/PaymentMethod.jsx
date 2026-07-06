@@ -65,6 +65,38 @@ export default function PaymentMethod({ route, navigation }) {
     const [proofImage, setProofImage] = useState(null);
 
 
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'success',
+    });
+
+
+    //show custom alert modal
+    const showAlertModal = (
+        title,
+        message,
+        type = 'success'
+    ) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+            type,
+        });
+    };
+
+
+    //close custom alert modal
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
+
     //pick image function
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -83,7 +115,11 @@ export default function PaymentMethod({ route, navigation }) {
     //proceed function
     const handleProceedClick = () => {
         if (method === 'manual' && !proofImage) {
-            Alert.alert("Missing Proof", "Please upload a photo of your deposit slip.");
+            showAlertModal(
+                'Missing Proof',
+                'Please upload a photo of your deposit slip.',
+                'warning'
+            );
             return;
         }
         setIsProceedModalOpen(true);
@@ -123,7 +159,11 @@ export default function PaymentMethod({ route, navigation }) {
                 setupData?.packageId;
 
             if (!targetPackageId) {
-                Alert.alert("Error", "Package ID is missing. Cannot proceed.");
+                showAlertModal(
+                    'Error',
+                    'Package ID is missing. Cannot proceed.',
+                    'error'
+                );
                 setLoading(false);
                 return;
             }
@@ -446,7 +486,11 @@ export default function PaymentMethod({ route, navigation }) {
         } catch (error) {
             setLoading(false);
             const errMsg = error.response?.data?.message || error.message || "Failed to process booking.";
-            Alert.alert("Booking Error", errMsg);
+            showAlertModal(
+                'Booking Error',
+                errMsg,
+                'error'
+            );
             console.error("Booking Error: ", error.response?.data || error.message);
         }
     };
@@ -633,6 +677,130 @@ export default function PaymentMethod({ route, navigation }) {
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
+            </Modal>
+
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 25,
+                    }}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={{
+                            width: '100%',
+                            maxWidth: 340,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 22,
+                            paddingHorizontal: 26,
+                            paddingTop: 24,
+                            paddingBottom: 22,
+                            alignItems: 'center',
+                        }}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : alertModal.type === 'info'
+                                                ? '#dbeafe'
+                                                : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : alertModal.type === 'info'
+                                                ? 'information-outline'
+                                                : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : alertModal.type === 'info'
+                                                ? '#305797'
+                                                : '#059669'
+                                }
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Roboto_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
         </SafeAreaView>
     );
