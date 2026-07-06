@@ -242,7 +242,7 @@ export default function PassportApplication() {
 
                 showFileValidationModal(
                     'File Too Large',
-                    `${file.name || 'The selected file'} is ${fileSizeInMB} MB. The maximum allowed size is 3 MB.`
+                    `${asset.name || asset.fileName || 'The selected file'} is ${selectedSizeInMB} MB. The maximum allowed size is 3 MB.`
                 );
                 return;
             }
@@ -2665,6 +2665,30 @@ export default function PassportApplication() {
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={uploadingAll}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+            >
+                <View style={PassportProgressStyle.loadingOverlay}>
+                    <View style={PassportProgressStyle.loadingCard}>
+                        <ActivityIndicator
+                            size="large"
+                            color="#305797"
+                        />
+
+                        <Text style={PassportProgressStyle.loadingText}>
+                            Uploading documents...
+                        </Text>
+
+                        <Text style={PassportProgressStyle.loadingSubtext}>
+                            Please do not close the app or tap anything.
+                        </Text>
+                    </View>
+                </View>
             </Modal>
 
             <Modal visible={paymentLoading} transparent animationType="fade">

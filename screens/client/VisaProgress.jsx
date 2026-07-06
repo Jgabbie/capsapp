@@ -2826,6 +2826,30 @@ export default function VisaProgress() {
                     </View>
                 </Modal>
 
+                <Modal
+                    visible={uploadingAll}
+                    transparent
+                    animationType="fade"
+                    statusBarTranslucent
+                >
+                    <View style={VisaProgressStyle.loadingOverlay}>
+                        <View style={VisaProgressStyle.loadingCard}>
+                            <ActivityIndicator
+                                size="large"
+                                color="#305797"
+                            />
+
+                            <Text style={VisaProgressStyle.loadingText}>
+                                Uploading documents...
+                            </Text>
+
+                            <Text style={VisaProgressStyle.loadingSubtext}>
+                                Please do not close the app or tap anything.
+                            </Text>
+                        </View>
+                    </View>
+                </Modal>
+
                 <Modal visible={paymentLoading} transparent animationType="fade">
                     <View style={VisaProgressStyle.loadingOverlay}>
                         <View style={VisaProgressStyle.loadingCard}>
