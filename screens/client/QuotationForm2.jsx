@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert, Pressable } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext';
@@ -70,6 +70,38 @@ export default function QuotationForm2({ route, navigation }) {
     const relationOptions = ['MOTHER', 'FATHER', 'SISTER', 'BROTHER', 'RELATIVE', 'OTHERS'];
 
 
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'warning',
+    });
+
+
+    //show custom alert modal
+    const showAlertModal = (
+        title,
+        message,
+        type = 'warning'
+    ) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+            type,
+        });
+    };
+
+
+    //close custom alert modal
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
+
     //validation functions for email
     const isValidEmail = (email) => {
         if (!email) return true;
@@ -95,24 +127,60 @@ export default function QuotationForm2({ route, navigation }) {
 
     //handle next button click, validate inputs and navigate to next form
     const handleNext = () => {
-        if (!medicalData.dietary) return Alert.alert("Required", "Please select Y or N for Dietary requests.");
-        if (medicalData.dietary === 'Y' && !medicalData.dietaryDetails.trim()) return Alert.alert("Required", "Please provide details for the Dietary request.");
+        if (!medicalData.dietary) return showAlertModal(
+            'Required',
+            'Please select Y or N for Dietary requests.',
+            'warning'
+        );
+        if (medicalData.dietary === 'Y' && !medicalData.dietaryDetails.trim()) return showAlertModal(
+            'Required',
+            'Please provide details for the Dietary request.',
+            'warning'
+        );
 
-        if (!medicalData.medical) return Alert.alert("Required", "Please select Y or N for Medical conditions.");
-        if (medicalData.medical === 'Y' && !medicalData.medicalDetails.trim()) return Alert.alert("Required", "Please provide details for the Medical conditions.");
+        if (!medicalData.medical) return showAlertModal(
+            'Required',
+            'Please select Y or N for Medical conditions.',
+            'warning'
+        );
+        if (medicalData.medical === 'Y' && !medicalData.medicalDetails.trim()) return showAlertModal(
+            'Required',
+            'Please provide details for the Medical conditions.',
+            'warning'
+        );
 
-        if (!medicalData.insurance1) return Alert.alert("Required", "Please select Y or N for Travel Insurance.");
-        if (!medicalData.insurance2) return Alert.alert("Required", "Please select Y or N for the second Travel Insurance confirmation.");
+        if (!medicalData.insurance1) return showAlertModal(
+            'Required',
+            'Please select Y or N for Travel Insurance.',
+            'warning'
+        );
+        if (!medicalData.insurance2) return showAlertModal(
+            'Required',
+            'Please select Y or N for the second Travel Insurance confirmation.',
+            'warning'
+        );
 
         if (!emergency.title || !emergency.fullName || !emergency.email || !emergency.contact || !emergency.relation) {
-            return Alert.alert("Required", "Please complete all required fields in the Emergency Contact section.");
+            return showAlertModal(
+                'Required',
+                'Please complete all required fields in the Emergency Contact section.',
+                'warning'
+            );
         }
 
         if (emailHasError) {
-            return Alert.alert("Invalid Input", "Please enter a valid email address.");
+            return showAlertModal(
+                'Invalid Input',
+                'Please enter a valid email address.',
+                'warning'
+            );
         }
         if (contactHasError) {
-            return Alert.alert("Invalid Input", "Enter valid contact number (09xxxxxxxxxx or 8xxxxxxx-8xxxxxxxx)");
+            return showAlertModal(
+                'Invalid Input',
+                'Enter valid contact number (09xxxxxxxxxx or 8xxxxxxx-8xxxxxxxx)',
+                'warning'
+            );
         }
 
         navigation.navigate("quotationform3", { ...route.params, medicalData, emergency, quotation });
