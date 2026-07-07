@@ -588,6 +588,7 @@ export default function Packages({ navigation, route }) {
                             <TextInput
                                 style={DestinationStyles.searchBar}
                                 placeholder="How many travellers?"
+                                placeholderTextColor={"#999"}
                                 keyboardType="numeric"
                                 value={travelersValue}
                                 onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))}

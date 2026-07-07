@@ -2603,26 +2603,26 @@ export default function PassportApplication() {
             {/* Appointment Success Modal */}
             <Modal visible={showAppointmentSuccessModal} transparent animationType="fade" onRequestClose={() => setShowAppointmentSuccessModal(false)}>
                 <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+                    style={PassportProgressStyle.modalOverlay}
                     activeOpacity={1}
                     onPress={() => setShowAppointmentSuccessModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
-                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                        <View style={PassportProgressStyle.modalCard}>
+                            <View style={PassportProgressStyle.modalIconContainer}>
                                 <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                            <Text style={PassportProgressStyle.modalTitle}>
                                 Appointment Date has been selected
                             </Text>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                            <Text style={PassportProgressStyle.modalDesc}>
                                 Your appointment schedule has been confirmed. Please check your email for further instructions.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowAppointmentSuccessModal(false)}
-                                style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                style={PassportProgressStyle.modalButton}
                             >
-                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                <Text style={PassportProgressStyle.modalButtonText}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
@@ -2630,23 +2630,23 @@ export default function PassportApplication() {
             </Modal>
 
             <Modal visible={showDocumentsSuccessModal} transparent animationType="fade" onRequestClose={() => setShowDocumentsSuccessModal(false)}>
-                <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                <TouchableOpacity style={PassportProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
                     <TouchableWithoutFeedback>
-                        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
-                            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                        <View style={PassportProgressStyle.modalCard}>
+                            <View style={PassportProgressStyle.modalIconContainer}>
                                 <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                            <Text style={PassportProgressStyle.modalTitle}>
                                 Files Successfully Uploaded
                             </Text>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                            <Text style={PassportProgressStyle.modalDesc}>
                                 Your files has been submitted. Our team will review it shortly.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowDocumentsSuccessModal(false)}
-                                style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                style={PassportProgressStyle.modalButton}
                             >
-                                <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                <Text style={PassportProgressStyle.modalButtonText}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>

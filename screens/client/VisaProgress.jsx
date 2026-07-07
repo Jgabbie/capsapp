@@ -2755,30 +2755,6 @@ export default function VisaProgress() {
                     </TouchableOpacity>
                 </Modal>
 
-                <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
-                        <TouchableWithoutFeedback>
-                            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
-                                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-                                    <Ionicons name="checkmark" size={32} color="#059669" />
-                                </View>
-                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
-                                    Files Successfully Uploaded
-                                </Text>
-                                <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
-                                    Your files has been submitted. Our team will review it shortly.
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={() => setShowDocumentsSuccessModal(false)}
-                                    style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
-                                >
-                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </TouchableOpacity>
-                </Modal>
-
                 <Modal visible={!!enlargedQR} transparent animationType="fade" onRequestClose={() => setEnlargedQR(null)}>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setEnlargedQR(null)}>
                         <View style={{ position: 'relative', width: '85%', aspectRatio: 1 }}>
@@ -2865,23 +2841,47 @@ export default function VisaProgress() {
                 </Modal>
 
                 <Modal visible={isDateSelectedModalOpen} transparent animationType="fade" onRequestClose={() => setIsDateSelectedModalOpen(false)}>
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
+                    <TouchableOpacity style={VisaProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center', width: '85%' }}>
-                                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                            <View style={VisaProgressStyle.modalCard}>
+                                <View style={VisaProgressStyle.modalIconContainer}>
                                     <Ionicons name="checkmark" size={32} color="#059669" />
                                 </View>
-                                <Text style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18, color: '#1f2937', marginBottom: 8, textAlign: 'center' }}>
+                                <Text style={VisaProgressStyle.modalTitle}>
                                     Appointment Date has been selected
                                 </Text>
-                                <Text style={{ fontFamily: 'Roboto_400Regular', fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+                                <Text style={VisaProgressStyle.modalDesc}>
                                     Your appointment schedule has been confirmed. Please check your email for further instructions.
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setIsDateSelectedModalOpen(false)}
-                                    style={{ backgroundColor: '#305797', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
+                                    style={VisaProgressStyle.modalButton}
                                 >
-                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Got It</Text>
+                                    <Text style={VisaProgressStyle.modalButtonText}>Got It</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
+                    <TouchableOpacity style={VisaProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={VisaProgressStyle.modalCard}>
+                                <View style={VisaProgressStyle.modalIconContainer}>
+                                    <Ionicons name="checkmark" size={32} color="#059669" />
+                                </View>
+                                <Text style={VisaProgressStyle.modalTitle}>
+                                    Files Successfully Uploaded
+                                </Text>
+                                <Text style={VisaProgressStyle.modalDesc}>
+                                    Your files has been submitted. Our team will review it shortly.
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowDocumentsSuccessModal(false)}
+                                    style={VisaProgressStyle.modalButton}
+                                >
+                                    <Text style={VisaProgressStyle.modalButtonText}>Got It</Text>
                                 </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>

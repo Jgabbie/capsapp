@@ -226,16 +226,66 @@ const PassportProgressStyle = StyleSheet.create({
         color: "#6b7280",
     },
 
-    // payment loading Modal
-
+    // Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20
+        padding: 20,
+    },
+    modalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        width: '100%',
+        alignItems: 'center',
+        overflow: 'hidden'
+    },
+    modalIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#d1fae5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+        marginTop: 10
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontFamily: "Montserrat_700Bold",
+        color: "#1f2937",
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    modalDesc: {
+        fontSize: 15,
+        fontFamily: "Roboto_400Regular",
+        color: "#4b5563",
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+        paddingHorizontal: 20
+    },
+    modalButton: {
+        backgroundColor: "#305797",
+        paddingVertical: 12,
+        borderRadius: 12,
+        width: '40%',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    modalButtonText: {
+        color: "#fff",
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 14
     },
 
+
+
+
+
+    // payment loading Modal
     modalBox: {
         width: '100%',
         backgroundColor: '#fff',
@@ -245,21 +295,12 @@ const PassportProgressStyle = StyleSheet.create({
         alignItems: 'center',
         elevation: 5
     },
-
     closeIcon: {
         position: 'absolute',
         top: 10,
         right: 10,
         padding: 5
     },
-
-    modalTitle: {
-        fontFamily: 'Montserrat_700Bold',
-        fontSize: 22,
-        color: '#305797',
-        marginBottom: 12
-    },
-
     modalSubtitle: {
         fontFamily: 'Roboto_400Regular',
         fontSize: 14,
@@ -267,14 +308,12 @@ const PassportProgressStyle = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 25
     },
-
     modalButtonRow: {
         flexDirection: 'row',
         width: '100%',
         justifyContent: 'space-between',
         gap: 12
     },
-
     proceedBtn: {
         flex: 1,
         backgroundColor: '#305797',

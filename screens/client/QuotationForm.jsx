@@ -908,7 +908,7 @@ export default function QuotationForm({ route, navigation }) {
 
                         <View style={QuotationFormStyle.modalIconContainer}><Ionicons name="checkmark" size={32} color="#059669" /></View>
 
-                        <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 22, color: "#305797", textAlign: "center", marginTop: 20, marginBottom: 12 }}>
+                        <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 22, textAlign: "center", marginTop: 20, marginBottom: 12 }}>
                             Quotation Request Submitted
                         </Text>
 
