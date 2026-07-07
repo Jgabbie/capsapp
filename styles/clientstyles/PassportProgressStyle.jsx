@@ -239,7 +239,8 @@ const PassportProgressStyle = StyleSheet.create({
         borderRadius: 16,
         width: '100%',
         alignItems: 'center',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        paddingTop: 10,
     },
     modalIconContainer: {
         width: 64,

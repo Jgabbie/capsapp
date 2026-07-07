@@ -81,7 +81,7 @@ export default function Chatbot() {
                                     <Text style={ChatbotStyle.chatbotTitle}>TRAVEX Assistant</Text>
                                 </View>
                                 <TouchableOpacity onPress={() => setChatbotOpen(false)} style={{ padding: 5 }}>
-                                    <Text style={{ fontSize: 18, color: "#666", fontWeight: 'bold' }}>X</Text>
+                                    <Text style={{ fontSize: 18, color: "#666", fontWeight: 'bold' }}><Ionicons name="close" size={24} color="#333" /></Text>
                                 </TouchableOpacity>
                             </View>
 

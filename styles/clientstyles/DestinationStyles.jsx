@@ -151,7 +151,7 @@ const DestinationStyles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 2,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: "#dbe3ef"
   },
@@ -1504,7 +1504,6 @@ const DestinationStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    paddingHorizontal: 10
   },
 
   budgetInputBox: {
@@ -1529,7 +1528,6 @@ const DestinationStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    paddingHorizontal: 10
   },
 
   daysInputBox: {

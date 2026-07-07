@@ -543,7 +543,6 @@ export default function Packages({ navigation, route }) {
                             <TouchableOpacity onPress={() => setFilterModalVisible(false)}><Ionicons name="close" size={24} color="#333" /></TouchableOpacity>
                         </View>
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-
                             <Text style={DestinationStyles.filterLabel}>Budget Range (₱)</Text>
                             <View style={DestinationStyles.budgetInputRow}>
                                 <TextInput
