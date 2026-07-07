@@ -7,9 +7,14 @@ const AI_SERVICE_URL = String(
     'https://recommendationtravex.onrender.com'
 ).replace(/\/$/, '');
 
-const AI_SERVICE_TIMEOUT = Number(
-    process.env.AI_SERVICE_TIMEOUT || 60000
+const parsedAiTimeout = Number(
+    process.env.AI_SERVICE_TIMEOUT || 10000
 );
+
+const AI_SERVICE_TIMEOUT =
+    Number.isFinite(parsedAiTimeout) && parsedAiTimeout > 0
+        ? parsedAiTimeout
+        : 10000;
 
 const aiService = axios.create({
     baseURL: AI_SERVICE_URL,
@@ -67,10 +72,14 @@ const getRecommendations = async (req, res) => {
         });
     }
 
+    const fallbackPackagesPromise = getFallbackPackages();
+
     try {
         console.log(
             `[Recommendations] Fetching recommendations for user ${userId}`
         );
+
+        const fallbackPackagesPromise = getFallbackPackages();
 
         const response = await aiService.get(
             `/recommend/${encodeURIComponent(userId)}`
@@ -97,7 +106,7 @@ const getRecommendations = async (req, res) => {
 
         // AI returned an empty result.
         if (recommendations.length === 0) {
-            const fallbackPackages = await getFallbackPackages();
+            const fallbackPackages = await fallbackPackagesPromise;
 
             return res.status(200).json({
                 packages: fallbackPackages,
@@ -207,7 +216,7 @@ const getRecommendations = async (req, res) => {
 
         // The AI returned IDs or names that do not exist in MongoDB.
         if (orderedPackages.length === 0) {
-            const fallbackPackages = await getFallbackPackages();
+            const fallbackPackages = await fallbackPackagesPromise;
 
             return res.status(200).json({
                 packages: fallbackPackages,
@@ -251,7 +260,7 @@ const getRecommendations = async (req, res) => {
         // Return database packages instead of breaking the Home screen.
         try {
             const fallbackPackages =
-                await getFallbackPackages();
+                await fallbackPackagesPromise;
 
             return res.status(200).json({
                 packages: fallbackPackages,
@@ -294,7 +303,7 @@ const trainModels = async (req, res) => {
     } catch (err) {
         console.error(
             '[Train] Error:',
-            error.response?.data || error.message
+            err.response?.data || err.message
         );
 
         return res.status(503).json({

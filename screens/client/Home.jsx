@@ -150,6 +150,7 @@ export default function Home({ route }) {
 
     const [packages, setPackages] = useState([])
     const [forYouPackages, setForYouPackages] = useState([])
+    const [recommendationBasis, setRecommendationBasis] = useState('preferences');
     const [searchQuery, setSearchQuery] = useState("")
     const [loading, setLoading] = useState(true)
     const [forYouLoading, setForYouLoading] = useState(false)
@@ -284,20 +285,49 @@ export default function Home({ route }) {
             // Fetch recommendations and popular packages
             if (user?._id) {
                 try {
-                    const recResponse = await api.get('/recommendations', withUserHeader(user._id));
-                    if (recResponse.data?.packages) {
-                        setForYouPackages(recResponse.data.packages);
-                    }
+                    const recResponse = await api.get(
+                        '/recommendations',
+                        {
+                            ...withUserHeader(user._id),
+                            timeout: 15000
+                        }
+                    );
+
+                    const recommendedPackages =
+                        Array.isArray(recResponse.data?.packages)
+                            ? recResponse.data.packages.filter(pkg => pkg?._id)
+                            : [];
+
+                    const recommendationMethod = String(
+                        recResponse.data?.method || ''
+                    ).toLowerCase();
+
+                    const isRatingsBased =
+                        recommendationMethod.includes('collaborative') ||
+                        recommendationMethod.includes('hybrid') ||
+                        recommendationMethod.includes('rating');
+
+                    setRecommendationBasis(
+                        isRatingsBased ? 'ratings' : 'preferences'
+                    );
+
+                    setForYouPackages(
+                        recommendedPackages.length > 0
+                            ? recommendedPackages
+                            : transformedPackages.slice(0, 5)
+                    );
                 } catch (error) {
                     console.error(
-                        "Failed to fetch recommendations on refresh:",
+                        'Failed to fetch recommendations on refresh:',
                         {
                             message: error.message,
+                            code: error.code,
                             status: error.response?.status,
                             data: error.response?.data
                         }
                     );
 
+                    setRecommendationBasis('preferences');
                     setForYouPackages(
                         transformedPackages.slice(0, 5)
                     );
@@ -415,15 +445,30 @@ export default function Home({ route }) {
 
                 console.log("Recommendation request config:", config);
 
-                const response = await api.get(
-                    '/recommendations',
-                    config
-                );
+                const response = await api.get('/recommendations', {
+                    ...config,
+                    timeout: 15000
+                });
 
                 const recommendedPackages =
                     Array.isArray(response.data?.packages)
                         ? response.data.packages.filter(pkg => pkg?._id)
                         : [];
+
+
+                const recommendationMethod = String(
+                    response.data?.method || ''
+                ).toLowerCase();
+
+                const isRatingsBased =
+                    recommendationMethod.includes('collaborative') ||
+                    recommendationMethod.includes('hybrid') ||
+                    recommendationMethod.includes('rating');
+
+                setRecommendationBasis(
+                    isRatingsBased ? 'ratings' : 'preferences'
+                );
+
 
                 setForYouPackages(
                     recommendedPackages.length > 0
@@ -725,7 +770,11 @@ export default function Home({ route }) {
                                 <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20, marginBottom: 20 }} />
                             ) : (
                                 <>
-                                    <Text style={HomeStyle.forYouNote}>These are the recommended packages based on your preferences.</Text>
+                                    <Text style={HomeStyle.forYouNote}>
+                                        {recommendationBasis === 'ratings'
+                                            ? 'These are the recommended packages based on your ratings.'
+                                            : 'These are the recommended packages based on your preferences.'}
+                                    </Text>
                                     {forYouPackages.length > 0 && (
                                         <ScrollView
                                             horizontal
