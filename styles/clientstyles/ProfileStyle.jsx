@@ -160,7 +160,7 @@ const ProfileStyle = StyleSheet.create({
         marginTop: 20,
     },
     verifiedText: {
-        color: '#52c41a',
+        color: '#00bf63',
         fontFamily: "Montserrat_500Medium",
         fontSize: 14,
     },

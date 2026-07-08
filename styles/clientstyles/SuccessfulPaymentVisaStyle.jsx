@@ -15,11 +15,11 @@ const styles = StyleSheet.create({
         width: 86,
         height: 86,
         borderRadius: 43,
-        backgroundColor: '#52c41a', 
+        backgroundColor: '#00bf63',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
-        shadowColor: '#52c41a',
+        shadowColor: '#00bf63',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     buttonPrimary: {
-        backgroundColor: '#305797', 
+        backgroundColor: '#305797',
         paddingVertical: 14,
         paddingHorizontal: 20,
         borderRadius: 10,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat_600SemiBold',
     },
     buttonSecondary: {
-        backgroundColor: '#fff', 
+        backgroundColor: '#fff',
         paddingVertical: 14,
         paddingHorizontal: 20,
         borderRadius: 10,

@@ -328,7 +328,7 @@ export default function UserQuotationRequest({ route, navigation }) {
           <View style={styles.modalContentCentered}>
             <Text style={styles.modalTitleCentered}>Revision Requested</Text>
             <View style={{ alignItems: 'center', marginVertical: 15 }}>
-              <Ionicons name="checkmark-circle" size={60} color="#52c41a" />
+              <Ionicons name="checkmark-circle" size={60} color="#00bf63" />
             </View>
             <Text style={styles.modalTextCentered}>Your revision request has been submitted.</Text>
             <TouchableOpacity style={styles.modalPrimaryBtnFull} onPress={() => { setIsRevisionModalOpen(false); fetchQuotation(); }}>

@@ -458,7 +458,7 @@ export default function Profile() {
     //get status style for bookings and reviews
     const getStatusStyle = (status) => {
         const s = String(status).toLowerCase();
-        if (s === 'fully paid' || s.includes('fully paid') || s === 'full paid') return { bg: '#f6ffed', text: '#52c41a' };
+        if (s === 'fully paid' || s.includes('fully paid') || s === 'full paid') return { bg: '#f6ffed', text: '#00bf63' };
         if (s === 'not paid' || s.includes('not paid')) return { bg: '#fee2e2', text: '#dc2626' };
         if (s === 'cancelled' || s === 'canceled' || s.includes('cancel')) return { bg: '#fff7ed', text: '#c2410c' };
         if (s === 'pending' || s.includes('pending')) return { bg: '#fef9c3', text: '#b45309' };
@@ -979,7 +979,7 @@ export default function Profile() {
 
                     {userData.isAccountVerified && (
                         <View style={ProfileStyle.verifiedBadge}>
-                            <Ionicons name="checkmark" size={18} color="#52c41a" style={{ marginRight: 5 }} />
+                            <Ionicons name="checkmark" size={18} color="#00bf63" style={{ marginRight: 5 }} />
                             <Text style={ProfileStyle.verifiedText}>Account Verified</Text>
                         </View>
                     )}
