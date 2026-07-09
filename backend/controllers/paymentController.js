@@ -602,11 +602,6 @@ const createManualPayment = async (req, res) => {
                         <div style = "font-family: Arial, sans-serif; background:#ffffff; padding:30px 16px;">
                             <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
 
-                                <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                                <h2 style="color:#305797; margin-bottom:10px;">
-                                    Booking Confirmed!
-                                </h2>
 
                                 <p style="color:#555; font-size:16px;">
                                     Hello <b>${userDoc?.username}</b>,
@@ -877,7 +872,7 @@ const createManualPaymentQuotation = async (req, res) => {
                 to: user.email,
                 subject: `Booking Quotation ${booking.reference} Confirmed`,
                 html: `
-                    <div style = "font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
+                    <div style = "font-family: Arial, sans-serif; background:#ffffff; padding:30px 16px;">
                         <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
 
                             <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
@@ -2367,14 +2362,8 @@ const handlePayMongoWebhook = async (req, res) => {
                     to: user.email,
                     subject: `Booking Quotation ${booking.reference} Confirmed`,
                     html: `
-                        <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
+                        <div style="font-family: Arial, sans-serif; background:#ffffff; padding:30px 16px;">
                         <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-
-                            <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                            <h2 style="color:#305797; margin-bottom:10px;">
-                                Booking Quotation Confirmed!
-                            </h2>
 
                             <p style="color:#555; font-size:16px;">
                                 Hello <b>${user.username}</b>,
