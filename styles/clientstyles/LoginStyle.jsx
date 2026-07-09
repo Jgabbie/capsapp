@@ -144,7 +144,7 @@ const LoginStyle = StyleSheet.create({
     },
     //  NEW STYLES ADDED 
     errorContainer: {
-        height: 30,
+        height: 15,
         width: width * 0.85,
         maxWidth: 400,
         justifyContent: 'center',

@@ -49,7 +49,7 @@ const PasswordResetStyle = StyleSheet.create({
     },
 
     errorContainer: {
-        height: 30,
+        height: 25,
     },
     fieldError: {
         color: "#ff1616",
