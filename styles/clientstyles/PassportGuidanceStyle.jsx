@@ -72,56 +72,130 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     // Used on the Main Selection Screen
     selectionCard: {
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        marginBottom: 16,
+        backgroundColor: "#ffffff",
+        borderRadius: 18,
+        marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
-        padding: 20,
+        borderColor: "#d9e1ec",
+        paddingHorizontal: 28,
+        paddingTop: 27,
+        paddingBottom: 28,
+
         ...Platform.select({
-            ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
-            android: { elevation: 2 }
+            ios: {
+                shadowColor: "#000000",
+                shadowOffset: {
+                    width: 0,
+                    height: 3
+                },
+                shadowOpacity: 0.08,
+                shadowRadius: 7
+            },
+            android: {
+                elevation: 3
+            }
         })
     },
-    selectionTitleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        marginBottom: 8
+
+    selectionIconBox: {
+        width: 78,
+        height: 78,
+        borderRadius: 20,
+        backgroundColor: "#e9eef6",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 22
     },
 
     selectionIcon: {
-        width: 30,
-        height: 30,
-        flexShrink: 0
+        width: 45,
+        height: 45
     },
+
+    selectionBadge: {
+        alignSelf: "flex-start",
+        backgroundColor: "#eaf1fc",
+        paddingHorizontal: 13,
+        paddingVertical: 8,
+        borderRadius: 18,
+        marginBottom: 17
+    },
+
+    selectionBadgeText: {
+        color: "#315d9f",
+        fontSize: 11,
+        fontFamily: "Montserrat_700Bold"
+    },
+
     selectionTitle: {
-        fontSize: 18,
-        fontFamily: "Montserrat_600SemiBold",
-        color: "#1f2937",
-        marginBottom: 0
+        fontSize: 25,
+        lineHeight: 32,
+        fontFamily: "Montserrat_700Bold",
+        color: "#202b45",
+        marginBottom: 15
     },
+
     selectionDesc: {
-        fontSize: 14,
-        color: "#6b7280",
-        fontFamily: "Roboto_400Regular",
-    },
-    selectionFooter: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 12,
-    },
-    selectionPrice: {
+        width: "100%",
         fontSize: 15,
-        fontFamily: "Roboto_500Medium",
-        color: "#374151",
+        lineHeight: 25,
+        color: "#687995",
+        fontFamily: "Roboto_400Regular"
     },
-    selectionApplyText: {
-        color: "#305797",
-        fontSize: 14,
-        fontFamily: "Montserrat_600SemiBold",
+
+    selectionDivider: {
+        width: "100%",
+        height: 1,
+        backgroundColor: "#e2e8f0",
+        marginTop: 28,
+        marginBottom: 28
     },
+
+    selectionFooter: {
+        width: "100%",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16
+    },
+
+    selectionPriceContainer: {
+        flex: 1
+    },
+
+    selectionPrice: {
+        fontSize: 27,
+        lineHeight: 33,
+        fontFamily: "Montserrat_700Bold",
+        color: "#244d89"
+    },
+
+    selectionPriceLabel: {
+        fontSize: 12,
+        color: "#8a8f99",
+        fontFamily: "Roboto_400Regular",
+        marginTop: 3
+    },
+
+    selectionApplyButton: {
+        minWidth: 148,
+        minHeight: 48,
+        backgroundColor: "#315d9f",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        paddingHorizontal: 17,
+        paddingVertical: 13
+    },
+
+    selectionApplyButtonText: {
+        color: "#ffffff",
+        fontSize: 13,
+        fontFamily: "Montserrat_700Bold"
+    },
+
+
     // Used on the Form Screens
     columnCard: {
         backgroundColor: "#fff",

@@ -120,15 +120,9 @@ export default function VisaGuidance() {
                     <Text style={VisaGuidanceStyle.emptyText}>No visa services found.</Text>
                 ) : (
                     filteredServices.map((item, index) => (
-                        <TouchableOpacity
+                        <View
                             key={item.visaItem || item._id || index}
-                            activeOpacity={0.85}
                             style={VisaGuidanceStyle.card}
-                            onPress={() =>
-                                cs.navigate("visadetailsguidance", {
-                                    service: item
-                                })
-                            }
                         >
                             {item.visaImage ? (
                                 <Image
@@ -140,11 +134,15 @@ export default function VisaGuidance() {
                                 <View style={VisaGuidanceStyle.cardImagePlaceholder}>
                                     <Ionicons
                                         name="image-outline"
-                                        size={32}
+                                        size={42}
                                         color="#94a3b8"
                                     />
 
-                                    <Text style={VisaGuidanceStyle.cardImagePlaceholderText}>
+                                    <Text
+                                        style={
+                                            VisaGuidanceStyle.cardImagePlaceholderText
+                                        }
+                                    >
                                         No image available
                                     </Text>
                                 </View>
@@ -165,17 +163,41 @@ export default function VisaGuidance() {
                                     {item.visaDescription}
                                 </Text>
 
-                                <View style={VisaGuidanceStyle.cardFooter}>
-                                    <Text style={VisaGuidanceStyle.price}>
-                                        ₱ {Number(item.visaPrice || 0).toLocaleString()}
-                                    </Text>
+                                <Text style={VisaGuidanceStyle.price}>
+                                    ₱{Number(item.visaPrice || 0).toLocaleString(
+                                        "en-PH"
+                                    )}
+                                </Text>
 
-                                    <Text style={VisaGuidanceStyle.applyText}>
-                                        Apply
+                                <Text style={VisaGuidanceStyle.priceCaption}>
+                                    Service fee per applicant
+                                </Text>
+
+                                <Text style={VisaGuidanceStyle.serviceTypeText}>
+                                    Visa Service
+                                </Text>
+
+                                <TouchableOpacity
+                                    style={VisaGuidanceStyle.applyButton}
+                                    activeOpacity={0.85}
+                                    onPress={() =>
+                                        cs.navigate("visadetailsguidance", {
+                                            service: item
+                                        })
+                                    }
+                                >
+                                    <Ionicons
+                                        name="document-text-outline"
+                                        size={17}
+                                        color="#ffffff"
+                                    />
+
+                                    <Text style={VisaGuidanceStyle.applyButtonText}>
+                                        APPLY NOW
                                     </Text>
-                                </View>
+                                </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
+                        </View>
                     ))
                 )}
             </ScrollView>

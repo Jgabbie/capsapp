@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Image } from 'expo-image'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
+import { Ionicons } from '@expo/vector-icons'
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -59,50 +60,116 @@ export default function PassportGuidance() {
                     <Text style={PassportGuidanceStyle.subtitle}>Select the passport service you need.</Text>
                 </View>
 
-                <TouchableOpacity
-                    style={PassportGuidanceStyle.selectionCard}
-                    onPress={() => cs.navigate("passportguidancenew")}
-                    activeOpacity={0.7}
-                >
-                    <View style={PassportGuidanceStyle.selectionTitleRow}>
+                <View style={PassportGuidanceStyle.selectionCard}>
+                    <View style={PassportGuidanceStyle.selectionIconBox}>
                         <Image
                             source={require('../../assets/images/plus-circle-svgrepo-com.svg')}
                             style={PassportGuidanceStyle.selectionIcon}
-                            resizeMode="contain"
+                            contentFit="contain"
                         />
+                    </View>
 
-                        <Text style={PassportGuidanceStyle.selectionTitle}>
-                            New Passport
+                    <View style={PassportGuidanceStyle.selectionBadge}>
+                        <Text style={PassportGuidanceStyle.selectionBadgeText}>
+                            FIRST-TIME APPLICANT
                         </Text>
                     </View>
-                    <Text style={PassportGuidanceStyle.selectionDesc}>Apply for a passport for first-time applicants.</Text>
-                    <View style={PassportGuidanceStyle.selectionFooter}>
-                        <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
-                        <Text style={PassportGuidanceStyle.selectionApplyText}>Apply</Text>
-                    </View>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={PassportGuidanceStyle.selectionCard}
-                    onPress={() => cs.navigate("passportguidancerenew")}
-                    activeOpacity={0.7}
-                >
-                    <View style={PassportGuidanceStyle.selectionTitleRow}>
+                    <Text style={PassportGuidanceStyle.selectionTitle}>
+                        New Passport
+                    </Text>
+
+                    <Text style={PassportGuidanceStyle.selectionDesc}>
+                        Apply for a new passport with complete assistance throughout the
+                        application process.
+                    </Text>
+
+                    <View style={PassportGuidanceStyle.selectionDivider} />
+
+                    <View style={PassportGuidanceStyle.selectionFooter}>
+                        <View style={PassportGuidanceStyle.selectionPriceContainer}>
+                            <Text style={PassportGuidanceStyle.selectionPrice}>
+                                ₱2,000
+                            </Text>
+
+                            <Text style={PassportGuidanceStyle.selectionPriceLabel}>
+                                Service fee
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={PassportGuidanceStyle.selectionApplyButton}
+                            onPress={() => cs.navigate("passportguidancenew")}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons
+                                name="document-text-outline"
+                                size={16}
+                                color="#ffffff"
+                            />
+
+                            <Text style={PassportGuidanceStyle.selectionApplyButtonText}>
+                                APPLY NOW
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* RENEW PASSPORT */}
+                <View style={PassportGuidanceStyle.selectionCard}>
+                    <View style={PassportGuidanceStyle.selectionIconBox}>
                         <Image
                             source={require('../../assets/images/refresh-f-svgrepo-com.svg')}
                             style={PassportGuidanceStyle.selectionIcon}
-                            resizeMode="contain"
+                            contentFit="contain"
                         />
-                        <Text style={PassportGuidanceStyle.selectionTitle}>
-                            Renew Passport
+                    </View>
+
+                    <View style={PassportGuidanceStyle.selectionBadge}>
+                        <Text style={PassportGuidanceStyle.selectionBadgeText}>
+                            EXISTING PASSPORT HOLDER
                         </Text>
                     </View>
-                    <Text style={PassportGuidanceStyle.selectionDesc}>Renew your existing passport quickly.</Text>
+
+                    <Text style={PassportGuidanceStyle.selectionTitle}>
+                        Renew Passport
+                    </Text>
+
+                    <Text style={PassportGuidanceStyle.selectionDesc}>
+                        Renew your existing passport with complete assistance throughout
+                        the renewal process.
+                    </Text>
+
+                    <View style={PassportGuidanceStyle.selectionDivider} />
+
                     <View style={PassportGuidanceStyle.selectionFooter}>
-                        <Text style={PassportGuidanceStyle.selectionPrice}>₱ 2000</Text>
-                        <Text style={PassportGuidanceStyle.selectionApplyText}>Apply</Text>
+                        <View style={PassportGuidanceStyle.selectionPriceContainer}>
+                            <Text style={PassportGuidanceStyle.selectionPrice}>
+                                ₱2,000
+                            </Text>
+
+                            <Text style={PassportGuidanceStyle.selectionPriceLabel}>
+                                Service fee
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={PassportGuidanceStyle.selectionApplyButton}
+                            onPress={() => cs.navigate("passportguidancerenew")}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons
+                                name="document-text-outline"
+                                size={16}
+                                color="#ffffff"
+                            />
+
+                            <Text style={PassportGuidanceStyle.selectionApplyButtonText}>
+                                APPLY NOW
+                            </Text>
+                        </TouchableOpacity>
                     </View>
-                </TouchableOpacity>
+                </View>
 
             </ScrollView>
             <Chatbot />

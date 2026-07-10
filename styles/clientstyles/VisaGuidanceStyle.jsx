@@ -73,38 +73,38 @@ const VisaGuidanceStyle = StyleSheet.create({
         color: '#1f2937',
     },
     card: {
-        backgroundColor: "#fff",
+        backgroundColor: "#ffffff",
         borderRadius: 12,
-        marginBottom: 16,
+        marginBottom: 22,
         borderWidth: 1,
-        borderColor: "#e5e7eb",
+        borderColor: "#d8dce3",
         overflow: "hidden",
 
         ...Platform.select({
             ios: {
-                shadowColor: "#000",
+                shadowColor: "#000000",
                 shadowOffset: {
                     width: 0,
-                    height: 2
+                    height: 3
                 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4
+                shadowOpacity: 0.14,
+                shadowRadius: 7
             },
             android: {
-                elevation: 2
+                elevation: 4
             }
         })
     },
 
     cardImage: {
         width: "100%",
-        height: 190,
+        height: 245,
         backgroundColor: "#eef2f7"
     },
 
     cardImagePlaceholder: {
         width: "100%",
-        height: 190,
+        height: 245,
         backgroundColor: "#eef2f7",
         alignItems: "center",
         justifyContent: "center",
@@ -118,36 +118,77 @@ const VisaGuidanceStyle = StyleSheet.create({
     },
 
     cardContent: {
-        padding: 16
+        paddingHorizontal: 28,
+        paddingTop: 24,
+        paddingBottom: 25,
+        alignItems: "center"
     },
+
     visaTitle: {
-        fontSize: 18,
-        fontFamily: "Montserrat_600SemiBold",
-        color: "#1f2937",
-        marginBottom: 4
-    },
-    description: {
-        fontSize: 14,
-        color: "#6b7280",
-        fontFamily: "Roboto_400Regular",
-        lineHeight: 20,
-        marginBottom: 12,
-    },
-    cardFooter: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-    },
-    price: {
-        fontSize: 15,
+        width: "100%",
+        minHeight: 48,
+        fontSize: 19,
+        lineHeight: 24,
         fontFamily: "Montserrat_700Bold",
-        color: "#1f2937",
+        color: "#202124",
+        textAlign: "center",
+        textTransform: "uppercase",
+        marginBottom: 19
     },
-    applyText: {
-        color: "#305797",
-        fontFamily: "Montserrat_600SemiBold",
+
+    description: {
+        width: "100%",
+        minHeight: 78,
         fontSize: 14,
+        lineHeight: 24,
+        color: "#69758f",
+        fontFamily: "Roboto_400Regular",
+        textAlign: "center",
+        marginBottom: 13
+    },
+
+    price: {
+        fontSize: 28,
+        lineHeight: 34,
+        fontFamily: "Montserrat_700Bold",
+        color: "#244d89",
+        textAlign: "center"
+    },
+
+    priceCaption: {
+        fontSize: 12,
+        lineHeight: 18,
+        color: "#8a8f99",
+        fontFamily: "Roboto_400Regular",
+        textAlign: "center",
+        marginTop: 2
+    },
+
+    serviceTypeText: {
+        fontSize: 12,
+        color: "#666666",
+        fontFamily: "Montserrat_600SemiBold",
+        textAlign: "center",
+        marginTop: 16,
+        marginBottom: 27
+    },
+
+    applyButton: {
+        minWidth: 175,
+        minHeight: 49,
+        backgroundColor: "#315d9f",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 9,
+        paddingHorizontal: 21,
+        paddingVertical: 13
+    },
+
+    applyButtonText: {
+        color: "#ffffff",
+        fontSize: 14,
+        fontFamily: "Montserrat_700Bold"
     },
     emptyText: {
         textAlign: 'center',
