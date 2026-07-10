@@ -1,4 +1,5 @@
 import Wishlist from '../models/wishlist.js';
+import PackageModel from '../models/package.js';
 
 
 //add to wishlist function
@@ -27,16 +28,100 @@ const addToWishlist = async (req, res) => {
 //get wishlist function
 const getWishlist = async (req, res) => {
     const userId = req.userId;
+
     try {
-        if (!userId) return res.status(400).json({ message: "User ID is required" });
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
 
         const wishlist = await Wishlist.find({ userId })
             .populate('packageId')
             .sort({ createdAt: -1 });
-        return res.status(200).json({ wishlist });
+
+        const packageIds = wishlist
+            .map((wishlistItem) => wishlistItem.packageId?._id)
+            .filter(Boolean);
+
+        const packagesWithRatings = await PackageModel.aggregate([
+            {
+                $match: {
+                    _id: {
+                        $in: packageIds
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: "ratings",
+                    localField: "_id",
+                    foreignField: "packageId",
+                    as: "reviews"
+                }
+            },
+            {
+                $addFields: {
+                    averageRating: {
+                        $cond: [
+                            {
+                                $gt: [
+                                    {
+                                        $size: "$reviews"
+                                    },
+                                    0
+                                ]
+                            },
+                            {
+                                $avg: "$reviews.rating"
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                $project: {
+                    reviews: 0
+                }
+            }
+        ]);
+
+        const packageRatingMap = new Map(
+            packagesWithRatings.map((pkg) => [
+                String(pkg._id),
+                pkg
+            ])
+        );
+
+        const enrichedWishlist = wishlist.map((wishlistItem) => {
+            const wishlistObject = wishlistItem.toObject();
+            const packageId = wishlistItem.packageId?._id;
+
+            if (!packageId) {
+                return wishlistObject;
+            }
+
+            const packageWithRating =
+                packageRatingMap.get(String(packageId));
+
+            return {
+                ...wishlistObject,
+                packageId:
+                    packageWithRating ||
+                    wishlistObject.packageId
+            };
+        });
+
+        return res.status(200).json({
+            wishlist: enrichedWishlist
+        });
     } catch (error) {
         console.error("Error fetching wishlist:", error);
-        return res.status(500).json({ message: "Internal server error" });
+
+        return res.status(500).json({
+            message: "Internal server error"
+        });
     }
 };
 

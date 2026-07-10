@@ -207,224 +207,257 @@ const DestinationStyles = StyleSheet.create({
   },
 
   packageCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginBottom: 18,
-    elevation: 3,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    marginBottom: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#e6e9ef"
+    borderColor: "#d5dbe4",
+
+    elevation: 4,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 5
+  },
+
+  packageImageWrapper: {
+    position: "relative",
+    width: "100%",
+    height: 215,
+    overflow: "hidden",
+    backgroundColor: "#e5e7eb"
   },
 
   packageImage: {
     width: "100%",
-    height: 180
+    height: "100%"
+  },
+
+  discountRibbon: {
+    position: "absolute",
+    top: 17,
+    left: -45,
+    width: 155,
+    height: 34,
+    backgroundColor: "#ffd400",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [
+      {
+        rotate: "-45deg"
+      }
+    ],
+    elevation: 4
+  },
+
+  discountRibbonText: {
+    color: "#17458a",
+    fontSize: 14,
+    fontFamily: "Montserrat_700Bold",
+    letterSpacing: 0.2
+  },
+
+  wishlistCircleButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+
+    elevation: 5,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.16,
+    shadowRadius: 4
+  },
+
+  imageAvailabilityBadge: {
+    position: "absolute",
+    left: 15,
+    bottom: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+    borderRadius: 18,
+    elevation: 3
+  },
+
+  imageAvailabilityText: {
+    fontSize: 11,
+    fontFamily: "Montserrat_700Bold"
   },
 
   packageContent: {
-    padding: 16
-  },
-
-  cardHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 24,
+    alignItems: "center"
   },
 
   packageTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1e293b",
-    flex: 1,
-    marginRight: 10
+    width: "100%",
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: "Montserrat_700Bold",
+    color: "#111827",
+    textAlign: "center",
+    textTransform: "uppercase",
+    marginBottom: 22
   },
 
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#305797',
-    borderRadius: 20,
-    padding: 12,
-    gap: 4
+  priceDisplayRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 9
   },
 
-  averageRatingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#305797',
-    borderRadius: 20,
-    paddingTop: 8,
-    paddingBottom: 8,
-    paddingLeft: 14,
-    paddingRight: 14,
-    gap: 4
+  packagePrice: {
+    fontSize: 27,
+    lineHeight: 33,
+    fontFamily: "Montserrat_700Bold",
+    color: "#244d89"
   },
 
-  ratingText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff'
-  },
-
-  averageRatingText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff'
-  },
-
-  cardSubHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10
-  },
-
-  typeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4
-  },
-
-  typeTagText: {
-    fontSize: 10,
-    fontWeight: "700"
-  },
-
-  availTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4
-  },
-
-  availTagText: {
-    fontSize: 10,
-    fontWeight: "700"
-  },
-
-  durationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#305797',
-    borderRadius: 20,
-    padding: 12,
-    gap: 4
-  },
-
-  durationText: {
-    fontSize: 13,
-    color: "#ffffff",
-    fontWeight: "600"
-  },
-
-  cardDetailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start'
-  },
-
-  cardLeftColumn: {
-    flex: 1,
-    paddingRight: 10
-  },
-
-  cardRightColumn: {
-    alignItems: 'flex-end',
-    gap: 5
-  },
-
-  slotsText: {
+  packagePriceOld: {
     fontSize: 14,
-    color: "#94a3b8",
-    marginBottom: 6,
-    marginTop: 2
+    fontFamily: "Montserrat_600SemiBold",
+    color: "#9a9a9a",
+    textDecorationLine: "line-through"
+  },
+
+  priceCaption: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#8a8f99",
+    fontFamily: "Roboto_400Regular",
+    marginTop: 2,
+    textAlign: "center"
+  },
+
+  travelerPriceText: {
+    fontSize: 11,
+    color: "#6b7280",
+    fontFamily: "Roboto_400Regular",
+    marginTop: 4,
+    textAlign: "center"
+  },
+
+  packageMetaRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 17
+  },
+
+  packageMetaText: {
+    fontSize: 12,
+    color: "#626262",
+    fontFamily: "Montserrat_600SemiBold",
+    textTransform: "capitalize"
+  },
+
+  packageMetaDot: {
+    marginHorizontal: 9,
+    fontSize: 14,
+    color: "#6b7280"
   },
 
   packageTagsRow: {
+    width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6
+    justifyContent: "center",
+    gap: 7,
+    marginBottom: 18
   },
 
   tagPill: {
-    backgroundColor: "#e6f4ff",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#91caff",
-    marginBottom: 5
+    backgroundColor: "#edf2fb",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18
   },
 
   tagText: {
     fontSize: 10,
-    color: "#1677ff"
+    color: "#244d89",
+    fontFamily: "Montserrat_600SemiBold"
   },
 
-  discountBadge: {
-    backgroundColor: "#cf1322",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8
-  },
-
-  discountBadgeText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 11
-  },
-
-  packageFooter: {
+  packageStatsRow: {
+    width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 14,
+    marginBottom: 20
+  },
+
+  packageStatPill: {
+    flex: 1,
+    maxWidth: 145,
+    minHeight: 46,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0"
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "#315d9f",
+    borderRadius: 24,
+    paddingHorizontal: 15,
+
+    elevation: 3,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 3
   },
 
-  priceContainer: {
-    flex: 1
-  },
-
-  priceRowBox: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6
-  },
-
-  packagePrice: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#305797"
-  },
-
-  packagePriceOld: {
+  packageStatText: {
+    color: "#ffffff",
     fontSize: 13,
-    fontWeight: "600",
-    color: "#9aa0a6",
-    textDecorationLine: "line-through",
-    marginBottom: -2
-  },
-
-  budgetPaxText: {
-    fontSize: 11,
-    color: "#94a3b8"
+    fontFamily: "Montserrat_700Bold"
   },
 
   viewDetailsButton: {
-    backgroundColor: "#305797",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8
+    minWidth: 170,
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    backgroundColor: "#315d9f",
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: 0
+  },
+
+  viewDetailsButtonDisabled: {
+    backgroundColor: "#9ca3af",
+    opacity: 0.8
   },
 
   viewDetailsText: {
-    color: "#fff",
-    fontSize: 13,
-    fontFamily: 'Montserrat_600SemiBold'
+    color: "#ffffff",
+    fontSize: 14,
+    fontFamily: "Montserrat_700Bold"
   },
 
   detailsContainer: {

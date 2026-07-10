@@ -123,126 +123,275 @@ const WishlistStyle = StyleSheet.create({
         padding: 10,
     },
 
-    // --- CARD (Matches Web) ---
     card: {
-        backgroundColor: "#fff",
-        borderRadius: 16,
+        backgroundColor: "#ffffff",
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#e2e8f0",
-        marginBottom: 20,
+        borderColor: "#d5dbe4",
+        marginBottom: 22,
         overflow: "hidden",
-        elevation: 1
+
+        elevation: 4,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.12,
+        shadowRadius: 5
     },
+
+    cardImageWrapper: {
+        position: "relative",
+        width: "100%",
+        height: 215,
+        overflow: "hidden",
+        backgroundColor: "#e5e7eb"
+    },
+
     cardImage: {
         width: "100%",
-        height: 200,
+        height: "100%",
         resizeMode: "cover"
     },
-    cardContent: {
-        padding: 16
-    },
-    rowBetween: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end'
-    },
-    packageName: {
-        fontSize: 16,
-        fontFamily: "Montserrat_700Bold",
-        color: "#1e293b",
-        flex: 1,
-        marginRight: 10
-    },
-    refText: {
-        fontSize: 12,
-        color: "#94a3b8",
-        fontFamily: "Roboto_400Regular",
-        marginTop: 2
-    },
-    durationText: {
-        fontSize: 13,
-        color: "#64748b",
-        fontFamily: "Roboto_400Regular",
+
+    discountRibbon: {
+        position: "absolute",
+        top: 17,
+        left: -45,
+        width: 155,
+        height: 34,
+        backgroundColor: "#ffd400",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: [
+            {
+                rotate: "-45deg"
+            }
+        ],
+        elevation: 5
     },
 
-    //  NEW STYLES: Slots & Discount Badge 
-    slotsText: {
-        fontSize: 13,
-        color: "#64748b",
-        fontFamily: "Roboto_400Regular",
-    },
-    discountBadge: {
-        backgroundColor: "#305797",
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6
-    },
-    discountBadgeText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 11
+    discountRibbonText: {
+        color: "#17458a",
+        fontSize: 14,
+        fontFamily: "Montserrat_700Bold"
     },
 
-    //  NEW STYLES: Pricing Display 
-    priceContainer: {
-        flex: 1,
+    topRemoveButton: {
+        position: "absolute",
+        top: 15,
+        right: 15,
+        width: 46,
+        height: 46,
+        borderRadius: 23,
+        backgroundColor: "#ffffff",
+        alignItems: "center",
+        justifyContent: "center",
+
+        elevation: 5,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.16,
+        shadowRadius: 4
     },
-    packagePriceOld: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: "#94a3b8",
-        textDecorationLine: "line-through",
-        marginBottom: 2
+
+    imageAvailabilityBadge: {
+        position: "absolute",
+        left: 15,
+        bottom: 14,
+        paddingHorizontal: 15,
+        paddingVertical: 9,
+        borderRadius: 18,
+        elevation: 3
     },
-    priceText: {
-        fontSize: 18,
-        fontFamily: "Montserrat_700Bold",
-        color: "#1e293b",
-    },
-    budgetPaxText: {
+
+    imageAvailabilityText: {
+        color: "#ffffff",
         fontSize: 11,
-        color: "#94a3b8",
-        marginTop: 2
+        fontFamily: "Montserrat_700Bold"
     },
 
-    // --- TAGS ---
-    tag: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
+    cardContent: {
+        paddingTop: 24,
+        paddingHorizontal: 18,
+        paddingBottom: 24,
+        alignItems: "center"
     },
-    tagText: {
-        fontSize: 10,
+
+    packageName: {
+        width: "100%",
+        fontSize: 18,
+        lineHeight: 24,
         fontFamily: "Montserrat_700Bold",
+        color: "#111827",
+        textAlign: "center",
+        textTransform: "uppercase",
+        marginBottom: 22
     },
 
-    // --- BUTTONS ---
-    actionButtons: {
-        flexDirection: 'row',
+    priceDisplayRow: {
+        flexDirection: "row",
+        alignItems: "baseline",
+        justifyContent: "center",
+        flexWrap: "wrap",
+        gap: 9
+    },
+
+    packagePriceOld: {
+        fontSize: 14,
+        fontFamily: "Montserrat_600SemiBold",
+        color: "#9a9a9a",
+        textDecorationLine: "line-through"
+    },
+
+    priceText: {
+        fontSize: 27,
+        lineHeight: 33,
+        fontFamily: "Montserrat_700Bold",
+        color: "#244d89"
+    },
+
+    priceCaption: {
+        fontSize: 12,
+        lineHeight: 18,
+        color: "#8a8f99",
+        fontFamily: "Roboto_400Regular",
+        marginTop: 2,
+        textAlign: "center"
+    },
+
+    packageMetaRow: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 16,
+        marginBottom: 18
+    },
+
+    packageMetaText: {
+        fontSize: 12,
+        color: "#626262",
+        fontFamily: "Montserrat_600SemiBold",
+        textTransform: "uppercase"
+    },
+
+    packageMetaDot: {
+        marginHorizontal: 9,
+        fontSize: 14,
+        color: "#6b7280"
+    },
+
+    packageStatsRow: {
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 24
+    },
+
+    slotsPill: {
+        flex: 1,
+        minHeight: 46,
+        backgroundColor: "#315d9f",
+        borderRadius: 24,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 14,
+
+        elevation: 3,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 3
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 5
+    },
+
+    slotsPillText: {
+        color: "#ffffff",
+        fontSize: 13,
+        fontFamily: "Montserrat_700Bold",
+        textAlign: "center"
+    },
+
+    ratingPill: {
+        minWidth: 100,
+        minHeight: 46,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         gap: 8,
-        alignItems: 'center'
+        backgroundColor: "#ffffff",
+        borderRadius: 24,
+        paddingHorizontal: 16,
+
+        elevation: 4,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 3
+        },
+        shadowOpacity: 0.12,
+        shadowRadius: 6
     },
-    btnView: {
-        backgroundColor: "#305797",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 6,
+
+    ratingPillText: {
+        color: "#3f3f3f",
+        fontSize: 13,
+        fontFamily: "Montserrat_700Bold"
     },
-    btnViewText: {
-        color: "#fff",
+
+    cardButtonRow: {
+        width: "100%",
+        flexDirection: "row",
+        alignItems: "stretch",
+        gap: 10
+    },
+
+    viewDetailsButton: {
+        flex: 1,
+        minHeight: 48,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        backgroundColor: "#315d9f",
+        paddingHorizontal: 14,
+        paddingVertical: 13
+    },
+
+    viewDetailsButtonText: {
+        color: "#ffffff",
         fontSize: 12,
-        fontFamily: "Montserrat_600SemiBold"
+        fontFamily: "Montserrat_700Bold"
     },
-    btnRemove: {
-        backgroundColor: "#a11d33",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 6,
+
+    removeButton: {
+        width: 115,
+        minHeight: 48,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 7,
+        backgroundColor: "#a32345",
+        paddingHorizontal: 10,
+        paddingVertical: 13
     },
-    btnRemoveText: {
-        color: "#fff",
+
+    removeButtonText: {
+        color: "#ffffff",
         fontSize: 12,
-        fontFamily: "Montserrat_600SemiBold"
+        fontFamily: "Montserrat_700Bold"
     },
 
     // --- EMPTY STATE ---

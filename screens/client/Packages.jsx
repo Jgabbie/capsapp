@@ -418,102 +418,201 @@ export default function Packages({ navigation, route }) {
                     <>
                         {visiblePackages.map((item) => {
                             const tv = Number(travelersValue);
-                            const originalPrice = (tv > 0) ? item.packagePricePerPax * tv : item.packagePricePerPax;
-                            const displayPrice = (tv > 0) ? item.discountedPrice * tv : item.discountedPrice;
+
+                            const originalPrice =
+                                tv > 0
+                                    ? item.packagePricePerPax * tv
+                                    : item.packagePricePerPax;
+
+                            const displayPrice =
+                                tv > 0
+                                    ? item.discountedPrice * tv
+                                    : item.discountedPrice;
+
                             const isWishlisted = wishlistedIds.has(String(item.id));
+                            const isSoldOut = item.availability === "Sold out";
+
+                            const availabilityColors = isSoldOut
+                                ? {
+                                    backgroundColor: "#ef4444",
+                                    color: "#ffffff"
+                                }
+                                : item.availability === "Few slots"
+                                    ? {
+                                        backgroundColor: "#f59e0b",
+                                        color: "#ffffff"
+                                    }
+                                    : {
+                                        backgroundColor: "#00bf63",
+                                        color: "#ffffff"
+                                    };
 
                             return (
-                                <View key={item.id} style={DestinationStyles.packageCard}>
-                                    <Image
-                                        source={item.image}
-                                        style={DestinationStyles.packageImage}
-                                        contentFit="cover"
-                                        transition={300}
-                                    />
+                                <View
+                                    key={item.id}
+                                    style={DestinationStyles.packageCard}
+                                >
+                                    <View style={DestinationStyles.packageImageWrapper}>
+                                        <Image
+                                            source={item.image}
+                                            style={DestinationStyles.packageImage}
+                                            contentFit="cover"
+                                            transition={300}
+                                        />
+
+                                        {item.discountPercent > 0 && (
+                                            <View style={DestinationStyles.discountRibbon}>
+                                                <Text style={DestinationStyles.discountRibbonText}>
+                                                    {item.discountPercent}% OFF
+                                                </Text>
+                                            </View>
+                                        )}
+
+                                        <TouchableOpacity
+                                            onPress={() => handleWishlistToggle(item.id)}
+                                            style={DestinationStyles.wishlistCircleButton}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Ionicons
+                                                name={isWishlisted ? "heart" : "heart-outline"}
+                                                size={28}
+                                                color="#cf1322"
+                                            />
+                                        </TouchableOpacity>
+
+                                        <View
+                                            style={[
+                                                DestinationStyles.imageAvailabilityBadge,
+                                                {
+                                                    backgroundColor:
+                                                        availabilityColors.backgroundColor
+                                                }
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    DestinationStyles.imageAvailabilityText,
+                                                    {
+                                                        color: availabilityColors.color
+                                                    }
+                                                ]}
+                                            >
+                                                {item.availability.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                    </View>
+
                                     <View style={DestinationStyles.packageContent}>
+                                        <Text
+                                            style={DestinationStyles.packageTitle}
+                                            numberOfLines={2}
+                                        >
+                                            {item.title}
+                                        </Text>
 
-                                        <View style={DestinationStyles.cardHeaderRow}>
-                                            <Text style={DestinationStyles.packageTitle} numberOfLines={2}>{item.title}</Text>
-                                            {/*  Removed the "hide if 0.0" condition so the star is always visible */}
-                                            <View style={DestinationStyles.ratingContainer}>
-                                                <Ionicons name="star" size={14} color="#facc15" />
-                                                <Text style={DestinationStyles.ratingText}>{item.rating}</Text>
-                                            </View>
+                                        <View style={DestinationStyles.priceDisplayRow}>
+                                            {item.discountPercent > 0 && (
+                                                <Text style={DestinationStyles.packagePriceOld}>
+                                                    {formatPeso(originalPrice)}
+                                                </Text>
+                                            )}
+
+                                            <Text style={DestinationStyles.packagePrice}>
+                                                {formatPeso(displayPrice)}
+                                            </Text>
                                         </View>
 
-                                        <View style={DestinationStyles.cardSubHeaderRow}>
-                                            <View style={[DestinationStyles.typeTag, { backgroundColor: item.packageType.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
-                                                <Text style={[DestinationStyles.typeTagText, { color: item.packageType.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
-                                                    {item.packageType.toUpperCase()}
-                                                </Text>
-                                            </View>
-                                            <View style={[DestinationStyles.availTag, { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }]}>
-                                                <Text style={[DestinationStyles.availTagText, { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }]}>
-                                                    {item.availability.toUpperCase()}
-                                                </Text>
-                                            </View>
-                                            <Text style={DestinationStyles.durationText}>{item.duration}</Text>
+                                        <Text style={DestinationStyles.priceCaption}>
+                                            {item.discountPercent > 0
+                                                ? "Discounted price per person"
+                                                : "Price per person"}
+                                        </Text>
+
+                                        {tv > 1 && (
+                                            <Text style={DestinationStyles.travelerPriceText}>
+                                                {formatPeso(item.discountedPrice)} × {tv} travelers
+                                            </Text>
+                                        )}
+
+                                        <View style={DestinationStyles.packageMetaRow}>
+                                            <Text style={DestinationStyles.packageMetaText}>
+                                                {item.duration}
+                                            </Text>
+
+                                            <Text style={DestinationStyles.packageMetaDot}>
+                                                •
+                                            </Text>
+
+                                            <Text style={DestinationStyles.packageMetaText}>
+                                                {item.packageType}
+                                            </Text>
                                         </View>
 
-                                        <View style={DestinationStyles.cardDetailsRow}>
-                                            <View style={DestinationStyles.cardLeftColumn}>
-                                                <Text style={DestinationStyles.slotsText}>Slots: {item.slots}</Text>
-                                                {item.packageTags && item.packageTags.length > 0 && (
-                                                    <View style={DestinationStyles.packageTagsRow}>
-                                                        {item.packageTags.slice(0, 4).map((tag, index) => (
-                                                            <View key={index} style={DestinationStyles.tagPill}>
-                                                                <Text style={DestinationStyles.tagText}>{tag}</Text>
+                                        {item.packageTags &&
+                                            item.packageTags.length > 0 && (
+                                                <View style={DestinationStyles.packageTagsRow}>
+                                                    {item.packageTags
+                                                        .slice(0, 3)
+                                                        .map((tag, index) => (
+                                                            <View
+                                                                key={`${tag}-${index}`}
+                                                                style={DestinationStyles.tagPill}
+                                                            >
+                                                                <Text
+                                                                    style={DestinationStyles.tagText}
+                                                                >
+                                                                    {tag}
+                                                                </Text>
                                                             </View>
                                                         ))}
-                                                    </View>
-                                                )}
-                                            </View>
-
-                                            <View style={DestinationStyles.cardRightColumn}>
-                                                {item.discountPercent > 0 && (
-                                                    <View style={DestinationStyles.discountBadge}>
-                                                        <Text style={DestinationStyles.discountBadgeText}>-{item.discountPercent}%</Text>
-                                                    </View>
-                                                )}
-                                                <TouchableOpacity onPress={() => handleWishlistToggle(item.id)} style={{ padding: 4 }}>
-                                                    <Ionicons
-                                                        name={isWishlisted ? "heart" : "heart-outline"}
-                                                        size={26}
-                                                        color={isWishlisted ? "#cf1322" : "#305797"}
-                                                    />
-                                                </TouchableOpacity>
-                                            </View>
-                                        </View>
-
-                                        <View style={DestinationStyles.packageFooter}>
-                                            <View style={DestinationStyles.priceContainer}>
-                                                {tv > 1 ? (
-                                                    <Text style={{ fontSize: 11, color: '#777', marginBottom: 2 }}>
-                                                        {formatPeso(item.discountedPrice)} x {tv} pax =
-                                                    </Text>
-                                                ) : null}
-
-                                                {item.discountPercent > 0 && (
-                                                    <Text style={DestinationStyles.packagePriceOld}>
-                                                        {formatPeso(originalPrice)}
-                                                    </Text>
-                                                )}
-
-                                                <View style={DestinationStyles.priceRowBox}>
-                                                    <Text style={DestinationStyles.packagePrice}>{formatPeso(displayPrice)}</Text>
-                                                    <Text style={DestinationStyles.budgetPaxText}>
-                                                        {item.discountPercent > 0 ? "Discounted / Pax" : "Budget / Pax"}
-                                                    </Text>
                                                 </View>
+                                            )}
+
+                                        <View style={DestinationStyles.packageStatsRow}>
+                                            <View style={DestinationStyles.packageStatPill}>
+                                                <Text style={DestinationStyles.packageStatText}>
+                                                    Slots: {item.slots}
+                                                </Text>
                                             </View>
 
-                                            <TouchableOpacity
-                                                style={DestinationStyles.viewDetailsButton}
-                                                onPress={() => navigation.navigate("packagedetails", { pkg: item.rawItem, id: item.id })}
-                                            >
-                                                <Text style={DestinationStyles.viewDetailsText}>View Details</Text>
-                                            </TouchableOpacity>
+                                            <View style={DestinationStyles.packageStatPill}>
+                                                <Ionicons
+                                                    name="star"
+                                                    size={22}
+                                                    color="#facc15"
+                                                />
+
+                                                <Text style={DestinationStyles.packageStatText}>
+                                                    {item.rating}
+                                                </Text>
+                                            </View>
                                         </View>
+
+                                        <TouchableOpacity
+                                            style={[
+                                                DestinationStyles.viewDetailsButton,
+                                                isSoldOut &&
+                                                DestinationStyles.viewDetailsButtonDisabled
+                                            ]}
+                                            onPress={() =>
+                                                navigation.navigate("packagedetails", {
+                                                    pkg: item.rawItem,
+                                                    id: item.id
+                                                })
+                                            }
+                                            disabled={isSoldOut}
+                                            activeOpacity={0.85}
+                                        >
+                                            <Ionicons
+                                                name="cart-outline"
+                                                size={17}
+                                                color="#ffffff"
+                                            />
+
+                                            <Text style={DestinationStyles.viewDetailsText}>
+                                                {isSoldOut ? "SOLD OUT" : "BOOK NOW"}
+                                            </Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             );

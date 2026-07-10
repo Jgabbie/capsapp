@@ -91,8 +91,32 @@ export default function Wishlist() {
                 if (!user?._id) return;
                 try {
                     setLoading(true);
-                    const response = await api.get('/wishlist', withUserHeader(user._id));
-                    let items = response.data.wishlist || response.data;
+                    const [wishlistResponse, ratingResponse] = await Promise.all([
+                        api.get('/wishlist', withUserHeader(user._id)),
+                        api
+                            .get('/rating/average-ratings')
+                            .catch(() => ({
+                                data: {
+                                    averagesPayload: []
+                                }
+                            }))
+                    ]);
+
+                    const items =
+                        wishlistResponse.data.wishlist ||
+                        wishlistResponse.data ||
+                        [];
+
+                    const ratingMap = new Map();
+
+                    if (ratingResponse.data?.averagesPayload) {
+                        ratingResponse.data.averagesPayload.forEach((ratingItem) => {
+                            ratingMap.set(
+                                String(ratingItem.id),
+                                Number(ratingItem.averageRating) || 0
+                            );
+                        });
+                    }
 
                     const mapped = items.map(item => {
                         const pkg = item.packageId || item.package || item;
@@ -104,21 +128,49 @@ export default function Wishlist() {
                             }, 0);
                         }
 
-                        const finalSlots = pkg.packageAvailableSlots ?? pkg.slots ?? calculatedSlots;
-                        const finalDiscount = pkg.packageDiscountPercent ?? pkg.discount ?? 0;
+                        const finalSlots =
+                            pkg.packageAvailableSlots ??
+                            pkg.slots ??
+                            calculatedSlots;
+
+                        const finalDiscount =
+                            pkg.packageDiscountPercent ??
+                            pkg.discount ??
+                            0;
+
+                        // Get the live average rating from /rating/average-ratings
+                        const packageRating =
+                            ratingMap.get(String(pkg._id)) ??
+                            ratingMap.get(String(pkg.packageItem)) ??
+                            Number(pkg.averageRating) ??
+                            0;
 
                         return {
                             id: pkg._id,
                             title: pkg.packageName,
                             image: toImageUrl(pkg.images?.[0]),
-                            packagePricePerPax: pkg.packagePricePerPax || 0,
-                            duration: `${pkg.packageDuration || 0} DAYS`,
+                            packagePricePerPax: Number(pkg.packagePricePerPax) || 0,
+
+                            duration: `${pkg.packageDuration || 0} Days`,
                             packageDuration: pkg.packageDuration || 0,
+
                             packageType: pkg.packageType || "Domestic",
                             availability: getAvailabilityStatus(finalSlots),
                             slots: finalSlots,
-                            discount: finalDiscount,
-                            reference: pkg.packageCode || pkg.reference || `PKG-${pkg._id.substring(0, 8).toUpperCase()}`,
+
+                            discount: Number(finalDiscount) || 0,
+
+                            packageTags: pkg.packageTags || [],
+
+                            rating: Number(packageRating || 0).toFixed(1),
+
+                            reference:
+                                pkg.packageCode ||
+                                pkg.reference ||
+                                `PKG-${String(pkg._id)
+                                    .substring(0, 8)
+                                    .toUpperCase()}`,
+
                             rawPackage: pkg
                         };
                     });
@@ -144,7 +196,13 @@ export default function Wishlist() {
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
             const q = searchText.toLowerCase();
-            const matchesSearch = !q || item.title?.toLowerCase().includes(q) || item.packageType?.toLowerCase().includes(q);
+            const matchesSearch =
+                !q ||
+                item.title?.toLowerCase().includes(q) ||
+                item.packageType?.toLowerCase().includes(q) ||
+                item.packageTags?.some((tag) =>
+                    tag.toLowerCase().includes(q)
+                );
 
             const matchesCategory = selectedCategory === "All" || item.packageType?.toLowerCase() === selectedCategory.toLowerCase();
             const matchesAvailability = selectedAvailability === "All" || item.availability === selectedAvailability;
@@ -280,88 +338,167 @@ export default function Wishlist() {
                     </View>
                 ) : (
                     filteredPackages.map((item) => {
-                        //  Calculate display price dynamically
-                        const actualPrice = item.discount > 0 ? item.packagePricePerPax * (1 - item.discount / 100) : item.packagePricePerPax;
+                        const actualPrice =
+                            item.discount > 0
+                                ? item.packagePricePerPax * (1 - item.discount / 100)
+                                : item.packagePricePerPax;
+
+                        const availabilityColor =
+                            item.availability === "Available"
+                                ? "#00bf63"
+                                : item.availability === "Few slots"
+                                    ? "#f59e0b"
+                                    : "#ef4444";
 
                         return (
                             <View key={item.id} style={WishlistStyle.card}>
-                                <Image style={WishlistStyle.cardImage} source={{ uri: item.image }} />
+                                <View style={WishlistStyle.cardImageWrapper}>
+                                    <Image
+                                        style={WishlistStyle.cardImage}
+                                        source={{ uri: item.image }}
+                                    />
+
+                                    {item.discount > 0 && (
+                                        <View style={WishlistStyle.discountRibbon}>
+                                            <Text style={WishlistStyle.discountRibbonText}>
+                                                {item.discount}% OFF
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={WishlistStyle.topRemoveButton}
+                                        activeOpacity={0.8}
+                                        onPress={() => {
+                                            setItemToRemove(item);
+                                            setModalVisible(true);
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name="trash-outline"
+                                            size={24}
+                                            color="#a32345"
+                                        />
+                                    </TouchableOpacity>
+
+                                    <View
+                                        style={[
+                                            WishlistStyle.imageAvailabilityBadge,
+                                            {
+                                                backgroundColor: availabilityColor
+                                            }
+                                        ]}
+                                    >
+                                        <Text style={WishlistStyle.imageAvailabilityText}>
+                                            {item.availability.toUpperCase()}
+                                        </Text>
+                                    </View>
+                                </View>
 
                                 <View style={WishlistStyle.cardContent}>
-                                    <View style={WishlistStyle.rowBetween}>
-                                        <Text style={WishlistStyle.packageName} numberOfLines={1}>{item.title}</Text>
-                                        <View style={[WishlistStyle.tag, { backgroundColor: item.packageType?.toLowerCase() === 'domestic' ? '#fff3e0' : '#e8f4fd' }]}>
-                                            <Text style={[WishlistStyle.tagText, { color: item.packageType?.toLowerCase() === 'domestic' ? '#e65100' : '#0277bd' }]}>
-                                                {item.packageType?.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <Text style={WishlistStyle.refText}>{item.reference}</Text>
+                                    <Text
+                                        style={WishlistStyle.packageName}
+                                        numberOfLines={2}
+                                    >
+                                        {item.title}
+                                    </Text>
 
-                                    <View style={[WishlistStyle.rowBetween, { marginTop: 15, marginBottom: 8 }]}>
-                                        <Text style={WishlistStyle.durationText}>{item.duration}</Text>
-                                        <View style={[
-                                            WishlistStyle.tag,
-                                            { backgroundColor: item.availability === 'Available' ? '#e8f5e9' : item.availability === 'Sold out' ? '#ffebee' : '#fff8e1' }
-                                        ]}>
-                                            <Text style={[
-                                                WishlistStyle.tagText,
-                                                { color: item.availability === 'Available' ? '#2e7d32' : item.availability === 'Sold out' ? '#c62828' : '#f57f17' }
-                                            ]}>
-                                                {item.availability.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    {/*  NEW: Slots and Discount Badge Layout */}
-                                    <View style={[WishlistStyle.rowBetween, { marginBottom: 10 }]}>
-                                        <Text style={WishlistStyle.slotsText}>Slots: {item.slots}</Text>
+                                    <View style={WishlistStyle.priceDisplayRow}>
                                         {item.discount > 0 && (
-                                            <View style={WishlistStyle.discountBadge}>
-                                                <Text style={WishlistStyle.discountBadgeText}>-{item.discount}%</Text>
-                                            </View>
+                                            <Text style={WishlistStyle.packagePriceOld}>
+                                                {formatPeso(item.packagePricePerPax)}
+                                            </Text>
                                         )}
+
+                                        <Text style={WishlistStyle.priceText}>
+                                            {formatPeso(actualPrice)}
+                                        </Text>
                                     </View>
 
-                                    {/*  Restored the row format, but stacked the price text vertically! */}
-                                    <View style={WishlistStyle.rowBetween}>
+                                    <Text style={WishlistStyle.priceCaption}>
+                                        {item.discount > 0
+                                            ? "Discounted price per person"
+                                            : "Price per person"}
+                                    </Text>
 
-                                        <View style={WishlistStyle.priceContainer}>
-                                            {item.discount > 0 && (
-                                                <Text style={WishlistStyle.packagePriceOld}>
-                                                    {formatPeso(item.packagePricePerPax)}
-                                                </Text>
-                                            )}
+                                    <View style={WishlistStyle.packageMetaRow}>
+                                        <Text style={WishlistStyle.packageMetaText}>
+                                            {item.duration}
+                                        </Text>
 
-                                            {/*  Removed the priceRowBox wrapper to let these stack naturally */}
-                                            <Text style={WishlistStyle.priceText}>{formatPeso(actualPrice)}</Text>
-                                            <Text style={WishlistStyle.budgetPaxText}>
-                                                {item.discount > 0 ? "Discounted / Pax" : "Budget / Pax"}
+                                        <Text style={WishlistStyle.packageMetaDot}>
+                                            •
+                                        </Text>
+
+                                        <Text style={WishlistStyle.packageMetaText}>
+                                            {item.packageType}
+                                        </Text>
+                                    </View>
+
+                                    <View style={WishlistStyle.packageStatsRow}>
+                                        <View style={WishlistStyle.slotsPill}>
+                                            <Text style={WishlistStyle.slotsPillText}>
+                                                Slots Available: {item.slots}
                                             </Text>
                                         </View>
 
-                                        <View style={WishlistStyle.actionButtons}>
-                                            <TouchableOpacity
-                                                style={WishlistStyle.btnView}
-                                                onPress={() => cs.navigate("packagedetails", { pkg: item.rawPackage, id: item.id })}
-                                            >
-                                                <Text style={WishlistStyle.btnViewText}>View details</Text>
-                                            </TouchableOpacity>
+                                        <View style={WishlistStyle.ratingPill}>
+                                            <Ionicons
+                                                name="star"
+                                                size={21}
+                                                color="#facc15"
+                                            />
 
-                                            <TouchableOpacity
-                                                style={WishlistStyle.btnRemove}
-                                                onPress={() => {
-                                                    setItemToRemove(item);
-                                                    setModalVisible(true);
-                                                }}
-                                            >
-                                                <Text style={WishlistStyle.btnRemoveText}>Remove</Text>
-                                            </TouchableOpacity>
+                                            <Text style={WishlistStyle.ratingPillText}>
+                                                {item.rating || "0.0"}
+                                            </Text>
                                         </View>
+                                    </View>
+
+                                    <View style={WishlistStyle.cardButtonRow}>
+                                        <TouchableOpacity
+                                            style={WishlistStyle.viewDetailsButton}
+                                            activeOpacity={0.85}
+                                            onPress={() =>
+                                                cs.navigate("packagedetails", {
+                                                    pkg: item.rawPackage,
+                                                    id: item.id
+                                                })
+                                            }
+                                        >
+                                            <Ionicons
+                                                name="eye-outline"
+                                                size={16}
+                                                color="#ffffff"
+                                            />
+
+                                            <Text style={WishlistStyle.viewDetailsButtonText}>
+                                                VIEW DETAILS
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={WishlistStyle.removeButton}
+                                            activeOpacity={0.85}
+                                            onPress={() => {
+                                                setItemToRemove(item);
+                                                setModalVisible(true);
+                                            }}
+                                        >
+                                            <Ionicons
+                                                name="trash-outline"
+                                                size={15}
+                                                color="#ffffff"
+                                            />
+
+                                            <Text style={WishlistStyle.removeButtonText}>
+                                                REMOVE
+                                            </Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
-                        )
+                        );
                     })
                 )}
             </ScrollView>
