@@ -30,66 +30,144 @@ const { width } = Dimensions.get("window");
 
 
 // BannerCard component for displaying package information in a card format
-const BannerCard = React.memo(({ item, subText, isWishlisted, onPress }) => {
-    const imageSource = item.images && item.images.length > 0
-        ? item.images[0]
-        : require('../../assets/images/southkorea_image.png')
-    const packageTypeLabel = String(item.packageType || 'domestic').toLowerCase() === 'domestic' ? 'Domestic' : 'International'
-    const discountPercent = Number(item.packageDiscountPercent || 0)
+const BannerCard = React.memo(({ item, onPress }) => {
+    const packageData =
+        item?.packageId ||
+        item?.package ||
+        (
+            typeof item?.packageItem === "object"
+                ? item.packageItem
+                : item
+        );
+
+    const images =
+        packageData?.images ||
+        packageData?.packageImages ||
+        [];
+
+    const imageSource =
+        images.length > 0
+            ? images[0]
+            : require("../../assets/images/southkorea_image.png");
+
+    const packageName =
+        packageData?.packageName ||
+        item?.packageName ||
+        "Tour Package";
+
+    const packageType =
+        packageData?.packageType ||
+        item?.packageType ||
+        "Domestic";
+
+    const packageDuration =
+        Number(
+            packageData?.packageDuration ||
+            item?.packageDuration ||
+            0
+        );
+
+    const discountPercent =
+        Number(
+            packageData?.packageDiscountPercent ??
+            item?.packageDiscountPercent ??
+            item?.discountPercent ??
+            item?.discount ??
+            0
+        );
+
+    const originalPrice =
+        Number(
+            packageData?.packagePricePerPax ??
+            item?.packagePricePerPax ??
+            item?.price ??
+            0
+        );
+
+    const calculatedDiscountedPrice =
+        discountPercent > 0
+            ? originalPrice * (1 - discountPercent / 100)
+            : originalPrice;
+
+    const displayPrice =
+        Number(
+            packageData?.discountedPrice ??
+            item?.discountedPrice ??
+            calculatedDiscountedPrice
+        );
+
+    const formattedPrice = `₱${Math.round(
+        displayPrice || 0
+    ).toLocaleString("en-PH")}`;
 
     return (
         <View style={HomeStyle.bannerCard}>
+            <View style={HomeStyle.bannerImageContainer}>
+                <Image
+                    source={imageSource}
+                    style={HomeStyle.bannerImage}
+                    contentFit="cover"
+                    transition={300}
+                />
 
-            <Image
-                source={imageSource}
-                style={HomeStyle.bannerImage}
-                contentFit="cover"
-                transition={300}
-            />
-
-            <View style={HomeStyle.bannerTagContainer}>
                 {discountPercent > 0 && (
-                    <View style={HomeStyle.discountBannerTag}>
-                        <Text style={HomeStyle.discountBannerTagText}>{`-${Math.round(discountPercent)}% OFF`}</Text>
+                    <View style={HomeStyle.homeDiscountRibbon}>
+                        <Text style={HomeStyle.homeDiscountRibbonText}>
+                            {Math.round(discountPercent)}% OFF
+                        </Text>
                     </View>
                 )}
-
-                <View style={HomeStyle.typeBannerTag}>
-                    <Text style={HomeStyle.typeBannerTagText}>{packageTypeLabel}</Text>
-                </View>
             </View>
 
-            {isWishlisted && (
-                <View style={HomeStyle.wishlistButton}>
-                    <Ionicons name="heart" size={22} color="#cf1322" />
-                </View>
-            )}
-
             <View style={HomeStyle.bannerFooter}>
+                <Text
+                    style={HomeStyle.bannerTitle}
+                    numberOfLines={2}
+                >
+                    {packageName}
+                </Text>
 
-                <View style={HomeStyle.titleBanner}>
-                    <Image
-                        source={require('../../assets/images/destination_icon.png')}
-                        style={HomeStyle.locationIcon}
-                        contentFit="contain"
-                    />
-                    <Text style={HomeStyle.bannerTitle} numberOfLines={2}>
-                        {item.packageName}
+                <Text style={HomeStyle.homePackagePrice}>
+                    {formattedPrice}
+                </Text>
+
+                <Text style={HomeStyle.homePackagePriceCaption}>
+                    Starting price per person
+                </Text>
+
+                <View style={HomeStyle.homePackageMetaRow}>
+                    <Text style={HomeStyle.homePackageMetaText}>
+                        {packageDuration}{" "}
+                        {packageDuration === 1 ? "Day" : "Days"}
+                    </Text>
+
+                    <Text style={HomeStyle.homePackageMetaDot}>
+                        •
+                    </Text>
+
+                    <Text style={HomeStyle.homePackageMetaText}>
+                        {packageType}
                     </Text>
                 </View>
 
-                {/* Truncated Description */}
-                <Text style={HomeStyle.bannerDesc} numberOfLines={4}>
-                    {subText || item.packageDescription}
-                </Text>
+                <TouchableOpacity
+                    style={HomeStyle.viewPackageBtn}
+                    onPress={onPress}
+                    activeOpacity={0.85}
+                >
+                    <Ionicons
+                        name="cart-outline"
+                        size={17}
+                        color="#ffffff"
+                    />
 
-                <TouchableOpacity style={HomeStyle.viewPackageBtn} onPress={onPress} activeOpacity={0.6}>
-                    <Text style={HomeStyle.viewPackageText}>View Package</Text>
+                    <Text style={HomeStyle.viewPackageText}>
+                        BOOK NOW
+                    </Text>
                 </TouchableOpacity>
-
             </View>
         </View>
-    )
+    );
 });
 
 
@@ -779,14 +857,25 @@ export default function Home({ route }) {
                                         <ScrollView
                                             horizontal
                                             showsHorizontalScrollIndicator={false}
-                                            contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                                            contentContainerStyle={
+                                                HomeStyle.homePackageScrollContent
+                                            }
+                                            snapToInterval={width - 16}
+                                            decelerationRate="fast"
                                         >
                                             {forYouPackages.map((pkg) => (
-                                                <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
+                                                <View
+                                                    key={pkg._id}
+                                                    style={HomeStyle.homePackageCardSlide}
+                                                >
                                                     <BannerCard
                                                         item={pkg}
-                                                        isWishlisted={wishlistedIds.has(String(pkg._id))}
-                                                        onPress={() => cs.navigate("packagedetails", { id: pkg._id })}
+                                                        onPress={() =>
+                                                            cs.navigate("packagedetails", {
+                                                                id: pkg._id,
+                                                                pkg
+                                                            })
+                                                        }
                                                     />
                                                 </View>
                                             ))}
@@ -806,17 +895,44 @@ export default function Home({ route }) {
                                 <ScrollView
                                     horizontal
                                     showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ paddingBottom: 10, paddingRight: 20 }}
+                                    contentContainerStyle={
+                                        HomeStyle.homePackageScrollContent
+                                    }
+                                    snapToInterval={width - 16}
+                                    decelerationRate="fast"
                                 >
-                                    {(popularPackages.length > 0 ? popularPackages : fallbackPopularPackages).map((pkg) => (
-                                        <View key={pkg._id} style={{ width: width * 0.85, marginRight: 5, marginLeft: 0 }}>
-                                            <BannerCard
-                                                item={pkg}
-                                                isWishlisted={wishlistedIds.has(String(pkg._id))}
-                                                onPress={() => cs.navigate("packagedetails", { id: pkg._id, pkg })}
-                                            />
-                                        </View>
-                                    ))}
+                                    {(
+                                        popularPackages.length > 0
+                                            ? popularPackages
+                                            : fallbackPopularPackages
+                                    ).map((pkg) => {
+                                        const packageData =
+                                            typeof pkg.packageItem === "object"
+                                                ? pkg.packageItem
+                                                : pkg;
+
+                                        const packageId =
+                                            packageData?._id ||
+                                            pkg._id ||
+                                            pkg.packageItem;
+
+                                        return (
+                                            <View
+                                                key={String(packageId)}
+                                                style={HomeStyle.homePackageCardSlide}
+                                            >
+                                                <BannerCard
+                                                    item={pkg}
+                                                    onPress={() =>
+                                                        cs.navigate("packagedetails", {
+                                                            id: packageId,
+                                                            pkg: packageData
+                                                        })
+                                                    }
+                                                />
+                                            </View>
+                                        );
+                                    })}
                                 </ScrollView>
                             )}
                         </>

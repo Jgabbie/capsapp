@@ -146,132 +146,159 @@ const HomeStyle = StyleSheet.create({
     },
 
     // --- BANNER CARDS (NEW CANVA DESIGN) ---
-    bannerCard: {
-        width: width - 65, // Keeps it nicely sized within the horizontal scroll
-        alignSelf: 'center',
-        backgroundColor: "#fff",
-        borderRadius: 0, //  NO corner radius as requested
-        elevation: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-        marginBottom: 15,
-        marginTop: 0,
+    // --- HOME PACKAGE CARDS ---
+    homePackageScrollContent: {
+        paddingBottom: 16,
+        paddingRight: 15
     },
+
+    homePackageCardSlide: {
+        width: width - 30,
+        marginRight: 14
+    },
+
+    bannerCard: {
+        width: "100%",
+        backgroundColor: "#ffffff",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#315d9f",
+        overflow: "hidden",
+        marginBottom: 15,
+
+        elevation: 5,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 3
+        },
+        shadowOpacity: 0.16,
+        shadowRadius: 7
+    },
+
+    bannerImageContainer: {
+        position: "relative",
+        width: "100%",
+        height: 220,
+        overflow: "hidden",
+        backgroundColor: "#e5e7eb"
+    },
+
     bannerImage: {
         width: "100%",
-        height: 200,
-        borderRadius: 0, //  NO corner radius
-        backgroundColor: '#e0e0e0',
+        height: "100%"
     },
-    bannerTagContainer: {
-        position: 'absolute',
-        top: 12,
-        left: 12,
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: 8,
-        zIndex: 3,
-    },
-    discountBannerTag: {
-        backgroundColor: '#2db55d',
-        paddingHorizontal: 9,
-        paddingVertical: 5,
-        borderRadius: 7,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.16,
-        shadowRadius: 2,
-    },
-    discountBannerTagText: {
-        color: '#fff',
-        fontSize: 10,
-        fontFamily: 'Montserrat_700Bold',
-        letterSpacing: 0.2,
-    },
-    typeBannerTag: {
-        backgroundColor: 'rgba(255,255,255,0.96)',
-        paddingHorizontal: 9,
-        paddingVertical: 5,
-        borderRadius: 7,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 2,
-    },
-    typeBannerTagText: {
-        color: '#305797',
-        fontSize: 10,
-        fontFamily: 'Montserrat_700Bold',
-        letterSpacing: 0.2,
-    },
-    wishlistButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: '#fff',
-        width: 35,
-        height: 35,
-        borderRadius: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
+
+    homeDiscountRibbon: {
+        position: "absolute",
+        top: 18,
+        left: -47,
+        width: 160,
+        height: 36,
+        backgroundColor: "#ffd400",
+        alignItems: "center",
+        justifyContent: "center",
+        transform: [
+            {
+                rotate: "-45deg"
+            }
+        ],
+
         elevation: 5,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        zIndex: 2,
+
+        shadowColor: "#000000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 3
     },
-    bannerFooter: {
-        backgroundColor: "#fff",
-        paddingHorizontal: 0,
-        paddingBottom: 20,
-    },
-    titleBanner: {
-        backgroundColor: '#305797',
-        borderRadius: 30, //  This is the ONLY thing with rounded corners!
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 15,
-        marginTop: -25, //  This pulls the blue box up so it overlaps the image perfectly
-        marginBottom: 15,
-        minHeight: 65,
-    },
-    locationIcon: {
-        width: 18,
-        height: 18,
-        marginRight: 10,
-        tintColor: '#fff', // Ensures the icon is pure white against the blue
-    },
-    bannerTitle: {
+
+    homeDiscountRibbonText: {
+        color: "#17458a",
+        fontSize: 13,
         fontFamily: "Montserrat_700Bold",
-        fontSize: 14,
-        color: "#ffffff",
-        flex: 1,
-        textTransform: 'uppercase',
+        letterSpacing: 0.3
     },
-    bannerDesc: {
+
+    bannerFooter: {
+        minHeight: 275,
+        backgroundColor: "#ffffff",
+        paddingHorizontal: 22,
+        paddingTop: 25,
+        paddingBottom: 24,
+        alignItems: "center"
+    },
+
+    bannerTitle: {
+        width: "100%",
+        minHeight: 48,
+        color: "#111827",
+        fontSize: 19,
+        lineHeight: 24,
+        fontFamily: "Montserrat_700Bold",
+        textAlign: "center",
+        textTransform: "uppercase",
+        marginBottom: 13
+    },
+
+    homePackagePrice: {
+        color: "#244d89",
+        fontSize: 27,
+        lineHeight: 34,
+        fontFamily: "Montserrat_700Bold",
+        textAlign: "center"
+    },
+
+    homePackagePriceCaption: {
+        color: "#8a8f99",
+        fontSize: 12,
+        lineHeight: 18,
         fontFamily: "Roboto_400Regular",
+        textAlign: "center",
+        marginTop: 2
+    },
+
+    homePackageMetaRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 14,
+        marginBottom: 28
+    },
+
+    homePackageMetaText: {
+        color: "#626262",
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
+        textTransform: "capitalize"
+    },
+
+    homePackageMetaDot: {
+        color: "#626262",
         fontSize: 14,
-        color: "#305797", // Matches the dark blue-ish text in your design
-        lineHeight: 20,
-        textAlign: 'center',
-        marginBottom: 20,
-        paddingHorizontal: 20,
-        minHeight: 80,
+        marginHorizontal: 9
     },
+
     viewPackageBtn: {
-        alignItems: 'center',
-        paddingBottom: 0,
+        minWidth: 162,
+        minHeight: 49,
+        backgroundColor: "#315d9f",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 9,
+        paddingHorizontal: 20,
+        paddingVertical: 13,
+        borderRadius: 0
     },
+
     viewPackageText: {
-        fontFamily: "Roboto_500Medium",
-        fontSize: 16,
-        color: "#b22820", //  The exact red color requested!
+        color: "#ffffff",
+        fontSize: 14,
+        fontFamily: "Montserrat_700Bold"
     },
 
     // --- BACKGROUND IMAGES ---
