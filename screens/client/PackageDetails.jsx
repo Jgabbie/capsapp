@@ -515,9 +515,26 @@ export default function PackageDetails({ route, navigation }) {
                             </View>
 
                             <View style={DestinationStyles.averageRatingContainer}>
-                                <Ionicons name="star" size={14} color="#facc15" />
-                                <Text style={DestinationStyles.averageRatingText}>Average Rating: {averageRating} ({reviews.length} reviews)</Text>
+                                <View style={DestinationStyles.ratingIconContainer}>
+                                    <Ionicons name="star" size={20} color="#facc15" />
+                                </View>
+
+                                <View style={DestinationStyles.ratingContent}>
+                                    <View style={DestinationStyles.ratingValueRow}>
+                                        <Text style={DestinationStyles.averageRatingValue}>
+                                            {averageRating ? Number(averageRating).toFixed(1) : '0.0'}
+                                        </Text>
+
+                                        <Text style={DestinationStyles.averageRatingMaximum}>/ 5    </Text>
+                                        <Text style={DestinationStyles.averageRatingText}>
+                                            ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                                        </Text>
+                                    </View>
+
+
+                                </View>
                             </View>
+
                         </View>
 
                         <View style={DestinationStyles.carouselContainer}>

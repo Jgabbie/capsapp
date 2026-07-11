@@ -265,13 +265,31 @@ export default function Home({ route }) {
 
     const scaleValue = useRef(new Animated.Value(0)).current;
 
+    const hasShownFeaturedModalRef = useRef(false);
+    const hasHandledPreferenceModalRef = useRef(false);
 
-    //handle the visibility of the sidebar when the user interacts with the header
+    // Reset when the user logs out or another user logs in.
     useEffect(() => {
-        if (route?.params?.showPreferenceModal) {
+        hasShownFeaturedModalRef.current = false;
+        hasHandledPreferenceModalRef.current = false;
+    }, [user?._id]);
+
+
+    // Show the post-preference modal only once.
+    useEffect(() => {
+        if (
+            route?.params?.showPreferenceModal &&
+            !hasHandledPreferenceModalRef.current
+        ) {
+            hasHandledPreferenceModalRef.current = true;
             setPostPrefModalVisible(true);
+
+            // Remove the parameter so it cannot reopen later.
+            cs.setParams?.({
+                showPreferenceModal: undefined
+            });
         }
-    }, [route?.params?.showPreferenceModal]);
+    }, [route?.params?.showPreferenceModal, cs]);
 
 
     //animate the featured package modal when it becomes visible
@@ -630,16 +648,30 @@ export default function Home({ route }) {
 
 
     //show featured modal on focus (when returning to home screen)
+    // Show the featured package modal only once per login session.
     useFocusEffect(
         React.useCallback(() => {
-            if (packages.length > 0 && !postPrefModalVisible) {
-                const timeoutId = setTimeout(() => {
-                    const featured = getFeaturedPackage();
-                    setFeaturedPackage(featured);
-                    setFeaturedModalVisible(true);
-                }, 3000);
-                return () => clearTimeout(timeoutId);
+            if (
+                hasShownFeaturedModalRef.current ||
+                packages.length === 0 ||
+                postPrefModalVisible
+            ) {
+                return;
             }
+
+            const timeoutId = setTimeout(() => {
+                const featured = getFeaturedPackage();
+
+                if (!featured || hasShownFeaturedModalRef.current) {
+                    return;
+                }
+
+                hasShownFeaturedModalRef.current = true;
+                setFeaturedPackage(featured);
+                setFeaturedModalVisible(true);
+            }, 3000);
+
+            return () => clearTimeout(timeoutId);
         }, [packages, postPrefModalVisible])
     );
 

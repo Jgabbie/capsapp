@@ -489,6 +489,74 @@ const DestinationStyles = StyleSheet.create({
     marginBottom: 12
   },
 
+  durationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#305797',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 9,
+  },
+
+  durationText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  averageRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#305797',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 9,
+  },
+
+  ratingStar: {
+    color: '#FFC107',
+    fontSize: 21,
+    lineHeight: 24,
+  },
+
+  ratingContent: {
+    justifyContent: 'center',
+  },
+
+  ratingValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+
+  averageRatingValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  averageRatingMaximum: {
+    marginLeft: 3,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+
+  averageRatingText: {
+    marginTop: 1,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+
+
+
+
+
+
   carouselContainer: {
     width: "100%",
     height: 200,
