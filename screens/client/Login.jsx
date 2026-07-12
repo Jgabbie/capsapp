@@ -248,7 +248,7 @@ export default function Login() {
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
                 <View style={LoginStyle.inputWrapper}>
-                    <Text style={LoginStyle.loginLabel}>Username</Text>
+                    <Text style={LoginStyle.loginLabel}>Username <Text style={{ color: 'red' }}>*</Text></Text>
                     <TextInput
                         placeholder="Enter username"
                         placeholderTextColor="#6b7280"
@@ -264,7 +264,7 @@ export default function Login() {
                 </View>
 
                 <View style={LoginStyle.inputWrapper}>
-                    <Text style={LoginStyle.loginLabel}>Password</Text>
+                    <Text style={LoginStyle.loginLabel}>Password <Text style={{ color: 'red' }}>*</Text></Text>
                     <View style={{ position: 'relative', justifyContent: 'center' }}>
                         <TextInput
                             style={[LoginStyle.loginInputs, { paddingRight: 50 }, getError ? LoginStyle.inputErrorBorder : null]}

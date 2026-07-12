@@ -136,7 +136,7 @@ export default function PasswordReset() {
                 <Text style={PasswordResetStyle.heading}>Reset Password</Text>
                 <Text style={PasswordResetStyle.subHeading}>Enter your email to receive a One-Time Password</Text>
 
-                <Text style={PasswordResetStyle.label}>Email Address</Text>
+                <Text style={PasswordResetStyle.label}>Email Address <Text style={{ color: 'red' }}>*</Text></Text>
                 <TextInput
                     style={[PasswordResetStyle.input, errorEmail && PasswordResetStyle.inputErrorBorder]}
                     placeholder="Enter your email"

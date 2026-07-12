@@ -127,7 +127,7 @@ export default function ResetPassConfirm() {
                 {/*  1. NEW LOGO: Placed exactly on top of the title */}
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
-                <Text style={ResetPassConfirmStyle.label}>New Password</Text>
+                <Text style={ResetPassConfirmStyle.label}>New Password <Text style={{ color: 'red' }}>*</Text></Text>
                 <View style={ResetPassConfirmStyle.passwordContainer}>
                     <TextInput
                         style={[ResetPassConfirmStyle.input, errorPassword ? ResetPassConfirmStyle.inputErrorBorder : null]}
@@ -153,7 +153,7 @@ export default function ResetPassConfirm() {
                     {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
                 </View>
 
-                <Text style={ResetPassConfirmStyle.label}>Confirm Password</Text>
+                <Text style={ResetPassConfirmStyle.label}>Confirm Password <Text style={{ color: 'red' }}>*</Text></Text>
                 <View style={ResetPassConfirmStyle.passwordContainer}>
                     <TextInput
                         style={[ResetPassConfirmStyle.input, errorConfirm ? ResetPassConfirmStyle.inputErrorBorder : null]}

@@ -299,7 +299,7 @@ export default function PassportGuidanceNew() {
                         <Text style={PassportGuidanceStyle.feeBadgeText}>Passport Fee PHP 2,000</Text>
                     </View>
 
-                    <Text style={PassportGuidanceStyle.formLabel}>Select DFA location</Text>
+                    <Text style={PassportGuidanceStyle.formLabel}>Select DFA location <Text style={{ color: 'red' }}>*</Text></Text>
                     <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDfaModal(true)}>
                         <Text style={[PassportGuidanceStyle.inputText, !dfaLocation && PassportGuidanceStyle.inputTextPlaceholder]}>
                             {dfaLocation || 'Choose a DFA site'}
@@ -308,7 +308,7 @@ export default function PassportGuidanceNew() {
                     </TouchableOpacity>
 
                     <Text style={PassportGuidanceStyle.formLabel}>
-                        Preferred date
+                        Preferred date <Text style={{ color: 'red' }}>*</Text>
                     </Text>
 
                     <TouchableOpacity
@@ -351,7 +351,7 @@ export default function PassportGuidanceNew() {
                         )}
                     </TouchableOpacity>
 
-                    <Text style={PassportGuidanceStyle.formLabel}>Preferred time</Text>
+                    <Text style={PassportGuidanceStyle.formLabel}>Preferred time <Text style={{ color: 'red' }}>*</Text></Text>
                     <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowTimePickerModal(true)}>
                         <Text style={[PassportGuidanceStyle.inputText, !preferredTime && PassportGuidanceStyle.inputTextPlaceholder]}>
                             {preferredTime || 'Select time'}

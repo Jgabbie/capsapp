@@ -579,7 +579,7 @@ export default function BookingUploads({ route, navigation }) {
                             {/* Row 1: Title, First Name, Last Name */}
                             <View style={BookingUploadsStyle.formRow}>
                                 <View style={BookingUploadsStyle.formColSmall}>
-                                    <Text style={BookingUploadsStyle.inputLabel}>Title</Text>
+                                    <Text style={BookingUploadsStyle.inputLabel}>Title <Text style={{ color: 'red' }}>*</Text></Text>
                                     <TouchableOpacity
                                         style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput]}
                                         onPress={() => setActiveDropdown({ index, type: 'title' })}
@@ -592,12 +592,12 @@ export default function BookingUploads({ route, navigation }) {
                                 </View>
 
                                 <View style={BookingUploadsStyle.formCol}>
-                                    <Text style={BookingUploadsStyle.inputLabel}>First Name</Text>
+                                    <Text style={BookingUploadsStyle.inputLabel}>First Name <Text style={{ color: 'red' }}>*</Text></Text>
                                     <TextInput style={BookingUploadsStyle.input} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
                                 </View>
 
                                 <View style={BookingUploadsStyle.formCol}>
-                                    <Text style={BookingUploadsStyle.inputLabel}>Last Name</Text>
+                                    <Text style={BookingUploadsStyle.inputLabel}>Last Name <Text style={{ color: 'red' }}>*</Text></Text>
                                     <TextInput style={BookingUploadsStyle.input} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
                                 </View>
                             </View>
@@ -605,7 +605,7 @@ export default function BookingUploads({ route, navigation }) {
                             {/* Row 2: Room Type & Birthdate */}
                             <View style={BookingUploadsStyle.formRow}>
                                 <View style={BookingUploadsStyle.formCol}>
-                                    <Text style={BookingUploadsStyle.inputLabel}>Room Type</Text>
+                                    <Text style={BookingUploadsStyle.inputLabel}>Room Type <Text style={{ color: 'red' }}>*</Text></Text>
                                     <TouchableOpacity
                                         style={[
                                             BookingUploadsStyle.input,
@@ -628,7 +628,7 @@ export default function BookingUploads({ route, navigation }) {
                                 </View>
 
                                 <View style={BookingUploadsStyle.formCol}>
-                                    <Text style={BookingUploadsStyle.inputLabel}>Birthdate</Text>
+                                    <Text style={BookingUploadsStyle.inputLabel}>Birthdate <Text style={{ color: 'red' }}>*</Text></Text>
                                     <TouchableOpacity style={[BookingUploadsStyle.input, BookingUploadsStyle.selectInput]} onPress={() => openDatePicker(index, 'birthdate')}>
                                         <Text style={[BookingUploadsStyle.inputText, !t.birthdate && BookingUploadsStyle.placeholderText]}>
                                             {t.birthdate || 'Birthdate'}

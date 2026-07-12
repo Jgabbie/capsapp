@@ -88,9 +88,9 @@ const ResetPassConfirmStyle = StyleSheet.create({
         marginTop: 5,
     },
     linkText: {
-        fontSize: 16,             //  Increased size from 14 to 16 to match
-        color: '#305797',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: "Roboto_500Medium",
+        fontSize: 13,
+        color: "#305797",
         //  Removed the underline to mirror the other screen exactly
     },
     //  LOGO AT BOTTOM 

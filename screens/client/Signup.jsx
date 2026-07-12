@@ -242,7 +242,7 @@ export default function Signup() {
                         <Text style={SignupStyle.signupSecondHeading}>Create an Account</Text>
 
                         {/* USERNAME */}
-                        <Text style={SignupStyle.signupLabel}>Username</Text>
+                        <Text style={SignupStyle.signupLabel}>Username <Text style={{ color: 'red' }}>*</Text></Text>
                         <TextInput
                             placeholder="Enter username"
                             placeholderTextColor="#6b7280"
@@ -256,7 +256,7 @@ export default function Signup() {
                         {/* NAMES */}
                         <View style={SignupStyle.fullNameContainer}>
                             <View>
-                                <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>First Name</Text>
+                                <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>First Name <Text style={{ color: 'red' }}>*</Text></Text>
                                 <TextInput
                                     placeholder="First name"
                                     placeholderTextColor="#6b7280"
@@ -269,7 +269,7 @@ export default function Signup() {
                             </View>
 
                             <View>
-                                <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>Last Name</Text>
+                                <Text style={[SignupStyle.signupLabel, { marginLeft: 2 }]}>Last Name <Text style={{ color: 'red' }}>*</Text></Text>
                                 <TextInput
                                     placeholder="Last name"
                                     placeholderTextColor="#6b7280"
@@ -283,7 +283,7 @@ export default function Signup() {
                         </View>
 
                         {/* EMAIL */}
-                        <Text style={SignupStyle.signupLabel}>Email</Text>
+                        <Text style={SignupStyle.signupLabel}>Email <Text style={{ color: 'red' }}>*</Text></Text>
                         <TextInput
                             placeholder="Enter email"
                             placeholderTextColor="#6b7280"
@@ -296,7 +296,7 @@ export default function Signup() {
                         {errors.email ? <Text style={SignupStyle.fieldError}>{errors.email}</Text> : null}
 
                         {/* PHONE NUMBER */}
-                        <Text style={SignupStyle.signupLabel}>Phone Number</Text>
+                        <Text style={SignupStyle.signupLabel}>Phone Number <Text style={{ color: 'red' }}>*</Text></Text>
                         <View style={[SignupStyle.phoneContainer, errors.phonenum && SignupStyle.inputErrorBorder]}>
                             <TextInput
                                 maxLength={13}
@@ -311,7 +311,7 @@ export default function Signup() {
                         {errors.phonenum ? <Text style={SignupStyle.fieldError}>{errors.phonenum}</Text> : null}
 
                         {/* PASSWORD */}
-                        <Text style={SignupStyle.signupLabel}>Password</Text>
+                        <Text style={SignupStyle.signupLabel}>Password <Text style={{ color: 'red' }}>*</Text></Text>
                         <View style={[SignupStyle.passwordContainer, errors.password && SignupStyle.inputErrorBorder]}>
                             <TextInput
                                 maxLength={20}
@@ -332,7 +332,7 @@ export default function Signup() {
                         {errors.password ? <Text style={SignupStyle.fieldError}>{errors.password}</Text> : null}
 
                         {/* CONFIRM PASSWORD */}
-                        <Text style={SignupStyle.signupLabel}>Confirm Password</Text>
+                        <Text style={SignupStyle.signupLabel}>Confirm Password <Text style={{ color: 'red' }}>*</Text></Text>
                         <View style={[SignupStyle.passwordContainer, errors.confirmpassword && SignupStyle.inputErrorBorder]}>
                             <TextInput
                                 maxLength={20}
@@ -398,10 +398,13 @@ export default function Signup() {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     onPress={() => setTermsModalVisible(true)}
+                                    style={{ flexDirection: 'row', alignItems: 'center' }}
                                 >
+
                                     <Text style={SignupStyle.termsLink}>
                                         Terms and Conditions
                                     </Text>
+                                    <Text style={{ color: 'red', border: 'none' }}> *</Text>
                                 </TouchableOpacity>
                             </View>
 
