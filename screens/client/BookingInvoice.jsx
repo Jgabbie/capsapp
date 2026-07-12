@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBa
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
@@ -54,11 +53,13 @@ export default function BookingInvoice({ route, navigation }) {
 
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [booking, setBooking] = useState(rawBooking);
+    const [packageDetails, setPackageDetails] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [enlargedQR, setEnlargedQR] = useState(null);
 
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [isGeneratingInvoicePdf, setIsGeneratingInvoicePdf] = useState(false);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [invoiceNumber, setInvoiceNumber] = useState("");
 
@@ -195,6 +196,47 @@ export default function BookingInvoice({ route, navigation }) {
             setBooking(finalBooking);
             setTransactions(finalTxns);
 
+            const embeddedPackage =
+                finalBooking?.packageId &&
+                    typeof finalBooking.packageId === 'object'
+                    ? finalBooking.packageId
+                    : null;
+
+            if (embeddedPackage) {
+                setPackageDetails(embeddedPackage);
+            }
+
+            const packageIdentifier =
+                finalBooking?.packageId?._id ||
+                finalBooking?.packageId?.id ||
+                finalBooking?.packageId ||
+                finalBooking?.packageItem?._id ||
+                finalBooking?.packageItem ||
+                null;
+
+            if (packageIdentifier) {
+                try {
+                    const packageResponse = await api.get(
+                        `/package/get-package/${packageIdentifier}`,
+                        withUserHeader(user?._id)
+                    );
+
+                    setPackageDetails(
+                        packageResponse?.data?.package ||
+                        packageResponse?.data ||
+                        embeddedPackage ||
+                        null
+                    );
+                } catch (packageError) {
+                    console.error(
+                        'Unable to fetch package visa requirement:',
+                        packageError
+                    );
+
+                    setPackageDetails(embeddedPackage);
+                }
+            }
+
             // Fetch invoice number for this booking using controller (MMNN)
             if (reference && reference !== "--") {
                 try {
@@ -266,6 +308,36 @@ export default function BookingInvoice({ route, navigation }) {
     const paymentStatus = getPaymentStatus();
 
     const packageName = booking?.packageId?.packageName || bookingDetails?.tourPackageTitle || bookingDetails?.packageName || "Tour Package";
+    const packageType = String(
+        packageDetails?.packageType ??
+        booking?.packageId?.packageType ??
+        bookingDetails?.packageType ??
+        booking?.packageType ??
+        rawBooking?.packageId?.packageType ??
+        rawBooking?.packageType ??
+        ''
+    )
+        .trim()
+        .toLowerCase();
+
+    const rawVisaRequired =
+        packageDetails?.visaRequired ??
+        booking?.packageId?.visaRequired ??
+        bookingDetails?.visaRequired ??
+        booking?.visaRequired ??
+        rawBooking?.packageId?.visaRequired ??
+        rawBooking?.visaRequired ??
+        false;
+
+    const requiresVisa =
+        rawVisaRequired === true ||
+        ['true', 'yes', 'y', '1', 'required'].includes(
+            String(rawVisaRequired).trim().toLowerCase()
+        );
+
+    const shouldShowVisaUpload =
+        packageType.includes('international') && requiresVisa;
+
     const packageVia = bookingDetails?.tourPackageVia || "N/A";
 
     let formattedTravelDate = '--';
@@ -823,99 +895,212 @@ export default function BookingInvoice({ route, navigation }) {
 
 
     //helper function to save or share generated PDF
+    const PDF_DOWNLOAD_DIRECTORY_FILE = `${FileSystem.documentDirectory || FileSystem.cacheDirectory
+        }mrc-pdf-download-directory.txt`;
+
+
+    // Get the previously selected Android download folder
+    const getSavedPdfDirectory = async () => {
+        try {
+            const directoryFileInfo = await FileSystem.getInfoAsync(
+                PDF_DOWNLOAD_DIRECTORY_FILE
+            );
+
+            if (!directoryFileInfo.exists) {
+                return null;
+            }
+
+            const savedDirectory = await FileSystem.readAsStringAsync(
+                PDF_DOWNLOAD_DIRECTORY_FILE
+            );
+
+            return savedDirectory?.trim() || null;
+        } catch (error) {
+            console.warn(
+                'Unable to read the saved PDF folder:',
+                error
+            );
+
+            return null;
+        }
+    };
+
+
+    // Remember the selected Android download folder
+    const rememberPdfDirectory = async (directoryUri) => {
+        if (!directoryUri) return;
+
+        await FileSystem.writeAsStringAsync(
+            PDF_DOWNLOAD_DIRECTORY_FILE,
+            directoryUri
+        );
+    };
+
+
+    // Remove the stored folder when it is no longer available
+    const clearSavedPdfDirectory = async () => {
+        await FileSystem.deleteAsync(
+            PDF_DOWNLOAD_DIRECTORY_FILE,
+            {
+                idempotent: true,
+            }
+        );
+    };
+
+
+    // Write the generated PDF into the selected Android folder
+    const writePdfToAndroidDirectory = async ({
+        sourceUri,
+        directoryUri,
+        fileName,
+    }) => {
+        const pdfBase64 = await FileSystem.readAsStringAsync(
+            sourceUri,
+            {
+                encoding: FileSystem.EncodingType.Base64,
+            }
+        );
+
+        const fileNameWithoutExtension = fileName.replace(
+            /\.pdf$/i,
+            ''
+        );
+
+        const destinationUri =
+            await FileSystem.StorageAccessFramework.createFileAsync(
+                directoryUri,
+                fileNameWithoutExtension,
+                'application/pdf'
+            );
+
+        await FileSystem.writeAsStringAsync(
+            destinationUri,
+            pdfBase64,
+            {
+                encoding: FileSystem.EncodingType.Base64,
+            }
+        );
+
+        return destinationUri;
+    };
+
+
+    // Save generated PDFs directly
+    // Save the PDF without opening the file or share sheet
     const saveOrSharePdf = async ({
         sourceUri,
         fileName,
-        successTitle = 'PDF Saved',
+        successTitle = 'Download Complete',
     }) => {
         if (!sourceUri) {
             throw new Error('Generated PDF URI is missing.');
         }
 
-        const fileInfo = await FileSystem.getInfoAsync(sourceUri);
+        const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
 
-        if (!fileInfo.exists) {
-            throw new Error(`Generated PDF does not exist: ${sourceUri}`);
+        if (!sourceInfo.exists) {
+            throw new Error('The generated PDF could not be found.');
         }
 
         if (
-            Platform.OS === 'android' &&
-            FileSystem.StorageAccessFramework
+            Platform.OS !== 'android' ||
+            !FileSystem.StorageAccessFramework
         ) {
+            throw new Error(
+                'Direct saving to the public Downloads folder is currently available only on Android.'
+            );
+        }
+
+        const SAF = FileSystem.StorageAccessFramework;
+
+        let directoryUri = await getSavedPdfDirectory();
+
+        /*
+         * Try the previously selected Downloads folder first.
+         */
+        if (directoryUri) {
             try {
-                const permission =
-                    await FileSystem.StorageAccessFramework
-                        .requestDirectoryPermissionsAsync();
-
-                if (permission.granted) {
-                    const pdfBase64 = await FileSystem.readAsStringAsync(
+                const destinationUri =
+                    await writePdfToAndroidDirectory({
                         sourceUri,
-                        {
-                            encoding: FileSystem.EncodingType.Base64,
-                        }
+                        directoryUri,
+                        fileName,
+                    });
+
+                const savedFileInfo =
+                    await FileSystem.getInfoAsync(destinationUri);
+
+                if (!savedFileInfo.exists) {
+                    throw new Error(
+                        'The PDF was not written successfully.'
                     );
-
-                    // Expo expects the file name without its extension here.
-                    const fileNameWithoutExtension = fileName.replace(
-                        /\.pdf$/i,
-                        ''
-                    );
-
-                    const destinationUri =
-                        await FileSystem.StorageAccessFramework.createFileAsync(
-                            permission.directoryUri,
-                            fileNameWithoutExtension,
-                            'application/pdf'
-                        );
-
-                    await FileSystem.writeAsStringAsync(
-                        destinationUri,
-                        pdfBase64,
-                        {
-                            encoding: FileSystem.EncodingType.Base64,
-                        }
-                    );
-
-                    showAlertModal(
-                        successTitle,
-                        `${fileName} was saved successfully.`,
-                        'success'
-                    );
-
-                    return destinationUri;
                 }
-            } catch (androidSaveError) {
-                console.warn(
-                    'Direct Android PDF save failed. Falling back to share:',
-                    androidSaveError
+
+                showAlertModal(
+                    successTitle,
+                    `${fileName} was saved in your Downloads folder.`,
+                    'success'
                 );
+
+                return destinationUri;
+            } catch (savedFolderError) {
+                console.warn(
+                    'Previously selected Downloads folder is unavailable:',
+                    savedFolderError
+                );
+
+                await clearSavedPdfDirectory();
+                directoryUri = null;
             }
         }
 
-        const canShare = await Sharing.isAvailableAsync();
+        /*
+         * Open the Android folder selector directly at Download.
+         * The user only needs to approve this folder once.
+         */
+        const initialDownloadUri =
+            typeof SAF.getUriForDirectoryInRoot === 'function'
+                ? SAF.getUriForDirectoryInRoot('Download')
+                : null;
 
-        if (!canShare) {
-            throw new Error('File sharing is not available on this device.');
+        const permission =
+            await SAF.requestDirectoryPermissionsAsync(
+                initialDownloadUri
+            );
+
+        if (!permission.granted || !permission.directoryUri) {
+            throw new Error(
+                'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
+            );
         }
 
-        const namedPdfUri = `${FileSystem.cacheDirectory}${fileName}`;
+        await rememberPdfDirectory(
+            permission.directoryUri
+        );
 
-        await FileSystem.deleteAsync(namedPdfUri, {
-            idempotent: true,
-        });
+        const destinationUri =
+            await writePdfToAndroidDirectory({
+                sourceUri,
+                directoryUri: permission.directoryUri,
+                fileName,
+            });
 
-        await FileSystem.copyAsync({
-            from: sourceUri,
-            to: namedPdfUri,
-        });
+        const savedFileInfo =
+            await FileSystem.getInfoAsync(destinationUri);
 
-        await Sharing.shareAsync(namedPdfUri, {
-            mimeType: 'application/pdf',
-            UTI: 'com.adobe.pdf',
-            dialogTitle: fileName,
-        });
+        if (!savedFileInfo.exists) {
+            throw new Error(
+                'The PDF could not be saved to the selected folder.'
+            );
+        }
 
-        return namedPdfUri;
+        showAlertModal(
+            successTitle,
+            `${fileName} was saved in your Downloads folder.`,
+            'success'
+        );
+
+        return destinationUri;
     };
 
 
@@ -1219,12 +1404,17 @@ export default function BookingInvoice({ route, navigation }) {
             });
 
         } catch (error) {
+            console.error(
+                'Registration PDF download error:',
+                error
+            );
+
             showAlertModal(
-                'Error',
-                'Could not generate PDF. Please try again.',
+                'Download Failed',
+                error?.message ||
+                'Could not download the registration PDF.',
                 'error'
             );
-            console.error(error);
         } finally {
             setIsGeneratingPdf(false);
         }
@@ -1233,6 +1423,8 @@ export default function BookingInvoice({ route, navigation }) {
 
     //helper function to generate and download invoice as PDF
     const handleDownloadInvoice = async () => {
+        setIsGeneratingInvoicePdf(true);
+
         try {
             const logoDataUri = await getLogoDataUri();
 
@@ -1666,12 +1858,19 @@ export default function BookingInvoice({ route, navigation }) {
             });
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                'Invoice PDF download error:',
+                error
+            );
+
             showAlertModal(
-                'Error',
-                'Failed to generate invoice PDF.',
+                'Download Failed',
+                error?.message ||
+                'Could not download the invoice PDF.',
                 'error'
             );
+        } finally {
+            setIsGeneratingInvoicePdf(false);
         }
     };
 
@@ -2067,7 +2266,7 @@ export default function BookingInvoice({ route, navigation }) {
                                                     )}
                                                 </View>
 
-                                                {Boolean(traveler.visaFile || fallbackVisas[index]) && (
+                                                {shouldShowVisaUpload && (
                                                     <View>
                                                         <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Visa File</Text>
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
@@ -2322,9 +2521,27 @@ export default function BookingInvoice({ route, navigation }) {
                             <TouchableOpacity
                                 style={BookingInvoiceStyle.downloadBtn}
                                 onPress={handleDownloadInvoice}
+                                disabled={isGeneratingInvoicePdf}
                             >
-                                <Ionicons name="download-outline" size={20} color="#fff" />
-                                <Text style={BookingInvoiceStyle.downloadBtnText}>Download Invoice</Text>
+                                {isGeneratingInvoicePdf ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <Ionicons
+                                            name="download-outline"
+                                            size={20}
+                                            color="#fff"
+                                        />
+
+                                        <Text
+                                            style={
+                                                BookingInvoiceStyle.downloadBtnText
+                                            }
+                                        >
+                                            Download Invoice
+                                        </Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </SafeAreaView>

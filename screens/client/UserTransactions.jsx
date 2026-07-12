@@ -78,6 +78,39 @@ export default function UserTransactions() {
     const [isProofModalVisible, setProofModalVisible] = useState(false)
     const [isReceiptModalVisible, setReceiptModalVisible] = useState(false)
 
+    const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
+
+
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'success',
+    });
+
+
+
+    const showAlertModal = (
+        title,
+        message,
+        type = 'success'
+    ) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+            type,
+        });
+    };
+
+
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
 
     //function to get the current user's full name or username for display in the receipt
     const getCurrentUserFullName = () => {
@@ -229,10 +262,199 @@ export default function UserTransactions() {
         return raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '-');
     };
 
+    const RECEIPT_DOWNLOAD_DIRECTORY_FILE = `${FileSystem.documentDirectory || FileSystem.cacheDirectory
+        }mrc-receipt-download-directory.txt`;
+
+
+    // Read the previously selected Android download folder
+    const getSavedReceiptDirectory = async () => {
+        try {
+            const directoryFileInfo = await FileSystem.getInfoAsync(
+                RECEIPT_DOWNLOAD_DIRECTORY_FILE
+            );
+
+            if (!directoryFileInfo.exists) {
+                return null;
+            }
+
+            const directoryUri = await FileSystem.readAsStringAsync(
+                RECEIPT_DOWNLOAD_DIRECTORY_FILE
+            );
+
+            return directoryUri?.trim() || null;
+        } catch (error) {
+            console.warn(
+                'Unable to read saved receipt folder:',
+                error
+            );
+
+            return null;
+        }
+    };
+
+
+    // Remember the selected Android folder
+    const rememberReceiptDirectory = async (directoryUri) => {
+        if (!directoryUri) return;
+
+        await FileSystem.writeAsStringAsync(
+            RECEIPT_DOWNLOAD_DIRECTORY_FILE,
+            directoryUri
+        );
+    };
+
+
+    // Remove an invalid saved folder
+    const clearSavedReceiptDirectory = async () => {
+        await FileSystem.deleteAsync(
+            RECEIPT_DOWNLOAD_DIRECTORY_FILE,
+            {
+                idempotent: true,
+            }
+        );
+    };
+
+
+    // Write the generated receipt into the Android folder
+    const writeReceiptToAndroidDirectory = async ({
+        sourceUri,
+        directoryUri,
+        fileName,
+    }) => {
+        const receiptBase64 =
+            await FileSystem.readAsStringAsync(sourceUri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+        const fileNameWithoutExtension =
+            fileName.replace(/\.pdf$/i, '');
+
+        const destinationUri =
+            await FileSystem.StorageAccessFramework.createFileAsync(
+                directoryUri,
+                fileNameWithoutExtension,
+                'application/pdf'
+            );
+
+        await FileSystem.writeAsStringAsync(
+            destinationUri,
+            receiptBase64,
+            {
+                encoding: FileSystem.EncodingType.Base64,
+            }
+        );
+
+        return destinationUri;
+    };
+
+
+    // Save the receipt without opening it
+    const saveReceiptDirectly = async ({
+        sourceUri,
+        fileName,
+    }) => {
+        if (!sourceUri) {
+            throw new Error('Generated receipt file is missing.');
+        }
+
+        const sourceInfo =
+            await FileSystem.getInfoAsync(sourceUri);
+
+        if (!sourceInfo.exists) {
+            throw new Error(
+                'The generated receipt could not be found.'
+            );
+        }
+
+        if (
+            Platform.OS !== 'android' ||
+            !FileSystem.StorageAccessFramework
+        ) {
+            throw new Error(
+                'Direct saving to Downloads is currently available only on Android.'
+            );
+        }
+
+        const SAF = FileSystem.StorageAccessFramework;
+        let directoryUri = await getSavedReceiptDirectory();
+
+        /*
+         * Use the previously selected Downloads folder.
+         */
+        if (directoryUri) {
+            try {
+                const destinationUri =
+                    await writeReceiptToAndroidDirectory({
+                        sourceUri,
+                        directoryUri,
+                        fileName,
+                    });
+
+                showAlertModal(
+                    'Download Complete',
+                    `${fileName} was saved to your Downloads folder.`,
+                    'success'
+                );
+
+                return destinationUri;
+            } catch (savedDirectoryError) {
+                console.warn(
+                    'Saved receipt folder is no longer available:',
+                    savedDirectoryError
+                );
+
+                await clearSavedReceiptDirectory();
+                directoryUri = null;
+            }
+        }
+
+        /*
+         * The folder selector appears only on the first download.
+         */
+        const initialDownloadUri =
+            typeof SAF.getUriForDirectoryInRoot === 'function'
+                ? SAF.getUriForDirectoryInRoot('Download')
+                : null;
+
+        const permission =
+            await SAF.requestDirectoryPermissionsAsync(
+                initialDownloadUri
+            );
+
+        if (!permission.granted || !permission.directoryUri) {
+            throw new Error(
+                'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
+            );
+        }
+
+        await rememberReceiptDirectory(
+            permission.directoryUri
+        );
+
+        const destinationUri =
+            await writeReceiptToAndroidDirectory({
+                sourceUri,
+                directoryUri: permission.directoryUri,
+                fileName,
+            });
+
+        showAlertModal(
+            'Download Complete',
+            `${fileName} was saved to your Downloads folder.`,
+            'success'
+        );
+
+        return destinationUri;
+    };
+
 
     //function to handle downloading the receipt as a PDF and sharing it, with detailed logging for errors
     const handleDownloadReceipt = async () => {
-        if (!selectedTransaction) return;
+        if (!selectedTransaction || isDownloadingReceipt) {
+            return;
+        }
+
+        setIsDownloadingReceipt(true);
         try {
             const safePackageName = getTransactionItemLabel(selectedTransaction);
             const invoiceNumber = getCompactInvoiceNumber(selectedTransaction);
@@ -411,23 +633,25 @@ export default function UserTransactions() {
             const date = dayjs().format('MM-DD-YYYY');
             const fileName = `Receipt_${safeReference}_${date}.pdf`;
 
-            const newPath = `${FileSystem.documentDirectory}${fileName}`;
-            await FileSystem.copyAsync({ from: uri, to: newPath });
-
-            const canShare = await Sharing.isAvailableAsync();
-            if (!canShare) {
-                Alert.alert('Receipt Ready', `Saved as ${fileName}`);
-                return;
-            }
-
-            await Sharing.shareAsync(newPath, {
-                UTI: 'com.adobe.pdf',
-                mimeType: 'application/pdf',
-                dialogTitle: fileName,
+            await saveReceiptDirectly({
+                sourceUri: uri,
+                fileName,
             });
         } catch (error) {
-            console.error("PDF Error:", error);
-            Alert.alert("Error", "Failed to download receipt.");
+            console.error(
+                'Receipt PDF download error:',
+                error
+            );
+
+            showAlertModal(
+                'Download Failed',
+                error?.message ||
+                'Failed to download the receipt.',
+                'error'
+            );
+
+        } finally {
+            setIsDownloadingReceipt(false);
         }
     };
 
@@ -966,38 +1190,172 @@ export default function UserTransactions() {
 
                             <TouchableOpacity
                                 onPress={handleDownloadReceipt}
+                                disabled={isDownloadingReceipt}
                                 style={{
-                                    backgroundColor: '#305797',
+                                    backgroundColor: isDownloadingReceipt
+                                        ? '#94a3b8'
+                                        : '#305797',
                                     width: 110,
                                     flexDirection: 'row',
                                     alignItems: 'center',
+                                    justifyContent: 'center',
                                     paddingHorizontal: 12,
                                     paddingVertical: 8,
                                     borderRadius: 8,
                                     marginRight: 10,
+                                    opacity: isDownloadingReceipt ? 0.8 : 1,
                                 }}
                             >
-                                <Ionicons
-                                    name="download-outline"
-                                    size={18}
-                                    color="#fff"
-                                />
-                                <Text
-                                    style={{
-                                        color: '#fff',
-                                        marginLeft: 6,
-                                        fontFamily: 'Montserrat_600SemiBold',
-                                        fontSize: 12,
-                                    }}
-                                >
-                                    Download
-                                </Text>
+                                {isDownloadingReceipt ? (
+                                    <ActivityIndicator
+                                        size="small"
+                                        color="#ffffff"
+                                    />
+                                ) : (
+                                    <>
+                                        <Ionicons
+                                            name="download-outline"
+                                            size={18}
+                                            color="#fff"
+                                        />
+
+                                        <Text
+                                            style={{
+                                                color: '#fff',
+                                                marginLeft: 6,
+                                                fontFamily:
+                                                    'Montserrat_600SemiBold',
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            Download
+                                        </Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </SafeAreaView>
 
 
                 </View>
+            </Modal>
+
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 25,
+                    }}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={{
+                            width: '100%',
+                            maxWidth: 340,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 22,
+                            paddingHorizontal: 26,
+                            paddingTop: 24,
+                            paddingBottom: 22,
+                            alignItems: 'center',
+                        }}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : '#059669'
+                                }
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Roboto_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
 
         </View >

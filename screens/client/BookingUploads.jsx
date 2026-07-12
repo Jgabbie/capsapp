@@ -593,12 +593,12 @@ export default function BookingUploads({ route, navigation }) {
 
                                 <View style={BookingUploadsStyle.formCol}>
                                     <Text style={BookingUploadsStyle.inputLabel}>First Name <Text style={{ color: 'red' }}>*</Text></Text>
-                                    <TextInput style={BookingUploadsStyle.input} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
+                                    <TextInput style={BookingUploadsStyle.input} placeholderTextColor="#9ca3af" placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
                                 </View>
 
                                 <View style={BookingUploadsStyle.formCol}>
                                     <Text style={BookingUploadsStyle.inputLabel}>Last Name <Text style={{ color: 'red' }}>*</Text></Text>
-                                    <TextInput style={BookingUploadsStyle.input} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
+                                    <TextInput style={BookingUploadsStyle.input} placeholderTextColor="#9ca3af" placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
                                 </View>
                             </View>
 

@@ -500,7 +500,7 @@ export default StyleSheet.create({
 
     downloadBtn: {
         backgroundColor: '#305797',
-        width: 145,
+        width: 165,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
