@@ -917,7 +917,7 @@ export default function Home({ route }) {
 
 
                             <View style={HomeStyle.popularPackagesTitleBar}>
-                                <Text style={HomeStyle.popularPackagesTitleText}>Popular Packages</Text>
+                                <Text style={HomeStyle.popularPackagesTitleText}>POPULAR PACKAGES</Text>
                             </View>
                             {popularLoading ? (
                                 <ActivityIndicator size="large" color="#305797" style={{ marginTop: 20, marginBottom: 20 }} />

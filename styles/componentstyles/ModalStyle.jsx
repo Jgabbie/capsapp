@@ -26,6 +26,15 @@ const ModalStyle = StyleSheet.create({
         padding: 20,
         alignItems: "center"
     },
+    modalIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#d1fae5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10
+    },
     modalTitle: {
         fontSize: 22,
         fontFamily: "Montserrat_700Bold",

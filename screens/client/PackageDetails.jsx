@@ -144,6 +144,11 @@ export default function PackageDetails({ route, navigation }) {
     const [isDateModalOpen, setIsDateModalOpen] = useState(false);
     const [isDeleteReviewModalOpen, setIsDeleteReviewModalOpen] = useState(false);
 
+    const [isReviewSuccessModalOpen, setIsReviewSuccessModalOpen] = useState(false);
+    const [reviewSuccessMessage, setReviewSuccessMessage] = useState(
+        "Review submitted successfully!"
+    );
+
     const [selectedArrangement, setSelectedArrangement] = useState("All in Package");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
 
@@ -410,29 +415,47 @@ export default function PackageDetails({ route, navigation }) {
             Alert.alert("Login Required", "Please login to submit a review.");
             return;
         }
+
         if (!reviewForm.rating || !reviewForm.comment.trim()) {
             Alert.alert("Required", "Please provide a rating and a comment.");
             return;
         }
 
         setIsSubmittingReview(true);
+
         try {
             if (isEditingReview && userReview) {
-                await api.put(`/rating/${userReview._id || userReview.id}`, {
-                    rating: reviewForm.rating,
-                    review: reviewForm.comment.trim(),
-                }, withUserHeader(user._id));
-                Alert.alert("Success", "Review updated!");
+                await api.put(
+                    `/rating/${userReview._id || userReview.id}`,
+                    {
+                        rating: reviewForm.rating,
+                        review: reviewForm.comment.trim(),
+                    },
+                    withUserHeader(user._id)
+                );
+
+                setReviewSuccessMessage("Review updated successfully!");
+                setIsReviewSuccessModalOpen(true);
             } else {
-                await api.post('/rating/submit-rating', {
-                    packageId: fullPkg.id,
-                    rating: reviewForm.rating,
-                    review: reviewForm.comment.trim(),
-                }, withUserHeader(user._id));
-                Alert.alert("Success", "Review submitted!");
+                await api.post(
+                    "/rating/submit-rating",
+                    {
+                        packageId: fullPkg.id,
+                        rating: reviewForm.rating,
+                        review: reviewForm.comment.trim(),
+                    },
+                    withUserHeader(user._id)
+                );
+
+                setReviewSuccessMessage("Review submitted successfully!");
+                setIsReviewSuccessModalOpen(true);
             }
 
-            setReviewForm({ rating: 0, comment: "" });
+            setReviewForm({
+                rating: 0,
+                comment: "",
+            });
+
             setIsEditingReview(false);
             await fetchReviewsData();
         } catch (error) {
@@ -446,14 +469,27 @@ export default function PackageDetails({ route, navigation }) {
     //delete review function
     const handleDeleteReview = async () => {
         if (!userReview) return;
+
         setIsSubmittingReview(true);
+
         try {
-            await api.delete(`/rating/${userReview._id || userReview.id}`, withUserHeader(user._id));
-            Alert.alert("Success", "Review deleted.");
+            await api.delete(
+                `/rating/${userReview._id || userReview.id}`,
+                withUserHeader(user._id)
+            );
+
             setIsDeleteReviewModalOpen(false);
             setIsEditingReview(false);
-            setReviewForm({ rating: 0, comment: "" });
+
+            setReviewForm({
+                rating: 0,
+                comment: "",
+            });
+
             await fetchReviewsData();
+
+            setReviewSuccessMessage("Review deleted successfully!");
+            setIsReviewSuccessModalOpen(true);
         } catch (error) {
             Alert.alert("Error", "Unable to delete review.");
         } finally {
@@ -920,6 +956,32 @@ export default function PackageDetails({ route, navigation }) {
                 </ScrollView>
             </KeyboardAvoidingView>
 
+            <Modal
+                transparent
+                animationType="fade"
+                visible={isReviewSuccessModalOpen}
+                onRequestClose={() => setIsReviewSuccessModalOpen(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+
+                        <View style={ModalStyle.modalIconContainer}><Ionicons name="checkmark" size={32} color="#059669" /></View>
+                        <Text style={ModalStyle.modalTitle}>Success</Text>
+
+                        <Text style={ModalStyle.modalText}>
+                            {reviewSuccessMessage}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
+                            onPress={() => setIsReviewSuccessModalOpen(false)}
+                        >
+                            <Text style={ModalStyle.modalButtonText}>OK</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <Modal transparent animationType='fade' visible={isWishlistModalOpen} onRequestClose={() => setIsWishlistModalOpen(false)}>
                 <View style={ModalStyle.modalOverlay}>
                     <View style={ModalStyle.modalBox}>
@@ -1339,6 +1401,8 @@ export default function PackageDetails({ route, navigation }) {
                     </View>
                 </View>
             </Modal>
+
+
         </View>
     );
 }
