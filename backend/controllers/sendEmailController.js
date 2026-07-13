@@ -81,8 +81,6 @@ const sendContactEmail = async (req, res) => {
             })
         });
 
-        console.log(' Auto-reply sent to customer:', normalizedEmail, '| Message ID:', customerResult?.messageId);
-
         res.status(200).json({ success: true, message: 'Message sent successfully' });
 
     } catch (error) {

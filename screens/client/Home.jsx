@@ -539,8 +539,6 @@ export default function Home({ route }) {
 
                 const config = withUserHeader(user._id);
 
-                console.log("Recommendation request config:", config);
-
                 const response = await api.get('/recommendations', {
                     ...config,
                     timeout: 15000

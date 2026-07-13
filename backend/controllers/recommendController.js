@@ -75,9 +75,6 @@ const getRecommendations = async (req, res) => {
     const fallbackPackagesPromise = getFallbackPackages();
 
     try {
-        console.log(
-            `[Recommendations] Fetching recommendations for user ${userId}`
-        );
 
         const fallbackPackagesPromise = getFallbackPackages();
 
