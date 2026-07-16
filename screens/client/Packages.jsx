@@ -399,7 +399,22 @@ export default function Packages({ navigation, route }) {
                 <View style={DestinationStyles.searchRow}>
                     <View style={DestinationStyles.searchBar}>
                         <Ionicons name="search" size={18} color="#777" />
-                        <TextInput style={DestinationStyles.searchInput} placeholder="Search here" placeholderTextColor="#999" value={searchText} onChangeText={setSearchText} />
+                        <TextInput
+                            maxLength={50}
+                            style={DestinationStyles.searchInput}
+                            placeholder="Search here"
+                            placeholderTextColor="#999"
+                            value={searchText}
+                            autoCorrect={false}
+                            onChangeText={(text) => {
+                                const cleanedSearch = text
+                                    .replace(/[^a-zA-Z0-9\s,'&()./-]/g, "")
+                                    .replace(/\s{2,}/g, " ")
+                                    .replace(/^\s+/, "");
+
+                                setSearchText(cleanedSearch);
+                            }}
+                        />
                     </View>
                     <TouchableOpacity style={DestinationStyles.filterButton} onPress={() => setFilterModalVisible(true)}>
                         <Ionicons name="options-outline" size={18} color="#fff" />
@@ -645,6 +660,7 @@ export default function Packages({ navigation, route }) {
                             <Text style={DestinationStyles.filterLabel}>Budget Range (₱)</Text>
                             <View style={DestinationStyles.budgetInputRow}>
                                 <TextInput
+                                    maxLength={6}
                                     style={DestinationStyles.budgetInputBox}
                                     keyboardType="numeric"
                                     value={minBudgetInput}
@@ -652,6 +668,7 @@ export default function Packages({ navigation, route }) {
                                 />
                                 <Text style={DestinationStyles.budgetInputText}>to</Text>
                                 <TextInput
+                                    maxLength={6}
                                     style={DestinationStyles.budgetInputBox}
                                     keyboardType="numeric"
                                     value={maxBudgetInput}
@@ -684,6 +701,7 @@ export default function Packages({ navigation, route }) {
 
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Travelers</Text>
                             <TextInput
+                                maxLength={2}
                                 style={DestinationStyles.searchBar}
                                 placeholder="How many travellers?"
                                 placeholderTextColor={"#999"}
@@ -700,6 +718,7 @@ export default function Packages({ navigation, route }) {
                                     keyboardType="numeric"
                                     value={daysInput}
                                     onChangeText={handleDaysInputChange}
+                                    maxLength={2}
                                 />
                                 <Text style={DestinationStyles.daysMaxText}>Max{'\n'}Days</Text>
                             </View>

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, TouchableWithoutFeedback, Image, Pressable } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, TouchableWithoutFeedback, Image, Pressable, BackHandler } from 'react-native'
 import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -240,7 +240,23 @@ export default function UserBookings() {
         }
     }
 
-    useFocusEffect(useCallback(() => { fetchBookings() }, [user?._id]))
+
+    useFocusEffect(useCallback(() => {
+        fetchBookings()
+    }, [user?._id]))
+
+
+    //disable back button
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => true
+            )
+
+            return () => backHandler.remove()
+        }, [])
+    )
 
 
     //filter bookings based on search text, status filter, booking date filter, and travel date filter
@@ -344,11 +360,20 @@ export default function UserBookings() {
                         <View style={UserBookingsStyle.searchBar}>
                             <Ionicons name="search" size={16} color="#777" />
                             <TextInput
+                                maxLength={50}
                                 style={UserBookingsStyle.searchInput}
                                 placeholder='Search reference, package or status...'
                                 placeholderTextColor="#777"
                                 value={searchText}
-                                onChangeText={setSearchText}
+                                autoCorrect={false}
+                                onChangeText={(text) => {
+                                    const cleanedSearch = text
+                                        .replace(/[^a-zA-Z0-9\s,'&()./-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setSearchText(cleanedSearch);
+                                }}
                             />
                         </View>
                     </View>
@@ -870,24 +895,44 @@ export default function UserBookings() {
 
                                     {cancelReason === 'Other' && (
                                         <TextInput
-                                            style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 10, fontFamily: 'Roboto_400Regular' }}
+                                            style={UserBookingsStyle.cancelSpecify}
                                             placeholder="Please specify"
+                                            placeholderTextColor="#999"
                                             value={cancelOtherReason}
-                                            onChangeText={setCancelOtherReason}
+                                            autoCapitalize="sentences"
+                                            autoCorrect={false}
+                                            onChangeText={(text) => {
+                                                const cleanedReason = text
+                                                    .replace(/[^a-zA-Z0-9\s.,!?'"()&/+\-]/g, "")
+                                                    .replace(/\s{2,}/g, " ")
+                                                    .replace(/^\s+/, "");
+
+                                                setCancelOtherReason(cleanedReason);
+                                            }}
                                         />
                                     )}
 
                                     <TextInput
-                                        style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 15, fontFamily: 'Roboto_400Regular', height: 80, textAlignVertical: 'top' }}
+                                        style={UserBookingsStyle.cancelAdditional}
                                         placeholder="Additional comments (optional)"
+                                        placeholderTextColor="#999"
                                         multiline
                                         value={cancelComments}
-                                        onChangeText={setCancelComments}
+                                        autoCapitalize="sentences"
+                                        autoCorrect={false}
+                                        onChangeText={(text) => {
+                                            const cleanedComments = text
+                                                .replace(/[^a-zA-Z0-9\s.,!?'"()@&/:;#+\-]/g, "")
+                                                .replace(/[^\S\r\n]{2,}/g, " ")
+                                                .replace(/^\s+/, "");
+
+                                            setCancelComments(cleanedComments);
+                                        }}
                                     />
 
                                     <View style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}>
                                         <TouchableOpacity
-                                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#305797', borderRadius: 6, paddingVertical: 10, width: '100%' }}
+                                            style={UserBookingsStyle.cancelUploadButton}
                                             onPress={pickCancelImage}
                                         >
                                             <Ionicons name="push-outline" size={18} color="#305797" style={{ marginRight: 8 }} />

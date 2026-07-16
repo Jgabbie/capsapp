@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, Pressable } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, Pressable, BackHandler } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -70,7 +70,25 @@ export default function UserPackageQuotation() {
         }
     };
 
-    useFocusEffect(useCallback(() => { fetchQuotations(); }, [user?._id]));
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchQuotations();
+        }, [user?._id])
+    );
+
+
+    //disable back button
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                () => true
+            );
+
+            return () => backHandler.remove();
+        }, [])
+    );
 
 
     //helper function to extract travelers object from various possible payload structures
@@ -208,11 +226,20 @@ export default function UserPackageQuotation() {
                         <View style={UserPackageQuotationStyle.searchBar}>
                             <Ionicons name="search" size={16} color="#777" />
                             <TextInput
+                                maxLength={50}
                                 style={UserPackageQuotationStyle.searchInput}
                                 placeholder="Search reference, package or status..."
                                 placeholderTextColor="#999"
                                 value={searchText}
-                                onChangeText={setSearchText}
+                                autoCorrect={false}
+                                onChangeText={(text) => {
+                                    const cleanedSearch = text
+                                        .replace(/[^a-zA-Z0-9\s,'&()./#-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setSearchText(cleanedSearch);
+                                }}
                             />
                             {searchText !== "" && (
                                 <TouchableOpacity onPress={() => setSearchText("")}>

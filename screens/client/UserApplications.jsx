@@ -198,11 +198,20 @@ export default function UserApplications() {
                             <View style={UserApplicationsStyle.searchContainer}>
                                 <Ionicons name="search" size={18} color="#9ca3af" />
                                 <TextInput
+                                    maxLength={40}
                                     style={UserApplicationsStyle.searchInput}
                                     placeholder="Search applications..."
                                     placeholderTextColor="#9ca3af"
                                     value={searchText}
-                                    onChangeText={setSearchText}
+                                    autoCorrect={false}
+                                    onChangeText={(text) => {
+                                        const cleanedSearch = text
+                                            .replace(/[^a-zA-Z0-9\s.,'&()/#\-]/g, "")
+                                            .replace(/\s{2,}/g, " ")
+                                            .replace(/^\s+/, "");
+
+                                        setSearchText(cleanedSearch);
+                                    }}
                                 />
                                 {searchText !== '' && (
                                     <TouchableOpacity onPress={() => setSearchText('')}>

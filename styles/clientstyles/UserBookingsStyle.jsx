@@ -170,6 +170,29 @@ const UserBookingsStyle = StyleSheet.create({
         paddingVertical: 10,
     },
 
+    cancelSpecify: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8, padding: 12,
+        marginBottom: 10,
+        fontFamily: 'Roboto_400Regular',
+        color: "#333"
+    },
+
+    cancelAdditional: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 15,
+        fontFamily: 'Roboto_400Regular',
+        height: 80,
+        textAlignVertical: 'top',
+        color: "#333"
+    },
+
     cancelButton: {
         flex: 1,
         flexDirection: "row",
@@ -182,6 +205,18 @@ const UserBookingsStyle = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#8B0000",
     },
+
+    cancelUploadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#305797',
+        borderRadius: 6,
+        paddingVertical: 10,
+        width: '100%'
+    },
+
     viewButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_700Bold",

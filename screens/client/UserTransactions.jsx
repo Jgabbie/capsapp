@@ -695,11 +695,20 @@ export default function UserTransactions() {
                         <View style={UserTransactionStyle.searchBar}>
                             <Ionicons name="search" size={16} color="#777" />
                             <TextInput
+                                maxLength={50}
                                 style={UserTransactionStyle.searchInput}
                                 placeholder='Search reference or package...'
                                 placeholderTextColor="#777"
                                 value={searchText}
-                                onChangeText={setSearchText}
+                                autoCorrect={false}
+                                onChangeText={(text) => {
+                                    const cleanedSearch = text
+                                        .replace(/[^a-zA-Z0-9\s,'&()./#-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setSearchText(cleanedSearch);
+                                }}
                             />
                         </View>
                     </View>

@@ -137,9 +137,16 @@ export default function ResetPassConfirm() {
                         maxLength={20}
                         value={password}
                         onChangeText={(text) => {
-                            setPassword(text)
-                            setErrorPassword("")
+                            const cleanedPassword = text.replace(
+                                /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                ""
+                            );
+
+                            setPassword(cleanedPassword);
+                            setErrorPassword("");
                         }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
                     />
                     {/*  2. CONDITIONAL EYE ICON */}
                     {password.length > 0 && (
@@ -163,9 +170,16 @@ export default function ResetPassConfirm() {
                         maxLength={20}
                         value={confirmPassword}
                         onChangeText={(text) => {
-                            setConfirmPassword(text)
-                            setErrorConfirm("")
+                            const cleanedPassword = text.replace(
+                                /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                ""
+                            );
+
+                            setConfirmPassword(cleanedPassword);
+                            setErrorConfirm("");
                         }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
                     />
                     {/*  CONDITIONAL EYE ICON */}
                     {confirmPassword.length > 0 && (

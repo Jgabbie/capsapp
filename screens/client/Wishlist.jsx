@@ -258,11 +258,20 @@ export default function Wishlist() {
                     <Text style={WishlistStyle.filterLabel}>Search</Text>
                     <View style={WishlistStyle.searchBar}>
                         <TextInput
+                            maxLength={50}
                             style={WishlistStyle.searchInput}
                             placeholder="Search by destination or package name"
                             placeholderTextColor="#9ca3af"
                             value={searchText}
-                            onChangeText={setSearchText}
+                            autoCorrect={false}
+                            onChangeText={(text) => {
+                                const cleanedSearch = text
+                                    .replace(/[^a-zA-Z0-9\s,'&()./-]/g, "")
+                                    .replace(/\s{2,}/g, " ")
+                                    .replace(/^\s+/, "");
+
+                                setSearchText(cleanedSearch);
+                            }}
                         />
                     </View>
 

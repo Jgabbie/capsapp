@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet, Pressable } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet, Pressable, BackHandler } from "react-native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -224,6 +224,19 @@ export default function VisaProgress() {
     const [isDocumentsUploadedModalOpen, setIsDocumentsUploadedModalOpen] = useState(false);
     const [isDateSelectedModalOpen, setIsDateSelectedModalOpen] = useState(false);
     const [isPassportReleaseOptionSelectedModalOpen, setIsPassportReleaseOptionSelectedModalOpen] = useState(false);
+
+
+    //disable back button
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                () => true
+            );
+
+            return () => backHandler.remove();
+        }, [])
+    );
 
 
     //navigation alias used in some functions
@@ -1863,8 +1876,18 @@ export default function VisaProgress() {
                                 <View style={{ marginTop: 2 }}>
                                     <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', marginBottom: 8 }}>Delivery Address</Text>
                                     <TextInput
+                                        maxLength={100}
                                         value={deliveryAddress}
-                                        onChangeText={setDeliveryAddress}
+                                        autoCapitalize="words"
+                                        autoCorrect={false}
+                                        onChangeText={(text) => {
+                                            const cleanedAddress = text
+                                                .replace(/[^a-zA-Z0-9\s.,'#&()/:;\-]/g, "")
+                                                .replace(/[^\S\r\n]{2,}/g, " ")
+                                                .replace(/^\s+/, "");
+
+                                            setDeliveryAddress(cleanedAddress);
+                                        }}
                                         placeholder="Enter your complete delivery address"
                                         placeholderTextColor="#9ca3af"
                                         multiline

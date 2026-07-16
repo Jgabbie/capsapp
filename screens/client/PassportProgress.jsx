@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image, StyleSheet, Pressable } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image, StyleSheet, Pressable, BackHandler } from "react-native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -159,6 +159,19 @@ export default function PassportApplication() {
 
     const [method, setMethod] = useState(null); // default selected payment method  
     const paymentMethod = method;
+
+
+    //disable back button
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                () => true
+            );
+
+            return () => backHandler.remove();
+        }, [])
+    );
 
 
     //function to normalize the picked document to a consistent format

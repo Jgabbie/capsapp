@@ -101,11 +101,20 @@ export default function VisaGuidance() {
                 <View style={VisaGuidanceStyle.searchContainer}>
                     <Ionicons name="search" size={20} color="#9ca3af" />
                     <TextInput
+                        maxLength={40}
                         style={VisaGuidanceStyle.searchInput}
                         placeholder="Search visa"
                         placeholderTextColor="#9ca3af"
                         value={searchQuery}
-                        onChangeText={setSearchQuery}
+                        autoCorrect={false}
+                        onChangeText={(text) => {
+                            const cleanedSearch = text
+                                .replace(/[^a-zA-Z0-9\s,'&()/-]/g, "")
+                                .replace(/\s{2,}/g, " ")
+                                .replace(/^\s+/, "");
+
+                            setSearchQuery(cleanedSearch);
+                        }}
                     />
                     {searchQuery.length > 0 && (
                         <TouchableOpacity onPress={() => setSearchQuery('')}>

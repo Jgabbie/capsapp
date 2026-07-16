@@ -291,10 +291,23 @@ export default function QuotationForm2({ route, navigation }) {
                     <View style={[QuotationFormStepStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
                         <TextInput
-                            style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
+                            maxLength={250}
+                            style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top', color: '#000' }}
                             multiline
                             value={medicalData.dietaryDetails}
-                            onChangeText={(v) => setMedicalData({ ...medicalData, dietaryDetails: v })}
+                            onChangeText={(text) => {
+                                const cleanedDetails = text
+                                    .replace(/[^a-zA-Z0-9\s.,!?'"()@&/:;#+\-]/g, "")
+                                    .replace(/[^\S\r\n]{2,}/g, " ")
+                                    .replace(/^\s+/, "");
+
+                                setMedicalData((prev) => ({
+                                    ...prev,
+                                    dietaryDetails: cleanedDetails
+                                }));
+                            }}
+                            autoCapitalize="sentences"
+                            autoCorrect={false}
                             editable={medicalData.dietary === 'Y'}
                             backgroundColor={medicalData.dietary === 'Y' ? '#fff' : '#fff'}
                         />
@@ -313,10 +326,23 @@ export default function QuotationForm2({ route, navigation }) {
                     <View style={[QuotationFormStepStyle.row, { alignItems: 'flex-start', marginTop: 5, marginBottom: 15 }]}>
                         <Text style={{ fontSize: 9, marginTop: 5, marginRight: 5 }}>If yes, please indicate details:</Text>
                         <TextInput
-                            style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top' }}
+                            maxLength={250}
+                            style={{ flex: 1, borderWidth: 1, borderColor: '#000', height: 40, padding: 5, fontSize: 10, textAlignVertical: 'top', color: '#000' }}
                             multiline
                             value={medicalData.medicalDetails}
-                            onChangeText={(v) => setMedicalData({ ...medicalData, medicalDetails: v })}
+                            onChangeText={(text) => {
+                                const cleanedDetails = text
+                                    .replace(/[^a-zA-Z0-9\s.,!?'"()@&/:;#+\-]/g, "")
+                                    .replace(/[^\S\r\n]{2,}/g, " ")
+                                    .replace(/^\s+/, "");
+
+                                setMedicalData((prev) => ({
+                                    ...prev,
+                                    medicalDetails: cleanedDetails
+                                }));
+                            }}
+                            autoCapitalize="sentences"
+                            autoCorrect={false}
                             editable={medicalData.medical === 'Y'}
                         />
                     </View>
@@ -371,18 +397,35 @@ export default function QuotationForm2({ route, navigation }) {
                             </View>
                             <View style={{ flex: 2, padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Full name: </Text>
-                                <TextInput style={{ flex: 1, fontSize: 9, padding: 0, height: 15 }} value={emergency.fullName} onChangeText={(v) => setEmergency({ ...emergency, fullName: v.replace(/[^A-Za-z\s-]/g, '') })} />
+                                <TextInput
+                                    maxLength={50}
+                                    style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: '#000' }}
+                                    value={emergency.fullName}
+                                    onChangeText={(v) => setEmergency({ ...emergency, fullName: v.replace(/[^A-Za-z\s-]/g, '') })}
+                                />
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row' }}>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={QuotationFormStepStyle.label}>Email: </Text>
                                 <TextInput
+                                    maxLength={50}
                                     style={{ flex: 1, fontSize: 9, padding: 0, height: 15, color: emailHasError ? '#b54747' : '#000' }}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
+                                    autoCorrect={false}
                                     value={emergency.email}
-                                    onChangeText={(v) => setEmergency({ ...emergency, email: v.replace(/\s/g, '') })}
+                                    onChangeText={(text) => {
+                                        const cleanedEmail = text
+                                            .replace(/\s/g, "")
+                                            .replace(/[^a-zA-Z0-9@._+-]/g, "")
+                                            .toLowerCase();
+
+                                        setEmergency((prev) => ({
+                                            ...prev,
+                                            email: cleanedEmail
+                                        }));
+                                    }}
                                 />
                             </View>
                             <View style={{ flex: 1.5, borderRightWidth: 1, borderColor: '#000', padding: 4, flexDirection: 'row', alignItems: 'center' }}>

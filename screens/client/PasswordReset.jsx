@@ -138,6 +138,7 @@ export default function PasswordReset() {
 
                 <Text style={PasswordResetStyle.label}>Email Address <Text style={{ color: 'red' }}>*</Text></Text>
                 <TextInput
+                    maxLength={40}
                     style={[PasswordResetStyle.input, errorEmail && PasswordResetStyle.inputErrorBorder]}
                     placeholder="Enter your email"
                     placeholderTextColor="#6b7280"
@@ -145,9 +146,16 @@ export default function PasswordReset() {
                     autoCapitalize="none"
                     value={email}
                     onChangeText={(text) => {
-                        setEmail(text)
-                        setErrorEmail("")
+                        const cleanedEmail = text
+                            .replace(/\s/g, "")
+                            .replace(/[^a-zA-Z0-9@._+-]/g, "")
+                            .toLowerCase();
+
+                        setEmail(cleanedEmail);
+                        setErrorEmail("");
                     }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
                 />
 
                 {/*  WRAPPED IN ERROR CONTAINER */}

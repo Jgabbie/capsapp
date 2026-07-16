@@ -260,6 +260,8 @@ export default function Login() {
                             setError("");
                         }}
                         value={getUsername}
+                        autoCapitalize="none"
+                        autoCorrect={false}
                     />
                 </View>
 
@@ -270,12 +272,20 @@ export default function Login() {
                             style={[LoginStyle.loginInputs, { paddingRight: 50 }, getError ? LoginStyle.inputErrorBorder : null]}
                             placeholder="Enter password"
                             placeholderTextColor="#6b7280"
+                            maxLength={16}
                             value={getPassword}
                             onChangeText={(text) => {
-                                setPassword(text)
-                                setError("")
+                                const cleanedPassword = text.replace(
+                                    /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                    ""
+                                );
+
+                                setPassword(cleanedPassword);
+                                setError("");
                             }}
                             secureTextEntry={!showPassword}
+                            autoCapitalize="none"
+                            autoCorrect={false}
                         />
 
                         {/*  CHANGED: Only renders the icon if there is text! */}

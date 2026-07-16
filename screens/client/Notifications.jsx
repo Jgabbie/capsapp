@@ -208,11 +208,20 @@ export default function Notifications() {
                 <View style={NotificationStyle.searchContainer}>
                     <Ionicons name="search" size={18} color="#9ca3af" />
                     <TextInput
+                        maxLength={30}
                         style={NotificationStyle.searchInput}
                         placeholder="Search notifications..."
                         placeholderTextColor="#9ca3af"
                         value={search}
-                        onChangeText={setSearch}
+                        autoCorrect={false}
+                        onChangeText={(text) => {
+                            const cleanedSearch = text
+                                .replace(/[^a-zA-Z0-9\s.,'&()/#\-]/g, "")
+                                .replace(/\s{2,}/g, " ")
+                                .replace(/^\s+/, "");
+
+                            setSearch(cleanedSearch);
+                        }}
                     />
                     {search.length > 0 && (
                         <TouchableOpacity onPress={() => setSearch("")}>

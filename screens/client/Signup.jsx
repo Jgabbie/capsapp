@@ -291,7 +291,16 @@ export default function Signup() {
                             keyboardType="email-address"
                             style={[SignupStyle.signupInputs, errors.email && SignupStyle.inputErrorBorder]}
                             value={user.email}
-                            onChangeText={(e) => changeHandler("email", e)}
+                            onChangeText={(text) => {
+                                const cleanedEmail = text
+                                    .replace(/\s/g, "")
+                                    .replace(/[^a-zA-Z0-9@._+-]/g, "")
+                                    .toLowerCase();
+
+                                changeHandler("email", cleanedEmail);
+                            }}
+                            autoCapitalize="none"
+                            autoCorrect={false}
                         />
                         {errors.email ? <Text style={SignupStyle.fieldError}>{errors.email}</Text> : null}
 
@@ -320,7 +329,16 @@ export default function Signup() {
                                 placeholderTextColor="#6b7280"
                                 secureTextEntry={!showPassword}
                                 value={user.password}
-                                onChangeText={(e) => changeHandler("password", e)}
+                                onChangeText={(text) => {
+                                    const cleanedPassword = text.replace(
+                                        /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                        ""
+                                    );
+
+                                    changeHandler("password", cleanedPassword);
+                                }}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                             />
                             {/*  CONDITIONAL EYE: Only shows if there is text */}
                             {user.password.length > 0 && (
@@ -341,7 +359,16 @@ export default function Signup() {
                                 placeholderTextColor="#6b7280"
                                 secureTextEntry={!showConfirmPassword}
                                 value={user.confirmpassword}
-                                onChangeText={(e) => changeHandler("confirmpassword", e)}
+                                onChangeText={(text) => {
+                                    const cleanedPassword = text.replace(
+                                        /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                        ""
+                                    );
+
+                                    changeHandler("confirmpassword", cleanedPassword);
+                                }}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                             />
                             {/*  CONDITIONAL EYE: Only shows if there is text */}
                             {user.confirmpassword.length > 0 && (

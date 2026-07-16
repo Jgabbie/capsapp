@@ -708,8 +708,18 @@ export default function Profile() {
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>First Name</Text>
                             <TextInput
+                                maxLength={30}
                                 value={userData.firstname} editable={editing}
-                                onChangeText={(text) => valueHandler('firstname', toProperCase(text))}
+                                onChangeText={(text) => {
+                                    const cleanedName = text
+                                        .replace(/[^a-zA-Z\s'-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    valueHandler("firstname", toProperCase(cleanedName));
+                                }}
+                                autoCapitalize="words"
+                                autoCorrect={false}
                                 style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.firstname && ProfileStyle.profileInputsError]}
                             />
                             {errors.firstname ? <Text style={ProfileStyle.errorMessage}>{errors.firstname}</Text> : null}
@@ -717,8 +727,18 @@ export default function Profile() {
                         <View style={ProfileStyle.halfInput}>
                             <Text style={ProfileStyle.profileLabel}>Last Name</Text>
                             <TextInput
+                                maxLength={30}
                                 value={userData.lastname} editable={editing}
-                                onChangeText={(text) => valueHandler('lastname', toProperCase(text))}
+                                onChangeText={(text) => {
+                                    const cleanedName = text
+                                        .replace(/[^a-zA-Z\s'-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    valueHandler("lastname", toProperCase(cleanedName));
+                                }}
+                                autoCapitalize="words"
+                                autoCorrect={false}
                                 style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.lastname && ProfileStyle.profileInputsError]}
                             />
                             {errors.lastname ? <Text style={ProfileStyle.errorMessage}>{errors.lastname}</Text> : null}
@@ -727,11 +747,20 @@ export default function Profile() {
 
                     <Text style={ProfileStyle.profileLabel}>Email Address</Text>
                     <TextInput
+                        maxLength={50}
                         value={userData.email}
                         editable={editing}
                         keyboardType="email-address"
+                        onChangeText={(text) => {
+                            const cleanedEmail = text
+                                .replace(/\s/g, "")
+                                .replace(/[^a-zA-Z0-9@._+-]/g, "")
+                                .toLowerCase();
+
+                            valueHandler("email", cleanedEmail);
+                        }}
                         autoCapitalize="none"
-                        onChangeText={(text) => valueHandler('email', text.trim())}
+                        autoCorrect={false}
                         style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled, errors.email && ProfileStyle.profileInputsError]}
                     />
                     {errors.email ? <Text style={ProfileStyle.errorMessage}>{errors.email}</Text> : null}
@@ -747,8 +776,18 @@ export default function Profile() {
 
                     <Text style={ProfileStyle.profileLabel}>Home Address</Text>
                     <TextInput
+                        maxLength={100}
                         value={userData.address} editable={editing}
-                        onChangeText={(text) => valueHandler('address', text)}
+                        onChangeText={(text) => {
+                            const cleanedAddress = text
+                                .replace(/[^a-zA-Z0-9\s.,'#&()\/-]/g, "")
+                                .replace(/\s{2,}/g, " ")
+                                .replace(/^\s+/, "");
+
+                            valueHandler("address", cleanedAddress);
+                        }}
+                        autoCapitalize="words"
+                        autoCorrect={false}
                         style={[ProfileStyle.profileInputs, !editing && ProfileStyle.profileInputsDisabled]}
                     />
 

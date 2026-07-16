@@ -164,12 +164,19 @@ export default function FAQs() {
                     <View style={FAQsStyle.searchContainer}>
                         <Ionicons name="search" size={18} color="#9ca3af" />
                         <TextInput
+                            maxLength={30}
                             style={FAQsStyle.searchInput}
                             placeholder="Search a question or keyword"
                             placeholderTextColor="#9ca3af"
                             value={searchTerm}
+                            autoCorrect={false}
                             onChangeText={(text) => {
-                                setSearchTerm(text);
+                                const cleanedSearch = text
+                                    .replace(/[^a-zA-Z0-9\s.,?!'&()/#\-]/g, "")
+                                    .replace(/\s{2,}/g, " ")
+                                    .replace(/^\s+/, "");
+
+                                setSearchTerm(cleanedSearch);
                                 setExpandedIndex(null);
                             }}
                         />

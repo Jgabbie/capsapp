@@ -802,13 +802,26 @@ export default function PackageDetails({ route, navigation }) {
                                     ))}
                                 </View>
                                 <TextInput
+                                    maxLength={250}
                                     style={[DestinationStyles.reviewInput, disableForm && { backgroundColor: '#f3f4f6', color: '#9ca3af' }]}
                                     placeholder="Share your experience..."
                                     placeholderTextColor="#9ca3af"
                                     multiline
                                     editable={!disableForm}
+                                    autoCapitalize="sentences"
+                                    autoCorrect={false}
                                     value={reviewForm.comment}
-                                    onChangeText={(val) => setReviewForm({ ...reviewForm, comment: val })}
+                                    onChangeText={(text) => {
+                                        const cleanedComment = text
+                                            .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;#+\-]/g, "")
+                                            .replace(/[^\S\r\n]{2,}/g, " ")
+                                            .replace(/^\s+/, "");
+
+                                        setReviewForm((prev) => ({
+                                            ...prev,
+                                            comment: cleanedComment
+                                        }));
+                                    }}
                                 />
 
                                 <TouchableOpacity style={DestinationStyles.reviewButton} onPress={handleSubmitReview} disabled={disableForm}>
@@ -1224,11 +1237,20 @@ export default function PackageDetails({ route, navigation }) {
                         <View style={DestinationStyles.dateFilterRow}>
                             <View style={DestinationStyles.dateSearchContainer}>
                                 <TextInput
+                                    maxLength={30}
                                     style={DestinationStyles.dateSearchInput}
                                     placeholder="Search dates"
                                     placeholderTextColor="#94a3b8"
                                     value={dateSearchQuery}
-                                    onChangeText={setDateSearchQuery}
+                                    autoCorrect={false}
+                                    onChangeText={(text) => {
+                                        const cleanedSearch = text
+                                            .replace(/[^a-zA-Z0-9\s,./\-]/g, "")
+                                            .replace(/\s{2,}/g, " ")
+                                            .replace(/^\s+/, "");
+
+                                        setDateSearchQuery(cleanedSearch);
+                                    }}
                                 />
                                 {dateSearchQuery.length > 0 && (
                                     <TouchableOpacity style={DestinationStyles.dateClearSearchBtn} onPress={() => setDateSearchQuery("")}>

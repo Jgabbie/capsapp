@@ -524,13 +524,23 @@ export default function VisaDetailsGuidance() {
 
                     <Text style={VisaDetailsGuidanceStyle.formLabel}>Purpose of travel</Text>
                     <TextInput
+                        maxLength={150}
                         style={[VisaDetailsGuidanceStyle.inputContainer, { height: 100, textAlignVertical: 'top', paddingTop: 12 }]}
                         placeholder="Share your purpose of travel"
                         placeholderTextColor="#9ca3af"
                         multiline
                         numberOfLines={3}
                         value={purpose}
-                        onChangeText={setPurpose}
+                        autoCapitalize="sentences"
+                        autoCorrect={false}
+                        onChangeText={(text) => {
+                            const cleanedPurpose = text
+                                .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;#+%_\-]/g, "")
+                                .replace(/[^\S\r\n]{2,}/g, " ")
+                                .replace(/^\s+/, "");
+
+                            setPurpose(cleanedPurpose);
+                        }}
                     />
 
                     <TouchableOpacity style={VisaDetailsGuidanceStyle.submitButton} onPress={submitApplication} disabled={isSubmitting}>

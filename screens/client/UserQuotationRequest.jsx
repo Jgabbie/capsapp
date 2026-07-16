@@ -293,10 +293,18 @@ export default function UserQuotationRequest({ route, navigation }) {
               placeholder="Kindly provide any notes for revision (max 200 characters). Please be as detailed as possible."
               placeholderTextColor="#999"
               value={notes}
-              onChangeText={setNotes}
+              onChangeText={(text) => {
+                const cleanedNotes = text
+                  .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;#+%_\-]/g, "")
+                  .replace(/[^\S\r\n]{2,}/g, " ")
+                  .replace(/^\s+/, "");
+
+                setNotes(cleanedNotes);
+              }}
               multiline
               maxLength={200}
               editable={!isDisabled}
+
             />
             <Text style={styles.charCount}>{notes.length}/200</Text>
 

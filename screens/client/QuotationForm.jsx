@@ -530,10 +530,20 @@ export default function QuotationForm({ route, navigation }) {
                             {showCustomAirlineInput && (
                                 <View style={{ marginTop: 10 }}>
                                     <TextInput
+                                        maxLength={50}
                                         style={[QuotationFormStyle.textInput, errors.customAirline && QuotationFormStyle.inputErrorBorder]}
                                         placeholder="Enter preferred airline"
                                         value={customAirline}
-                                        onChangeText={setCustomAirline}
+                                        autoCapitalize="words"
+                                        autoCorrect={false}
+                                        onChangeText={(text) => {
+                                            const cleanedAirline = text
+                                                .replace(/[^a-zA-Z0-9\s.,'&()/-]/g, "")
+                                                .replace(/\s{2,}/g, " ")
+                                                .replace(/^\s+/, "");
+
+                                            setCustomAirline(cleanedAirline);
+                                        }}
                                     />
                                     {errors.customAirline && <Text style={QuotationFormStyle.errorText}>{errors.customAirline}</Text>}
                                 </View>
@@ -557,10 +567,20 @@ export default function QuotationForm({ route, navigation }) {
                         {showCustomHotelInput && (
                             <View style={{ marginTop: 10 }}>
                                 <TextInput
+                                    maxLength={50}
                                     style={[QuotationFormStyle.textInput, errors.customHotel && QuotationFormStyle.inputErrorBorder]}
                                     placeholder="Enter preferred hotel"
                                     value={customHotel}
-                                    onChangeText={setCustomHotel}
+                                    autoCapitalize="words"
+                                    autoCorrect={false}
+                                    onChangeText={(text) => {
+                                        const cleanedHotel = text
+                                            .replace(/[^a-zA-Z0-9\s.,'&()/-]/g, "")
+                                            .replace(/\s{2,}/g, " ")
+                                            .replace(/^\s+/, "");
+
+                                        setCustomHotel(cleanedHotel);
+                                    }}
                                 />
                                 {errors.customHotel && <Text style={QuotationFormStyle.errorText}>{errors.customHotel}</Text>}
                             </View>
@@ -618,10 +638,20 @@ export default function QuotationForm({ route, navigation }) {
                         <View style={[QuotationFormStyle.inputGroup, { marginTop: 15 }]}>
                             <Text style={QuotationFormStyle.inputLabel}>Airline <Text style={{ color: 'red' }}>*</Text></Text>
                             <TextInput
+                                maxLength={50}
                                 style={[QuotationFormStyle.textInput, errors.flightAirline && QuotationFormStyle.inputErrorBorder]}
                                 placeholder="Enter airline name"
                                 value={flightAirline}
-                                onChangeText={setFlightAirline}
+                                autoCapitalize="words"
+                                autoCorrect={false}
+                                onChangeText={(text) => {
+                                    const cleanedAirline = text
+                                        .replace(/[^a-zA-Z0-9\s.,'&()/-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setFlightAirline(cleanedAirline);
+                                }}
                             />
                             {errors.flightAirline && <Text style={QuotationFormStyle.errorText}>{errors.flightAirline}</Text>}
                         </View>
@@ -699,14 +729,22 @@ export default function QuotationForm({ route, navigation }) {
                         <View key={index} style={QuotationFormStyle.inputGroup}>
                             <Text style={QuotationFormStyle.inputLabel}>{label}</Text>
                             <TextInput
+                                maxLength={200}
                                 style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea, errors.itineraryNotes && !itineraryNotes[index].trim() && QuotationFormStyle.inputErrorBorder]}
                                 placeholder={`Notes for ${label.toLowerCase()}. Type "NONE" if no changes`}
                                 placeholderTextColor="#9ca3af"
                                 multiline
+                                autoCapitalize="sentences"
+                                autoCorrect={false}
                                 value={itineraryNotes[index]}
                                 onChangeText={(text) => {
+                                    const cleanedNotes = text
+                                        .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;#+%_-]/g, "")
+                                        .replace(/[^\S\r\n]{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
                                     const updated = [...itineraryNotes];
-                                    updated[index] = text;
+                                    updated[index] = cleanedNotes;
                                     setItineraryNotes(updated);
                                 }}
                             />
@@ -717,12 +755,22 @@ export default function QuotationForm({ route, navigation }) {
                     <Text style={[QuotationFormStyle.helperNote, { color: '#ef4444', marginTop: 4, marginBottom: 14 }]}>Note: If you wish to not have any changes in the following Itinerary, kindly type "NONE" in the fields of the Itinerary notes.</Text>
                     <Text style={[QuotationFormStyle.inputLabel, { marginTop: 4, marginBottom: 8 }]}>Additional Comments</Text>
                     <TextInput
+                        maxLength={250}
                         style={[QuotationFormStyle.textInput, QuotationFormStyle.textArea]}
                         placeholder="Anything else we should know?"
                         placeholderTextColor="#9ca3af"
                         multiline
+                        autoCapitalize="sentences"
+                        autoCorrect={false}
                         value={additionalComments}
-                        onChangeText={setAdditionalComments}
+                        onChangeText={(text) => {
+                            const cleanedComments = text
+                                .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;#+%_-]/g, "")
+                                .replace(/[^\S\r\n]{2,}/g, " ")
+                                .replace(/^\s+/, "");
+
+                            setAdditionalComments(cleanedComments);
+                        }}
                     />
 
                     <TouchableOpacity

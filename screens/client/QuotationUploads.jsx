@@ -604,12 +604,42 @@ export default function QuotationUploads({ route, navigation }) {
 
                                 <View style={BookingUploadsStyle.formCol}>
                                     <Text style={QuotationUploadsStyle.inputLabel}>First Name</Text>
-                                    <TextInput style={BookingUploadsStyle.input} placeholder="First name" maxLength={30} value={t.firstName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'firstName', v)} />
+                                    <TextInput
+                                        style={BookingUploadsStyle.input}
+                                        placeholder="First name"
+                                        maxLength={30}
+                                        value={t.firstName}
+                                        autoCapitalize="words"
+                                        autoCorrect={false}
+                                        onChangeText={(text) => {
+                                            const cleanedName = text
+                                                .replace(/[^a-zA-Z\s'-]/g, "")
+                                                .replace(/\s{2,}/g, " ")
+                                                .replace(/^\s+/, "");
+
+                                            updateTraveler(index, "firstName", cleanedName);
+                                        }}
+                                    />
                                 </View>
 
                                 <View style={BookingUploadsStyle.formCol}>
                                     <Text style={QuotationUploadsStyle.inputLabel}>Last Name</Text>
-                                    <TextInput style={BookingUploadsStyle.input} placeholder="Last name" maxLength={30} value={t.lastName} onChangeText={(v) => /^[A-Za-z\s-]*$/.test(v) && updateTraveler(index, 'lastName', v)} />
+                                    <TextInput
+                                        style={BookingUploadsStyle.input}
+                                        placeholder="Last name"
+                                        maxLength={30}
+                                        value={t.lastName}
+                                        autoCapitalize="words"
+                                        autoCorrect={false}
+                                        onChangeText={(text) => {
+                                            const cleanedName = text
+                                                .replace(/[^a-zA-Z\s'-]/g, "")
+                                                .replace(/\s{2,}/g, " ")
+                                                .replace(/^\s+/, "");
+
+                                            updateTraveler(index, "lastName", cleanedName);
+                                        }}
+                                    />
                                 </View>
                             </View>
 

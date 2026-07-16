@@ -28,6 +28,8 @@ import {
 
 const { width } = Dimensions.get("window");
 
+const featuredModalShownForUsers = new Set();
+
 
 // BannerCard component for displaying package information in a card format
 const BannerCard = React.memo(({ item, onPress }) => {
@@ -649,8 +651,14 @@ export default function Home({ route }) {
     // Show the featured package modal only once per login session.
     useFocusEffect(
         React.useCallback(() => {
+            const featuredModalUserKey = user?._id
+                ? String(user._id)
+                : "guest";
+
+            // Prevent the modal from showing again when returning to Home.
             if (
                 hasShownFeaturedModalRef.current ||
+                featuredModalShownForUsers.has(featuredModalUserKey) ||
                 packages.length === 0 ||
                 postPrefModalVisible
             ) {
@@ -660,17 +668,24 @@ export default function Home({ route }) {
             const timeoutId = setTimeout(() => {
                 const featured = getFeaturedPackage();
 
-                if (!featured || hasShownFeaturedModalRef.current) {
+                if (
+                    !featured ||
+                    hasShownFeaturedModalRef.current ||
+                    featuredModalShownForUsers.has(featuredModalUserKey)
+                ) {
                     return;
                 }
 
+                // Mark it as shown before opening the modal.
                 hasShownFeaturedModalRef.current = true;
+                featuredModalShownForUsers.add(featuredModalUserKey);
+
                 setFeaturedPackage(featured);
                 setFeaturedModalVisible(true);
             }, 3000);
 
             return () => clearTimeout(timeoutId);
-        }, [packages, postPrefModalVisible])
+        }, [packages, postPrefModalVisible, user?._id])
     );
 
 
@@ -848,11 +863,21 @@ export default function Home({ route }) {
                                 <View style={HomeStyle.heroSearchRow}>
                                     <View style={HomeStyle.heroSearchInputContainer}>
                                         <TextInput
+                                            maxLength={30}
                                             style={HomeStyle.heroSearchInput}
                                             placeholder='Search your destination...'
                                             placeholderTextColor="#999"
                                             value={searchQuery}
-                                            onChangeText={setSearchQuery}
+                                            onChangeText={(text) => {
+                                                const cleanedSearch = text
+                                                    .replace(/[^a-zA-Z0-9\s,'&.-]/g, "")
+                                                    .replace(/\s{2,}/g, " ")
+                                                    .replace(/^\s+/, "");
+
+                                                setSearchQuery(cleanedSearch);
+                                            }}
+                                            autoCapitalize="words"
+                                            autoCorrect={false}
                                         />
                                     </View>
 
@@ -1089,22 +1114,42 @@ export default function Home({ route }) {
                             <Text style={HomeStyle.contactCardTitle}>You have an inquiry? Send us a message!</Text>
 
                             <TextInput
+                                maxLength={50}
                                 style={HomeStyle.contactInput}
                                 placeholder="Your Name"
                                 placeholderTextColor="#999"
                                 value={contactName}
-                                onChangeText={(text) => setContactName(text.replace(/[^a-zA-Z\s]/g, ''))}
+                                onChangeText={(text) => {
+                                    const cleanedName = text
+                                        .replace(/[^a-zA-Z\s'-]/g, "")
+                                        .replace(/\s{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setContactName(cleanedName);
+                                }}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                             />
 
                             <View style={HomeStyle.inputWrapper}>
                                 <TextInput
+                                    maxLength={50}
                                     style={[HomeStyle.contactInput, emailError ? HomeStyle.inputErrorBorder : null, { marginBottom: 0 }]}
                                     placeholder="Your Email"
                                     placeholderTextColor="#999"
                                     keyboardType="email-address"
                                     autoCapitalize="none"
                                     value={contactEmail}
-                                    onChangeText={handleEmailChange}
+                                    onChangeText={(text) => {
+                                        const cleanedEmail = text
+                                            .replace(/\s/g, "")
+                                            .replace(/[^a-zA-Z0-9@._+-]/g, "")
+                                            .toLowerCase();
+
+                                        handleEmailChange(cleanedEmail);
+                                    }}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
                                 />
                                 {emailError ? <Text style={HomeStyle.errorText}>{emailError}</Text> : null}
                             </View>
@@ -1123,6 +1168,7 @@ export default function Home({ route }) {
                             </TouchableOpacity>
 
                             <TextInput
+                                maxLength={200}
                                 style={HomeStyle.contactTextArea}
                                 placeholder="Your Message"
                                 placeholderTextColor="#999"
@@ -1130,7 +1176,14 @@ export default function Home({ route }) {
                                 numberOfLines={4}
                                 textAlignVertical="top"
                                 value={contactMessage}
-                                onChangeText={setContactMessage}
+                                onChangeText={(text) => {
+                                    const cleanedMessage = text
+                                        .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;+\-]/g, "")
+                                        .replace(/[^\S\r\n]{2,}/g, " ")
+                                        .replace(/^\s+/, "");
+
+                                    setContactMessage(cleanedMessage);
+                                }}
                             />
 
                             <TouchableOpacity

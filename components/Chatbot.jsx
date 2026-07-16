@@ -132,7 +132,17 @@ export default function Chatbot() {
                                     value={message}
                                     onChangeText={setMessage}
                                     multiline
-                                    maxLength={200}
+                                    maxLength={150}
+                                    onChangeText={(text) => {
+                                        const cleanedMessage = text
+                                            .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;+\-_#%]/g, "")
+                                            .replace(/[^\S\r\n]{2,}/g, " ")
+                                            .replace(/^\s+/, "");
+
+                                        setMessage(cleanedMessage);
+                                    }}
+                                    autoCapitalize="sentences"
+                                    autoCorrect={true}
                                 />
 
                                 <TouchableOpacity

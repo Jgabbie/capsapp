@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert, Modal, Platform, Pressable } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, ActivityIndicator, Alert, Modal, Platform, Pressable, BackHandler } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import * as Print from 'expo-print';
@@ -78,6 +79,20 @@ export default function BookingInvoice({ route, navigation }) {
     const [visaUploadLists, setVisaUploadLists] = useState({});
     const [submittingTravelerIndex, setSubmittingTravelerIndex] = useState(null);
     const [documentPreview, setDocumentPreview] = useState(null);
+
+
+    //disable back button
+    useFocusEffect(
+        useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                () => true
+            );
+
+            return () => backHandler.remove();
+        }, [])
+    );
+
 
     const [alertModal, setAlertModal] = useState({
         visible: false,
