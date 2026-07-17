@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal, Pressable } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Alert, TextInput, Platform, Modal, Pressable, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { launchImageLibraryAsync, MediaTypeOptions } from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -192,6 +192,7 @@ export default function BookingUploads({ route, navigation }) {
     });
 
     const [uploads, setUploads] = useState({});
+    const [uploadingFile, setUploadingFile] = useState(null);
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerConfig, setDatePickerConfig] = useState({
@@ -291,94 +292,79 @@ export default function BookingUploads({ route, navigation }) {
     //pick image or document for a traveler and upload it to cloudinary, then update the uploads state
     const pickImage = async (index, type) => {
         try {
-            if (type === 'photo') {
-                try {
-                    const result = await DocumentPicker.getDocumentAsync({
-                        type: ['image/*', 'application/pdf'],
-                        copyToCacheDirectory: true,
-                        multiple: false,
-                    });
-
-                    if (result.canceled || !result.assets?.length) {
-                        return;
-                    }
-
-                    const file = result.assets[0];
-                    const fileName = file.name || file.fileName || `traveler-${index + 1}-photo`;
-                    const mimeType = file.mimeType || file.type || 'application/octet-stream';
-                    const uploadedUrl = await uploadDocumentToCloudinary(file.uri, fileName, mimeType, user?._id);
-
-                    if (!uploadedUrl) {
-                        throw new Error('Upload failed');
-                    }
-
-                    const isPdf = String(mimeType).toLowerCase().includes('pdf') || String(fileName).toLowerCase().endsWith('.pdf');
-
-                    setUploads(prev => ({
-                        ...prev,
-                        [index]: {
-                            ...prev[index],
-                            [type]: uploadedUrl,
-                            [`${type}Type`]: isPdf ? 'pdf' : 'image',
-                            [`${type}Name`]: isPdf ? fileName : null
-                        }
-                    }));
-                } catch (fileError) {
-                    console.error('Document picker error:', fileError);
-                    showAlertModal(
-                        'Error',
-                        'Failed to pick file. Please try again.',
-                        'error'
-                    );
-                }
-            } else {
-                try {
-                    const result = await DocumentPicker.getDocumentAsync({
-                        type: ['image/*', 'application/pdf'],
-                        copyToCacheDirectory: true,
-                        multiple: false,
-                    });
-
-                    if (result.canceled || !result.assets?.length) {
-                        return;
-                    }
-
-                    const file = result.assets[0];
-                    const fileName = file.name || file.fileName || `traveler-${index + 1}-document`;
-                    const mimeType = file.mimeType || file.type || 'application/octet-stream';
-                    const uploadedUrl = await uploadDocumentToCloudinary(file.uri, fileName, mimeType, user?._id);
-
-                    if (!uploadedUrl) {
-                        throw new Error('Upload failed');
-                    }
-
-                    const isPdf = String(mimeType).toLowerCase().includes('pdf') || String(fileName).toLowerCase().endsWith('.pdf');
-
-                    setUploads(prev => ({
-                        ...prev,
-                        [index]: {
-                            ...prev[index],
-                            [type]: uploadedUrl,
-                            [`${type}Type`]: isPdf ? 'pdf' : 'image',
-                            [`${type}Name`]: isPdf ? fileName : null
-                        }
-                    }));
-                } catch (fileError) {
-                    console.error('Document picker error:', fileError);
-                    showAlertModal(
-                        'Error',
-                        'Failed to pick file. Please try again.',
-                        'error'
-                    );
-                }
+            // Prevent starting another upload while one is active
+            if (uploadingFile) {
+                return;
             }
+
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['image/*', 'application/pdf'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (result.canceled || !result.assets?.length) {
+                return;
+            }
+
+            const file = result.assets[0];
+
+            const defaultFileName =
+                type === 'photo'
+                    ? `traveler-${index + 1}-photo`
+                    : type === 'visa'
+                        ? `traveler-${index + 1}-visa`
+                        : `traveler-${index + 1}-document`;
+
+            const fileName =
+                file.name ||
+                file.fileName ||
+                defaultFileName;
+
+            const mimeType =
+                file.mimeType ||
+                file.type ||
+                'application/octet-stream';
+
+            const isPdf =
+                String(mimeType).toLowerCase().includes('pdf') ||
+                String(fileName).toLowerCase().endsWith('.pdf');
+
+            setUploadingFile({
+                index,
+                type,
+            });
+
+            const uploadedUrl = await uploadDocumentToCloudinary(
+                file.uri,
+                fileName,
+                mimeType,
+                user?._id
+            );
+
+            if (!uploadedUrl) {
+                throw new Error('Upload failed');
+            }
+
+            setUploads(prev => ({
+                ...prev,
+                [index]: {
+                    ...prev[index],
+                    [type]: uploadedUrl,
+                    [`${type}Type`]: isPdf ? 'pdf' : 'image',
+                    [`${type}Name`]: fileName,
+                }
+            }));
         } catch (error) {
-            console.error('Error in pickImage:', error);
+            console.error('File upload error:', error);
+
             showAlertModal(
-                'Error',
-                'An error occurred. Please try again.',
+                'Upload Failed',
+                'Failed to upload the selected file. Please try again.',
                 'error'
             );
+        } finally {
+            setUploadingFile(null);
         }
     };
 
@@ -503,44 +489,109 @@ export default function BookingUploads({ route, navigation }) {
 
     //handle "Next" button press: validate uploads and traveler data before proceeding to the next screen
     const handleNext = () => {
-        const uploadedCount = Object.keys(uploads).length;
-        const isComplete = Object.values(uploads).every(u => u.passport && u.photo);
+        // Validate traveler information
+        for (let index = 0; index < travelersData.length; index++) {
+            const traveler = travelersData[index];
+            const travelerNumber = index + 1;
 
-        if (uploadedCount < totalTravelers || !isComplete) {
-            showAlertModal(
-                'Missing Documents',
-                `Please upload both ${travelDocumentLabel} and 2x2 Photo for all travelers.`,
-                'warning'
-            );
-            return;
-        }
+            const missingFields = [];
 
-        if (!isDomestic) {
-            const invalidPassportIndex = travelersData.findIndex(traveler => !isValidPassportNumber(traveler.passportNo));
-            if (invalidPassportIndex !== -1) {
+            if (!String(traveler.title || '').trim()) {
+                missingFields.push('Title');
+            }
+
+            if (!String(traveler.firstName || '').trim()) {
+                missingFields.push('First Name');
+            }
+
+            if (!String(traveler.lastName || '').trim()) {
+                missingFields.push('Last Name');
+            }
+
+            if (!String(traveler.roomType || '').trim()) {
+                missingFields.push('Room Type');
+            }
+
+            if (!String(traveler.birthdate || '').trim()) {
+                missingFields.push('Birthdate');
+            }
+
+            // Passport fields are required only for international packages
+            if (!isDomestic) {
+                if (!String(traveler.passportNo || '').trim()) {
+                    missingFields.push('Passport Number');
+                }
+
+                if (!String(traveler.passportExpiry || '').trim()) {
+                    missingFields.push('Passport Expiry');
+                }
+            }
+
+            if (missingFields.length > 0) {
                 showAlertModal(
-                    'Invalid Passport Number',
-                    'Passport number must start with P, followed by 7 digits, and end with a letter (e.g. P1234567A).',
+                    'Incomplete Traveler Information',
+                    `Please complete the following fields for Traveler ${travelerNumber}: ${missingFields.join(', ')}.`,
                     'warning'
                 );
                 return;
             }
         }
 
-        if (requiresVisa) {
-            const missingVisaIndex = Object.entries(uploads).findIndex(([, upload]) => {
-                if (!upload) return false;
-                if (upload.visaStatus !== 'yes') return false;
-                return !upload.visa;
-            });
+        // Validate passport number format for international packages
+        if (!isDomestic) {
+            const invalidPassportIndex = travelersData.findIndex(
+                traveler => !isValidPassportNumber(traveler.passportNo)
+            );
 
-            if (missingVisaIndex !== -1) {
+            if (invalidPassportIndex !== -1) {
                 showAlertModal(
-                    'Missing Visa',
-                    'Please upload the visa document for travelers who have a visa.',
+                    'Invalid Passport Number',
+                    `Traveler ${invalidPassportIndex + 1}'s passport number must start with P, followed by 7 digits, and end with a letter (e.g. P1234567A).`,
                     'warning'
                 );
                 return;
+            }
+        }
+
+        // Validate passport/valid ID and 2x2 photo uploads
+        for (let index = 0; index < totalTravelers; index++) {
+            const travelerUpload = uploads[index];
+
+            if (!travelerUpload?.passport || !travelerUpload?.photo) {
+                showAlertModal(
+                    'Missing Documents',
+                    `Please upload both the ${travelDocumentLabel} and 2x2 Photo for Traveler ${index + 1}.`,
+                    'warning'
+                );
+                return;
+            }
+        }
+
+        // Validate visa selection and upload
+        if (requiresVisa) {
+            for (let index = 0; index < totalTravelers; index++) {
+                const travelerUpload = uploads[index];
+
+                if (!travelerUpload?.visaStatus) {
+                    showAlertModal(
+                        'Visa Information Required',
+                        `Please select Yes or No for the visa question for Traveler ${index + 1}.`,
+                        'warning'
+                    );
+                    return;
+                }
+
+                if (
+                    travelerUpload.visaStatus === 'yes' &&
+                    !travelerUpload.visa
+                ) {
+                    showAlertModal(
+                        'Missing Visa Document',
+                        `Please upload the visa document for Traveler ${index + 1}.`,
+                        'warning'
+                    );
+                    return;
+                }
             }
         }
 
@@ -1274,6 +1325,90 @@ export default function BookingUploads({ route, navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            <Modal
+                visible={Boolean(uploadingFile)}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 24,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: '85%',
+                            maxWidth: 320,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 16,
+                            paddingVertical: 30,
+                            paddingHorizontal: 24,
+                            alignItems: 'center',
+                            elevation: 8,
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 4,
+                            },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                        }}
+                    >
+                        <ActivityIndicator
+                            size="large"
+                            color="#305797"
+                        />
+
+                        <Text
+                            style={{
+                                marginTop: 18,
+                                fontSize: 17,
+                                color: '#305797',
+                                fontFamily: 'Montserrat_700Bold',
+                                textAlign: 'center',
+                            }}
+                        >
+                            Uploading File
+                        </Text>
+
+                        <Text
+                            style={{
+                                marginTop: 8,
+                                fontSize: 14,
+                                lineHeight: 20,
+                                color: '#64748b',
+                                fontFamily: 'Roboto_400Regular',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {uploadingFile?.type === 'photo'
+                                ? `Uploading the 2x2 photo for Traveler ${uploadingFile.index + 1}.`
+                                : uploadingFile?.type === 'visa'
+                                    ? `Uploading the visa document for Traveler ${uploadingFile.index + 1}.`
+                                    : `Uploading the ${travelDocumentLabel.toLowerCase()} for Traveler ${uploadingFile?.index + 1}.`}
+                        </Text>
+
+                        <Text
+                            style={{
+                                marginTop: 6,
+                                fontSize: 12,
+                                color: '#94a3b8',
+                                fontFamily: 'Roboto_400Regular',
+                                textAlign: 'center',
+                            }}
+                        >
+                            Please do not close this screen.
+                        </Text>
+                    </View>
+                </View>
+            </Modal>
+
         </SafeAreaView>
     );
 }

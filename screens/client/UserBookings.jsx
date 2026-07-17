@@ -3,7 +3,8 @@ import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Calendar } from 'react-native-calendars'
-import * as ImagePicker from 'expo-image-picker'
+import * as DocumentPicker from 'expo-document-picker'
+import * as FileSystem from 'expo-file-system/legacy'
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -293,15 +294,64 @@ export default function UserBookings() {
 
     //image picker for cancellation proof
     const pickCancelImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            base64: true,
-            quality: 0.7,
-        });
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: [
+                    'image/jpeg',
+                    'image/png',
+                    'application/pdf',
+                ],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
 
-        if (!result.canceled) {
-            setCancelImage(result.assets[0]);
+            if (result.canceled || !result.assets?.length) {
+                return;
+            }
+
+            const file = result.assets[0];
+
+            const fileName =
+                file.name ||
+                file.fileName ||
+                'cancellation-proof';
+
+            const lowerFileName = fileName.toLowerCase();
+
+            const isPdf =
+                file.mimeType === 'application/pdf' ||
+                lowerFileName.endsWith('.pdf');
+
+            const isPng =
+                file.mimeType === 'image/png' ||
+                lowerFileName.endsWith('.png');
+
+            const mimeType = isPdf
+                ? 'application/pdf'
+                : isPng
+                    ? 'image/png'
+                    : 'image/jpeg';
+
+            const base64 = await FileSystem.readAsStringAsync(file.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            setCancelImage({
+                ...file,
+                fileName,
+                mimeType,
+                base64,
+                isPdf,
+            });
+        } catch (error) {
+            console.error('Cancellation file picker error:', error);
+
+            showFeedbackModal({
+                type: 'error',
+                title: 'File Selection Failed',
+                message: 'Unable to select the file. Please try again.',
+                reopenCancelModal: true,
+            });
         }
     };
 
@@ -387,7 +437,9 @@ export default function UserBookings() {
             const payload = {
                 reason: finalReason,
                 comments: cancelComments || '',
-                imageProof: `data:${cancelImage.mimeType || 'image/jpeg'};base64,${cancelImage.base64}`
+                imageProof: `data:${cancelImage.mimeType};base64,${cancelImage.base64}`,
+                fileName: cancelImage.fileName,
+                fileType: cancelImage.mimeType,
             };
 
             await api.post(`/booking/cancel/${selectedBookingId}`, payload, withUserHeader(user._id));
@@ -1018,16 +1070,94 @@ export default function UserBookings() {
                                         </TouchableOpacity>
 
                                         {cancelImage && (
-                                            <View style={{ alignItems: 'center', marginTop: 15 }}>
-                                                <Image
-                                                    source={{ uri: cancelImage.uri }}
-                                                    style={{ width: 120, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' }}
-                                                />
-                                                <Text style={{ fontSize: 11, color: '#555', marginTop: 8 }}>{cancelImage.fileName || 'image.jpg'}</Text>
+                                            <View
+                                                style={{
+                                                    alignItems: 'center',
+                                                    marginTop: 15,
+                                                }}
+                                            >
+                                                {cancelImage.isPdf ? (
+                                                    <View
+                                                        style={{
+                                                            width: 120,
+                                                            height: 120,
+                                                            borderRadius: 8,
+                                                            borderWidth: 1,
+                                                            borderColor: '#ddd',
+                                                            backgroundColor: '#f8fafc',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                        }}
+                                                    >
+                                                        <Ionicons
+                                                            name="document-text"
+                                                            size={48}
+                                                            color="#dc2626"
+                                                        />
+
+                                                        <Text
+                                                            style={{
+                                                                marginTop: 8,
+                                                                fontSize: 12,
+                                                                color: '#dc2626',
+                                                                fontFamily: 'Montserrat_600SemiBold',
+                                                            }}
+                                                        >
+                                                            PDF Document
+                                                        </Text>
+                                                    </View>
+                                                ) : (
+                                                    <Image
+                                                        source={{ uri: cancelImage.uri }}
+                                                        style={{
+                                                            width: 120,
+                                                            height: 120,
+                                                            borderRadius: 8,
+                                                            borderWidth: 1,
+                                                            borderColor: '#ddd',
+                                                        }}
+                                                    />
+                                                )}
+
+                                                <Text
+                                                    numberOfLines={1}
+                                                    style={{
+                                                        maxWidth: 220,
+                                                        fontSize: 11,
+                                                        color: '#555',
+                                                        marginTop: 8,
+                                                    }}
+                                                >
+                                                    {cancelImage.fileName || 'cancellation-proof'}
+                                                </Text>
+
+                                                <TouchableOpacity
+                                                    style={{ marginTop: 8 }}
+                                                    onPress={() => setCancelImage(null)}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: '#dc2626',
+                                                            fontSize: 12,
+                                                            fontFamily: 'Montserrat_600SemiBold',
+                                                        }}
+                                                    >
+                                                        Remove
+                                                    </Text>
+                                                </TouchableOpacity>
                                             </View>
                                         )}
 
-                                        <Text style={{ fontSize: 11, color: '#777', marginTop: 10 }}>Uploading at least one file is required.</Text>
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                color: '#777',
+                                                marginTop: 10,
+                                                textAlign: 'center',
+                                            }}
+                                        >
+                                            Uploading at least one JPG, PNG, or PDF file is required.
+                                        </Text>
                                     </View>
 
                                     <View style={ModalStyle.modalButtonContainer}>

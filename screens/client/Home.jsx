@@ -1566,6 +1566,73 @@ export default function Home({ route }) {
                 </View>
             </Modal>
 
+            <Modal
+                visible={submittingContact}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 24,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: '85%',
+                            maxWidth: 320,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 16,
+                            paddingVertical: 30,
+                            paddingHorizontal: 24,
+                            alignItems: 'center',
+                            elevation: 8,
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 4,
+                            },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                        }}
+                    >
+                        <ActivityIndicator
+                            size="large"
+                            color="#305797"
+                        />
+
+                        <Text
+                            style={{
+                                marginTop: 18,
+                                fontSize: 17,
+                                color: '#305797',
+                                fontFamily: 'Montserrat_700Bold',
+                                textAlign: 'center',
+                            }}
+                        >
+                            Sending Message
+                        </Text>
+
+                        <Text
+                            style={{
+                                marginTop: 8,
+                                fontSize: 14,
+                                lineHeight: 20,
+                                color: '#64748b',
+                                fontFamily: 'Roboto_400Regular',
+                                textAlign: 'center',
+                            }}
+                        >
+                            Please wait while we send your inquiry.
+                        </Text>
+                    </View>
+                </View>
+            </Modal>
+
             <Chatbot />
         </View>
     )

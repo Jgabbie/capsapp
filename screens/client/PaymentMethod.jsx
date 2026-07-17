@@ -45,6 +45,7 @@ export default function PaymentMethod({ route, navigation }) {
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [uploadingProof, setUploadingProof] = useState(false);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     const [enlargedQR, setEnlargedQR] = useState(null);
 
@@ -142,6 +143,19 @@ export default function PaymentMethod({ route, navigation }) {
         }
     };
 
+    const uploadPaymentProof = async (formData) => {
+        setUploadingProof(true);
+
+        try {
+            return await uploadFilesToBackend(
+                '/upload/upload-receipt',
+                formData
+            );
+        } finally {
+            setUploadingProof(false);
+        }
+    };
+
 
     //execute payment flow function
     const executePaymentFlow = async () => {
@@ -182,7 +196,9 @@ export default function PaymentMethod({ route, navigation }) {
 
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
 
-                    const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                    const receiptUpload = await uploadPaymentProof(
+                        receiptFormData
+                    );
                     const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
 
                     const manualPayload = {
@@ -437,7 +453,9 @@ export default function PaymentMethod({ route, navigation }) {
 
                     receiptFormData.append('file', { uri: proofImage.uri, name: filename, type });
 
-                    const receiptUpload = await uploadFilesToBackend('/upload/upload-receipt', receiptFormData);
+                    const receiptUpload = await uploadPaymentProof(
+                        receiptFormData
+                    );
                     const proofUrl = receiptUpload?.url || receiptUpload?.data?.url;
 
                     const manualPayload = {
@@ -659,8 +677,40 @@ export default function PaymentMethod({ route, navigation }) {
                 <View style={PaymentStyle.loadingOverlay}>
                     <View style={PaymentStyle.loadingCard}>
                         <ActivityIndicator size="large" color="#305797" />
-                        <Text style={PaymentStyle.loadingText}>Processing payment...</Text>
-                        <Text style={PaymentStyle.loadingSubtext}>Please do not close the app or tap anything.</Text>
+                        <Text style={PaymentStyle.loadingText}>
+                            Processing payment...
+                        </Text>
+                        <Text style={PaymentStyle.loadingSubtext}>
+                            Please do not close the app or tap anything.
+                        </Text>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={loading || uploadingProof}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+            >
+                <View style={PaymentStyle.loadingOverlay}>
+                    <View style={PaymentStyle.loadingCard}>
+                        <ActivityIndicator
+                            size="large"
+                            color="#305797"
+                        />
+
+                        <Text style={PaymentStyle.loadingText}>
+                            {uploadingProof
+                                ? 'Uploading payment proof...'
+                                : 'Processing payment...'}
+                        </Text>
+
+                        <Text style={PaymentStyle.loadingSubtext}>
+                            {uploadingProof
+                                ? 'Please wait while your receipt is securely uploaded.'
+                                : 'Please do not close the app or tap anything.'}
+                        </Text>
                     </View>
                 </View>
             </Modal>
