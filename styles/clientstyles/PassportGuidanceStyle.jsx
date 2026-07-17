@@ -306,44 +306,6 @@ const PassportGuidanceStyle = StyleSheet.create({
     inputTextPlaceholder: {
         color: '#9ca3af',
     },
-    uploadRow: {
-        flexDirection: "row",
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-        backgroundColor: '#f8fafc',
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#f1f5f9'
-    },
-    uploadLabel: {
-        flex: 1,
-        fontSize: 13,
-        fontFamily: "Roboto_500Medium",
-        color: "#1f2937",
-        marginRight: 10
-    },
-    uploadButton: {
-        backgroundColor: "#305797",
-        borderRadius: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    uploadButtonText: {
-        color: "#fff",
-        fontSize: 12,
-        fontFamily: "Montserrat_600SemiBold"
-    },
-    fileNameText: {
-        fontSize: 12,
-        color: '#0284c7',
-        marginBottom: 12,
-        fontFamily: "Roboto_400Regular",
-        paddingHorizontal: 4
-    },
     submitButton: {
         backgroundColor: "#305797",
         paddingVertical: 14,
@@ -357,19 +319,6 @@ const PassportGuidanceStyle = StyleSheet.create({
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
         fontSize: 15
-    },
-    faqTitle: {
-        fontSize: 15,
-        fontFamily: "Montserrat_600SemiBold",
-        color: "#1f2937",
-        marginBottom: 6,
-    },
-    faqDesc: {
-        fontSize: 14,
-        fontFamily: "Roboto_400Regular",
-        color: "#4b5563",
-        marginBottom: 16,
-        lineHeight: 20,
     },
     // Modals
     modalOverlay: {

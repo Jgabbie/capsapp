@@ -37,12 +37,6 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         fontFamily: "Roboto_400Regular",
         color: "#6b7280",
     },
-    contentRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-    },
     columnCard: {
         backgroundColor: "#fff",
         padding: 20,
@@ -59,18 +53,6 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
         marginBottom: 16
     },
 
-    // Badges for (Required) and (Optional)
-    badgeText: {
-        fontSize: 13,
-        fontFamily: "Roboto_500Medium",
-        marginLeft: 8,
-    },
-    reqBadge: {
-        color: '#dc2626', // Red color for Required
-    },
-    optBadge: {
-        color: '#6b7280', // Gray color for Optional
-    },
 
     // Visa Fee Badge Styling
     feeBadge: {
@@ -93,13 +75,6 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
 
     // Link styling for Korea Visa Application form
-    linkText: {
-        fontSize: 13,
-        fontFamily: "Roboto_500Medium",
-        color: "#305797",
-        textDecorationLine: 'underline',
-        marginBottom: 4
-    },
 
     emptyText: {
         fontSize: 14,

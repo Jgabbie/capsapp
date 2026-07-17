@@ -227,35 +227,6 @@ export default StyleSheet.create({
     color: '#305797',
     fontFamily: 'Montserrat_600SemiBold',
   },
-  timeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  timeSlotButton: {
-    flexBasis: '30%',
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  timeSlotButtonSelected: {
-    borderColor: '#305797',
-    backgroundColor: '#f8faff',
-  },
-  timeSlotText: {
-    fontSize: 12,
-    color: '#333',
-    fontFamily: 'Roboto_400Regular',
-  },
-  timeSlotTextSelected: {
-    color: '#305797',
-    fontFamily: 'Montserrat_600SemiBold',
-  },
-
 
   modalCard: {
     width: '92%',

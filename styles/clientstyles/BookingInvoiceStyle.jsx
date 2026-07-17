@@ -264,14 +264,6 @@ export default StyleSheet.create({
         color: '#333',
         marginBottom: 8,
     },
-    docImage: {
-        width: '100%',
-        height: 200,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        backgroundColor: '#f8fafc',
-    },
 
     // --- INLINE PAYMENT METHODS (NEW) ---
     methodGridContainer: {
@@ -330,12 +322,6 @@ export default StyleSheet.create({
     // --- MANUAL BANK & UPLOAD SECTION (NEW) ---
     manualBankSection: {
         marginTop: 5,
-    },
-    bankGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        marginBottom: 20,
     },
     bankGridCard: {
         width: '48%',

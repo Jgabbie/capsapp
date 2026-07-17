@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet } from "react-native";
 
 const FAQsStyle = StyleSheet.create({
     container: {
@@ -20,7 +20,7 @@ const FAQsStyle = StyleSheet.create({
     },
     heroOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.6)', 
+        backgroundColor: 'rgba(0,0,0,0.6)',
     },
     heroTitle: {
         fontSize: 26,

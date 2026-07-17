@@ -31,13 +31,6 @@ const AboutUsStyle = StyleSheet.create({
         marginBottom: 12,
         textAlign: 'justify'
     },
-    paragraphSmall: {
-        fontSize: 13,
-        fontFamily: 'Roboto_400Regular',
-        color: '#555',
-        lineHeight: 20,
-        textAlign: 'justify'
-    },
     rowSection: {
         flexDirection: 'column', // Stacked for mobile readability
         justifyContent: 'space-between',
@@ -48,14 +41,11 @@ const AboutUsStyle = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 20,
         borderRadius: 10,
-        elevation: 2, 
-        shadowColor: '#000', 
+        elevation: 2,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
-    },
-    brandCard: {
-        backgroundColor: '#305797',
     },
     /* Make certain cards full-bleed (edge-to-edge) while keeping inner padding */
     fullBleedCard: {
@@ -108,41 +98,6 @@ const AboutUsStyle = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.8)',
         marginVertical: 18,
     },
-    // --- SHOWCASE IMAGE STYLES ---
-    showcaseImage: {
-        width: '100%',
-        height: 230, 
-        borderRadius: 10,
-        marginTop: 15,
-        resizeMode: 'cover', // Ensures the image fills the space nicely
-        alignSelf: 'stretch',
-    },
-    showcaseImageInside: {
-        width: '100%',
-        height: 210,
-        borderRadius: 10,
-        marginTop: 16,
-        resizeMode: 'cover',
-        alignSelf: 'stretch',
-    },
-    showcaseImageInsideLarge: {
-        width: '100%',
-        height: 240,
-        borderRadius: 10,
-        marginTop: 16,
-        resizeMode: 'cover',
-        alignSelf: 'stretch',
-    },
-    // --- REDUNDANT DIVIDER STYLE REMOVED ---
-    // divider: {
-    //     height: 1,
-    //     backgroundColor: '#ddd',
-    //     marginVertical: 10,
-    // },
-    // --- REDUNDANT INFOSECTION STYLE REMOVED ---
-    // infoSection: {
-    //     paddingVertical: 15,
-    // },
     socialBtn: {
         flexDirection: 'row',
         alignItems: 'center',

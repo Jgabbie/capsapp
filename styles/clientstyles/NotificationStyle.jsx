@@ -1,10 +1,6 @@
 import { StyleSheet, Platform } from "react-native";
 
 export default StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: "#f5f7fa", 
-    },
     scrollContent: {
         padding: 20,
         paddingBottom: 40
@@ -13,11 +9,11 @@ export default StyleSheet.create({
         marginBottom: 20,
         marginTop: 10,
     },
-    title: { 
-        fontSize: 24, 
-        fontFamily: "Montserrat_700Bold", 
-        color: "#305797", 
-        marginBottom: 6 
+    title: {
+        fontSize: 24,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        marginBottom: 6
     },
     subtitle: {
         fontSize: 14,
@@ -25,82 +21,82 @@ export default StyleSheet.create({
         color: "#6b7280",
     },
     searchContainer: {
-        flexDirection: "row", 
+        flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff", 
+        backgroundColor: "#fff",
         borderRadius: 8,
-        paddingHorizontal: 12, 
+        paddingHorizontal: 12,
         height: 48,
-        borderWidth: 1, 
-        borderColor: "#e5e7eb", 
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
         marginBottom: 20
     },
-    searchInput: { 
-        flex: 1, 
-        marginLeft: 10, 
-        fontSize: 14, 
-        color: "#1f2937", 
-        fontFamily: "Roboto_400Regular" 
+    searchInput: {
+        flex: 1,
+        marginLeft: 10,
+        fontSize: 14,
+        color: "#1f2937",
+        fontFamily: "Roboto_400Regular"
     },
     notifCard: {
-        padding: 16, 
-        borderRadius: 10, 
+        padding: 16,
+        borderRadius: 10,
         backgroundColor: "#fff",
-        marginBottom: 12, 
-        borderWidth: 1, 
+        marginBottom: 12,
+        borderWidth: 1,
         borderColor: "#e5e7eb",
-        flexDirection: 'row', 
+        flexDirection: 'row',
         alignItems: 'flex-start',
     },
-    unreadCard: { 
+    unreadCard: {
         backgroundColor: "#f0f9ff", // Very subtle blue tint for unread
-        borderColor: "#bae6fd" 
+        borderColor: "#bae6fd"
     },
     dotContainer: {
         marginRight: 12,
         marginTop: 6, // Aligns the dot with the first line of text
     },
-    dotUnread: { 
-        width: 10, 
-        height: 10, 
-        borderRadius: 5, 
+    dotUnread: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: "#b81e1e" // Red for unread
     },
-    dotRead: { 
-        width: 10, 
-        height: 10, 
-        borderRadius: 5, 
+    dotRead: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: "#cbd5e1" // Grey for read
     },
-    content: { 
-        flex: 1 
+    content: {
+        flex: 1
     },
-    notifTitle: { 
-        fontFamily: "Montserrat_600SemiBold", 
-        fontSize: 15, 
+    notifTitle: {
+        fontFamily: "Montserrat_600SemiBold",
+        fontSize: 15,
         color: "#1f2937",
         marginBottom: 4
     },
-    notifMessage: { 
-        fontFamily: "Roboto_400Regular", 
-        fontSize: 14, 
-        color: "#4b5563", 
+    notifMessage: {
+        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        color: "#4b5563",
         marginBottom: 8,
         lineHeight: 20
     },
-    time: { 
-        fontSize: 12, 
-        color: "#9ca3af", 
-        fontFamily: "Roboto_400Regular" 
+    time: {
+        fontSize: 12,
+        color: "#9ca3af",
+        fontFamily: "Roboto_400Regular"
     },
-    emptyContainer: { 
-        alignItems: "center", 
+    emptyContainer: {
+        alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 60 
+        paddingVertical: 60
     },
-    emptyText: { 
-        fontFamily: "Roboto_400Regular", 
-        color: "#6b7280", 
+    emptyText: {
+        fontFamily: "Roboto_400Regular",
+        color: "#6b7280",
         marginTop: 12,
         fontSize: 15
     },

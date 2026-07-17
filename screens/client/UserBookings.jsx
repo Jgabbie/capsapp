@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, Alert, TouchableWithoutFeedback, Image, Pressable, BackHandler } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Image, Pressable, BackHandler } from 'react-native'
 import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -70,6 +70,15 @@ export default function UserBookings() {
     const [cancelComments, setCancelComments] = useState('')
     const [cancelImage, setCancelImage] = useState(null)
     const [showCancelReasonDropdown, setShowCancelReasonDropdown] = useState(false)
+
+    // Feedback Modal State
+    const [feedbackModal, setFeedbackModal] = useState({
+        visible: false,
+        type: 'warning',
+        title: '',
+        message: '',
+        reopenCancelModal: false,
+    });
 
 
     //open and close booking date picker modals with pending date state management
@@ -297,20 +306,79 @@ export default function UserBookings() {
     };
 
 
+    const showFeedbackModal = ({
+        type = 'warning',
+        title,
+        message,
+        reopenCancelModal = false,
+    }) => {
+        const openFeedbackModal = () => {
+            setFeedbackModal({
+                visible: true,
+                type,
+                title,
+                message,
+                reopenCancelModal,
+            });
+        };
+
+        // Close the cancellation modal first to avoid stacking React Native modals
+        if (isCancelModalOpen) {
+            setCancelModalOpen(false);
+            setTimeout(openFeedbackModal, 250);
+        } else {
+            openFeedbackModal();
+        }
+    };
+
+    const closeFeedbackModal = () => {
+        const shouldReopenCancelModal = feedbackModal.reopenCancelModal;
+
+        setFeedbackModal((previous) => ({
+            ...previous,
+            visible: false,
+        }));
+
+        if (shouldReopenCancelModal) {
+            setTimeout(() => {
+                setCancelModalOpen(true);
+            }, 250);
+        }
+    };
+
+
     //handle booking cancellation with validation for reason and image proof
     const handleCancelBooking = async () => {
         if (!cancelReason) {
-            Alert.alert("Required", "Please select a cancellation reason.");
+            showFeedbackModal({
+                type: 'warning',
+                title: 'Reason Required',
+                message: 'Please select a cancellation reason.',
+                reopenCancelModal: true,
+            });
             return;
         }
+
         if (cancelReason === 'Other' && !cancelOtherReason.trim()) {
-            Alert.alert("Required", "Please specify your cancellation reason.");
+            showFeedbackModal({
+                type: 'warning',
+                title: 'Reason Required',
+                message: 'Please specify your cancellation reason.',
+                reopenCancelModal: true,
+            });
             return;
         }
+
         if (!cancelImage) {
-            Alert.alert("Required", "Uploading at least one file is required.");
+            showFeedbackModal({
+                type: 'warning',
+                title: 'File Required',
+                message: 'Uploading at least one file is required.',
+                reopenCancelModal: true,
+            });
             return;
         }
+
 
         try {
             setLoadingCancel(true);
@@ -329,11 +397,19 @@ export default function UserBookings() {
 
             setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); setCancelImage(null);
 
-            Alert.alert("Success", "Cancellation request sent successfully.");
+            showFeedbackModal({
+                type: 'success',
+                title: 'Request Submitted',
+                message: 'Your cancellation request was sent successfully.',
+            });
             fetchBookings();
         } catch (error) {
             setLoadingCancel(false);
-            Alert.alert("Error", "Unable to cancel booking. Please try again.");
+            showFeedbackModal({
+                type: 'error',
+                title: 'Error',
+                message: 'Unable to cancel booking. Please try again.',
+            });
         }
     }
 
@@ -964,6 +1040,116 @@ export default function UserBookings() {
                                     </View>
                                 </>
                             )}
+                        </View>
+                    </TouchableWithoutFeedback>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                transparent
+                visible={feedbackModal.visible}
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeFeedbackModal}
+            >
+                <TouchableOpacity
+                    style={ModalStyle.modalOverlay}
+                    activeOpacity={1}
+                    onPress={closeFeedbackModal}
+                >
+                    <TouchableWithoutFeedback>
+                        <View
+                            style={[
+                                ModalStyle.modalBox,
+                                {
+                                    width: '86%',
+                                    padding: 24,
+                                    alignItems: 'center',
+                                },
+                            ]}
+                        >
+                            <View
+                                style={{
+                                    width: 72,
+                                    height: 72,
+                                    borderRadius: 36,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginBottom: 16,
+                                    backgroundColor:
+                                        feedbackModal.type === 'success'
+                                            ? '#edf8f0'
+                                            : feedbackModal.type === 'error'
+                                                ? '#fff1f0'
+                                                : '#fffbe6',
+                                }}
+                            >
+                                <Ionicons
+                                    name={
+                                        feedbackModal.type === 'success'
+                                            ? 'checkmark'
+                                            : feedbackModal.type === 'error'
+                                                ? 'close'
+                                                : 'alert'
+                                    }
+                                    size={32}
+                                    color={
+                                        feedbackModal.type === 'success'
+                                            ? '#059669'
+                                            : feedbackModal.type === 'error'
+                                                ? '#dc2626'
+                                                : '#d97706'
+                                    }
+                                />
+                            </View>
+
+                            <Text
+                                style={{
+                                    fontFamily: 'Montserrat_700Bold',
+                                    fontSize: 19,
+                                    color: '#1e293b',
+                                    textAlign: 'center',
+                                    marginBottom: 10,
+                                }}
+                            >
+                                {feedbackModal.title}
+                            </Text>
+
+                            <Text
+                                style={{
+                                    fontFamily: 'Roboto_400Regular',
+                                    fontSize: 14,
+                                    lineHeight: 21,
+                                    color: '#64748b',
+                                    textAlign: 'center',
+                                    marginBottom: 22,
+                                }}
+                            >
+                                {feedbackModal.message}
+                            </Text>
+
+                            <TouchableOpacity
+                                style={{
+                                    width: '100%',
+                                    minHeight: 46,
+                                    borderRadius: 10,
+                                    backgroundColor: '#305797',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                                activeOpacity={0.8}
+                                onPress={closeFeedbackModal}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#ffffff',
+                                        fontFamily: 'Montserrat_700Bold',
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    OK
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>

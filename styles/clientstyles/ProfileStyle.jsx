@@ -117,16 +117,6 @@ const ProfileStyle = StyleSheet.create({
         backgroundColor: "#fff",
         overflow: 'hidden'
     },
-    phonePrefix: {
-        paddingHorizontal: 12,
-        backgroundColor: '#f3f4f6',
-        height: '100%',
-        textAlignVertical: 'center',
-        color: '#6b7280',
-        fontFamily: "Roboto_400Regular",
-        borderRightWidth: 1,
-        borderRightColor: '#dbe3ef'
-    },
     phoneInput: {
         flex: 1,
         paddingHorizontal: 12,

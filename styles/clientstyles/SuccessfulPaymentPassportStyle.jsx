@@ -70,21 +70,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Montserrat_600SemiBold',
     },
-    buttonSecondary: {
-        backgroundColor: '#fff',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-    },
-    buttonTextSecondary: {
-        color: '#374151',
-        fontSize: 14,
-        fontFamily: 'Montserrat_600SemiBold',
-    }
+
 });
 
 export default styles;

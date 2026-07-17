@@ -101,11 +101,6 @@ const BookingUploadsStyle = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    titleSelect: {
-        flex: 0,
-        width: 96,
-        minHeight: 52,
-    },
     inputText: {
         fontSize: 13,
         fontFamily: "Roboto_400Regular",
@@ -185,28 +180,6 @@ const BookingUploadsStyle = StyleSheet.create({
         fontFamily: "Roboto_500Medium",
         fontSize: 15,
         color: '#1f2a44',
-    },
-
-    // --- IOS DATE PICKER ---
-    iosPickerContainer: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-    },
-    iosPickerHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
     },
 
     // --- FOOTER BUTTONS ---

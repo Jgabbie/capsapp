@@ -19,12 +19,6 @@ const HomeStyle = StyleSheet.create({
     mainTitleAccent: {
         color: "#305797",
     },
-    byTravex: {
-        fontSize: 12,
-        fontFamily: "Montserrat_500Medium",
-        color: "#777",
-        marginLeft: 5,
-    },
     forYouTitleBar: {
         backgroundColor: '#305797',
         marginHorizontal: -15,

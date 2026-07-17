@@ -5,9 +5,6 @@ const SignupStyle = StyleSheet.create({
         flex: 1,
         paddingTop: 200
     },
-    signupHeading: {
-        display: "none"
-    },
     signupSecondHeading: {
         fontSize: 26,
         fontFamily: "Montserrat_700Bold",

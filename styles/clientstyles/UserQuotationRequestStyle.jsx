@@ -86,10 +86,6 @@ const UserQuotationRequestStyle = StyleSheet.create({
     color: "#555",
     fontSize: 12,
   },
-  metaDivider: {
-    color: "#ccc",
-    marginHorizontal: 8,
-  },
   statusTag: {
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -243,8 +239,8 @@ const UserQuotationRequestStyle = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     ...Platform.select({
-        ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
-        android: { elevation: 2 },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+      android: { elevation: 2 },
     }),
   },
   noteInput: {

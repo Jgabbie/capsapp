@@ -75,34 +75,12 @@ const UserBookingsStyle = StyleSheet.create({
     },
 
     // --- MODAL STYLES ---
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        width: '80%',
-        borderRadius: 15,
-        paddingVertical: 10,
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
     modalOption: {
         paddingVertical: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
         alignItems: 'center',
         width: '100%'
-    },
-    modalOptionText: {
-        fontSize: 16,
-        color: '#305797',
-        fontFamily: 'Roboto_500Medium'
     },
 
     // --- BOOKING CARDS ---

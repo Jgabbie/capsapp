@@ -56,29 +56,6 @@ const LoginStyle = StyleSheet.create({
         borderColor: "#ef4444", // Using the same red as your error text!
         borderWidth: 1.5,
     },
-    // --- Password Styles with Eye Icon ---
-    passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderRadius: 10,
-        borderColor: "#6d6d6d",
-        width: '100%',
-        height: 45,
-        backgroundColor: "rgba(255,255,255,0.8)",
-    },
-    passwordInput: {
-        flex: 1,
-        fontSize: 18,
-        paddingHorizontal: 15,
-        color: "#000",
-        height: '100%',
-    },
-    eyeIcon: {
-        paddingRight: 15,
-        justifyContent: 'center',
-        height: '100%'
-    },
     // --- Error Message ---
     errorMessage: {
         color: "#ff1616",

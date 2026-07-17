@@ -139,26 +139,6 @@ const PassportProgressStyle = StyleSheet.create({
         fontFamily: 'Montserrat_600SemiBold',
         fontSize: 15,
     },
-    // NEW STYLES FOR SUBMITTED DOCUMENTS 
-    docRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6'
-    },
-    docLabel: {
-        fontFamily: 'Roboto_500Medium',
-        fontSize: 14,
-        color: '#374151',
-    },
-    docLink: {
-        fontFamily: 'Roboto_500Medium',
-        fontSize: 14,
-        color: '#305797',
-        textDecorationLine: 'underline'
-    },
     // --- Progress Tracker Styles ---
     stepItem: {
         flexDirection: 'row',
@@ -279,67 +259,6 @@ const PassportProgressStyle = StyleSheet.create({
     modalButtonText: {
         color: "#fff",
         fontFamily: "Montserrat_600SemiBold",
-        fontSize: 14
-    },
-
-
-
-
-
-    // payment loading Modal
-    modalBox: {
-        width: '100%',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 24,
-        paddingTop: 35,
-        alignItems: 'center',
-        elevation: 5
-    },
-    closeIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        padding: 5
-    },
-    modalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
-        fontSize: 14,
-        color: '#64748b',
-        textAlign: 'center',
-        marginBottom: 25
-    },
-    modalButtonRow: {
-        flexDirection: 'row',
-        width: '100%',
-        justifyContent: 'space-between',
-        gap: 12
-    },
-    proceedBtn: {
-        flex: 1,
-        backgroundColor: '#305797',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center'
-    },
-
-    proceedBtnText: {
-        fontFamily: 'Montserrat_600SemiBold',
-        color: '#fff',
-        fontSize: 14
-    },
-
-    cancelBtn: {
-        flex: 1,
-        backgroundColor: '#9f2b46',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center'
-    },
-
-    cancelBtnText: {
-        fontFamily: 'Montserrat_600SemiBold',
-        color: '#fff',
         fontSize: 14
     },
 

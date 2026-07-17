@@ -177,12 +177,6 @@ export default StyleSheet.create({
     },
 
     // --- UTILITY MODAL STYLES ---
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
     modalContent: {
         backgroundColor: '#fff',
         width: '80%',
@@ -331,13 +325,6 @@ export default StyleSheet.create({
         paddingTop: 8,
     },
     receiptInvoiceText: {
-        fontFamily: "Montserrat_semiBold",
-        fontSize: 18,
-        color: '#000000',
-        textAlign: 'right',
-        lineHeight: 22,
-    },
-    receiptInvoiceNumber: {
         fontFamily: "Montserrat_semiBold",
         fontSize: 18,
         color: '#000000',
@@ -515,20 +502,6 @@ export default StyleSheet.create({
         fontSize: 12,
         color: '#000000',
     },
-    receiptDownloadButton: {
-        backgroundColor: '#305797',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 6,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        marginTop: 15,
-        alignSelf: 'flex-end',
-    },
-
-
 
     dateModalOverlay: {
         flex: 1,
