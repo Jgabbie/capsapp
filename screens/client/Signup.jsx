@@ -12,11 +12,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 import { api } from '../../utils/api'
 
@@ -25,9 +20,6 @@ export default function Signup() {
         Montserrat_400Regular,
         Montserrat_500Medium,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
     })
 
     const cs = useNavigation()

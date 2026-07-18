@@ -28,7 +28,7 @@ const UserPreferenceStyle = StyleSheet.create({
     subtitle: {
         color: '#4b5563',
         fontSize: 15,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginBottom: 20,
         lineHeight: 22,
     },
@@ -44,7 +44,7 @@ const UserPreferenceStyle = StyleSheet.create({
     progressText: {
         color: '#305797',
         fontSize: 12,
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
     },
     progressDivider: {
         width: 1,
@@ -55,7 +55,7 @@ const UserPreferenceStyle = StyleSheet.create({
     progressTarget: {
         color: '#6b7280',
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     card: {
         backgroundColor: '#fff',
@@ -77,7 +77,7 @@ const UserPreferenceStyle = StyleSheet.create({
     },
     questionSubtitle: {
         fontSize: 13,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#6b7280',
         marginBottom: 20,
         marginTop: -15,
@@ -100,13 +100,13 @@ const UserPreferenceStyle = StyleSheet.create({
         borderColor: '#305797',
     },
     chipText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14,
         color: '#4b5563',
     },
     chipTextSelected: {
         color: '#fff',
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
     },
     footer: {
         padding: 20,
@@ -118,7 +118,7 @@ const UserPreferenceStyle = StyleSheet.create({
     },
     footerNote: {
         fontSize: 13,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#6b7280',
         marginBottom: 15,
     },

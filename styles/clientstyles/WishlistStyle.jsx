@@ -16,7 +16,7 @@ const WishlistStyle = StyleSheet.create({
     subtitle: {
         fontSize: 13,
         color: "#64748b",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginBottom: 20
     },
 
@@ -49,7 +49,7 @@ const WishlistStyle = StyleSheet.create({
     searchInput: {
         fontSize: 14,
         color: "#333",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
     dropdownRow: {
         flexDirection: "row",
@@ -69,7 +69,7 @@ const WishlistStyle = StyleSheet.create({
     dropdownText: {
         fontSize: 12,
         color: "#475569",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
     },
     dropdownMenu: {
         position: 'absolute',
@@ -90,7 +90,7 @@ const WishlistStyle = StyleSheet.create({
     dropdownMenuItemText: {
         fontSize: 13,
         color: '#334155',
-        fontFamily: 'Roboto_400Regular'
+        fontFamily: 'Montserrat_400Regular'
     },
 
     // --- SLIDER STYLES ---
@@ -261,7 +261,7 @@ const WishlistStyle = StyleSheet.create({
         fontSize: 12,
         lineHeight: 18,
         color: "#8a8f99",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 2,
         textAlign: "center"
     },

@@ -16,7 +16,7 @@ export default StyleSheet.create({
   subtitle: {
     fontSize: 13,
     color: "#6b7280",
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     marginBottom: 20,
   },
 
@@ -51,7 +51,7 @@ export default StyleSheet.create({
     marginLeft: 8,
     fontSize: 13,
     color: "#333",
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
   },
   dropdownGroup: {
     flex: 1,
@@ -72,7 +72,7 @@ export default StyleSheet.create({
     height: 42,
   },
   dropdownText: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 10,
     color: "#333",
   },
@@ -141,7 +141,7 @@ export default StyleSheet.create({
     fontSize: 12,
   },
   detailValue: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#1f2937",
     fontSize: 12,
   },
@@ -174,7 +174,7 @@ export default StyleSheet.create({
   emptyText: {
     color: "#9ca3af",
     fontSize: 15,
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
   },
 
 
@@ -219,7 +219,7 @@ export default StyleSheet.create({
   },
   modalStatusText: {
     color: '#333',
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'Montserrat_400Regular',
     fontSize: 14,
     textAlign: 'center'
   },
@@ -275,7 +275,7 @@ export default StyleSheet.create({
   },
 
   subtitleModal: {
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'Montserrat_400Regular',
     fontSize: 12,
     color: '#64748b',
     marginTop: 3
@@ -330,7 +330,7 @@ export default StyleSheet.create({
   },
 
   selectedDateLabel: {
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'Montserrat_400Regular',
     fontSize: 11,
     color: '#64748b'
   },

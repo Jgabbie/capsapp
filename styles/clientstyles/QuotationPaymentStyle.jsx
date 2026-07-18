@@ -45,7 +45,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 4,
     },
     sectionSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#6b7486",
         marginBottom: 20,
@@ -70,7 +70,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 10,
     },
     previewLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#64748b',
         marginBottom: 2,
@@ -162,7 +162,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 4,
     },
     modeDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#64748b',
         lineHeight: 18,
@@ -215,7 +215,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         flexShrink: 1,
     },
     scheduleDate: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#64748b',
         marginTop: 2,
@@ -227,6 +227,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         textAlign: 'right',
     },
     scheduleNote: {
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#b54747',
         fontStyle: 'italic',
@@ -286,7 +287,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 2
     },
     invMutedText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 7.5,
         color: '#555',
         marginTop: 1.5,
@@ -297,7 +298,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         justifyContent: 'center',
     },
     invTitleText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#333',
     },
@@ -368,7 +369,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         borderBottomColor: '#e5e7eb',
     },
     invCell: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 8,
         color: '#333',
     },
@@ -442,7 +443,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         color: '#305797',
     },
     invScheduleNote: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 7,
         fontStyle: 'italic',
         color: '#b54747',
@@ -512,13 +513,13 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 4,
     },
     bankAccount: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#1e293b',
         letterSpacing: 1,
     },
     bankHolder: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 8,
         color: '#94a3b8',
         marginTop: 4,
@@ -538,19 +539,19 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 6,
     },
     uploadSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#64748b',
         lineHeight: 16,
     },
     uploadConstraints: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: '#94a3b8',
         marginTop: 8,
     },
     verificationNote: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: '#ef4444',
         fontStyle: 'italic',
@@ -614,7 +615,7 @@ const QuotationPaymentStyle = StyleSheet.create({
     noImageText: {
         color: '#94a3b8',
         fontSize: 12,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
     },
     successContainer: {
         flex: 1,
@@ -642,7 +643,7 @@ const QuotationPaymentStyle = StyleSheet.create({
         marginBottom: 12,
     },
     successDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: '#64748b',
         textAlign: 'center',
@@ -719,7 +720,7 @@ const QuotationPaymentStyle = StyleSheet.create({
     },
 
     modalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14,
         color: '#64748b',
         textAlign: 'center',
@@ -789,7 +790,7 @@ const QuotationPaymentStyle = StyleSheet.create({
 
     loadingSubtext: {
         marginTop: 6,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 13,
         color: '#64748b',
         textAlign: 'center'
@@ -835,7 +836,7 @@ const QuotationPaymentStyle = StyleSheet.create({
 
     alertMessage: {
         color: '#6b7280',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14,
         lineHeight: 21,
         textAlign: 'center',

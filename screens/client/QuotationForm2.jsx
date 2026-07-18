@@ -12,11 +12,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 
 //format long date
@@ -33,9 +28,6 @@ export default function QuotationForm2({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -275,8 +267,8 @@ export default function QuotationForm2({ route, navigation }) {
                         Instructions: Please fill-up and write your answers inside each box.
                     </Text>
 
-                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 4 }]}>TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{packageName}</Text></Text>
-                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 15 }]}>PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{packageTravelDate}</Text></Text>
+                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 4 }]}>TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Montserrat_400Regular" }}>{packageName}</Text></Text>
+                    <Text style={[QuotationFormStepStyle.label, { marginBottom: 15 }]}>PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Montserrat_400Regular" }}>{packageTravelDate}</Text></Text>
 
                     <View style={QuotationFormStepStyle.row}>
                         <View style={{ flex: 1 }}>
@@ -384,7 +376,7 @@ export default function QuotationForm2({ route, navigation }) {
                     </View>
 
                     <View style={{ backgroundColor: '#ADD8E6', borderWidth: 1, borderColor: '#000', paddingVertical: 4, paddingHorizontal: 5 }}>
-                        <Text style={QuotationFormStepStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
+                        <Text style={QuotationFormStepStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Montserrat_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
                     </View>
 
                     <View style={{ borderWidth: 1, borderTopWidth: 0, borderColor: '#000' }}>

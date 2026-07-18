@@ -32,7 +32,7 @@ const VisaGuidanceStyle = StyleSheet.create({
         zIndex: 1,
     },
     heroSubText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#fff",
         textAlign: 'center',
@@ -51,7 +51,7 @@ const VisaGuidanceStyle = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     searchContainer: {
@@ -68,7 +68,7 @@ const VisaGuidanceStyle = StyleSheet.create({
     searchInput: {
         flex: 1,
         marginLeft: 10,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 15,
         color: '#1f2937',
     },
@@ -112,7 +112,7 @@ const VisaGuidanceStyle = StyleSheet.create({
     },
 
     cardImagePlaceholderText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#64748b"
     },
@@ -142,7 +142,7 @@ const VisaGuidanceStyle = StyleSheet.create({
         fontSize: 14,
         lineHeight: 24,
         color: "#69758f",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         marginBottom: 13
     },
@@ -159,7 +159,7 @@ const VisaGuidanceStyle = StyleSheet.create({
         fontSize: 12,
         lineHeight: 18,
         color: "#8a8f99",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         marginTop: 2
     },
@@ -193,7 +193,7 @@ const VisaGuidanceStyle = StyleSheet.create({
     emptyText: {
         textAlign: 'center',
         color: '#6b7280',
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 40,
         fontSize: 16
     }

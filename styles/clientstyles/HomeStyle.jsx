@@ -38,7 +38,7 @@ const HomeStyle = StyleSheet.create({
     },
     forYouNote: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#000000",
         paddingLeft: 5,
         marginTop: 0,
@@ -95,7 +95,7 @@ const HomeStyle = StyleSheet.create({
         marginTop: -15,
     },
     heroSubtitleWhite: {
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
         fontSize: 14,
         color: '#fff',
         textAlign: 'center',
@@ -127,6 +127,7 @@ const HomeStyle = StyleSheet.create({
         flex: 1,
         marginLeft: 5,
         fontSize: 14,
+        fontFamily: 'Montserrat_500Medium',
         color: '#000000',
         paddingVertical: 0
     },
@@ -250,7 +251,7 @@ const HomeStyle = StyleSheet.create({
         color: "#8a8f99",
         fontSize: 12,
         lineHeight: 18,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         marginTop: 2
     },
@@ -320,7 +321,7 @@ const HomeStyle = StyleSheet.create({
         zIndex: 1,
     },
     bgDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#fff",
         textAlign: "center",
@@ -376,7 +377,7 @@ const HomeStyle = StyleSheet.create({
         maxWidth: '85%',
     },
     carouselSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#ffffff",
         textAlign: "left",
@@ -457,7 +458,7 @@ const HomeStyle = StyleSheet.create({
         marginLeft: 5,
     },
     contactDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#555",
         lineHeight: 20,
@@ -483,7 +484,7 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 5,
     },
     contactInfoSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#e0eaff",
         marginBottom: 20,
@@ -507,7 +508,7 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 3,
     },
     contactInfoText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#e0eaff",
         lineHeight: 20,
@@ -540,7 +541,7 @@ const HomeStyle = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 15,
         height: 45,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#333",
         marginBottom: 15
@@ -551,7 +552,7 @@ const HomeStyle = StyleSheet.create({
     errorText: {
         color: "#ff4d4f",
         fontSize: 11,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 4,
         marginLeft: 4,
     },
@@ -564,7 +565,7 @@ const HomeStyle = StyleSheet.create({
         paddingTop: 12,
         minHeight: 100,
         marginBottom: 20,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#333"
     },
@@ -606,7 +607,7 @@ const HomeStyle = StyleSheet.create({
     },
     subjectOptionText: {
         fontSize: 15,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#333',
     },
 
@@ -646,7 +647,7 @@ const HomeStyle = StyleSheet.create({
         marginBottom: 10,
     },
     successModalSub: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#6b7280",
         textAlign: "center",
@@ -754,18 +755,18 @@ const HomeStyle = StyleSheet.create({
         fontSize: 14,
         textDecorationLine: 'line-through',
         marginRight: 15,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     featuredModalPrice: {
         color: '#00bf63',
         fontSize: 22,
-        fontFamily: 'Roboto_700Bold',
+        fontFamily: 'Montserrat_700Bold',
         marginRight: 15,
     },
     featuredModalDiscountText: {
         color: '#00bf63',
         fontSize: 22,
-        fontFamily: 'Roboto_700Bold',
+        fontFamily: 'Montserrat_700Bold',
         marginLeft: 'auto',
     },
     featuredModalPriceLabel: {
@@ -773,7 +774,7 @@ const HomeStyle = StyleSheet.create({
         fontSize: 14,
         marginBottom: 15,
         marginTop: 10,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginLeft: 0,
     },
     featuredModalStatsRow: {
@@ -798,13 +799,13 @@ const HomeStyle = StyleSheet.create({
     featuredModalDetailLabel: {
         color: '#737373',
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginBottom: 4,
     },
     featuredModalDetailValue: {
         color: '#305896',
         fontSize: 14,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     featuredModalStars: {
         color: '#fadb14',
@@ -815,7 +816,7 @@ const HomeStyle = StyleSheet.create({
     featuredModalRatingCount: {
         color: '#737373',
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     featuredModalTagsContainer: {
         flexDirection: 'row',
@@ -835,7 +836,7 @@ const HomeStyle = StyleSheet.create({
     featuredModalTagText: {
         color: '#305896',
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     featuredModalTypeAndWish: {
         flexDirection: 'row',

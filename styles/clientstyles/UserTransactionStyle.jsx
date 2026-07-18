@@ -18,7 +18,7 @@ export default StyleSheet.create({
     },
     subtitle: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#777",
         marginBottom: 20,
         paddingLeft: 5,
@@ -47,7 +47,7 @@ export default StyleSheet.create({
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#333",
     },
@@ -69,7 +69,7 @@ export default StyleSheet.create({
         paddingHorizontal: 12,
     },
     dropdownText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: "#333",
     },
@@ -127,12 +127,12 @@ export default StyleSheet.create({
         marginBottom: 4
     },
     detailLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#777",
         fontSize: 12
     },
     detailValue: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#333",
         fontSize: 12
     },
@@ -198,7 +198,7 @@ export default StyleSheet.create({
     modalOptionText: {
         fontSize: 16,
         color: '#305797',
-        fontFamily: 'Roboto_500Medium'
+        fontFamily: 'Montserrat_500Medium'
     },
 
     // --- EMPTY STATE ---
@@ -214,7 +214,7 @@ export default StyleSheet.create({
         opacity: 0.8,
     },
     emptyText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 16,
         color: '#999',
         marginTop: 15,
@@ -388,7 +388,7 @@ export default StyleSheet.create({
         color: '#fff',
     },
     receiptMetaValue: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 10,
         color: '#1f2a44',
         textAlign: 'center',
@@ -425,7 +425,7 @@ export default StyleSheet.create({
         borderColor: '#000',   // Keeps the line pure black
     },
     receiptTd: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 8,
         color: '#6b7280',      //  Slightly grey text underneath
         paddingHorizontal: 2
@@ -452,7 +452,7 @@ export default StyleSheet.create({
         textTransform: 'uppercase',
     },
     receiptBankText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 8,
         color: '#555',
         lineHeight: 12,
@@ -475,12 +475,12 @@ export default StyleSheet.create({
         marginTop: 10,
     },
     receiptSummaryLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: '#6b7280',
     },
     receiptSummaryValue: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#6b7280',
     },
@@ -493,7 +493,7 @@ export default StyleSheet.create({
         marginBottom: 10,
     },
     receiptTotalLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#6b7280',
     },
@@ -557,7 +557,7 @@ export default StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -612,7 +612,7 @@ export default StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },

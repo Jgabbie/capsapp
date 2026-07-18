@@ -22,11 +22,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
@@ -84,9 +79,6 @@ export default function QuotationBookingProcess() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const navigation = useNavigation();

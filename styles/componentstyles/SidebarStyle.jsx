@@ -35,14 +35,12 @@ const SidebarStyle = StyleSheet.create({
     },
     userName: {
         color: '#fff',
-        fontFamily: 'Roboto_400Regular',
-        fontWeight: 'bold',
+        fontFamily: 'Montserrat_600SemiBold',
         fontSize: 14,
     },
     userHandle: {
         color: '#fff',
-        fontFamily: 'Roboto_400Regular',
-        fontWeight: 'normal',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12
     },
     divider: {

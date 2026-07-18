@@ -53,13 +53,13 @@ const ProfileStyle = StyleSheet.create({
     },
     changePhotoText: {
         color: "#fff",
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 14,
     },
     photoHelpText: {
         fontSize: 12,
         color: "#6b7280",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 6,
     },
     card: {
@@ -97,7 +97,7 @@ const ProfileStyle = StyleSheet.create({
         width: "100%",
         backgroundColor: "#fff",
         color: "#333",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
     profileInputsDisabled: {
         backgroundColor: "#f3f4f6",
@@ -122,7 +122,7 @@ const ProfileStyle = StyleSheet.create({
         paddingHorizontal: 12,
         paddingLeft: 12,
         fontSize: 15,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#333",
     },
     fullNameContainer: {
@@ -136,7 +136,7 @@ const ProfileStyle = StyleSheet.create({
     errorMessage: {
         color: "#d9534f",
         fontSize: 11,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 4,
     },
     verifiedBadge: {
@@ -225,12 +225,12 @@ const ProfileStyle = StyleSheet.create({
     },
     emptyStateText: {
         color: "#6b7280",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 15,
     },
     datePickerText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 15,
     },
     // --- NEW PREFERENCES STYLES ---
@@ -261,7 +261,7 @@ const ProfileStyle = StyleSheet.create({
         marginBottom: 4,
     },
     prefSubText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14,
         color: '#6b7280',
         marginTop: 0,
@@ -356,7 +356,7 @@ const ProfileStyle = StyleSheet.create({
     },
 
     datePickerModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -411,7 +411,7 @@ const ProfileStyle = StyleSheet.create({
     },
 
     selectedDateLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },

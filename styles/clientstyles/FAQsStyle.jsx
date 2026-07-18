@@ -32,7 +32,7 @@ const FAQsStyle = StyleSheet.create({
     },
     heroSubtitle: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#ffffff",
         textAlign: "center",
         paddingHorizontal: 10,
@@ -50,8 +50,9 @@ const FAQsStyle = StyleSheet.create({
     },
     introSubtitle: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
+        textAlign: "justify",
         lineHeight: 19,
     },
     filterScroll: {
@@ -101,7 +102,7 @@ const FAQsStyle = StyleSheet.create({
         flex: 1,
         marginLeft: 10,
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#333",
         padding: 0,
     },
@@ -144,7 +145,7 @@ const FAQsStyle = StyleSheet.create({
     },
     answerText: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#4b5563",
         lineHeight: 22
     },
@@ -169,7 +170,7 @@ const FAQsStyle = StyleSheet.create({
     },
     emptySub: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
         textAlign: "center",
         marginBottom: 20,

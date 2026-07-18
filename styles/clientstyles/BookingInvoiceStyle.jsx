@@ -36,7 +36,7 @@ export default StyleSheet.create({
     pageSubtitle: {
         fontSize: 14,
         color: '#666',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginBottom: 24,
     },
     viewBookingInvoiceButton: {
@@ -87,7 +87,7 @@ export default StyleSheet.create({
     metaValue: {
         fontSize: 14,
         color: '#333',
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
     },
 
     // --- STAT CARDS (Prices) ---
@@ -152,6 +152,12 @@ export default StyleSheet.create({
         color: '#000000',
         marginBottom: 16,
     },
+    cardTitleText: {
+        fontSize: 12,
+        fontFamily: 'Montserrat_500Medium',
+        color: '#000000',
+        marginBottom: 16,
+    },
 
     // --- TRANSACTIONS ---
     noticeBox: {
@@ -165,7 +171,7 @@ export default StyleSheet.create({
     noticeText: {
         color: '#000',
         fontSize: 13,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
 
     // --- REVIEW NOTICE CARD ---
@@ -197,7 +203,7 @@ export default StyleSheet.create({
     },
     reviewNoticeText: {
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#4b5563',
         lineHeight: 18,
     },
@@ -223,7 +229,7 @@ export default StyleSheet.create({
     txnValue: {
         fontSize: 14,
         color: '#000',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
 
     // --- DOCUMENTS ---
@@ -248,7 +254,7 @@ export default StyleSheet.create({
         width: '50%',
         fontSize: 13,
         color: '#555',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginBottom: 6,
     },
     docGrid: {
@@ -310,12 +316,13 @@ export default StyleSheet.create({
         marginBottom: 6,
     },
     modeDesc: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 13,
         color: '#64748b',
         lineHeight: 18,
     },
     modeNote: {
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
     },
 
@@ -339,13 +346,13 @@ export default StyleSheet.create({
         marginBottom: 4,
     },
     bankAccount: {
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
         fontSize: 12,
         color: '#333',
         marginBottom: 2,
     },
     bankHolder: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 9,
         color: '#64748b',
         textTransform: 'uppercase',
@@ -364,7 +371,7 @@ export default StyleSheet.create({
         marginBottom: 6,
     },
     uploadSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginBottom: 16,
@@ -427,7 +434,7 @@ export default StyleSheet.create({
     },
     noImageText: {
         color: '#9ca3af',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 13,
     },
 
@@ -537,7 +544,7 @@ export default StyleSheet.create({
     },
 
     modalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14, color: '#64748b',
         textAlign: 'center',
         marginBottom: 25

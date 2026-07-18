@@ -15,10 +15,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat';
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium
-} from '@expo-google-fonts/roboto';
 
 export default function UserPreference() {
     const [fontsLoaded] = useFonts({
@@ -26,8 +22,6 @@ export default function UserPreference() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium
     });
 
     const navigation = useNavigation();

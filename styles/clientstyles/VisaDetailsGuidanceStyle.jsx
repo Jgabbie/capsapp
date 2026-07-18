@@ -34,7 +34,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     columnCard: {
@@ -78,7 +78,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
 
     emptyText: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
         fontStyle: 'italic'
     },
@@ -94,12 +94,12 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     requirementText: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#1f2937"
     },
     requirementSubText: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
         marginTop: 4,
     },
@@ -116,7 +116,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     // Open Application Link button
     openApplicationLinkText: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#305797",
         textDecorationLine: 'underline',
     },
@@ -166,7 +166,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     stepDesc: {
         fontSize: 12,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
         marginTop: 4,
         lineHeight: 17,
@@ -174,11 +174,13 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
 
     formLabel: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#374151",
         marginBottom: 8,
     },
     inputContainer: {
+        fontFamily: "Montserrat_400Regular",
+        fontSize: 15,
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
@@ -191,7 +193,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     inputText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 15,
         color: '#1f2937',
     },
@@ -247,7 +249,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
     modalDesc: {
         fontSize: 15,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#4b5563",
         textAlign: 'center',
         marginBottom: 24,
@@ -324,7 +326,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -379,7 +381,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },
@@ -392,7 +394,7 @@ const VisaDetailsGuidanceStyle = StyleSheet.create({
     },
 
     dateAvailabilityNote: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b',
         textAlign: 'center',

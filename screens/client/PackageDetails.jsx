@@ -21,11 +21,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 const { width } = Dimensions.get('window');
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
@@ -107,9 +102,6 @@ export default function PackageDetails({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -1228,7 +1220,7 @@ export default function PackageDetails({ route, navigation }) {
                         <View style={{ marginBottom: 15 }}>
                             <Text style={[DestinationStyles.modalTitle, { fontSize: 18 }]}>Select Preferred Date</Text>
                             {/*  FIX: Package title is now M&RC Blue */}
-                            <Text style={{ fontSize: 12, color: '#555', marginTop: 4, fontWeight: 'bold' }}>
+                            <Text style={{ fontSize: 12, color: '#555', marginTop: 4, fontFamily: "Montserrat_600SemiBold", }}>
                                 Available Dates for <Text style={{ color: '#305797' }}>{fullPkg?.title?.toUpperCase()}</Text>
                             </Text>
                         </View>
@@ -1382,7 +1374,7 @@ export default function PackageDetails({ route, navigation }) {
 
                         <View style={DestinationStyles.selectionFooter}>
                             <Text style={DestinationStyles.selectionFooterText}>
-                                You have selected: <Text style={{ fontWeight: 'bold' }}>
+                                You have selected: <Text style={{ fontFamily: "Montserrat_700Bold", }}>
                                     {selectedSchedule
                                         ? `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}`
                                         : "None"}

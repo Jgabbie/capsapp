@@ -20,7 +20,7 @@ const QuotationFormStyle = StyleSheet.create({
         color: "#1f2a44",
     },
     subtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#4e5b72",
         marginTop: 4,
@@ -99,7 +99,7 @@ const QuotationFormStyle = StyleSheet.create({
         marginBottom: 6
     },
     sectionSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#4e5b72",
         lineHeight: 18
@@ -149,7 +149,7 @@ const QuotationFormStyle = StyleSheet.create({
     },
     packageDesc: {
         textAlign: "justify",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#555",
         lineHeight: 20,
@@ -184,7 +184,7 @@ const QuotationFormStyle = StyleSheet.create({
         lineHeight: 18
     },
     listItemText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#1f2a44",
         flex: 1,
@@ -222,7 +222,7 @@ const QuotationFormStyle = StyleSheet.create({
         marginBottom: 4
     },
     selectionDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#666",
         lineHeight: 16
@@ -288,7 +288,7 @@ const QuotationFormStyle = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 12,
         paddingVertical: 10,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#333"
     },
@@ -300,13 +300,13 @@ const QuotationFormStyle = StyleSheet.create({
         borderColor: "#e74c3c"
     },
     errorText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: "#e74c3c",
         marginTop: 4
     },
     helperNote: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: "#5b677a",
         marginTop: 4,
@@ -326,7 +326,7 @@ const QuotationFormStyle = StyleSheet.create({
         paddingVertical: 12,
     },
     dropdownText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#333"
     },
@@ -341,7 +341,7 @@ const QuotationFormStyle = StyleSheet.create({
         marginBottom: 10
     },
     budgetValue: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: "#305797"
     },
@@ -356,7 +356,7 @@ const QuotationFormStyle = StyleSheet.create({
         marginTop: 12
     },
     flightNoteText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: "#333",
         lineHeight: 17

@@ -22,11 +22,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 export default function QuotationPaymentMethod({ route, navigation }) {
     const [fontsLoaded] = useFonts({
@@ -34,9 +29,6 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -633,13 +625,13 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             </Modal>
 
             <Modal visible={loading} transparent animationType="fade">
-                <View style={PaymentStyle.loadingOverlay}>
-                    <View style={PaymentStyle.loadingCard}>
+                <View style={QuotationPaymentStyle.loadingOverlay}>
+                    <View style={QuotationPaymentStyle.loadingCard}>
                         <ActivityIndicator size="large" color="#305797" />
-                        <Text style={PaymentStyle.loadingText}>
+                        <Text style={QuotationPaymentStyle.loadingText}>
                             Processing payment...
                         </Text>
-                        <Text style={PaymentStyle.loadingSubtext}>
+                        <Text style={QuotationPaymentStyle.loadingSubtext}>
                             Please do not close the app or tap anything.
                         </Text>
                     </View>

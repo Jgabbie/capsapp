@@ -26,11 +26,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 const VISA_TERMINAL_STATUSES = new Set([
     'documents submitted',
@@ -161,9 +156,6 @@ export default function VisaProgress() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const cs = useNavigation()
@@ -1902,7 +1894,7 @@ export default function VisaProgress() {
                                             textAlignVertical: 'top',
                                             backgroundColor: '#fff',
                                             color: '#1f2937',
-                                            fontFamily: 'Roboto_400Regular',
+                                            fontFamily: 'Montserrat_400Regular',
                                         }}
                                     />
                                 </View>
@@ -1932,10 +1924,10 @@ export default function VisaProgress() {
                 {normalizedAppStatus === 'application approved' && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
-                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Complete payment for your visa application to proceed.</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_500Medium' }}>Complete payment for your visa application to proceed.</Text>
 
                         <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>
-                            <Text style={{ color: '#6b7280', fontSize: 12 }}>Application Fee</Text>
+                            <Text style={{ color: '#6b7280', fontSize: 12, fontFamily: 'Montserrat_500Medium' }}>Application Fee</Text>
                             <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 18, marginTop: 6 }}>
                                 ₱{servicePrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Text>
@@ -1967,7 +1959,7 @@ export default function VisaProgress() {
                                         {paymentMethod === 'paymongo' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
                                     </View>
                                 </View>
-                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
+                                <Text style={{ fontSize: 10, color: '#6b7280', fontFamily: 'Montserrat_500Medium' }}>Pay securely through card, GCash, GrabPay, Maya, or QRPH.</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -1989,7 +1981,7 @@ export default function VisaProgress() {
                                         {paymentMethod === 'manual' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#305797' }} />}
                                     </View>
                                 </View>
-                                <Text style={{ fontSize: 12, color: '#6b7280' }}>Upload your proof of payment for manual verification.</Text>
+                                <Text style={{ fontSize: 10, color: '#6b7280', fontFamily: 'Montserrat_500Medium' }}>Upload your proof of payment for manual verification.</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -2013,7 +2005,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Montserrat_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -2139,7 +2131,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Montserrat_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -2264,7 +2256,7 @@ export default function VisaProgress() {
                                                         <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
                                                     </TouchableOpacity>
                                                 ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Roboto_400Regular' }}></Text>
+                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Montserrat_400Regular' }}></Text>
                                                 )}
                                             </View>
                                         ))}
@@ -2453,7 +2445,7 @@ export default function VisaProgress() {
                                                     backgroundColor: '#fff',
                                                 }}
                                             >
-                                                <Text style={{ color: customPreferredDate ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                <Text style={{ color: customPreferredDate ? '#1f2937' : '#9ca3af', fontFamily: 'Montserrat_400Regular' }}>
                                                     {customPreferredDate ? dayjs(customPreferredDate).format('MMM D, YYYY') : 'Select Preferred Date'}
                                                 </Text>
                                             </TouchableOpacity>
@@ -2468,7 +2460,7 @@ export default function VisaProgress() {
                                                     backgroundColor: '#fff',
                                                 }}
                                             >
-                                                <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Roboto_400Regular' }}>
+                                                <Text style={{ color: customPreferredTime ? '#1f2937' : '#9ca3af', fontFamily: 'Montserrat_400Regular' }}>
                                                     {customPreferredTime || 'Select Preferred Time'}
                                                 </Text>
                                             </TouchableOpacity>
@@ -2485,7 +2477,7 @@ export default function VisaProgress() {
                                 </TouchableOpacity>
                             </>
                         ) : (
-                            <Text style={{ color: '#6b7280', fontSize: 14 }}>No suggested dates yet. Please check back later.</Text>
+                            <Text style={{ color: '#6b7280', fontSize: 12, fontFamily: 'Montserrat_400Regular' }}>No suggested dates yet. Please check back later.</Text>
                         )}
                     </View>
                 )}
@@ -2499,7 +2491,7 @@ export default function VisaProgress() {
                         <View style={{ backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 12 }}>
                             <View>
                                 <Text style={{ fontSize: 13, color: '#374151' }}>
-                                    <Text style={{ fontWeight: '700' }}>Current status set on:</Text> {statusSetDate ? dayjs(statusSetDate).format('MMM D, YYYY') : '—'}
+                                    <Text style={{ fontFamily: 'Montserrat_700Bold' }}>Current status set on:</Text> {statusSetDate ? dayjs(statusSetDate).format('MMM D, YYYY') : '—'}
                                 </Text>
                             </View>
                         </View>
@@ -2534,11 +2526,11 @@ export default function VisaProgress() {
                                         <Text style={isCompleted ? VisaProgressStyle.stepTitleActive : VisaProgressStyle.stepTitleInactive}>
                                             {title}
                                         </Text>
-                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
+                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6, fontFamily: 'Montserrat_500Medium' }}>
                                             Set on: {stepSetDate ? dayjs(stepSetDate).format('MMM D, YYYY') : '—'}
                                         </Text>
                                         {hasStepDeadline && stepDeadlineDate && (
-                                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
+                                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4, fontFamily: 'Montserrat_500Medium' }}>
                                                 Deadline: {dayjs(stepDeadlineDate).format('MMM D, YYYY')}
                                                 {stepDaysLeft !== null && (
                                                     <Text style={{ color: stepDaysLeft < 0 ? '#dc2626' : '#6b7280' }}>
@@ -2662,7 +2654,7 @@ export default function VisaProgress() {
                                     todayTextColor: '#305797',
                                     arrowColor: '#305797',
 
-                                    textDayFontFamily: 'Roboto_400Regular',
+                                    textDayFontFamily: 'Montserrat_400Regular',
                                     textMonthFontFamily: 'Montserrat_700Bold',
                                     textDayHeaderFontFamily: 'Roboto_500Medium',
 

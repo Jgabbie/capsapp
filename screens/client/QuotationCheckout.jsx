@@ -14,11 +14,6 @@ import {
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-  Roboto_400Regular,
-  Roboto_500Medium,
-  Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 
 export default function QuotationCheckout({ route, navigation }) {
@@ -27,9 +22,6 @@ export default function QuotationCheckout({ route, navigation }) {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
   });
 
   const { user } = useUser();

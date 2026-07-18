@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 import { Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
-import { Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { Ionicons } from '@expo/vector-icons'
 import { SvgXml } from 'react-native-svg'
 
@@ -35,8 +34,9 @@ export default function Sidebar({ visible, onClose }) {
 </svg>`
 
     const [fontsLoaded] = useFonts({
-        Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
-        Roboto_400Regular, Roboto_500Medium, Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_500Medium,
+        Montserrat_700Bold
     })
 
     // Standard Image-based Menu Item

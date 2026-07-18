@@ -16,7 +16,7 @@ const ResetPassConfirmStyle = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#305797",
         marginLeft: 20,
         marginBottom: 4
@@ -33,7 +33,8 @@ const ResetPassConfirmStyle = StyleSheet.create({
     // Updated input style: removed margin/width since the container handles it now
     input: {
         flex: 1, // Take up full space of the container
-        fontSize: 16,
+        fontSize: 14,
+        fontFamily: "Montserrat_500Medium",
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
@@ -74,8 +75,8 @@ const ResetPassConfirmStyle = StyleSheet.create({
     },
     buttonText: {
         color: "#fff",
-        fontSize: 18,
-        fontFamily: "Roboto_500Medium"
+        fontSize: 16,
+        fontFamily: "Montserrat_500Medium"
     },
     //  NEW STYLES ADDED 
     errorContainer: {
@@ -88,7 +89,7 @@ const ResetPassConfirmStyle = StyleSheet.create({
         marginTop: 5,
     },
     linkText: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: "#305797",
         //  Removed the underline to mirror the other screen exactly

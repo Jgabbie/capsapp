@@ -17,11 +17,6 @@ import {
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-  Roboto_400Regular,
-  Roboto_500Medium,
-  Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 export default function UserQuotationRequest({ route, navigation }) {
   const [fontsLoaded] = useFonts({
@@ -29,9 +24,6 @@ export default function UserQuotationRequest({ route, navigation }) {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
   });
 
   const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -159,7 +151,7 @@ export default function UserQuotationRequest({ route, navigation }) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#305797" />
-        <Text style={{ marginTop: 10, color: '#666', fontFamily: 'Roboto_400Regular' }}>Loading quotation...</Text>
+        <Text style={{ marginTop: 10, color: '#666', fontFamily: 'Montserrat_400Regular' }}>Loading quotation...</Text>
       </View>
     );
   }
@@ -187,7 +179,7 @@ export default function UserQuotationRequest({ route, navigation }) {
 
           <Text style={styles.pageTitle}>Booking Quotation Request</Text>
           <Text style={styles.pageSubtitle}>
-            Review your the details of your booking quotation request here. You can view the latest quotation PDF, check the revision history, and provide feedback for any necessary revisions.
+            Review the details of your booking quotation request here. You can view the latest quotation PDF, check the revision history, and provide feedback for any necessary revisions.
           </Text>
         </View>
 

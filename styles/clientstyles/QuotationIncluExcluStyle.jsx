@@ -51,7 +51,7 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         marginTop: 5,
     },
     sectionSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#6b7486",
         marginTop: 2,
@@ -85,7 +85,7 @@ const QuotationIncluExcluStyle = StyleSheet.create({
     },
     activityText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#3c465a",
         lineHeight: 18,
@@ -109,7 +109,7 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         marginBottom: 10,
     },
     itemText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#3c465a",
         marginBottom: 5,
@@ -128,10 +128,11 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         marginBottom: 8,
     },
     policyText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#3c465a",
         lineHeight: 18,
+        textAlign: "justify"
     },
 
     //  NEW BOTTOM BUTTON STYLES 

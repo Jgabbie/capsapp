@@ -12,24 +12,18 @@ import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceSty
 
 import {
     Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 export default function PassportGuidance() {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_500Medium,
     })
 
     const cs = useNavigation()

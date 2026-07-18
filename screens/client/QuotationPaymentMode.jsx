@@ -19,11 +19,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatPeso = (value) => `₱${formatPesoNumber(value)}`;
@@ -58,9 +53,6 @@ export default function QuotationPaymentMode({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -263,7 +255,7 @@ export default function QuotationPaymentMode({ route, navigation }) {
 
                 <View style={{ marginBottom: 10 }}>
                     <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 18, color: "#1f2a44", marginBottom: 4 }}>Booking Invoice</Text>
-                    <Text style={{ fontFamily: "Roboto_400Regular", fontSize: 12, color: "#4b5563" }}>Please review your booking invoice before proceeding to payment.</Text>
+                    <Text style={{ fontFamily: "Montserrat_400Regular", fontSize: 12, color: "#4b5563" }}>Please review your booking invoice before proceeding to payment.</Text>
                 </View>
 
                 <View style={QuotationPaymentStyle.previewButtonContainer}>

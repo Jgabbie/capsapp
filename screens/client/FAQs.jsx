@@ -9,14 +9,13 @@ import FAQsStyle from '../../styles/clientstyles/FAQsStyle';
 
 import {
     useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat';
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium
-} from '@expo-google-fonts/roboto';
+
 
 const faqData = [
     {
@@ -70,8 +69,8 @@ export default function FAQs() {
     const [fontsLoaded] = useFonts({
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium
+        Montserrat_400Regular,
+        Montserrat_500Medium
     });
 
     const cs = useNavigation();

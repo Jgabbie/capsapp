@@ -16,15 +16,11 @@ import dayjs from 'dayjs'
 
 import {
     Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 const dfaLocations = [
     'DFA Aseana (Paranaque)',
@@ -135,9 +131,7 @@ export default function PassportGuidanceNew() {
         Montserrat_400Regular,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_500Medium,
     })
 
     const cs = useNavigation()
@@ -472,7 +466,7 @@ export default function PassportGuidanceNew() {
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
 
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
 
@@ -570,7 +564,7 @@ export default function PassportGuidanceNew() {
                             {dfaLocations.map((loc, i) => (
                                 <TouchableOpacity key={i} style={{ paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderColor: '#f3f4f6' }}
                                     onPress={() => { setDfaLocation(loc); setShowDfaModal(false); }}>
-                                    <Text style={{ fontSize: 15, fontFamily: dfaLocation === loc ? "Montserrat_600SemiBold" : "Roboto_400Regular", color: dfaLocation === loc ? '#305797' : '#374151' }}>{loc}</Text>
+                                    <Text style={{ fontSize: 15, fontFamily: dfaLocation === loc ? "Montserrat_600SemiBold" : "Montserrat_400Regular", color: dfaLocation === loc ? '#305797' : '#374151' }}>{loc}</Text>
                                 </TouchableOpacity>
                             ))}
                             <Text style={{ textAlign: 'center', padding: 20, color: '#9ca3af', fontStyle: 'italic', fontSize: 12 }}>More locations available on the official DFA website</Text>

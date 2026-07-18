@@ -23,11 +23,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 dayjs.extend(isSameOrBefore);
 
@@ -58,9 +53,6 @@ export default function QuotationForm({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -798,11 +790,11 @@ export default function QuotationForm({ route, navigation }) {
                             <ScrollView>
                                 {airlines.map((a, i) => (
                                     <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredAirlines(a.name); setShowCustomAirlineInput(false); setCustomAirline(""); setAirlineModalOpen(false); }}>
-                                        <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredAirlines === a.name ? '#305797' : '#333', textAlign: 'center' }}>{a.name}</Text>
+                                        <Text style={{ fontFamily: 'Montserrat_400Regular', color: preferredAirlines === a.name ? '#305797' : '#333', textAlign: 'center' }}>{a.name}</Text>
                                     </TouchableOpacity>
                                 ))}
                                 <TouchableOpacity style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredAirlines("Other"); setShowCustomAirlineInput(true); setAirlineModalOpen(false); }}>
-                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredAirlines === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
+                                    <Text style={{ fontFamily: 'Montserrat_400Regular', color: preferredAirlines === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
                                 </TouchableOpacity>
                             </ScrollView>
                         </View>
@@ -819,11 +811,11 @@ export default function QuotationForm({ route, navigation }) {
                             <ScrollView>
                                 {hotels.map((h, i) => (
                                     <TouchableOpacity key={i} style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredHotels(h.name); setShowCustomHotelInput(false); setCustomHotel(""); setHotelModalOpen(false); }}>
-                                        <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredHotels === h.name ? '#305797' : '#333', textAlign: 'center' }}>{h.name} ({h.stars} Star)</Text>
+                                        <Text style={{ fontFamily: 'Montserrat_400Regular', color: preferredHotels === h.name ? '#305797' : '#333', textAlign: 'center' }}>{h.name} ({h.stars} Star)</Text>
                                     </TouchableOpacity>
                                 ))}
                                 <TouchableOpacity style={{ padding: 15, borderTopWidth: 1, borderColor: '#f0f0f0' }} onPress={() => { setPreferredHotels("Other"); setShowCustomHotelInput(true); setHotelModalOpen(false); }}>
-                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: preferredHotels === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
+                                    <Text style={{ fontFamily: 'Montserrat_400Regular', color: preferredHotels === "Other" ? '#305797' : '#333', textAlign: 'center' }}>Other</Text>
                                 </TouchableOpacity>
                             </ScrollView>
                         </View>
@@ -860,8 +852,8 @@ export default function QuotationForm({ route, navigation }) {
                                                         setDateModalOpen(false);
                                                     }}
                                                 >
-                                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
-                                                    <Text style={{ fontFamily: 'Roboto_400Regular', color: hasSlots ? '#305797' : '#e74c3c', textAlign: 'center', fontSize: 12, marginTop: 4 }}>
+                                                    <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#333', textAlign: 'center' }}>{rangeString}</Text>
+                                                    <Text style={{ fontFamily: 'Montserrat_400Regular', color: hasSlots ? '#305797' : '#e74c3c', textAlign: 'center', fontSize: 12, marginTop: 4 }}>
                                                         {hasSlots ? `Slots Available: ${range.slots}` : 'Fully Booked'}
                                                     </Text>
                                                 </TouchableOpacity>
@@ -902,7 +894,7 @@ export default function QuotationForm({ route, navigation }) {
                                 <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {hoursList.map(h => (
                                         <TouchableOpacity key={`h-${h}`} onPress={() => setTempHour(h)} style={{ paddingVertical: 10, backgroundColor: tempHour === h ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
-                                            <Text style={{ textAlign: 'center', fontFamily: tempHour === h ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempHour === h ? '#305797' : '#333' }}>{h}</Text>
+                                            <Text style={{ textAlign: 'center', fontFamily: tempHour === h ? 'Montserrat_600SemiBold' : 'Montserrat_400Regular', color: tempHour === h ? '#305797' : '#333' }}>{h}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
@@ -911,7 +903,7 @@ export default function QuotationForm({ route, navigation }) {
                                 <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {minutesList.map(m => (
                                         <TouchableOpacity key={`m-${m}`} onPress={() => setTempMinute(m)} style={{ paddingVertical: 10, backgroundColor: tempMinute === m ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
-                                            <Text style={{ textAlign: 'center', fontFamily: tempMinute === m ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempMinute === m ? '#305797' : '#333' }}>{m}</Text>
+                                            <Text style={{ textAlign: 'center', fontFamily: tempMinute === m ? 'Montserrat_600SemiBold' : 'Montserrat_400Regular', color: tempMinute === m ? '#305797' : '#333' }}>{m}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
@@ -920,7 +912,7 @@ export default function QuotationForm({ route, navigation }) {
                                 <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                                     {periodsList.map(p => (
                                         <TouchableOpacity key={`p-${p}`} onPress={() => setTempPeriod(p)} style={{ paddingVertical: 10, backgroundColor: tempPeriod === p ? '#f0f5ff' : 'transparent', borderRadius: 6 }}>
-                                            <Text style={{ textAlign: 'center', fontFamily: tempPeriod === p ? 'Montserrat_600SemiBold' : 'Roboto_400Regular', color: tempPeriod === p ? '#305797' : '#333' }}>{p}</Text>
+                                            <Text style={{ textAlign: 'center', fontFamily: tempPeriod === p ? 'Montserrat_600SemiBold' : 'Montserrat_400Regular', color: tempPeriod === p ? '#305797' : '#333' }}>{p}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
@@ -960,7 +952,7 @@ export default function QuotationForm({ route, navigation }) {
                             Quotation Request Submitted
                         </Text>
 
-                        <Text style={{ fontFamily: "Roboto_400Regular", fontSize: 14, color: "#555", textAlign: "center", lineHeight: 22, marginBottom: 25, paddingHorizontal: 10 }}>
+                        <Text style={{ fontFamily: "Montserrat_400Regular", fontSize: 14, color: "#555", textAlign: "center", lineHeight: 22, marginBottom: 25, paddingHorizontal: 10 }}>
                             Your package quotation request has been submitted successfully. Please wait for your quotation to be generated.
                         </Text>
 

@@ -19,11 +19,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 export default function UserPackageQuotation() {
     const [fontsLoaded] = useFonts({
@@ -31,9 +26,6 @@ export default function UserPackageQuotation() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const navigation = useNavigation();
@@ -521,7 +513,7 @@ export default function UserPackageQuotation() {
                                 selectedDayTextColor: '#ffffff',
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
                                 textDayFontSize: 14,

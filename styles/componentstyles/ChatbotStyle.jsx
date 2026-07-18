@@ -84,7 +84,7 @@ const ChatbotStyle = StyleSheet.create({
         borderColor: '#e5e7eb'
     },
     messageText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 14,
         lineHeight: 20,
     },
@@ -102,7 +102,7 @@ const ChatbotStyle = StyleSheet.create({
         gap: 8
     },
     loadingText: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#8c8c8c'
     },
@@ -138,7 +138,7 @@ const ChatbotStyle = StyleSheet.create({
         fontSize: 14,
         minHeight: 40,
         maxHeight: 100,
-        fontFamily: 'Roboto_400Regular'
+        fontFamily: 'Montserrat_400Regular'
     },
     sendButton: {
         backgroundColor: "#305797",
@@ -159,7 +159,7 @@ const ChatbotStyle = StyleSheet.create({
     messageHeaderText: {
         fontSize: 11,
         color: '#6b7280',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     messageHeaderDot: {
         fontSize: 10,

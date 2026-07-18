@@ -12,23 +12,19 @@ import { useUser } from '../../context/UserContext';
 
 import {
     useFonts,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat';
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto';
 
 export default function UserApplications() {
     const [fontsLoaded] = useFonts({
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_500Medium,
     });
 
     const cs = useNavigation();
@@ -279,7 +275,7 @@ export default function UserApplications() {
                         <ActivityIndicator size="large" color="#305797" style={{ marginTop: 40 }} />
                     ) : filteredApps.length === 0 ? (
                         <View style={{ alignItems: 'center', marginTop: 50 }}>
-                            <Text style={{ color: '#9ca3af', fontFamily: 'Roboto_400Regular' }}>No applications found.</Text>
+                            <Text style={{ color: '#9ca3af', fontFamily: 'Montserrat_400Regular' }}>No applications found.</Text>
                         </View>
                     ) : (
                         filteredApps.map((item, index) => {
@@ -480,7 +476,7 @@ export default function UserApplications() {
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
 
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
 

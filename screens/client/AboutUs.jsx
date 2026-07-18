@@ -7,12 +7,11 @@ import AboutUsStyle from '../../styles/clientstyles/AboutUsStyle';
 
 import {
     useFonts,
-    Montserrat_700Bold
+    Montserrat_700Bold,
+    Montserrat_400Regular,
+    Montserrat_500Medium
 } from '@expo-google-fonts/montserrat';
-import {
-    Roboto_400Regular,
-    Roboto_500Medium
-} from '@expo-google-fonts/roboto';
+
 
 
 
@@ -21,8 +20,8 @@ export default function AboutUs() {
     //fonts
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium
+        Montserrat_400Regular,
+        Montserrat_500Medium
     });
 
     const [isSidebarVisible, setSidebarVisible] = useState(false);

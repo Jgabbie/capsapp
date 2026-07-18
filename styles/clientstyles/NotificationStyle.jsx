@@ -16,8 +16,8 @@ export default StyleSheet.create({
         marginBottom: 6
     },
     subtitle: {
-        fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontSize: 12,
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     searchContainer: {
@@ -36,7 +36,7 @@ export default StyleSheet.create({
         marginLeft: 10,
         fontSize: 14,
         color: "#1f2937",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
     notifCard: {
         padding: 16,
@@ -78,7 +78,7 @@ export default StyleSheet.create({
         marginBottom: 4
     },
     notifMessage: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 14,
         color: "#4b5563",
         marginBottom: 8,
@@ -87,7 +87,7 @@ export default StyleSheet.create({
     time: {
         fontSize: 12,
         color: "#9ca3af",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
     emptyContainer: {
         alignItems: "center",
@@ -95,14 +95,14 @@ export default StyleSheet.create({
         paddingVertical: 60
     },
     emptyText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
         marginTop: 12,
         fontSize: 15
     },
     markAllText: {
-        fontSize: 13,
-        fontFamily: "Roboto_500Medium",
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
         color: "#305797",
         textDecorationLine: 'underline'
     },

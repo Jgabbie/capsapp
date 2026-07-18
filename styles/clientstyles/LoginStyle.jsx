@@ -33,14 +33,14 @@ const LoginStyle = StyleSheet.create({
         marginBottom: 10,
     },
     loginLabel: {
-        fontSize: 16,
+        fontSize: 14,
         color: "#305797",
         marginBottom: 5,
         alignSelf: 'flex-start',
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_500Medium",
     },
     loginInputs: {
-        fontSize: 18,
+        fontSize: 14,
         borderWidth: 1,
         borderRadius: 10,
         borderColor: "#6d6d6d",
@@ -48,7 +48,7 @@ const LoginStyle = StyleSheet.create({
         width: '100%',
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#000"
     },
     //  ADD THIS: The red border style for errors
@@ -72,7 +72,7 @@ const LoginStyle = StyleSheet.create({
         marginBottom: 20,
     },
     loginLinks: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: "#305797",
     },
@@ -93,7 +93,7 @@ const LoginStyle = StyleSheet.create({
     loginButtonText: {
         color: "#fff",
         fontSize: 18,
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_500Medium"
     },
     // --- OTP Specific Styles ---
     otpInput: {
@@ -111,13 +111,13 @@ const LoginStyle = StyleSheet.create({
     },
     timerText: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#333",
         marginTop: 15
     },
     timerHighlight: {
         color: "#992A46",
-        fontFamily: "Roboto_700Bold"
+        fontFamily: "Montserrat_700Bold"
     },
     //  NEW STYLES ADDED 
     errorContainer: {
@@ -131,7 +131,7 @@ const LoginStyle = StyleSheet.create({
         color: '#ff1616',
         fontSize: 12,
         textAlign: 'left',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
     },
     //  RENAMED AND ADJUSTED FOR THE BOTTOM
     bottomLogo: {

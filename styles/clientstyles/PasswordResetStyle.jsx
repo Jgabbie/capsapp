@@ -16,21 +16,21 @@ const PasswordResetStyle = StyleSheet.create({
     },
     subHeading: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#333",
         marginBottom: 25,
         marginHorizontal: 40,
         textAlign: "center"
     },
     label: {
-        fontSize: 16,
-        fontFamily: "Roboto_400Regular",
+        fontSize: 14,
+        fontFamily: "Montserrat_500Medium",
         color: "#305797",
         marginLeft: 25,
         marginBottom: 5
     },
     input: {
-        fontSize: 18,
+        fontSize: 14,
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
@@ -40,7 +40,7 @@ const PasswordResetStyle = StyleSheet.create({
         width: 350,
         height: 45,
         backgroundColor: "rgba(255,255,255,0.8)",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#000"
     },
     inputErrorBorder: {
@@ -53,7 +53,7 @@ const PasswordResetStyle = StyleSheet.create({
     },
     fieldError: {
         color: "#ff1616",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         marginLeft: 25,
         marginBottom: 0,
@@ -72,7 +72,7 @@ const PasswordResetStyle = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontSize: 18,
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_500Medium"
     },
     linksContainer: {
         alignItems: "flex-start", //  Changed from "center" to "flex-start"
@@ -82,7 +82,7 @@ const PasswordResetStyle = StyleSheet.create({
     linkText: {
         fontSize: 13,
         color: "#305797",
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
     },
     // --- OTP Specific Styles ---
     otpInput: {
@@ -100,13 +100,13 @@ const PasswordResetStyle = StyleSheet.create({
     },
     timerText: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#333",
         marginTop: 15
     },
     timerHighlight: {
         color: "#992A46",
-        fontFamily: "Roboto_700Bold"
+        fontFamily: "Montserrat_700Bold"
     },
     //  LOGO AT BOTTOM 
     bottomLogo: {

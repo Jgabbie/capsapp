@@ -22,11 +22,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 export default function UserBookings() {
     const [fontsLoaded] = useFonts({
@@ -34,9 +29,6 @@ export default function UserBookings() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const navigation = useNavigation()
@@ -631,7 +623,7 @@ export default function UserBookings() {
                                     <Text style={{
                                         fontSize: 15,
                                         color: statusFilter === status ? '#305797' : '#555',
-                                        fontFamily: statusFilter === status ? 'Montserrat_700Bold' : 'Roboto_400Regular'
+                                        fontFamily: statusFilter === status ? 'Montserrat_700Bold' : 'Montserrat_400Regular'
                                     }}>
                                         {status}
                                     </Text>
@@ -735,7 +727,7 @@ export default function UserBookings() {
                                 selectedDayTextColor: '#ffffff',
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
                                 textDayFontSize: 14,
@@ -892,7 +884,7 @@ export default function UserBookings() {
                                 selectedDayTextColor: '#ffffff',
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
                                 textDayFontSize: 14,
@@ -968,8 +960,8 @@ export default function UserBookings() {
                             </TouchableOpacity>
 
                             <Text style={[ModalStyle.modalTitle, { color: '#305797', fontSize: 20, textAlign: 'center', marginBottom: 10 }]}>Continue Cancellation?</Text>
-                            <Text style={[ModalStyle.modalText, { marginBottom: 14, textAlign: 'center', color: '#555', lineHeight: 22 }]}>Please review our cancellation policy before proceeding.</Text>
-                            <Text style={[ModalStyle.modalText, { marginBottom: 12, textAlign: 'center', color: '#555', lineHeight: 22 }]}>All tour packages will not be converted to any travel funds in case the tour will not push through whether it be government mandated, due to natural calamities, etc. Tour package purchase is non-refundable, non-reroutable, non-rebookable, and non-transferable unless otherwise stated and is due to natural calamities and force majeure that is beyond our control otherwise NON-REFUNDABLE.</Text>
+                            <Text style={[ModalStyle.modalTextParagraph, { marginBottom: 14, textAlign: 'center', color: '#555', lineHeight: 22 }]}>Please review our cancellation policy before proceeding.</Text>
+                            <Text style={[ModalStyle.modalTextParagraph, { marginBottom: 12, textAlign: 'center', color: '#555', lineHeight: 22 }]}>All tour packages will not be converted to any travel funds in case the tour will not push through whether it be government mandated, due to natural calamities, etc. Tour package purchase is non-refundable, non-reroutable, non-rebookable, and non-transferable unless otherwise stated and is due to natural calamities and force majeure that is beyond our control otherwise NON-REFUNDABLE.</Text>
                             <Text style={{ fontSize: 13, fontStyle: 'italic', color: '#ff4d4f', textAlign: 'center', marginBottom: 18, lineHeight: 20 }}>Note: Cancellation of bookings is allowed but will be subject for reviewing and approval.</Text>
 
                             <View style={ModalStyle.modalButtonContainer}>
@@ -1003,7 +995,7 @@ export default function UserBookings() {
                                         style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 10, backgroundColor: '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                                         onPress={() => setShowCancelReasonDropdown(!showCancelReasonDropdown)}
                                     >
-                                        <Text style={{ color: cancelReason ? '#333' : '#888', fontFamily: 'Roboto_400Regular' }}>{cancelReason || 'Select a reason'}</Text>
+                                        <Text style={{ color: cancelReason ? '#333' : '#888', fontFamily: 'Montserrat_400Regular' }}>{cancelReason || 'Select a reason'}</Text>
                                         <Ionicons name="chevron-down" size={16} color="#888" />
                                     </TouchableOpacity>
 
@@ -1015,7 +1007,7 @@ export default function UserBookings() {
                                                     style={{ padding: 12, borderBottomWidth: idx === 2 ? 0 : 1, borderBottomColor: '#eee' }}
                                                     onPress={() => { setCancelReason(reason); setShowCancelReasonDropdown(false); }}
                                                 >
-                                                    <Text style={{ color: '#333', fontFamily: 'Roboto_400Regular' }}>{reason}</Text>
+                                                    <Text style={{ color: '#333', fontFamily: 'Montserrat_400Regular' }}>{reason}</Text>
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
@@ -1149,12 +1141,7 @@ export default function UserBookings() {
                                         )}
 
                                         <Text
-                                            style={{
-                                                fontSize: 11,
-                                                color: '#777',
-                                                marginTop: 10,
-                                                textAlign: 'center',
-                                            }}
+                                            style={UserBookingsStyle.uploadNote}
                                         >
                                             Uploading at least one JPG, PNG, or PDF file is required.
                                         </Text>
@@ -1162,10 +1149,10 @@ export default function UserBookings() {
 
                                     <View style={ModalStyle.modalButtonContainer}>
                                         <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#305797', flex: 1, marginRight: 5 }]} onPress={() => { setCancelModalOpen(false); setCancelImage(null); setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); }}>
-                                            <Text style={ModalStyle.modalButtonText}>Keep Booking</Text>
+                                            <Text style={ModalStyle.modalButtonTextSmall}>Keep Booking</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#8B0000', flex: 1, marginLeft: 5 }]} onPress={handleCancelBooking}>
-                                            <Text style={ModalStyle.modalButtonText}>Cancel Booking</Text>
+                                            <Text style={ModalStyle.modalButtonTextSmall}>Cancel Booking</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </>
@@ -1247,7 +1234,7 @@ export default function UserBookings() {
 
                             <Text
                                 style={{
-                                    fontFamily: 'Roboto_400Regular',
+                                    fontFamily: 'Montserrat_400Regular',
                                     fontSize: 14,
                                     lineHeight: 21,
                                     color: '#64748b',

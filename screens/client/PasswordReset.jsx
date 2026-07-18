@@ -8,22 +8,18 @@ import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api } from '../../utils/api'
 
 import {
+    Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 
 export default function PasswordReset() {
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_500Medium,
     })
 
     const cs = useNavigation()
@@ -98,9 +94,11 @@ export default function PasswordReset() {
         setLoading(true)
         try {
             const response = await api.post('/users/auth/check-reset-otp', { email, otp })
+            console.log("OTP Response:", response.data);
             if (response.data.success || response.status === 200) {
                 setIsModalOpen(false)
                 cs.navigate("resetpassconfirm", { email: email, token: response.data.resetToken })
+                console.log("Navigate called");
             }
         } catch (err) {
             setErrorOtp(err.response?.data?.message || "Invalid OTP")

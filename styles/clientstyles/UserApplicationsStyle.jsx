@@ -14,7 +14,7 @@ const UserApplicationsStyle = StyleSheet.create({
     subtitle: {
         fontSize: 13,
         color: "#6b7280",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginBottom: 20,
     },
 
@@ -42,7 +42,7 @@ const UserApplicationsStyle = StyleSheet.create({
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: "#333",
     },
@@ -64,7 +64,7 @@ const UserApplicationsStyle = StyleSheet.create({
         paddingHorizontal: 12,
     },
     dropdownText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: "#333",
     },
@@ -100,7 +100,7 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     typeLabel: {
         fontSize: 12,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#6b7280",
         marginBottom: 4,
     },
@@ -119,7 +119,7 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     statusText: {
         fontSize: 10, //  FIXED: Dropped size slightly so long words fit perfectly
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         textTransform: 'uppercase',
         textAlign: 'center',
     },
@@ -134,12 +134,12 @@ const UserApplicationsStyle = StyleSheet.create({
     },
     dateLabel: {
         fontSize: 12,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#9ca3af",
     },
     dateText: {
         fontSize: 13,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#4b5563",
         marginTop: 2,
     },
@@ -205,11 +205,11 @@ const UserApplicationsStyle = StyleSheet.create({
     modalStatusText: {
         fontSize: 13,
         color: '#4b5563',
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
     },
     modalStatusTextSelected: {
         color: '#305797',
-        fontFamily: 'Roboto_700Bold',
+        fontFamily: 'Montserrat_700Bold',
     },
 
 
@@ -268,7 +268,7 @@ const UserApplicationsStyle = StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -323,7 +323,7 @@ const UserApplicationsStyle = StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },

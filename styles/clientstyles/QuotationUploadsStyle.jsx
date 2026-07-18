@@ -35,7 +35,7 @@ const QuotationUploadsStyle = StyleSheet.create({
     },
     notesText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#000000",
         lineHeight: 18,
@@ -60,7 +60,7 @@ const QuotationUploadsStyle = StyleSheet.create({
         marginBottom: 4,
     },
     cardSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#64748b",
         marginBottom: 15,
@@ -90,7 +90,7 @@ const QuotationUploadsStyle = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#1f2a44",
         backgroundColor: '#fff',
     },
@@ -106,7 +106,7 @@ const QuotationUploadsStyle = StyleSheet.create({
     },
     inputText: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#1f2a44",
         flex: 1,
         textAlignVertical: 'center',
@@ -176,7 +176,7 @@ const QuotationUploadsStyle = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     dropdownItemText: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 15,
         color: '#1f2a44',
     },

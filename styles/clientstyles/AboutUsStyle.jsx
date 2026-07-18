@@ -25,7 +25,7 @@ const AboutUsStyle = StyleSheet.create({
     },
     paragraph: {
         fontSize: 14,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#555',
         lineHeight: 22,
         marginBottom: 12,
@@ -81,7 +81,7 @@ const AboutUsStyle = StyleSheet.create({
     },
     paragraphWhite: {
         fontSize: 14,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#fff',
         lineHeight: 22,
         marginBottom: 12,
@@ -112,7 +112,7 @@ const AboutUsStyle = StyleSheet.create({
     },
     socialText: {
         fontSize: 15,
-        fontFamily: 'Roboto_500Medium',
+        fontFamily: 'Montserrat_500Medium',
         color: '#333',
         marginLeft: 10,
     },
@@ -122,7 +122,7 @@ const AboutUsStyle = StyleSheet.create({
     },
     footerText: {
         fontSize: 12,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#999',
     }
 });

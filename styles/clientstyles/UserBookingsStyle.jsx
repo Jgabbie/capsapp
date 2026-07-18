@@ -14,7 +14,7 @@ const UserBookingsStyle = StyleSheet.create({
     },
     subtitle: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#777",
         marginBottom: 20,
         paddingLeft: 5,
@@ -38,7 +38,7 @@ const UserBookingsStyle = StyleSheet.create({
     searchInput: {
         flex: 1,
         marginLeft: 8,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#333",
     },
@@ -69,7 +69,7 @@ const UserBookingsStyle = StyleSheet.create({
         gap: 5,
     },
     dropdownText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: "#333",
     },
@@ -127,7 +127,7 @@ const UserBookingsStyle = StyleSheet.create({
         marginBottom: 8,
     },
     detailText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#555",
         marginBottom: 4,
@@ -154,7 +154,7 @@ const UserBookingsStyle = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 8, padding: 12,
         marginBottom: 10,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: "#333"
     },
 
@@ -165,7 +165,7 @@ const UserBookingsStyle = StyleSheet.create({
         borderRadius: 8,
         padding: 12,
         marginBottom: 15,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         height: 80,
         textAlignVertical: 'top',
         color: "#333"
@@ -219,10 +219,16 @@ const UserBookingsStyle = StyleSheet.create({
         opacity: 0.8,
     },
     emptyText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 16,
         color: '#999',
         marginTop: 15,
+    },
+    uploadNote: {
+        fontFamily: "Montserrat_400Regular",
+        fontSize: 11,
+        textAlign: "justify",
+        color: '#999',
     },
 
 
@@ -276,7 +282,7 @@ const UserBookingsStyle = StyleSheet.create({
     },
 
     subtitleModal: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -331,7 +337,7 @@ const UserBookingsStyle = StyleSheet.create({
     },
 
     selectedDateLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },

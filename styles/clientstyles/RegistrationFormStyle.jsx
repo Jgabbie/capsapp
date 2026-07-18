@@ -222,7 +222,7 @@ const RegistrationFormStyle = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
         color: '#4f5d74',
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         marginBottom: 24,
         paddingHorizontal: 8,
     },

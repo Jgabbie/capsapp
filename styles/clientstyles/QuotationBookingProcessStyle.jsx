@@ -27,7 +27,7 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         color: "#1f2a44",
     },
     subtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#4e5b72",
         marginTop: 4,
@@ -75,7 +75,7 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         flex: 1,
     },
     breakdownValue: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#4e5b72',
         flex: 2,
@@ -83,7 +83,7 @@ const QuotationBookingProcessStyle = StyleSheet.create({
     },
 
     sectionNote: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#64748b',
         lineHeight: 16,
@@ -112,13 +112,13 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         letterSpacing: 1,
     },
     totalValue: {
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 30,
         color: '#305797',
         marginVertical: 8,
     },
     totalFinePrint: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontStyle: 'italic',
         fontSize: 10,
         color: '#7c8798',
@@ -134,7 +134,7 @@ const QuotationBookingProcessStyle = StyleSheet.create({
         padding: 14,
     },
     packageTypeLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#64748b',
     },

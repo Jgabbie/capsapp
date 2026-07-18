@@ -24,11 +24,6 @@ import {
     Montserrat_700Bold
 } from "@expo-google-fonts/montserrat"
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from "@expo-google-fonts/roboto"
 
 export default function Profile() {
 
@@ -37,9 +32,6 @@ export default function Profile() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
     })
 
     //user, sidebar and edit states
@@ -796,7 +788,7 @@ export default function Profile() {
                         style={[ProfileStyle.profileInputs, ProfileStyle.dropdownButton, !editing && ProfileStyle.profileInputsDisabled]}
                         disabled={!editing} onPress={() => setGenderModalVisible(true)}
                     >
-                        <Text style={{ color: userData.gender ? '#333' : '#a0a0a0', fontFamily: 'Roboto_400Regular' }}>
+                        <Text style={{ color: userData.gender ? '#333' : '#a0a0a0', fontFamily: 'Montserrat_400Regular' }}>
                             {userData.gender || "Select gender"}
                         </Text>
                         {editing && <Ionicons name="chevron-down" size={16} color="#666" />}
@@ -927,7 +919,7 @@ export default function Profile() {
                                             todayTextColor: '#305797',
                                             arrowColor: '#305797',
 
-                                            textDayFontFamily: 'Roboto_400Regular',
+                                            textDayFontFamily: 'Montserrat_400Regular',
                                             textMonthFontFamily: 'Montserrat_700Bold',
                                             textDayHeaderFontFamily: 'Roboto_500Medium',
 
@@ -1002,7 +994,7 @@ export default function Profile() {
                         <Text
                             style={{
                                 color: userData.nationality ? '#333' : '#a0a0a0',
-                                fontFamily: 'Roboto_400Regular'
+                                fontFamily: 'Montserrat_400Regular'
                             }}
                         >
                             {userData.nationality || "Select nationality"}
@@ -1137,13 +1129,13 @@ export default function Profile() {
                                     </Text>
                                 </TouchableOpacity>
                             </View>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
+                            <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
                                 {dayjs(review.createdAt || review.date).format('MMM D, YYYY')}
                             </Text>
                             <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#fadb14', fontSize: 16 }}>
                                 {'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}
                             </Text>
-                            <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', marginTop: 6 }} numberOfLines={2}>
+                            <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#4b5563', marginTop: 6 }} numberOfLines={2}>
                                 {review.review}
                             </Text>
                         </View>
@@ -1175,11 +1167,11 @@ export default function Profile() {
                                     </View>
                                 </View>
 
-                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 10 }}>
+                                <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#6b7280', fontSize: 12, marginBottom: 10 }}>
                                     {dayjs(booking.createdAt || booking.bookingDate).format('MMM D, YYYY')}
                                 </Text>
 
-                                <Text style={{ fontFamily: 'Roboto_400Regular', color: '#4b5563', fontSize: 13 }}>
+                                <Text style={{ fontFamily: 'Montserrat_400Regular', color: '#4b5563', fontSize: 13 }}>
                                     Reference No. {booking.bookingReference || booking.reference || "N/A"} • {(booking.packageId?.packageType || booking.package?.packageType || booking.bookingDetails?.pkg?.packageType || "DOMESTIC").toUpperCase()}
                                 </Text>
                             </View>
@@ -1201,7 +1193,7 @@ export default function Profile() {
                                         style={{ paddingVertical: 15, borderBottomWidth: index === 3 ? 0 : 1, borderBottomColor: '#f0f0f0', alignItems: 'center' }}
                                         onPress={() => { valueHandler('gender', option); setGenderModalVisible(false); }}
                                     >
-                                        <Text style={{ fontSize: 16, color: isSelected ? '#305797' : '#000', fontFamily: isSelected ? 'Roboto_500Medium' : 'Roboto_400Regular' }}>{option}</Text>
+                                        <Text style={{ fontSize: 16, color: isSelected ? '#305797' : '#000', fontFamily: isSelected ? 'Roboto_500Medium' : 'Montserrat_400Regular' }}>{option}</Text>
                                     </TouchableOpacity>
                                 )
                             })}
@@ -1255,7 +1247,7 @@ export default function Profile() {
                                                     color: isSelected ? '#305797' : '#000',
                                                     fontFamily: isSelected
                                                         ? 'Roboto_500Medium'
-                                                        : 'Roboto_400Regular'
+                                                        : 'Montserrat_400Regular'
                                                 }}
                                             >
                                                 {option}

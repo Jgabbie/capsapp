@@ -27,7 +27,7 @@ const QuotationAllInStyle = StyleSheet.create({
         color: "#1f2a44",
     },
     subtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#4e5b72",
         marginTop: 4,
@@ -41,7 +41,7 @@ const QuotationAllInStyle = StyleSheet.create({
         backgroundColor: '#fff',
     },
     backButtonText: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#64748b",
         fontSize: 12,
     },
@@ -90,7 +90,7 @@ const QuotationAllInStyle = StyleSheet.create({
         flex: 1,
     },
     breakdownValue: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: '#4e5b72',
         flex: 2,
@@ -117,7 +117,7 @@ const QuotationAllInStyle = StyleSheet.create({
         letterSpacing: 1,
     },
     totalValue: {
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 32,
         color: "#305797",
         marginVertical: 8,
@@ -128,18 +128,18 @@ const QuotationAllInStyle = StyleSheet.create({
         marginTop: 8,
     },
     pricingText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: '#4e5b72',
     },
     pricingValue: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: '#1f2a44',
         textAlign: 'right'
     },
     summaryNote: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontStyle: 'italic',
         fontSize: 10,
         color: '#888',
@@ -155,7 +155,7 @@ const QuotationAllInStyle = StyleSheet.create({
         backgroundColor: '#f8fafc',
     },
     dashedBoxLabel: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 11,
         color: '#1f2a44',
     },
@@ -208,13 +208,13 @@ const QuotationAllInStyle = StyleSheet.create({
         marginBottom: 6,
     },
     cardDesc: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#4b5563",
         lineHeight: 18,
     },
     cardNoteRed: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 11,
         color: "#dc2626",
         marginTop: 10,
@@ -251,7 +251,7 @@ const QuotationAllInStyle = StyleSheet.create({
         marginBottom: 4
     },
     travelerDetailText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#64748b",
         marginTop: 4,
@@ -343,7 +343,7 @@ const QuotationAllInStyle = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 24,
         lineHeight: 22,
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
     modalButton: {
         backgroundColor: "#305797",

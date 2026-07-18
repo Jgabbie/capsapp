@@ -22,11 +22,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat';
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto';
 
 const { width } = Dimensions.get('window');
 
@@ -52,9 +47,6 @@ export default function Wishlist() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
     });
 
     const cs = useNavigation();

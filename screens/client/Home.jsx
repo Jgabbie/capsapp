@@ -20,11 +20,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 const { width } = Dimensions.get("window");
 
@@ -179,9 +174,6 @@ export default function Home({ route }) {
         Montserrat_400Regular,
         Montserrat_500Medium,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
     })
 
     const cs = useNavigation()
@@ -1160,7 +1152,7 @@ export default function Home({ route }) {
                                 activeOpacity={0.7}
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ color: contactSubject ? '#333' : '#999', fontFamily: 'Roboto_400Regular' }}>
+                                    <Text style={{ color: contactSubject ? '#333' : '#999', fontFamily: 'Montserrat_400Regular' }}>
                                         {contactSubject || "Select subject"}
                                     </Text>
                                     <Ionicons name="chevron-down" size={16} color="#999" />
@@ -1623,7 +1615,7 @@ export default function Home({ route }) {
                                 fontSize: 14,
                                 lineHeight: 20,
                                 color: '#64748b',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 textAlign: 'center',
                             }}
                         >

@@ -9,9 +9,9 @@ const BookingUploadsStyle = StyleSheet.create({
         padding: 20,
     },
     notesBox: {
-        backgroundColor: '#fffbe6',
+        backgroundColor: '#cfd8ee',
         borderWidth: 1,
-        borderColor: '#ffe58f',
+        borderColor: '#7e98d3',
         padding: 15,
         borderRadius: 12,
         marginBottom: 20,
@@ -35,7 +35,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     notesText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#000000",
         lineHeight: 18,
@@ -60,7 +60,7 @@ const BookingUploadsStyle = StyleSheet.create({
         marginBottom: 4,
     },
     cardSubtitle: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         color: "#64748b",
         marginBottom: 15,
@@ -92,7 +92,7 @@ const BookingUploadsStyle = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#1f2a44",
         backgroundColor: '#fff',
     },
@@ -103,7 +103,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     inputText: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#1f2a44",
         flex: 1,
         textAlignVertical: 'center',
@@ -177,7 +177,7 @@ const BookingUploadsStyle = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     dropdownItemText: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 15,
         color: '#1f2a44',
     },
@@ -257,7 +257,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
     pdfFileName: {
         fontSize: 10,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#dc2626',
         marginTop: 6,
         textAlign: 'center',
@@ -332,7 +332,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -387,7 +387,7 @@ const BookingUploadsStyle = StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },
@@ -400,14 +400,14 @@ const BookingUploadsStyle = StyleSheet.create({
     },
 
     dateSelectedExtra: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b',
         marginTop: 2
     },
 
     dateLimitNote: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b',
         textAlign: 'center',

@@ -41,9 +41,16 @@ const ModalStyle = StyleSheet.create({
         color: "#305797",
         marginBottom: 10
     },
+    modalTextParagraph: {
+        fontSize: 13,
+        fontFamily: "Montserrat_400Regular",
+        textAlign: "justify",
+        color: "#333",
+        marginBottom: 20
+    },
     modalText: {
         fontSize: 16,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         color: "#333",
         marginBottom: 20
@@ -79,8 +86,13 @@ const ModalStyle = StyleSheet.create({
     },
     modalButtonText: {
         color: "#fff",
+        fontSize: 16,
+        fontFamily: "Montserrat_500Medium"
+    },
+    modalButtonTextSmall: {
+        color: "#fff",
         fontSize: 13,
-        fontFamily: "Montserrat_600SemiBold"
+        fontFamily: "Montserrat_500Medium"
     },
     otpInput: {
         fontSize: 20,

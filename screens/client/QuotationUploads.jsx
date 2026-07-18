@@ -26,11 +26,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 
 //format date function
@@ -115,9 +110,6 @@ export default function QuotationUploads({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -889,7 +881,7 @@ export default function QuotationUploads({ route, navigation }) {
                                 </View>
 
                                 {uploads[index]?.visaStatus === 'no' && (
-                                    <Text style={{ marginTop: 12, color: '#d9534f', fontSize: 13, textAlign: 'center', fontFamily: 'Roboto_400Regular' }}>
+                                    <Text style={{ marginTop: 12, color: '#d9534f', fontSize: 13, textAlign: 'center', fontFamily: 'Montserrat_400Regular' }}>
                                         This travel package requires a visa, we highly recommend for you to get one first before booking to avoid travel issues.
                                     </Text>
                                 )}
@@ -1106,7 +1098,7 @@ export default function QuotationUploads({ route, navigation }) {
                                     selectedDayTextColor: '#ffffff',
                                     todayTextColor: '#305797',
                                     arrowColor: '#305797',
-                                    textDayFontFamily: 'Roboto_400Regular',
+                                    textDayFontFamily: 'Montserrat_400Regular',
                                     textMonthFontFamily: 'Montserrat_700Bold',
                                     textDayHeaderFontFamily: 'Roboto_500Medium',
                                     textDayFontSize: 14,
@@ -1295,7 +1287,7 @@ export default function QuotationUploads({ route, navigation }) {
                         <Text
                             style={{
                                 color: '#6b7280',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 fontSize: 14,
                                 lineHeight: 21,
                                 textAlign: 'center',
@@ -1389,7 +1381,7 @@ export default function QuotationUploads({ route, navigation }) {
                                 fontSize: 14,
                                 lineHeight: 20,
                                 color: '#64748b',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 textAlign: 'center',
                             }}
                         >
@@ -1405,7 +1397,7 @@ export default function QuotationUploads({ route, navigation }) {
                                 marginTop: 6,
                                 fontSize: 12,
                                 color: '#94a3b8',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 textAlign: 'center',
                             }}
                         >

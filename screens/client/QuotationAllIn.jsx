@@ -18,11 +18,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
 
@@ -44,9 +39,6 @@ export default function QuotationAllIn() {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const navigation = useNavigation();
@@ -343,7 +335,7 @@ export default function QuotationAllIn() {
                     {discountPercent > 0 && (
                         <View style={QuotationAllInStyle.pricingRow}>
                             <Text style={QuotationAllInStyle.pricingText}>Original total</Text>
-                            <Text style={[QuotationAllInStyle.pricingValue, { textDecorationLine: 'line-through', color: '#9aa0a6', fontFamily: 'Roboto_400Regular' }]}>
+                            <Text style={[QuotationAllInStyle.pricingValue, { textDecorationLine: 'line-through', color: '#9aa0a6', fontFamily: 'Montserrat_400Regular' }]}>
                                 {formatPeso(originalTotalAmount)}
                             </Text>
                         </View>

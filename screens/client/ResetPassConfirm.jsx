@@ -1,29 +1,26 @@
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Modal, ActivityIndicator, ToastAndroid, Platform, Image, BackHandler } from 'react-native'
 import React, { useState, useCallback } from 'react'
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native'
-import { useFonts } from '@expo-google-fonts/montserrat'
+import {
+    useFonts, Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold
+} from '@expo-google-fonts/montserrat'
 import { Ionicons } from '@expo/vector-icons'
 
 import ResetPassConfirmStyle from '../../styles/clientstyles/ResetPassConfirmStyle'
 import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api } from '../../utils/api'
 
-import {
-    Montserrat_700Bold
-} from '@expo-google-fonts/montserrat'
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
+
 
 export default function ResetPassConfirm() {
+
     const [fontsLoaded] = useFonts({
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_400Regular,
+        Montserrat_500Medium,
     })
 
     const cs = useNavigation()

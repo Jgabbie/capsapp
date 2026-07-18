@@ -23,11 +23,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 dayjs.extend(customParseFormat);
 
@@ -37,9 +32,6 @@ export default function PaymentMethod({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -817,7 +809,7 @@ export default function PaymentMethod({ route, navigation }) {
                         <Text
                             style={{
                                 color: '#6b7280',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 fontSize: 14,
                                 lineHeight: 21,
                                 textAlign: 'center',

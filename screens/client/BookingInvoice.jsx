@@ -26,11 +26,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 
 export default function BookingInvoice({ route, navigation }) {
@@ -41,9 +36,6 @@ export default function BookingInvoice({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -2332,7 +2324,7 @@ export default function BookingInvoice({ route, navigation }) {
 
                     <View style={BookingInvoiceStyle.card}>
                         <Text style={BookingInvoiceStyle.cardTitle}>Booking Registration</Text>
-                        <Text style={{ color: '#555', marginBottom: 16 }}>Download your complete registration forms and terms & conditions.</Text>
+                        <Text style={BookingInvoiceStyle.cardTitleText}>Download your complete registration forms and terms & conditions.</Text>
 
                         <TouchableOpacity
                             style={BookingInvoiceStyle.pdfButton}
@@ -2659,7 +2651,7 @@ export default function BookingInvoice({ route, navigation }) {
                         <Text
                             style={{
                                 color: '#6b7280',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 fontSize: 14,
                                 lineHeight: 21,
                                 textAlign: 'center',

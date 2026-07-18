@@ -16,15 +16,10 @@ import dayjs from 'dayjs'
 
 import {
     Montserrat_400Regular,
+    Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
-
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold
-} from '@expo-google-fonts/roboto'
 
 const timeSlots = [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
@@ -81,9 +76,7 @@ export default function VisaDetailsGuidance() {
         Montserrat_400Regular,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold
+        Montserrat_500Medium,
     })
 
     const cs = useNavigation()
@@ -654,7 +647,7 @@ export default function VisaDetailsGuidance() {
                                 todayTextColor: '#305797',
                                 arrowColor: '#305797',
 
-                                textDayFontFamily: 'Roboto_400Regular',
+                                textDayFontFamily: 'Montserrat_400Regular',
                                 textMonthFontFamily: 'Montserrat_700Bold',
                                 textDayHeaderFontFamily: 'Roboto_500Medium',
 

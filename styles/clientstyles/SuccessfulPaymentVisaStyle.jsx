@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     },
     desc: {
         fontSize: 14,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#4b5563',
         textAlign: 'center',
         lineHeight: 22,
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     },
     countdown: {
         fontSize: 13,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#9ca3af',
         marginBottom: 35,
     },

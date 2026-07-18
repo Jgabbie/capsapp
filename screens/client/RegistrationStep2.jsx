@@ -12,11 +12,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
 
 
 //format long date fun
@@ -32,9 +27,6 @@ export default function RegistrationStep2({ route, navigation }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
     const { user } = useUser();
@@ -271,10 +263,10 @@ export default function RegistrationStep2({ route, navigation }) {
                     {/* Package Info */}
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 4 }]}>
                         {/*  FIXED: Now properly checks for packageName first, just like Step 1 */}
-                        TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.pkg?.packageName || setupData?.pkg?.title || ''}</Text>
+                        TOUR PACKAGE TITLE: <Text style={{ fontFamily: "Montserrat_400Regular" }}>{setupData?.pkg?.packageName || setupData?.pkg?.title || ''}</Text>
                     </Text>
                     <Text style={[RegistrationFormStyle.label, { marginBottom: 15 }]}>
-                        PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Roboto_400Regular" }}>{setupData?.selectedDate}</Text>
+                        PACKAGE TRAVEL DATE: <Text style={{ fontFamily: "Montserrat_400Regular" }}>{setupData?.selectedDate}</Text>
                     </Text>
 
                     {/* --- DIETARY REQUESTS --- */}
@@ -395,7 +387,7 @@ export default function RegistrationStep2({ route, navigation }) {
 
                     {/* --- EMERGENCY CONTACT --- */}
                     <View style={{ backgroundColor: '#ADD8E6', borderWidth: 1, borderColor: '#000', paddingVertical: 4, paddingHorizontal: 5 }}>
-                        <Text style={RegistrationFormStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Roboto_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
+                        <Text style={RegistrationFormStyle.headerBlueText}>EMERGENCY CONTACT <Text style={{ fontSize: 8, fontStyle: 'italic', fontFamily: "Montserrat_400Regular", color: '#333' }}>(i.e: the person to contact in the event of an emergency while you are away)</Text></Text>
                     </View>
 
                     <View style={{ borderWidth: 1, borderTopWidth: 0, borderColor: '#000' }}>
@@ -596,7 +588,7 @@ export default function RegistrationStep2({ route, navigation }) {
                         <Text
                             style={{
                                 color: '#6b7280',
-                                fontFamily: 'Roboto_400Regular',
+                                fontFamily: 'Montserrat_400Regular',
                                 fontSize: 14,
                                 lineHeight: 21,
                                 textAlign: 'center',

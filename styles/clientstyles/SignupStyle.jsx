@@ -15,14 +15,14 @@ const SignupStyle = StyleSheet.create({
         textAlign: "center"
     },
     signupLabel: {
-        fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
         color: "#305797",
         marginLeft: 20,
         marginBottom: 2
     },
     signupInputs: {
-        fontSize: 14,
+        fontSize: 12,
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
@@ -31,6 +31,7 @@ const SignupStyle = StyleSheet.create({
         marginBottom: 8,
         width: 350,
         height: 40,
+        fontFamily: "Montserrat_500Medium",
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
     },
@@ -41,7 +42,7 @@ const SignupStyle = StyleSheet.create({
         justifyContent: "space-between"
     },
     nameInputs: {
-        fontSize: 14,
+        fontSize: 12,
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
@@ -49,6 +50,7 @@ const SignupStyle = StyleSheet.create({
         marginBottom: 8,
         width: 170,
         height: 40,
+        fontFamily: "Montserrat_500Medium",
         backgroundColor: "rgba(255,255,255,0.8)",
         color: "#000"
     },
@@ -67,7 +69,8 @@ const SignupStyle = StyleSheet.create({
     },
     phoneInput: {
         flex: 1,
-        fontSize: 14,
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
         paddingHorizontal: 10,
         color: "#000"
     },
@@ -86,7 +89,8 @@ const SignupStyle = StyleSheet.create({
     },
     passwordInput: {
         flex: 1,
-        fontSize: 14,
+        fontSize: 12,
+        fontFamily: "Montserrat_500Medium",
         paddingHorizontal: 15,
         color: "#000",
         height: '100%',
@@ -111,13 +115,13 @@ const SignupStyle = StyleSheet.create({
     generalError: {
         color: "#ff1616",
         fontSize: 10,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         marginLeft: 20,
         marginBottom: 10,
         marginTop: 5,
     },
     signupLinks: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: "#305797",
         marginRight: 4,
@@ -140,7 +144,7 @@ const SignupStyle = StyleSheet.create({
     signupButtonText: {
         color: "#fff",
         fontSize: 18,
-        fontFamily: "Roboto_500Medium"
+        fontFamily: "Montserrat_500Medium"
     },
     // NEW LOGO STYLE AT BOTTOM 
     bottomLogo: {
@@ -188,14 +192,14 @@ const SignupStyle = StyleSheet.create({
     },
 
     termsText: {
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         fontSize: 13,
         color: "#305797",
         marginRight: 4,
     },
 
     termsLink: {
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 13,
         color: "#305797",
         textDecorationLine: "underline",
@@ -208,7 +212,7 @@ const SignupStyle = StyleSheet.create({
     },
 
     termsError: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 10,
         color: "#ff0000",
     },
@@ -240,7 +244,7 @@ const SignupStyle = StyleSheet.create({
     },
 
     termsSectionTitle: {
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 14,
         color: "#305797",
         marginTop: 14,
@@ -248,7 +252,7 @@ const SignupStyle = StyleSheet.create({
     },
 
     termsParagraph: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         lineHeight: 18,
         color: "#4b5563",
@@ -279,7 +283,7 @@ const SignupStyle = StyleSheet.create({
     },
 
     termsButtonText: {
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         fontSize: 13,
         color: "#ffffff",
     },

@@ -48,7 +48,7 @@ const PassportGuidanceStyle = StyleSheet.create({
         zIndex: 1,
     },
     heroSubText: {
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 13,
         color: "#fff",
         textAlign: 'center',
@@ -67,7 +67,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     // Used on the Main Selection Screen
@@ -140,7 +140,7 @@ const PassportGuidanceStyle = StyleSheet.create({
         fontSize: 15,
         lineHeight: 25,
         color: "#687995",
-        fontFamily: "Roboto_400Regular"
+        fontFamily: "Montserrat_400Regular"
     },
 
     selectionDivider: {
@@ -173,7 +173,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     selectionPriceLabel: {
         fontSize: 12,
         color: "#8a8f99",
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         marginTop: 3
     },
 
@@ -244,7 +244,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     requirementText: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#1f2937"
     },
     stepRow: {
@@ -277,12 +277,12 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     stepDesc: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     formLabel: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#374151",
         marginBottom: 8,
     },
@@ -299,7 +299,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     inputText: {
         flex: 1,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         fontSize: 15,
         color: '#1f2937',
     },
@@ -354,7 +354,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
     modalDesc: {
         fontSize: 15,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#4b5563",
         textAlign: 'center',
         marginBottom: 24,
@@ -431,7 +431,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -486,7 +486,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },
@@ -499,7 +499,7 @@ const PassportGuidanceStyle = StyleSheet.create({
     },
 
     dateAvailabilityNote: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b',
         textAlign: 'center',

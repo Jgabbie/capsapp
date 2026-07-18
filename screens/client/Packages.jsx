@@ -19,12 +19,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-} from "@expo-google-fonts/roboto";
-
 const { width } = Dimensions.get('window');
 
 const formatPeso = (value) => `₱${(Number(value) || 0).toLocaleString("en-PH")}`;
@@ -42,9 +36,6 @@ export default function Packages({ navigation, route }) {
         Montserrat_500Medium,
         Montserrat_600SemiBold,
         Montserrat_700Bold,
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_700Bold,
     });
 
 
@@ -402,7 +393,7 @@ export default function Packages({ navigation, route }) {
                         <TextInput
                             maxLength={50}
                             style={DestinationStyles.searchInput}
-                            placeholder="Search here"
+                            placeholder="Search here..."
                             placeholderTextColor="#999"
                             value={searchText}
                             autoCorrect={false}
@@ -635,13 +626,13 @@ export default function Packages({ navigation, route }) {
 
                         {visibleCount > 10 && (
                             <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>
-                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto_400Regular' }}>See less</Text>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Montserrat_400Regular' }}>See less</Text>
                             </TouchableOpacity>
                         )}
 
                         {visibleCount < filteredPackages.length && (
                             <TouchableOpacity onPress={handleLoadMore} style={{ alignSelf: 'center', marginVertical: 12 }}>
-                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Roboto_400Regular' }}>Load more</Text>
+                                <Text style={{ color: '#305797', fontSize: 16, fontFamily: 'Montserrat_400Regular' }}>Load more</Text>
                             </TouchableOpacity>
                         )}
 

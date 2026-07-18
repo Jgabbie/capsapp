@@ -66,13 +66,13 @@ const VisaProgressStyle = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#6b7280",
         flex: 1,
     },
     infoValue: {
         fontSize: 14,
-        fontFamily: "Roboto_500Medium",
+        fontFamily: "Montserrat_500Medium",
         color: "#1f2937",
         flex: 1,
         textAlign: 'right',
@@ -86,7 +86,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
     statusText: {
         fontSize: 12,
-        fontFamily: "Roboto_700Bold",
+        fontFamily: "Montserrat_700Bold",
         color: '#b45309',
         textTransform: 'uppercase'
     },
@@ -153,7 +153,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
     stepDesc: {
         fontSize: 13,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#6b7280",
     },
     //  NEW STYLES FOR APPOINTMENT OPTIONS 
@@ -189,7 +189,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
     optionTime: {
         fontSize: 14,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         color: '#6b7280',
         marginTop: 4,
     },
@@ -242,7 +242,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
     modalDesc: {
         fontSize: 15,
-        fontFamily: "Roboto_400Regular",
+        fontFamily: "Montserrat_400Regular",
         color: "#4b5563",
         textAlign: 'center',
         marginBottom: 24,
@@ -291,7 +291,7 @@ const VisaProgressStyle = StyleSheet.create({
 
     loadingSubtext: {
         marginTop: 6,
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 13,
         color: '#64748b',
         textAlign: 'center'
@@ -353,7 +353,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
 
     dateModalSubtitle: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 12,
         color: '#64748b',
         marginTop: 3
@@ -408,7 +408,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
 
     dateSelectedLabel: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b'
     },
@@ -421,7 +421,7 @@ const VisaProgressStyle = StyleSheet.create({
     },
 
     dateAvailabilityNote: {
-        fontFamily: 'Roboto_400Regular',
+        fontFamily: 'Montserrat_400Regular',
         fontSize: 11,
         color: '#64748b',
         textAlign: 'center',

@@ -54,7 +54,7 @@ const DestinationStyles = StyleSheet.create({
 
   heroBannerTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: "Montserrat_700Bold",
     color: '#fff',
     textAlign: 'center',
     marginBottom: 8
@@ -62,15 +62,15 @@ const DestinationStyles = StyleSheet.create({
 
   heroBannerSubtitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: "Montserrat_500Medium",
     color: '#fff',
     textAlign: 'center',
     lineHeight: 20
   },
 
   heroTitle: {
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 22,
-    fontWeight: "700",
     color: "#305797",
     textAlign: "center",
     marginTop: 10
@@ -80,6 +80,7 @@ const DestinationStyles = StyleSheet.create({
     fontSize: 12,
     color: "#777",
     textAlign: "center",
+    fontFamily: "Montserrat_600SemiBold",
     marginTop: 4,
     marginBottom: 16
   },
@@ -97,18 +98,18 @@ const DestinationStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
+    paddingHorizontal: 20,
+
     borderColor: "#dbe3ef"
   },
 
   searchInput: {
+    flex: 1,
     marginLeft: 8,
     fontSize: 14,
     color: "#333",
-    height: 35,
-    fontFamily: 'Roboto_400Regular',
+    height: 42,
+    fontFamily: 'Montserrat_400Regular',
   },
 
   filterButton: {
@@ -132,6 +133,7 @@ const DestinationStyles = StyleSheet.create({
   resultsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignContent: 'center',
     alignItems: 'baseline',
     marginBottom: 15,
     marginTop: 5
@@ -139,14 +141,14 @@ const DestinationStyles = StyleSheet.create({
 
   resultsTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: 'Montserrat_700Bold',
     color: "#1e293b"
   },
 
   resultsCount: {
     backgroundColor: "#305797",
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Montserrat_600SemiBold',
     color: "#fff",
     borderRadius: 15,
     padding: 10,
@@ -289,7 +291,7 @@ const DestinationStyles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: "#8a8f99",
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     marginTop: 2,
     textAlign: "center"
   },
@@ -297,7 +299,7 @@ const DestinationStyles = StyleSheet.create({
   travelerPriceText: {
     fontSize: 11,
     color: "#6b7280",
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     marginTop: 4,
     textAlign: "center"
   },
@@ -423,7 +425,7 @@ const DestinationStyles = StyleSheet.create({
 
   detailsTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#305797",
   },
 
@@ -448,7 +450,7 @@ const DestinationStyles = StyleSheet.create({
 
   durationText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: "Montserrat_700Bold",
     color: '#FFFFFF',
   },
 
@@ -474,21 +476,21 @@ const DestinationStyles = StyleSheet.create({
 
   averageRatingValue: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: "Montserrat_700Bold",
     color: '#FFFFFF',
   },
 
   averageRatingMaximum: {
     marginLeft: 3,
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: "Montserrat_700Bold",
     color: '#FFFFFF',
   },
 
   averageRatingText: {
     marginTop: 1,
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: "Montserrat_700Bold",
     color: '#FFFFFF',
   },
 
@@ -560,6 +562,7 @@ const DestinationStyles = StyleSheet.create({
   },
 
   packageDetailLabel: {
+    fontFamily: "Montserrat_500Medium",
     fontSize: 11,
     color: '#6b7280',
     marginBottom: 4
@@ -568,14 +571,16 @@ const DestinationStyles = StyleSheet.create({
   packageDetailValue: {
     fontSize: 13,
     color: '#1f2a44',
-    fontWeight: '700'
+    fontFamily: "Montserrat_700Bold",
   },
 
   heroDescription: {
     textAlign: "justify",
-    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
+    fontSize: 12,
     color: "#374151",
-    lineHeight: 20
+    lineHeight: 20,
+    marginTop: 15,
   },
 
   priceCard: {
@@ -591,7 +596,7 @@ const DestinationStyles = StyleSheet.create({
 
   priceLabel: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#6b7280",
     marginBottom: 8,
     letterSpacing: 0.5
@@ -599,7 +604,7 @@ const DestinationStyles = StyleSheet.create({
 
   priceValue: {
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#305797"
   },
 
@@ -618,12 +623,13 @@ const DestinationStyles = StyleSheet.create({
 
   priceUnit: {
     fontSize: 13,
+    fontFamily: "Montserrat_500Medium",
     color: "#6b7280"
   },
 
   slotsValue: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#1f2a44"
   },
 
@@ -654,7 +660,7 @@ const DestinationStyles = StyleSheet.create({
 
   cancellationPolicyTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: "Montserrat_700Bold",
     color: '#6b7280',
     marginBottom: 8,
     letterSpacing: 0.5
@@ -662,6 +668,7 @@ const DestinationStyles = StyleSheet.create({
 
   cancellationPolicyText: {
     textAlign: 'justify',
+    fontFamily: "Montserrat_400Regular",
     fontSize: 13,
     color: '#6b7280',
     lineHeight: 20
@@ -729,7 +736,7 @@ const DestinationStyles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#ffffff",
     textAlign: "center",
   },
@@ -752,20 +759,21 @@ const DestinationStyles = StyleSheet.create({
   sectionText: {
     flex: 1,
     fontSize: 13,
+    fontFamily: "Montserrat_500Medium",
     color: "#374151",
     lineHeight: 20
   },
 
   packageDetailsHeading: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#305797",
     marginBottom: 15
   },
 
   discountTextOnly: {
     color: "#cf1322",
-    fontWeight: "800",
+    fontFamily: "Montserrat_700Bold",
     fontSize: 14,
     marginLeft: 8
   },
@@ -810,7 +818,6 @@ const DestinationStyles = StyleSheet.create({
 
   primaryText: {
     color: "#fff",
-    fontWeight: "600",
     fontSize: 14,
     fontFamily: 'Montserrat_700Bold'
   },
@@ -833,7 +840,7 @@ const DestinationStyles = StyleSheet.create({
 
   wishlistButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 13
   },
 
@@ -889,7 +896,7 @@ const DestinationStyles = StyleSheet.create({
   },
 
   reviewTitle: {
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     fontSize: 16,
     color: "#1f2937",
     marginBottom: 12
@@ -920,14 +927,14 @@ const DestinationStyles = StyleSheet.create({
 
   reviewButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontFamily: "Montserrat_600SemiBold",
     fontSize: 14
   },
 
 
   filterLabel: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#333",
     marginBottom: 10
   },
@@ -1003,7 +1010,7 @@ const DestinationStyles = StyleSheet.create({
     flex: 0.2,
     color: '#305797',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: "Montserrat_600SemiBold",
     textAlign: 'center',
     marginLeft: 10
   },
@@ -1055,13 +1062,15 @@ const DestinationStyles = StyleSheet.create({
 
   arrangementTitleText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: "Montserrat_700Bold",
     color: '#305797',
     marginBottom: 6
   },
 
   arrangementDesc: {
     fontSize: 12,
+    fontFamily: "Montserrat_400Regular",
+    textAlign: "justify",
     color: '#555',
     lineHeight: 18
   },
@@ -1084,7 +1093,7 @@ const DestinationStyles = StyleSheet.create({
 
   proceedButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: "Montserrat_700Bold",
     fontSize: 14
   },
 
@@ -1098,7 +1107,7 @@ const DestinationStyles = StyleSheet.create({
 
   cancelArrangementText: {
     color: "#ffffff",
-    fontWeight: "bold",
+    fontFamily: "Montserrat_700Bold",
     fontSize: 14
   },
 
@@ -1141,7 +1150,7 @@ const DestinationStyles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginLeft: 8,
-    fontWeight: "500"
+    fontFamily: "Montserrat_500Medium",
   },
 
   priceRowDate: {
@@ -1152,7 +1161,7 @@ const DestinationStyles = StyleSheet.create({
 
   priceTextDate: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: "Montserrat_700Bold",
     color: "#305797"
   },
 
@@ -1166,7 +1175,7 @@ const DestinationStyles = StyleSheet.create({
   slotsBadgeText: {
     fontSize: 11,
     color: "#475569",
-    fontWeight: "600"
+    fontFamily: "Montserrat_600SemiBold",
   },
 
   selectedBadge: {
@@ -1182,7 +1191,7 @@ const DestinationStyles = StyleSheet.create({
   selectedBadgeText: {
     color: '#1677ff',
     fontSize: 10,
-    fontWeight: 'bold'
+    fontFamily: "Montserrat_700Bold",
   },
 
   selectionFooter: {
@@ -1194,6 +1203,7 @@ const DestinationStyles = StyleSheet.create({
 
   selectionFooterText: {
     fontSize: 13,
+    fontFamily: "Montserrat_600SemiBold",
     color: '#333',
     marginBottom: 15
   },
@@ -1217,7 +1227,7 @@ const DestinationStyles = StyleSheet.create({
 
   dateProceedText: {
     color: "#fff",
-    fontWeight: "bold"
+    fontFamily: "Montserrat_700Bold",
   },
 
   dateCancelButton: {
@@ -1229,7 +1239,7 @@ const DestinationStyles = StyleSheet.create({
 
   dateCancelText: {
     color: "#fff",
-    fontWeight: "bold"
+    fontFamily: "Montserrat_700Bold",
   },
 
   breakdownCard: {
@@ -1280,7 +1290,7 @@ const DestinationStyles = StyleSheet.create({
   breakdownCount: {
     fontSize: 12,
     color: '#777',
-    fontFamily: 'Roboto_400Regular'
+    fontFamily: 'Montserrat_400Regular'
   },
 
   breakdownBody: {
@@ -1328,7 +1338,7 @@ const DestinationStyles = StyleSheet.create({
     fontSize: 12,
     color: '#777',
     textAlign: 'right',
-    fontFamily: 'Roboto_400Regular'
+    fontFamily: 'Montserrat_400Regular'
   },
 
   resetButton: {
@@ -1379,7 +1389,7 @@ const DestinationStyles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
-    fontFamily: "Roboto_400Regular"
+    fontFamily: "Montserrat_400Regular"
   },
   visaButtonRow: {
     flexDirection: 'row',
@@ -1398,7 +1408,7 @@ const DestinationStyles = StyleSheet.create({
   },
   visaButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: "Montserrat_700Bold",
     fontSize: 13,
     textAlign: 'center'
   },
@@ -1424,6 +1434,7 @@ const DestinationStyles = StyleSheet.create({
   dateSearchInput: {
     flex: 1,
     fontSize: 13,
+    fontFamily: "Montserrat_500Medium",
     color: '#333',
     height: '100%',
     padding: 0
@@ -1439,7 +1450,7 @@ const DestinationStyles = StyleSheet.create({
   dateToggleText: {
     fontSize: 11, //  CHANGED: Slightly smaller to fit in the single row
     color: '#475569',
-    fontWeight: '500'
+    fontFamily: "Montserrat_500Medium",
   },
   dateClearFiltersBtn: {
     backgroundColor: '#305797',
@@ -1452,7 +1463,6 @@ const DestinationStyles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     color: '#fff',
     fontSize: 12,
-    fontWeight: 'bold'
   },
 });
 

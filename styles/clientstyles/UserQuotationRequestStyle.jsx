@@ -46,10 +46,11 @@ const UserQuotationRequestStyle = StyleSheet.create({
     marginBottom: 6,
   },
   pageSubtitle: {
-    fontFamily: "Roboto_400Regular",
-    color: "#666",
+    fontFamily: "Montserrat_400Regular",
+    color: "#555",
     fontSize: 12,
     lineHeight: 18,
+    textAlign: "justify"
   },
 
   // --- HEADER CARD ---
@@ -82,7 +83,7 @@ const UserQuotationRequestStyle = StyleSheet.create({
     fontSize: 12,
   },
   metaValue: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#555",
     fontSize: 12,
   },
@@ -122,7 +123,7 @@ const UserQuotationRequestStyle = StyleSheet.create({
     marginBottom: 15,
   },
   emptyText: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#9ca3af",
     fontStyle: "italic",
     textAlign: "center",
@@ -149,24 +150,24 @@ const UserQuotationRequestStyle = StyleSheet.create({
     color: "#333",
   },
   historyItemDate: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 10,
     color: "#888",
   },
   historyItemSub: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 11,
     color: "#555",
     marginBottom: 4,
   },
   historyItemLink: {
-    fontFamily: "Roboto_500Medium",
+    fontFamily: "Montserrat_500Medium",
     fontSize: 11,
     color: "#305797",
     textDecorationLine: "underline",
   },
   historyItemComment: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 12,
     color: "#555",
     fontStyle: 'italic',
@@ -185,11 +186,12 @@ const UserQuotationRequestStyle = StyleSheet.create({
     marginBottom: 10,
   },
   latestRevisionDescription: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#666",
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 19,
     marginBottom: 12,
+    textAlign: "justify"
   },
   latestRevisionBox: {
     backgroundColor: '#fff',
@@ -227,10 +229,11 @@ const UserQuotationRequestStyle = StyleSheet.create({
     marginBottom: 6,
   },
   revisionNotesSubtitle: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#666",
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 19,
+    textAlign: "justify"
   },
 
   // --- INPUT & BUTTONS ---
@@ -251,13 +254,13 @@ const UserQuotationRequestStyle = StyleSheet.create({
     padding: 12,
     height: 80,
     textAlignVertical: "top",
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 13,
     color: "#333",
   },
   charCount: {
     textAlign: 'right',
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     fontSize: 10,
     color: '#999',
     marginTop: 4,
@@ -326,7 +329,7 @@ const UserQuotationRequestStyle = StyleSheet.create({
     textAlign: "center",
   },
   modalTextCentered: {
-    fontFamily: "Roboto_400Regular",
+    fontFamily: "Montserrat_400Regular",
     color: "#555",
     fontSize: 14,
     textAlign: "center",
