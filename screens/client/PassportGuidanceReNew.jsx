@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Alert, ScrollView, Modal, ActivityIndicator, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
 
@@ -21,53 +21,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat'
 
-
-
-const dfaLocations = [
-    'DFA Aseana (Paranaque)',
-    'DFA NCR Central (Robinsons Galleria Ortigas)',
-    'DFA NCR East (SM Megamall)',
-    'DFA NCR North (Robinsons Novaliches)',
-    'DFA NCR Northeast (Ali Mall Cubao)',
-    'DFA NCR South (Festival Mall Muntinlupa)',
-    'DFA NCR West (SM City Manila)',
-    'DFA Angeles (SM City Clark)',
-    'DFA Antipolo (SM Center Antipolo)',
-    'DFA Baguio (SM City Baguio)',
-    'DFA Balanga (The Bunker Bataan)',
-    'DFA Calasiao (Robinsons Calasiao)',
-    'DFA Candon (Candon City Arena)',
-    'DFA Dasmarinas (SM City Dasmarinas)',
-    'DFA Ilocos Norte (Robinsons Place San Nicolas)',
-    'DFA La Union (CSI Mall San Fernando)',
-    'DFA Legazpi (Pacific Mall Legazpi)',
-    'DFA Lipa (Robinsons Lipa)',
-    'DFA Lucena (Pacific Mall Lucena)',
-    'DFA Malolos (Xentro Mall Malolos)',
-    'DFA Olongapo (SM City Olongapo Central)',
-    'DFA Pampanga (Robinsons Starmills San Fernando)',
-    'DFA Paniqui (WalterMart Paniqui)',
-    'DFA Puerto Princesa (Robinsons Place Palawan)',
-    'DFA San Pablo (SM City San Pablo)',
-    'DFA Santiago (Robinsons Place Santiago)',
-    'DFA Tuguegarao (Regional Government Center)',
-    'DFA Antique (CityMall Antique)',
-    'DFA Bacolod (Robinsons Place Bacolod)',
-    'DFA Cebu (Robinsons Galleria Cebu)',
-    'DFA Dumaguete (Robinsons Place Dumaguete)',
-    'DFA Iloilo (Robinsons Place Iloilo)',
-    'DFA Tacloban (Robinsons North Tacloban)',
-    'DFA Tagbilaran (Alturas Mall)',
-    'DFA Butuan (Robinsons Place Butuan)',
-    'DFA Cagayan de Oro (SM CDO Downtown Premier)',
-    'DFA Clarin (Clarin Town Center)',
-    'DFA Davao (SM City Davao)',
-    'DFA General Santos (Robinsons Place General Santos)',
-    'DFA Kidapawan',
-    'DFA Pagadian (C3 Mall)',
-    'DFA Tagum (Robinsons Place Tagum)',
-    'DFA Zamboanga (Go-Velayo Building)'
-];
 
 const timeSlots = [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
@@ -141,6 +94,9 @@ export default function PassportGuidanceReNew() {
     const [isSidebarVisible, setSidebarVisible] = useState(false)
 
     const [dfaLocation, setDfaLocation] = useState('')
+    const [dfaLocations, setDfaLocations] = useState([]);
+    const [loadingLocations, setLoadingLocations] = useState(false);
+
     const [preferredDate, setPreferredDate] = useState(null)
     const [pendingPreferredDate, setPendingPreferredDate] = useState(null)
     const [preferredTime, setPreferredTime] = useState(null)
@@ -150,6 +106,25 @@ export default function PassportGuidanceReNew() {
     const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
+
+
+    useEffect(() => {
+        fetchDfaLocations();
+    }, []);
+
+    const fetchDfaLocations = async () => {
+        try {
+            setLoadingLocations(true);
+
+            const { data } = await api.get("/dfalocation/get-dfalocation");
+
+            setDfaLocations(data);
+        } catch (error) {
+            Alert.alert("Error", "Unable to load DFA locations.");
+        } finally {
+            setLoadingLocations(false);
+        }
+    };
 
 
     const minimumAppointmentDate = dayjs()
@@ -564,10 +539,35 @@ export default function PassportGuidanceReNew() {
                             <Text style={[PassportGuidanceStyle.sectionTitle, { marginBottom: 0, textAlign: 'center' }]}>Select DFA Site</Text>
                         </View>
                         <ScrollView style={{ width: '100%' }}>
-                            {dfaLocations.map((loc, i) => (
-                                <TouchableOpacity key={i} style={{ paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderColor: '#f3f4f6' }}
-                                    onPress={() => { setDfaLocation(loc); setShowDfaModal(false); }}>
-                                    <Text style={{ fontSize: 15, fontFamily: dfaLocation === loc ? "Montserrat_600SemiBold" : "Montserrat_400Regular", color: dfaLocation === loc ? '#305797' : '#374151' }}>{loc}</Text>
+                            {dfaLocations.map((loc) => (
+                                <TouchableOpacity
+                                    key={loc._id}
+                                    style={{
+                                        paddingVertical: 16,
+                                        paddingHorizontal: 20,
+                                        borderBottomWidth: 1,
+                                        borderColor: "#f3f4f6",
+                                    }}
+                                    onPress={() => {
+                                        setDfaLocation(loc.location);
+                                        setShowDfaModal(false);
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontSize: 15,
+                                            fontFamily:
+                                                dfaLocation === loc.location
+                                                    ? "Montserrat_600SemiBold"
+                                                    : "Montserrat_400Regular",
+                                            color:
+                                                dfaLocation === loc.location
+                                                    ? "#305797"
+                                                    : "#374151",
+                                        }}
+                                    >
+                                        {loc.location}
+                                    </Text>
                                 </TouchableOpacity>
                             ))}
                             <Text style={{ textAlign: 'center', padding: 20, color: '#9ca3af', fontStyle: 'italic', fontSize: 12 }}>More locations available on the official DFA website</Text>
