@@ -1,16 +1,11 @@
 import express from "express";
-import {
-    getLocations,
-    createLocation,
-    updateLocation,
-    deleteLocation
-} from "../controllers/dfaLocationController.js";
+import * as dfalocationController from "../controllers/dfalocationController.js";
 
 const router = express.Router();
 
-router.get("/get-dfalocation", getLocations);
-router.post("/create-dfalocation", createLocation);
-router.put("/:id/update-dfalocation", updateLocation);
-router.delete("/:id/delete-dfalocation", deleteLocation);
+router.get("/get-dfalocation", dfalocationController.getLocations);
+router.post("/create-dfalocation", dfalocationController.createLocation);
+router.put("/:id/update-dfalocation", dfalocationController.updateLocation);
+router.delete("/:id/delete-dfalocation", dfalocationController.deleteLocation);
 
 export default router;
