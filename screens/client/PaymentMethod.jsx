@@ -74,7 +74,7 @@ export default function PaymentMethod({ route, navigation }) {
 
     const fetchPaymentMethods = async () => {
         try {
-            const res = await api.get("/paymentmethods/get-methods");
+            const res = await api.get("/payment-methods/get-methods");
             setPaymentMethods(res.data);
         } catch (err) {
             console.log(err);
@@ -84,8 +84,6 @@ export default function PaymentMethod({ route, navigation }) {
 
     const methodsWithImage = paymentMethods.filter(method => method.image);
     const methodsWithoutImage = paymentMethods.filter(method => !method.image);
-
-
 
 
 

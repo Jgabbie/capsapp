@@ -106,15 +106,11 @@ export default function PassportGuidanceNew() {
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
 
-    useEffect(() => {
-        fetchDfaLocations();
-    }, []);
-
     const fetchDfaLocations = async () => {
         try {
             setLoadingLocations(true);
 
-            const { data } = await api.get("/dfalocation/get-dfalocation");
+            const { data } = await api.get("/dfa-locations/get-dfalocation");
 
             setDfaLocations(data);
         } catch (error) {
@@ -123,6 +119,10 @@ export default function PassportGuidanceNew() {
             setLoadingLocations(false);
         }
     };
+
+    useEffect(() => {
+        fetchDfaLocations();
+    }, []);
 
 
 

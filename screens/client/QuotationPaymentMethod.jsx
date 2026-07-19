@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Modal, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -41,6 +41,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
     const { quotation, setupData, amountToPay, paymentType, frequency, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
 
     const [method, setMethod] = useState('paymongo');
+    const [paymentMethods, setPaymentMethods] = useState([]);
     const [proofImage, setProofImage] = useState(null);
 
 
@@ -50,6 +51,24 @@ export default function QuotationPaymentMethod({ route, navigation }) {
         message: '',
         type: 'success',
     });
+
+
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, []);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const res = await api.get("/payment-methods/get-methods");
+            setPaymentMethods(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+
+    const methodsWithImage = paymentMethods.filter(method => method.image);
+    const methodsWithoutImage = paymentMethods.filter(method => !method.image);
 
 
     //show custom alert modal
@@ -536,29 +555,70 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     <View style={QuotationPaymentStyle.manualBankSection}>
                         <Text style={[QuotationPaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={QuotationPaymentStyle.bankGrid}>
-                            <View style={QuotationPaymentStyle.bankGridCard}>
-                                <Text style={QuotationPaymentStyle.bankName}>GCASH</Text>
-                                <Text style={QuotationPaymentStyle.bankAccount}>09688880405</Text>
-                                <Text style={QuotationPaymentStyle.bankHolder}>RHN C.</Text>
-                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeRhon)}>
-                                    <Image source={QRCodeRhon} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                </TouchableOpacity>
-                            </View>
+                            {methodsWithImage.map((item) => (
+                                <View
+                                    key={item._id}
+                                    style={QuotationPaymentStyle.bankGridCard}
+                                >
+                                    <Text style={QuotationPaymentStyle.bankName}>
+                                        {item.paymentType}
+                                    </Text>
 
-                            <View style={QuotationPaymentStyle.bankGridCard}>
-                                <Text style={QuotationPaymentStyle.bankName}>GCASH</Text>
-                                <Text style={QuotationPaymentStyle.bankAccount}>09690554806</Text>
-                                <Text style={QuotationPaymentStyle.bankHolder}>MA***R C.</Text>
-                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeMaricar)}>
-                                    <Image source={QRCodeMaricar} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                </TouchableOpacity>
-                            </View>
+                                    <Text style={QuotationPaymentStyle.bankAccount}>
+                                        {item.number}
+                                    </Text>
 
-                            <View style={QuotationPaymentStyle.bankGridCardFull}>
-                                <Text style={QuotationPaymentStyle.bankName}>BDO</Text>
-                                <Text style={QuotationPaymentStyle.bankAccount}>006838032692</Text>
-                                <Text style={QuotationPaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
-                            </View>
+                                    <Text style={QuotationPaymentStyle.bankHolder}>
+                                        {item.accountName}
+                                    </Text>
+
+                                    {item.additionalInfo ? (
+                                        <Text style={QuotationPaymentStyle.bankHolder}>
+                                            {item.additionalInfo}
+                                        </Text>
+                                    ) : null}
+
+                                    <TouchableOpacity
+                                        onPress={() => setEnlargedQR(item.image)}
+                                    >
+                                        <Image
+                                            source={{ uri: item.image }}
+                                            style={{
+                                                width: 100,
+                                                height: 100,
+                                                alignSelf: "center",
+                                                marginTop: 8,
+                                            }}
+                                            resizeMode="contain"
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+
+                            {methodsWithoutImage.map((item) => (
+                                <View
+                                    key={item._id}
+                                    style={QuotationPaymentStyle.bankGridCardFull}
+                                >
+                                    <Text style={QuotationPaymentStyle.bankName}>
+                                        {item.paymentType}
+                                    </Text>
+
+                                    <Text style={QuotationPaymentStyle.bankAccount}>
+                                        {item.number}
+                                    </Text>
+
+                                    <Text style={QuotationPaymentStyle.bankHolder}>
+                                        {item.accountName}
+                                    </Text>
+
+                                    {item.additionalInfo ? (
+                                        <Text style={QuotationPaymentStyle.bankHolder}>
+                                            {item.additionalInfo}
+                                        </Text>
+                                    ) : null}
+                                </View>
+                            ))}
                         </View>
 
                         <View style={QuotationPaymentStyle.uploadSection}>

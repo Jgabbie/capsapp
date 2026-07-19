@@ -150,7 +150,26 @@ export default function PassportApplication() {
     const [uploadingAll, setUploadingAll] = useState(false);
 
     const [method, setMethod] = useState(null); // default selected payment method  
+    const [paymentMethods, setPaymentMethods] = useState([]);
     const paymentMethod = method;
+
+
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, []);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const res = await api.get("/payment-methods/get-methods");
+            setPaymentMethods(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+
+    const methodsWithImage = paymentMethods.filter(method => method.image);
+    const methodsWithoutImage = paymentMethods.filter(method => !method.image);
 
 
     //disable back button
@@ -1883,55 +1902,101 @@ export default function PassportApplication() {
                         </View>
 
                         {paymentMethod === 'manual' && (
-                            <View style={{ marginBottom: 14 }}>
-                                <View style={PaymentStyle.manualBankSection}>
-                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
-                                    <View style={PaymentStyle.bankGrid}>
-                                        {[
-                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
-                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
-                                        ].map((bank, index) => (
-                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
-                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
-                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
-                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
-                                                {bank.qr ? (
-                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
-                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                            <View style={PaymentStyle.manualBankSection}>
+                                <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                <View style={PaymentStyle.bankGrid}>
+                                    {methodsWithImage.map((item) => (
+                                        <View
+                                            key={item._id}
+                                            style={PaymentStyle.bankGridCard}
+                                        >
+                                            <Text style={PaymentStyle.bankName}>
+                                                {item.paymentType}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankAccount}>
+                                                {item.number}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankHolder}>
+                                                {item.accountName}
+                                            </Text>
+
+                                            {item.additionalInfo ? (
+                                                <Text style={PaymentStyle.bankHolder}>
+                                                    {item.additionalInfo}
+                                                </Text>
+                                            ) : null}
+
+                                            <TouchableOpacity
+                                                onPress={() => setEnlargedQR(item.image)}
+                                            >
+                                                <Image
+                                                    source={{ uri: item.image }}
+                                                    style={{
+                                                        width: 100,
+                                                        height: 100,
+                                                        alignSelf: "center",
+                                                        marginTop: 8,
+                                                    }}
+                                                    resizeMode="contain"
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    ))}
+
+                                    {methodsWithoutImage.map((item) => (
+                                        <View
+                                            key={item._id}
+                                            style={PaymentStyle.bankGridCardFull}
+                                        >
+                                            <Text style={PaymentStyle.bankName}>
+                                                {item.paymentType}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankAccount}>
+                                                {item.number}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankHolder}>
+                                                {item.accountName}
+                                            </Text>
+
+                                            {item.additionalInfo ? (
+                                                <Text style={PaymentStyle.bankHolder}>
+                                                    {item.additionalInfo}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+                                    ))}
+                                </View>
+
+                                <View style={PaymentStyle.uploadSection}>
+                                    <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                    <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                    <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                    <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                        Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                    </Text>
+
+                                    <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                        <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                        <Text style={PaymentStyle.selectImageBtnText}>Select Receipt Image</Text>
+                                    </TouchableOpacity>
+
+                                    {proofImage && (
+                                        <View style={PaymentStyle.imagePreviewContainer}>
+                                            <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                            <View style={PaymentStyle.previewImageBox}>
+                                                <View style={PaymentStyle.imageWrapper}>
+                                                    <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                    <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                                     </TouchableOpacity>
-                                                ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Montserrat_400Regular' }}></Text>
-                                                )}
-                                            </View>
-                                        ))}
-                                    </View>
-
-                                    <View style={PaymentStyle.uploadSection}>
-                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
-                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
-                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
-                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>Our team will manually verify your payment within 1-2 business days.</Text>
-
-                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
-                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
-                                        </TouchableOpacity>
-
-                                        {proofImage && (
-                                            <View style={PaymentStyle.imagePreviewContainer}>
-                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
-                                                <View style={PaymentStyle.previewImageBox}>
-                                                    <View style={PaymentStyle.imageWrapper}>
-                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
-                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
-                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                                                        </TouchableOpacity>
-                                                    </View>
                                                 </View>
                                             </View>
-                                        )}
-                                    </View>
+                                        </View>
+                                    )}
                                 </View>
                             </View>
                         )}
@@ -2016,55 +2081,101 @@ export default function PassportApplication() {
                         </View>
 
                         {paymentMethod === 'manual' && (
-                            <View style={{ marginBottom: 14 }}>
-                                <View style={PaymentStyle.manualBankSection}>
-                                    <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
-                                    <View style={PaymentStyle.bankGrid}>
-                                        {[
-                                            { name: 'GCASH', acc: '09690554806', holder: 'MA***R C.', qr: QRCodeMaricar },
-                                            { name: 'GCASH', acc: '09688880405', holder: 'RHN C.', qr: QRCodeRhon },
-                                            { name: 'BDO', acc: '006838032692', holder: 'M&RC TRAVEL AND TOURS' },
-                                        ].map((bank, index) => (
-                                            <View key={index} style={[PaymentStyle.bankGridCard, index === 2 && { width: '100%' }]}>
-                                                <Text style={PaymentStyle.bankName}>{bank.name}</Text>
-                                                <Text style={PaymentStyle.bankAccount}>{bank.acc}</Text>
-                                                <Text style={PaymentStyle.bankHolder}>{bank.holder}</Text>
-                                                {bank.qr ? (
-                                                    <TouchableOpacity onPress={() => setEnlargedQR(bank.qr)}>
-                                                        <Image source={bank.qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
+                            <View style={PaymentStyle.manualBankSection}>
+                                <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                <View style={PaymentStyle.bankGrid}>
+                                    {methodsWithImage.map((item) => (
+                                        <View
+                                            key={item._id}
+                                            style={PaymentStyle.bankGridCard}
+                                        >
+                                            <Text style={PaymentStyle.bankName}>
+                                                {item.paymentType}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankAccount}>
+                                                {item.number}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankHolder}>
+                                                {item.accountName}
+                                            </Text>
+
+                                            {item.additionalInfo ? (
+                                                <Text style={PaymentStyle.bankHolder}>
+                                                    {item.additionalInfo}
+                                                </Text>
+                                            ) : null}
+
+                                            <TouchableOpacity
+                                                onPress={() => setEnlargedQR(item.image)}
+                                            >
+                                                <Image
+                                                    source={{ uri: item.image }}
+                                                    style={{
+                                                        width: 100,
+                                                        height: 100,
+                                                        alignSelf: "center",
+                                                        marginTop: 8,
+                                                    }}
+                                                    resizeMode="contain"
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    ))}
+
+                                    {methodsWithoutImage.map((item) => (
+                                        <View
+                                            key={item._id}
+                                            style={PaymentStyle.bankGridCardFull}
+                                        >
+                                            <Text style={PaymentStyle.bankName}>
+                                                {item.paymentType}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankAccount}>
+                                                {item.number}
+                                            </Text>
+
+                                            <Text style={PaymentStyle.bankHolder}>
+                                                {item.accountName}
+                                            </Text>
+
+                                            {item.additionalInfo ? (
+                                                <Text style={PaymentStyle.bankHolder}>
+                                                    {item.additionalInfo}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+                                    ))}
+                                </View>
+
+                                <View style={PaymentStyle.uploadSection}>
+                                    <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
+                                    <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                    <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                    <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                        Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                    </Text>
+
+                                    <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
+                                        <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+                                        <Text style={PaymentStyle.selectImageBtnText}>Select Receipt Image</Text>
+                                    </TouchableOpacity>
+
+                                    {proofImage && (
+                                        <View style={PaymentStyle.imagePreviewContainer}>
+                                            <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
+                                            <View style={PaymentStyle.previewImageBox}>
+                                                <View style={PaymentStyle.imageWrapper}>
+                                                    <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
+                                                    <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
+                                                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                                     </TouchableOpacity>
-                                                ) : (
-                                                    <Text style={{ marginTop: 8, textAlign: 'center', color: '#6b7280', fontFamily: 'Montserrat_400Regular' }}></Text>
-                                                )}
-                                            </View>
-                                        ))}
-                                    </View>
-
-                                    <View style={PaymentStyle.uploadSection}>
-                                        <Text style={PaymentStyle.uploadTitle}>Upload Proof of Payment</Text>
-                                        <Text style={PaymentStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
-                                        <Text style={PaymentStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
-                                        <Text style={[PaymentStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>Our team will manually verify your payment within 1-2 business days.</Text>
-
-                                        <TouchableOpacity style={PaymentStyle.selectImageBtn} onPress={pickProofImage}>
-                                            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-                                            <Text style={PaymentStyle.selectImageBtnText}>{proofImage ? 'Change Proof Image' : 'Select Receipt Image'}</Text>
-                                        </TouchableOpacity>
-
-                                        {proofImage && (
-                                            <View style={PaymentStyle.imagePreviewContainer}>
-                                                <Text style={PaymentStyle.previewImageLabel}>Preview</Text>
-                                                <View style={PaymentStyle.previewImageBox}>
-                                                    <View style={PaymentStyle.imageWrapper}>
-                                                        <Image source={{ uri: proofImage.uri }} style={PaymentStyle.previewSelectedImage} resizeMode="contain" />
-                                                        <TouchableOpacity style={PaymentStyle.removeImageBtn} onPress={() => setProofImage(null)}>
-                                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                                                        </TouchableOpacity>
-                                                    </View>
                                                 </View>
                                             </View>
-                                        )}
-                                    </View>
+                                        </View>
+                                    )}
                                 </View>
                             </View>
                         )}

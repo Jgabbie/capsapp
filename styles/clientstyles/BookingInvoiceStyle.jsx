@@ -327,8 +327,22 @@ export default StyleSheet.create({
     },
 
     // --- MANUAL BANK & UPLOAD SECTION (NEW) ---
+
+    sectionTitle: {
+        fontFamily: "Montserrat_700Bold",
+        fontSize: 18,
+        color: "#1f2a44",
+        marginBottom: 4,
+    },
     manualBankSection: {
         marginTop: 5,
+    },
+
+    bankGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 20,
     },
     bankGridCard: {
         width: '48%',
@@ -338,6 +352,17 @@ export default StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e2e8f0',
         marginBottom: 10,
+    },
+    bankGridCardFull: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        elevation: 2,
+        alignItems: 'center',
     },
     bankName: {
         fontFamily: 'Montserrat_700Bold',

@@ -57,6 +57,7 @@ export default function BookingInvoice({ route, navigation }) {
     const [invoiceNumber, setInvoiceNumber] = useState("");
 
     const [method, setMethod] = useState('paymongo');
+    const [paymentMethods, setPaymentMethods] = useState([]);
     const [proofImage, setProofImage] = useState(null);
     const [isProceedModalOpen, setIsProceedModalOpen] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
@@ -71,6 +72,26 @@ export default function BookingInvoice({ route, navigation }) {
     const [visaUploadLists, setVisaUploadLists] = useState({});
     const [submittingTravelerIndex, setSubmittingTravelerIndex] = useState(null);
     const [documentPreview, setDocumentPreview] = useState(null);
+
+
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, []);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const res = await api.get("/payment-methods/get-methods");
+            setPaymentMethods(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+
+    const methodsWithImage = paymentMethods.filter(method => method.image);
+    const methodsWithoutImage = paymentMethods.filter(method => !method.image);
+
+
 
 
     //disable back button
@@ -1999,71 +2020,102 @@ export default function BookingInvoice({ route, navigation }) {
                                 </TouchableOpacity>
                             </View>
 
-                            {method === 'manual' && !hasPendingTransaction && (
+                            {method === 'manual' && (
                                 <View style={BookingInvoiceStyle.manualBankSection}>
-                                    <Text style={[BookingInvoiceStyle.cardTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
-                                    <View>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                                            <View style={[BookingInvoiceStyle.bankGridCard, { flex: 1, marginBottom: 0 }]}>
-                                                <Text style={BookingInvoiceStyle.bankName}>GCASH</Text>
-                                                <Text style={BookingInvoiceStyle.bankAccount}>09688880405</Text>
-                                                <Text style={BookingInvoiceStyle.bankHolder}>RHN C.</Text>
-                                                {(() => {
-                                                    const qr = QRCodeRhon;
-                                                    return (
-                                                        <TouchableOpacity onPress={() => setEnlargedQR(qr)}>
-                                                            <Image source={qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                                        </TouchableOpacity>
-                                                    );
-                                                })()}
-                                            </View>
+                                    <Text style={[BookingInvoiceStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
+                                    <View style={BookingInvoiceStyle.bankGrid}>
+                                        {methodsWithImage.map((item) => (
+                                            <View
+                                                key={item._id}
+                                                style={BookingInvoiceStyle.bankGridCard}
+                                            >
+                                                <Text style={BookingInvoiceStyle.bankName}>
+                                                    {item.paymentType}
+                                                </Text>
 
-                                            <View style={[BookingInvoiceStyle.bankGridCard, { flex: 1, marginBottom: 0 }]}>
-                                                <Text style={BookingInvoiceStyle.bankName}>GCASH</Text>
-                                                <Text style={BookingInvoiceStyle.bankAccount}>09690554806</Text>
-                                                <Text style={BookingInvoiceStyle.bankHolder}>MA***R C.</Text>
-                                                {(() => {
-                                                    const qr = QRCodeMaricar;
-                                                    return (
-                                                        <TouchableOpacity onPress={() => setEnlargedQR(qr)}>
-                                                            <Image source={qr} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                                        </TouchableOpacity>
-                                                    );
-                                                })()}
-                                            </View>
-                                        </View>
+                                                <Text style={BookingInvoiceStyle.bankAccount}>
+                                                    {item.number}
+                                                </Text>
 
-                                        <View style={[BookingInvoiceStyle.bankGridCard, { width: '100%', alignItems: 'center' }]}>
-                                            <Text style={[BookingInvoiceStyle.bankName, { textAlign: 'center' }]}>BDO</Text>
-                                            <Text style={[BookingInvoiceStyle.bankAccount, { textAlign: 'center' }]}>006838032692</Text>
-                                            <Text style={[BookingInvoiceStyle.bankHolder, { textAlign: 'center' }]}>M&RC TRAVEL AND TOURS</Text>
-                                        </View>
+                                                <Text style={BookingInvoiceStyle.bankHolder}>
+                                                    {item.accountName}
+                                                </Text>
+
+                                                {item.additionalInfo ? (
+                                                    <Text style={BookingInvoiceStyle.bankHolder}>
+                                                        {item.additionalInfo}
+                                                    </Text>
+                                                ) : null}
+
+                                                <TouchableOpacity
+                                                    onPress={() => setEnlargedQR(item.image)}
+                                                >
+                                                    <Image
+                                                        source={{ uri: item.image }}
+                                                        style={{
+                                                            width: 100,
+                                                            height: 100,
+                                                            alignSelf: "center",
+                                                            marginTop: 8,
+                                                        }}
+                                                        resizeMode="contain"
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+
+                                        {methodsWithoutImage.map((item) => (
+                                            <View
+                                                key={item._id}
+                                                style={BookingInvoiceStyle.bankGridCardFull}
+                                            >
+                                                <Text style={BookingInvoiceStyle.bankName}>
+                                                    {item.paymentType}
+                                                </Text>
+
+                                                <Text style={BookingInvoiceStyle.bankAccount}>
+                                                    {item.number}
+                                                </Text>
+
+                                                <Text style={BookingInvoiceStyle.bankHolder}>
+                                                    {item.accountName}
+                                                </Text>
+
+                                                {item.additionalInfo ? (
+                                                    <Text style={BookingInvoiceStyle.bankHolder}>
+                                                        {item.additionalInfo}
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        ))}
                                     </View>
 
                                     <View style={BookingInvoiceStyle.uploadSection}>
                                         <Text style={BookingInvoiceStyle.uploadTitle}>Upload Proof of Payment</Text>
-                                        <Text style={BookingInvoiceStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip.</Text>
+                                        <Text style={BookingInvoiceStyle.uploadSubtitle}>Please upload a clear screenshot or photo of your deposit slip or transfer confirmation.</Text>
+                                        <Text style={BookingInvoiceStyle.uploadSubtitle}>Accepted formats: JPG or PNG. Max size: 2MB.</Text>
+                                        <Text style={[BookingInvoiceStyle.uploadSubtitle, { color: '#ef4444', fontStyle: 'italic', marginTop: 4 }]}>
+                                            Note: Our team will manually verify your payment, which may take 1-2 business days. You will receive a confirmation email once your payment is verified.
+                                        </Text>
 
                                         <TouchableOpacity style={BookingInvoiceStyle.selectImageBtn} onPress={pickImage}>
                                             <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
                                             <Text style={BookingInvoiceStyle.selectImageBtnText}>Select Receipt Image</Text>
                                         </TouchableOpacity>
 
-                                        <View style={BookingInvoiceStyle.imagePreviewContainer}>
-                                            <Text style={BookingInvoiceStyle.previewImageLabel}>Preview</Text>
-                                            <View style={BookingInvoiceStyle.previewImageBox}>
-                                                {proofImage ? (
+                                        {proofImage && (
+                                            <View style={BookingInvoiceStyle.imagePreviewContainer}>
+                                                <Text style={BookingInvoiceStyle.previewImageLabel}>Preview</Text>
+                                                <View style={BookingInvoiceStyle.previewImageBox}>
                                                     <View style={BookingInvoiceStyle.imageWrapper}>
                                                         <Image source={{ uri: proofImage.uri }} style={BookingInvoiceStyle.previewSelectedImage} resizeMode="contain" />
                                                         <TouchableOpacity style={BookingInvoiceStyle.removeImageBtn} onPress={() => setProofImage(null)}>
                                                             <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                                         </TouchableOpacity>
                                                     </View>
-                                                ) : (
-                                                    <Text style={BookingInvoiceStyle.noImageText}>No image selected</Text>
-                                                )}
+                                                </View>
                                             </View>
-                                        </View>
+                                        )}
                                     </View>
                                 </View>
                             )}
