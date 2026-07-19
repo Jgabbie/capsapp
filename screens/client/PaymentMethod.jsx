@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert, ActivityIndicator, Modal, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -55,6 +55,7 @@ export default function PaymentMethod({ route, navigation }) {
     } = params;
 
     const [method, setMethod] = useState('paymongo');
+    const [paymentMethods, setPaymentMethods] = useState([]);
     const [proofImage, setProofImage] = useState(null);
 
 
@@ -64,6 +65,28 @@ export default function PaymentMethod({ route, navigation }) {
         message: '',
         type: 'success',
     });
+
+
+
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, []);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const res = await api.get("/paymentmethods/get-methods");
+            setPaymentMethods(res.data);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+
+    const methodsWithImage = paymentMethods.filter(method => method.image);
+    const methodsWithoutImage = paymentMethods.filter(method => !method.image);
+
+
+
 
 
     //show custom alert modal
@@ -577,29 +600,70 @@ export default function PaymentMethod({ route, navigation }) {
                     <View style={PaymentStyle.manualBankSection}>
                         <Text style={[PaymentStyle.sectionTitle, { fontSize: 16, marginBottom: 12 }]}>Available Bank Accounts</Text>
                         <View style={PaymentStyle.bankGrid}>
-                            <View style={PaymentStyle.bankGridCard}>
-                                <Text style={PaymentStyle.bankName}>GCASH</Text>
-                                <Text style={PaymentStyle.bankAccount}>09688880405</Text>
-                                <Text style={PaymentStyle.bankHolder}>RHN C.</Text>
-                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeRhon)}>
-                                    <Image source={QRCodeRhon} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                </TouchableOpacity>
-                            </View>
+                            {methodsWithImage.map((item) => (
+                                <View
+                                    key={item._id}
+                                    style={PaymentStyle.bankGridCard}
+                                >
+                                    <Text style={PaymentStyle.bankName}>
+                                        {item.paymentType}
+                                    </Text>
 
-                            <View style={PaymentStyle.bankGridCard}>
-                                <Text style={PaymentStyle.bankName}>GCASH</Text>
-                                <Text style={PaymentStyle.bankAccount}>09690554806</Text>
-                                <Text style={PaymentStyle.bankHolder}>MA***R C.</Text>
-                                <TouchableOpacity onPress={() => setEnlargedQR(QRCodeMaricar)}>
-                                    <Image source={QRCodeMaricar} style={{ width: 100, height: 100, marginTop: 8, alignSelf: 'center' }} resizeMode="contain" />
-                                </TouchableOpacity>
-                            </View>
+                                    <Text style={PaymentStyle.bankAccount}>
+                                        {item.number}
+                                    </Text>
 
-                            <View style={PaymentStyle.bankGridCardFull}>
-                                <Text style={PaymentStyle.bankName}>BDO</Text>
-                                <Text style={PaymentStyle.bankAccount}>006838032692</Text>
-                                <Text style={PaymentStyle.bankHolder}>M&RC TRAVEL AND TOURS</Text>
-                            </View>
+                                    <Text style={PaymentStyle.bankHolder}>
+                                        {item.accountName}
+                                    </Text>
+
+                                    {item.additionalInfo ? (
+                                        <Text style={PaymentStyle.bankHolder}>
+                                            {item.additionalInfo}
+                                        </Text>
+                                    ) : null}
+
+                                    <TouchableOpacity
+                                        onPress={() => setEnlargedQR(item.image)}
+                                    >
+                                        <Image
+                                            source={{ uri: item.image }}
+                                            style={{
+                                                width: 100,
+                                                height: 100,
+                                                alignSelf: "center",
+                                                marginTop: 8,
+                                            }}
+                                            resizeMode="contain"
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+
+                            {methodsWithoutImage.map((item) => (
+                                <View
+                                    key={item._id}
+                                    style={PaymentStyle.bankGridCardFull}
+                                >
+                                    <Text style={PaymentStyle.bankName}>
+                                        {item.paymentType}
+                                    </Text>
+
+                                    <Text style={PaymentStyle.bankAccount}>
+                                        {item.number}
+                                    </Text>
+
+                                    <Text style={PaymentStyle.bankHolder}>
+                                        {item.accountName}
+                                    </Text>
+
+                                    {item.additionalInfo ? (
+                                        <Text style={PaymentStyle.bankHolder}>
+                                            {item.additionalInfo}
+                                        </Text>
+                                    ) : null}
+                                </View>
+                            ))}
                         </View>
 
                         <View style={PaymentStyle.uploadSection}>
@@ -710,7 +774,15 @@ export default function PaymentMethod({ route, navigation }) {
             <Modal visible={!!enlargedQR} transparent animationType="fade" onRequestClose={() => setEnlargedQR(null)}>
                 <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setEnlargedQR(null)}>
                     <View style={{ position: 'relative', width: '85%', aspectRatio: 1 }}>
-                        <Image source={enlargedQR} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                        <Image
+                            source={
+                                typeof enlargedQR === "string"
+                                    ? { uri: enlargedQR }
+                                    : enlargedQR
+                            }
+                            style={{ width: "100%", height: "100%" }}
+                            resizeMode="contain"
+                        />
                         <TouchableOpacity
                             style={{ position: 'absolute', top: -40, right: -10, width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}
                             onPress={() => setEnlargedQR(null)}
@@ -844,6 +916,6 @@ export default function PaymentMethod({ route, navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }

@@ -1,11 +1,6 @@
 import express from "express";
 import multer from "multer";
-import {
-    createMethod,
-    getMethods,
-    updateMethod,
-    deleteMethod,
-} from "../controllers/paymentMethodController.js";
+import * as paymentmethodController from "../controllers/paymentMethodController.js";
 
 const router = express.Router();
 
@@ -13,20 +8,9 @@ const upload = multer({
     dest: "uploads/payment-methods",
 });
 
-router.get("/get-methods", getMethods);
-
-router.post(
-    "/create-methods",
-    upload.single("image"),
-    createMethod
-);
-
-router.put(
-    "/:id/update-methods",
-    upload.single("image"),
-    updateMethod
-);
-
-router.delete("/:id/delete-methods", deleteMethod);
+router.get("/get-methods", paymentmethodController.getMethods);
+router.post("/create-methods", upload.single("image"), paymentmethodController.createMethod);
+router.put("/:id/update-methods", upload.single("image"), paymentmethodController.updateMethod);
+router.delete("/:id/delete-methods", paymentmethodController.deleteMethod);
 
 export default router;
