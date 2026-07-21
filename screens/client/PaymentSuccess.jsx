@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, StyleSheet, BackHandler } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PaymentSuccessStyle from '../../styles/clientstyles/PaymentSuccessStyle';
 
@@ -13,7 +13,7 @@ import {
 } from "@expo-google-fonts/montserrat";
 
 
-export default function PaymentSuccess({ route, navigation }) {
+export default function PaymentSuccess({ navigation }) {
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_500Medium,

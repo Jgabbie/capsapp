@@ -94,11 +94,9 @@ export default function PasswordReset() {
         setLoading(true)
         try {
             const response = await api.post('/users/auth/check-reset-otp', { email, otp })
-            console.log("OTP Response:", response.data);
             if (response.data.success || response.status === 200) {
                 setIsModalOpen(false)
                 cs.navigate("resetpassconfirm", { email: email, token: response.data.resetToken })
-                console.log("Navigate called");
             }
         } catch (err) {
             setErrorOtp(err.response?.data?.message || "Invalid OTP")
@@ -141,7 +139,6 @@ export default function PasswordReset() {
                     placeholder="Enter your email"
                     placeholderTextColor="#6b7280"
                     keyboardType="email-address"
-                    autoCapitalize="none"
                     value={email}
                     onChangeText={(text) => {
                         const cleanedEmail = text

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, StyleSheet, Pressable, BackHandler } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, Pressable, BackHandler } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,8 +15,6 @@ import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 import {
     useFonts,
@@ -26,15 +24,6 @@ import {
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
 
-
-const VISA_TERMINAL_STATUSES = new Set([
-    'documents submitted',
-    'processing by embassy',
-    'embassy approved',
-    'dfa approved',
-    'passport released',
-    'rejected',
-]);
 
 const timeSlots = [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
@@ -1671,7 +1660,11 @@ export default function VisaProgress() {
     const normalizedStatus = Array.isArray(application?.status)
         ? String(application.status[application.status.length - 1] || '').toLowerCase()
         : String(application?.status || application?.statusText || '').toLowerCase();
+
     const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
+    const hasSecondChance = application?.secondChance === true;
+    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance;
+
 
     const shouldShow =
         normalizedStatus === 'payment completed' ||
@@ -1721,7 +1714,7 @@ export default function VisaProgress() {
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
 
-                    {isOnPenalty && (
+                    {showPenaltyPaymentSection && (
                         <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
                             <Text style={{ color: '#b91c1c', fontFamily: 'Montserrat_600SemiBold' }}>You are currently on Penalty, kindly pay the penalty fee to continue with your application.</Text>
                         </View>
@@ -2290,7 +2283,7 @@ export default function VisaProgress() {
 
 
                 {/* PENALTY FEE */}
-                {normalizedAppStatus !== 'application approved' && isOnPenalty && (
+                {showPenaltyPaymentSection && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>

@@ -68,7 +68,7 @@ export default function PaymentMode({ route, navigation }) {
 
     const { user } = useUser();
     const [isSidebarVisible, setSidebarVisible] = useState(false);
-    const { setupData, travelerUploads, passengers, leadGuestInfo, medicalData, emergency } = route.params || {};
+    const { setupData, leadGuestInfo } = route.params || {};
 
     const [paymentType, setPaymentType] = useState('deposit');
     const [frequency, setFrequency] = useState('Every 2 weeks');
@@ -121,49 +121,6 @@ export default function PaymentMode({ route, navigation }) {
         fetchInvoiceNumber();
     }, [user?._id, setupData]);
 
-
-    //build invoice number function
-    const buildInvoiceNumber = (allBookings, currentBooking) => {
-        if (!currentBooking) return "";
-        const createdAtValue = currentBooking.bookingDate || currentBooking.createdAt;
-        const createdAt = createdAtValue ? dayjs(createdAtValue) : null;
-        if (!createdAt || !createdAt.isValid()) return "";
-
-        const getIdentity = (item) =>
-            String(item?._id || item?.id || item?.reference || item?.ref || "");
-
-        const currentIdentity = getIdentity(currentBooking);
-        const monthKey = createdAt.format("MM");
-
-        const monthBookings = (allBookings || [])
-            .map((item) => ({
-                ...item,
-                _createdAt: item.bookingDate || item.createdAt,
-                _identity: getIdentity(item)
-            }))
-            .filter((item) => item._createdAt && dayjs(item._createdAt).isValid())
-            .filter((item) => dayjs(item._createdAt).isSame(createdAt, "month"));
-
-        monthBookings.sort((a, b) => {
-            const timeDiff = dayjs(a._createdAt).valueOf() - dayjs(b._createdAt).valueOf();
-            if (timeDiff !== 0) return timeDiff;
-            return a._identity.localeCompare(b._identity);
-        });
-
-        let index = monthBookings.findIndex((item) => item._identity === currentIdentity);
-
-        if (index < 0) {
-            const currentRef = String(currentBooking.reference || currentBooking.ref || "");
-            if (currentRef) {
-                index = monthBookings.findIndex(
-                    (item) => String(item.reference || item.ref || "") === currentRef
-                );
-            }
-        }
-
-        const sequence = index >= 0 ? index + 1 : monthBookings.length + 1;
-        return `${monthKey}${String(sequence).padStart(2, "0")}`;
-    };
 
 
     //schdule data computation

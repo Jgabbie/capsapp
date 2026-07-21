@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert, ScrollView, Modal, ActivityIndicator, Pressable } from 'react-native'
+import { View, Text, TouchableOpacity, Alert, ScrollView, Modal, Pressable } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { useFonts } from '@expo-google-fonts/montserrat'
@@ -129,11 +129,6 @@ export default function PassportGuidanceNew() {
     const minimumAppointmentDate = dayjs()
         .add(14, 'day')
         .format('YYYY-MM-DD')
-
-
-    const formatDate = (date) => {
-        return date || 'Select date'
-    }
 
 
     const openPreferredDatePicker = () => {

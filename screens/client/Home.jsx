@@ -621,12 +621,6 @@ export default function Home({ route }) {
         fetchPopularPackages();
     }, [])
 
-    const domesticPackages = packages.filter(
-        (pkg) => String(pkg.packageType).toLowerCase() === 'domestic'
-    )
-    const internationalPackages = packages.filter(
-        (pkg) => String(pkg.packageType).toLowerCase() === 'international'
-    )
 
 
     //get featured package function
@@ -689,35 +683,6 @@ export default function Home({ route }) {
             id: featuredPackage._id,
             pkg: featuredPackage
         });
-    };
-
-
-    //toggle wishlist for featured package
-    const toggleFeaturedWishlist = async () => {
-        if (!user?._id || !featuredPackage) return;
-        const pkgId = featuredPackage._id;
-        const isCurrentlyWishlisted = wishlistedIds.has(String(pkgId));
-
-        try {
-            if (isCurrentlyWishlisted) {
-                await api.delete(`/wishlist/${pkgId}`, withUserHeader(user._id));
-                setWishlistedIds(prev => {
-                    const updated = new Set(prev);
-                    updated.delete(String(pkgId));
-                    return updated;
-                });
-            } else {
-                await api.post('/wishlist/add', { packageId: pkgId }, withUserHeader(user._id));
-                setWishlistedIds(prev => new Set(prev).add(String(pkgId)));
-            }
-            // Update featured package state
-            setFeaturedPackage(prev => ({
-                ...prev,
-                isWishlisted: !isCurrentlyWishlisted
-            }));
-        } catch (error) {
-            console.error("Wishlist toggle error:", error.message);
-        }
     };
 
 

@@ -184,11 +184,6 @@ export default function VisaDetailsGuidance() {
     }
 
 
-    const formatDate = (date) => {
-        return date || 'Select date'
-    }
-
-
     const formatPeso = (value) => `${(Number(value) || 0).toLocaleString("en-PH")}`;
 
 

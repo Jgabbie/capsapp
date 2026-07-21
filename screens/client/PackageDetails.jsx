@@ -1301,7 +1301,6 @@ export default function PackageDetails({ route, navigation }) {
                                 return filteredDates.length > 0 ? (
                                     filteredDates.map((range, index) => {
                                         const isSelected = selectedSchedule === range;
-                                        const cardPrice = (fullPkg.price || 0) + (range.extrarate || 0);
 
                                         const today = new Date();
                                         today.setHours(0, 0, 0, 0);

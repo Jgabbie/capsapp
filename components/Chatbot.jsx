@@ -130,7 +130,6 @@ export default function Chatbot() {
                                     placeholder='Type your message...'
                                     placeholderTextColor="#999"
                                     value={message}
-                                    onChangeText={setMessage}
                                     multiline
                                     maxLength={150}
                                     onChangeText={(text) => {

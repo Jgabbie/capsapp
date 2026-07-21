@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Alert } from "react-native";
 import * as Notifications from "expo-notifications";
 
@@ -19,7 +19,6 @@ import { useUser } from "../context/UserContext";
 
 export default function PushNotificationManager() {
     const { user } = useUser();
-    const handledNotificationId = useRef(null);
 
     useEffect(() => {
         if (!user?._id) {

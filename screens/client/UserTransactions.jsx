@@ -5,7 +5,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Calendar } from 'react-native-calendars'
 import dayjs from 'dayjs'
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 
@@ -646,27 +645,6 @@ export default function UserTransactions() {
             setIsDownloadingReceipt(false);
         }
     };
-
-
-    //function to handle downloading the proof of payment image and sharing it, with detailed logging for errors
-    const handleDownloadProof = async () => {
-        if (!selectedTransaction?.proofImage) return;
-        try {
-            const url = selectedTransaction.proofImage;
-            const fileExt = url.split('.').pop().split('?')[0] || 'jpg';
-            const date = dayjs().format('MM-DD-YYYY');
-
-            const fileUri = FileSystem.documentDirectory + `Proof-of-Payment_${selectedTransaction.reference}_${date}.${fileExt}`;
-
-            const { uri } = await FileSystem.downloadAsync(url, fileUri);
-            await Sharing.shareAsync(uri, { dialogTitle: 'Download Proof of Payment' });
-        } catch (error) {
-            console.error("Download Image Error:", error.message);
-            Alert.alert("Error", `Could not download image. Reason: ${error.message || 'Unknown'}`);
-        }
-    };
-
-
 
 
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext';
@@ -82,15 +82,6 @@ export default function QuotationForm2({ route, navigation }) {
             message,
             type,
         });
-    };
-
-
-    //close custom alert modal
-    const closeAlertModal = () => {
-        setAlertModal(prev => ({
-            ...prev,
-            visible: false,
-        }));
     };
 
 

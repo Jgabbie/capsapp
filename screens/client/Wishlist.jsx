@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
+import { View, TouchableOpacity, TextInput, Image, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from "expo-constants";

@@ -382,11 +382,8 @@ const sendPassportPenaltyNotification = async (application, deadlineInfo) => {
     to: user.email,
     subject: `Passport Application On Penalty: ${applicationNumber}`,
     html: `
-            <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
                 <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                    <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
-
-                    <h2 style="color:#305797;">Passport Application On Penalty</h2>
+ 
                     <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
                     <p style="color:#555; font-size:15px; line-height:1.6;">Your passport application <b>${applicationNumber}</b> is on penalty because <b>${deadlineInfo.status}</b> was not completed on time.</p>
                     <p style="color:#555; font-size:15px; line-height:1.6;">Penalty fee: <b>PHP ${PENALTY_AMOUNT.toLocaleString('en-PH')}</b></p>
@@ -397,15 +394,7 @@ const sendPassportPenaltyNotification = async (application, deadlineInfo) => {
                         Login to Your Account
                     </a>
 
-                    <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                    <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                        <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                        <p>M&RC Travel and Tours</p>
-                        <p>info1@mrctravels.com</p>
-                        <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                    </div>
                 </div>
-            </div>
         `,
   });
 
@@ -476,11 +465,8 @@ const rejectPassportApplicationForDeadline = async (application, deadlineInfo, r
         to: user.email,
         subject: `Passport Application Automatically Rejected: ${application.applicationNumber || 'Application'}`,
         html: `
-                    <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
                         <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                            <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
 
-                            <h2 style="color:#305797;">Passport Application Automatically Rejected</h2>
                             <p style="color:#555; font-size:16px;">Hello <b>${user.firstname || user.username || 'Customer'}</b>,</p>
                             <p style="color:#555; font-size:15px; line-height:1.6;">Your passport application <b>${application.applicationNumber || ''}</b> was automatically rejected because ${reachedSecondDeadline ? 'the extra 3-day period after penalty payment expired' : 'the penalty fee was not paid within 1 day'}.</p>
                             <p style="color:#555; font-size:15px; line-height:1.6;">Please contact our office if you need assistance or wish to submit a new application.</p>
@@ -490,15 +476,7 @@ const rejectPassportApplicationForDeadline = async (application, deadlineInfo, r
                                 Login to Your Account
                             </a>
 
-                            <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                            <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                                <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                                <p>M&RC Travel and Tours</p>
-                                <p>info1@mrctravels.com</p>
-                                <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                            </div>
                         </div>
-                    </div>
                 `,
       });
     } catch (emailError) {
@@ -659,11 +637,8 @@ export const sendPassportDeadlineWarning = async (application) => {
     to: user.email,
     subject: `Passport Deadline Reminder: ${statusLabel} due ${deadlineLabel}`,
     html: `
-            <div style="font-family: Arial, sans-serif; background:#305797; padding:30px 16px;">
                 <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
-                    <img src="https://mrctravelandtours.com/images/Logo.png" style="width:100px; margin-bottom:15px;" />
 
-                    <h2 style="color:#305797;">Passport Deadline Reminder</h2>
                     <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
                     <p style="color:#555; font-size:15px; line-height:1.6;">One day remains to complete <b>${statusLabel}</b> for your passport application <b>${applicationNumber}</b>.</p>
                     <p style="color:#555; font-size:15px; line-height:1.6;">Deadline: <b>${deadlineLabel}</b></p>
@@ -674,15 +649,7 @@ export const sendPassportDeadlineWarning = async (application) => {
                         Login to Your Account
                     </a>
 
-                    <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                    <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                        <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                        <p>M&RC Travel and Tours</p>
-                        <p>info1@mrctravels.com</p>
-                        <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                    </div>
                 </div>
-            </div>
         `,
   });
 
