@@ -15,6 +15,8 @@ import User from "../models/users.js";
 import transporter from "../config/nodemailer.js";
 import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
+import { setVisaSecondChance } from "./visaController.js";
+import { setPassportSecondChance } from "./passportController.js";
 
 import {
     createNotificationAndPush,
@@ -988,7 +990,7 @@ const createCheckoutSession = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
                     metadata: {
@@ -1077,7 +1079,7 @@ const createCheckoutSessionDeliveryFee = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
                     metadata: {
@@ -1169,7 +1171,7 @@ const createCheckoutSessionPassportPenalty = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
                     metadata: {
@@ -1261,7 +1263,7 @@ const createCheckoutSessionVisaPenalty = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
                     metadata: {
@@ -1353,7 +1355,7 @@ const createCheckoutSessionPassport = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         //{ name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
                     metadata: {
@@ -1441,7 +1443,7 @@ const createCheckoutSessionVisa = async (req, res) => {
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
                         // 
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
                     metadata: {
@@ -1557,7 +1559,7 @@ const createCheckoutSessionDeposit = async (req, res) => {
                         //     currency: "PHP",
                         // }
                     ],
-                    payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                    payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
                     metadata,
@@ -1675,7 +1677,7 @@ const createCheckoutSessionQuotation = async (req, res) => {
                             //     currency: "PHP",
                             // }
                         ],
-                        payment_method_types: ["card", "gcash", "grab_pay", "paymaya", "qrph"],
+                        payment_method_types: ["qrph"],
                         success_url: successUrl,
                         cancel_url: cancelUrl,
                         metadata,
@@ -1837,11 +1839,9 @@ const handlePayMongoWebhook = async (req, res) => {
             console.log('Created transaction for visa application:', metadata.applicationId);
 
             const updatedVisa = await VisaModel.findOneAndUpdate(
-                { _id: metadata.applicationId }, // filter object
-                {
-                    $set: { status: ["Payment Completed"], currentStepIndex: 1 } // replace array & update progress
-                },
-                { new: true } // return the updated document
+                { _id: metadata.applicationId },
+                { _id: metadata.applicationId, status: ["Payment Completed"], currentStepIndex: 1 },
+                { returnDocument: 'after' } // return the updated document
             );
 
             if (!updatedVisa) {
@@ -1926,8 +1926,8 @@ const handlePayMongoWebhook = async (req, res) => {
 
             const updatedApp = await PassportModel.findOneAndUpdate(
                 { _id: metadata.applicationId },
-                { status: "Payment Completed" },
-                { new: true }
+                { _id: metadata.applicationId, status: "Payment Completed" },
+                { returnDocument: 'after' }
             );
 
             if (!updatedApp) {
@@ -1986,6 +1986,294 @@ const handlePayMongoWebhook = async (req, res) => {
             console.log('Passport payment processed successfully');
             return
         }
+
+
+        //visa penalty fee
+        if (metadata.applicationId && metadata.applicationType === "Visa Penalty Fee") {
+            console.log('Visa penalty fee payment detected');
+            const grossAmount =
+                Number(metadata.totalAmountCents || 0) / 100 ||
+                Number(sessionAttributes?.amount_total || 0) / 100;
+            const net = grossAmount - ((grossAmount * 0.035) + 15);
+            const amount = Math.round(net / 100) * 100;
+
+            const transactionReference = generateTransactionReference();
+
+            const { invoiceNumber: invoiceNumberVisa } = await generateTransactionInvoiceNumber();
+            await TransactionModel.create({
+                userId: user._id,
+                applicationId: metadata.applicationId,
+                applicationType: "Visa Penalty Fee",
+                invoiceNumber: invoiceNumberVisa,
+                reference: transactionReference,
+                amount: Math.round(metadata.baseAmountCents / 100),
+                method: 'Paymongo',
+                status: 'Successful',
+            });
+
+            logAction('PAYMONGO_PAYMENT', user._id, { "Visa Penalty Fee Paid": `Transaction Reference: ${transactionReference} | Amount: ₱${amount.toFixed(2)} | Payment Purpose: Visa Penalty Fee` });
+
+            console.log('Created transaction for visa penalty fee:', metadata.applicationId);
+
+            const visaApplication = await VisaModel.findById(metadata.applicationId);
+
+            if (!visaApplication) {
+                console.warn(`No visa application found with applicationId ${metadata.applicationId}`);
+            } else {
+                visaApplication.status = "Payment Completed";
+                visaApplication.currentStepIndex = 1;
+
+                visaApplication.onPenalty = true;
+                visaApplication.reachedSecondDeadline = false;
+
+                setVisaSecondChance(visaApplication);
+
+                await visaApplication.save();
+
+                console.log("Visa payment status updated:", visaApplication.status);
+            }
+
+            if (!updatedVisa) {
+                console.warn(`No visa application found with applicationId ${metadata.applicationId}`);
+            } else {
+                console.log("Visa payment status updated:", updatedVisa.status);
+            }
+
+            await createNotificationAndPush({
+                userId: user._id,
+                title: 'Visa Payment Successful',
+                message: `Your visa application ${metadata.applicationNumber} was successful.`,
+                type: 'visa',
+                link: '/user-transactions',
+            });
+
+            try {
+                await transporter.sendMail({
+                    from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+                    to: user.email,
+                    subject: `Visa Payment Successful`,
+                    html: `
+                                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+        
+                                    <p style="color:#555; font-size:16px;">
+                                        Hello <b>${user.username}</b>,
+                                    </p>
+        
+                                    <p style="color:#555; font-size:15px; line-height:1.6;">
+                                        Your visa penalty fee payment has been successfully processed!
+                                    </p>
+        
+                                    <p style="color:#555; font-size:15px; line-height:1.6;">
+        
+                                        <b>Transaction Reference:</b> ${transactionReference} <br/>
+                                        <b>Application Number:</b> ${metadata.applicationNumber} <br/>
+                                        <b>Total Paid:</b> ₱${amount.toFixed(2)}
+        
+                                        <p> Enjoy your trip and thank you for choosing M&RC Travel and Tours! </p>
+                                    </p>
+        
+                                    <p style="color:#777; font-size:13px; margin-top:30px;">
+                                        If you did not make this payment, please ignore this email.
+                                    </p>
+        
+                                </div>
+                            `
+                });
+            } catch (emailError) {
+                console.error('Failed to send visa email:', emailError);
+            }
+
+            console.log('Visa payment processed successfully');
+            return
+        }
+
+
+
+        //penalty fee passport
+        if (metadata.applicationId && metadata.applicationType === "Passport Penalty Fee") {
+            console.log('Passport penalty fee payment detected');
+            const grossAmount =
+                Number(metadata.totalAmountCents || 0) / 100 ||
+                Number(sessionAttributes?.amount_total || 0) / 100;
+            const net = grossAmount - ((grossAmount * 0.035) + 15);
+            const amount = Math.round(net / 100) * 100;
+
+            const transactionReference = generateTransactionReference();
+
+            const { invoiceNumber: invoiceNumberPassport } = await generateTransactionInvoiceNumber();
+            const transaction = await TransactionModel.create({
+                userId: user._id,
+                applicationId: metadata.applicationId,
+                applicationType: "Passport Penalty Fee",
+                invoiceNumber: invoiceNumberPassport,
+                reference: transactionReference,
+                amount: Math.round(metadata.baseAmountCents / 100),
+                method: 'Paymongo',
+                status: 'Successful',
+            });
+
+            console.log('Created transaction for passport application:', metadata.applicationId);
+
+            const passportApplication = await PassportModel.findById(metadata.applicationId);
+
+            if (!passportApplication) {
+                console.warn(`No passport application found with applicationId ${metadata.applicationId}`);
+            } else {
+                passportApplication.status = "Payment Completed";
+                passportApplication.currentStepIndex = 1;
+
+                passportApplication.onPenalty = true;
+                passportApplication.reachedSecondDeadline = false;
+
+                setPassportSecondChance(passportApplication);
+
+                await passportApplication.save();
+
+                console.log("Updated status:", passportApplication.status);
+            }
+
+            if (!updatedApp) {
+                console.warn(`No passport application found with applicationId ${metadata.applicationId}`);
+            } else {
+                console.log("Updated status:", updatedApp.status);
+            }
+            console.log("Updated status:", updatedApp.status);
+
+            await createNotificationAndPush({
+                userId: user._id,
+                title: 'Passport Payment Successful',
+                message: `Your passport application ${metadata.applicationNumber} was successful.`,
+                type: 'passport',
+                link: '/user-transactions',
+            });
+
+            try {
+                await transporter.sendMail({
+                    from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+                    to: user.email,
+                    subject: `Passport Penalty Fee Payment Successful`,
+                    html: `
+                                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+        
+                                    <p style="color:#555; font-size:16px;">
+                                        Hello <b>${user.username}</b>,
+                                    </p>
+        
+                                    <p style="color:#555; font-size:15px; line-height:1.6;">
+                                        Your passport penalty fee payment has been successfully processed!
+                                    </p>
+        
+                                    <p style="color:#555; font-size:15px; line-height:1.6;">
+        
+                                        <b>Transaction Reference:</b> ${transactionReference} <br/>
+                                        <b>Application Number:</b> ${metadata.applicationNumber} <br/>
+                                        <b>Total Paid:</b> ₱${amount.toFixed(2)}
+        
+                                        <p> Enjoy your trip and thank you for choosing M&RC Travel and Tours! </p>
+                                    </p>
+        
+                                    <p style="color:#777; font-size:13px; margin-top:30px;">
+                                        If you did not make this payment, please ignore this email.
+                                    </p>
+        
+        
+                                </div>
+                            `
+                });
+            } catch (emailError) {
+                console.error('Failed to send passport email:', emailError);
+            }
+
+            logAction('PAYMONGO_PAYMENT', user._id, { "Passport Application Paid": `Transaction Reference: ${transactionReference} | Amount: ₱${amount.toFixed(2)} | Payment Purpose: Passport Application` });
+
+            console.log('Passport payment processed successfully');
+            return
+        }
+
+
+
+        //delivery fee payment
+        if (metadata.applicationId && metadata.applicationType === "Delivery Fee") {
+            console.log('Delivery fee payment detected');
+            const grossAmount =
+                Number(metadata.totalAmountCents || 0) / 100 ||
+                Number(sessionAttributes?.amount_total || 0) / 100;
+            const net = grossAmount - ((grossAmount * 0.035) + 15);
+            const amount = Math.round(net / 100) * 100;
+
+            const transactionReference = generateTransactionReference();
+
+            const { invoiceNumber: invoiceNumberPassport } = await generateTransactionInvoiceNumber();
+            const transaction = await TransactionModel.create({
+                userId: user._id,
+                applicationId: metadata.applicationId,
+                applicationType: "Delivery Fee",
+                invoiceNumber: invoiceNumberPassport,
+                reference: transactionReference,
+                amount: Math.round(metadata.baseAmountCents / 100),
+                method: 'Paymongo',
+                status: 'Successful',
+            });
+
+            console.log('Created transaction for delivery fee:', metadata.applicationId);
+
+            if (!updatedApp) {
+                console.warn(`No passport application found with applicationId ${metadata.applicationId}`);
+            } else {
+                console.log("Updated status:", updatedApp.status);
+            }
+            console.log("Updated status:", updatedApp.status);
+
+            await createNotificationAndPush({
+                userId: user._id,
+                title: 'Delivery Fee Payment Successful',
+                message: `Your delivery fee payment for application ${metadata.applicationNumber} was successful.`,
+                type: 'delivery-fee',
+                link: '/user-transactions',
+            });
+
+            try {
+                await transporter.sendMail({
+                    from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
+                    to: user.email,
+                    subject: `Delivery Fee Payment Successful`,
+                    html: `
+                        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+
+                            <p style="color:#555; font-size:16px;">
+                                Hello <b>${user.username}</b>,
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+                                Your delivery fee payment has been successfully processed!
+                            </p>
+
+                            <p style="color:#555; font-size:15px; line-height:1.6;">
+
+                                <b>Transaction Reference:</b> ${transactionReference} <br/>
+                                <b>Application Number:</b> ${metadata.applicationNumber} <br/>
+                                <b>Total Paid:</b> ₱${amount.toFixed(2)}
+
+                                <p> Enjoy your trip and thank you for choosing M&RC Travel and Tours! </p>
+                            </p>
+
+                            <p style="color:#777; font-size:13px; margin-top:30px;">
+                                If you did not make this payment, please ignore this email.
+                            </p>
+
+                        </div>
+                    `
+                });
+            } catch (emailError) {
+                console.error('Failed to send passport email:', emailError);
+            }
+
+            logAction('PAYMONGO_PAYMENT', user._id, { "Delivery Fee Paid": `Transaction Reference: ${transactionReference} | Amount: ₱${amount.toFixed(2)} | Payment Purpose: Delivery Fee` });
+
+            console.log('Delivery fee payment processed successfully');
+            return
+        }
+
 
 
         //installment payment handling

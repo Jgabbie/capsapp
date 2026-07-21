@@ -1074,5 +1074,6 @@ export {
   getVisaApplicationById,
   chooseAppointment,
   updateVisaApplicationWithDocs,
-  passportReleaseOption
+  passportReleaseOption,
+  setVisaSecondChance,
 };

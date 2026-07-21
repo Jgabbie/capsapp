@@ -956,4 +956,5 @@ export {
   applyPassport,
   chooseAppointment,
   updatePassportApplicationWithDocs,
+  setPassportSecondChance,
 }
