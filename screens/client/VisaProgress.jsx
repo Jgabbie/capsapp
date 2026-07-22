@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, Pressable, BackHandler } from "react-native";
+import * as ExpoLinking from 'expo-linking';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -1347,7 +1348,7 @@ export default function VisaProgress() {
                     return;
                 }
 
-                const successDeepLink = Linking.createURL('visaprogress', {
+                const successDeepLink = ExpoLinking.createURL('successfulpaymentvisa', {
                     queryParams: {
                         applicationId: application._id,
                         payment: 'success',
@@ -1359,7 +1360,7 @@ export default function VisaProgress() {
                     },
                 });
 
-                const cancelDeepLink = Linking.createURL('visaprogress', {
+                const cancelDeepLink = ExpoLinking.createURL('visaprogress', {
                     queryParams: {
                         applicationId: application._id,
                         payment: 'cancel',

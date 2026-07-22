@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, TextInput, Image, StyleSheet, Pressable, BackHandler } from "react-native";
+import * as ExpoLinking from 'expo-linking';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -1205,14 +1206,14 @@ export default function PassportApplication() {
                     return;
                 }
 
-                const successDeepLink = Linking.createURL('passportprogress', {
+                const successDeepLink = ExpoLinking.createURL('successfulpaymentpassport', {
                     queryParams: {
                         applicationId: application._id,
                         payment: 'success',
                     },
                 });
 
-                const cancelDeepLink = Linking.createURL('passportprogress', {
+                const cancelDeepLink = ExpoLinking.createURL('passportprogress', {
                     queryParams: {
                         applicationId: application._id,
                         payment: 'cancel',

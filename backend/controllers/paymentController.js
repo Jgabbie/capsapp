@@ -1394,6 +1394,7 @@ const createCheckoutSessionPassport = async (req, res) => {
 const createCheckoutSessionVisa = async (req, res) => {
     const { applicationId, applicationNumber, totalPrice } = req.body;
     const userId = req.userId;
+    const payload = req.body;
 
     try {
         if (!applicationId || !applicationNumber || !totalPrice) {
@@ -1423,9 +1424,6 @@ const createCheckoutSessionVisa = async (req, res) => {
 
         const pkgName = "Visa Application";
 
-        const successUrl = 'myapp://payment-success';
-        const cancelUrl = 'myapp://payment-cancel';
-
         const baseAmountCents = Math.round(parsedAmount * 100);
         const convenienceFeeCents = Math.round((baseAmountCents * 0.035) + 1500);
         const finalTotalCents = baseAmountCents + convenienceFeeCents;
@@ -1444,8 +1442,8 @@ const createCheckoutSessionVisa = async (req, res) => {
                         // 
                     ],
                     payment_method_types: ["qrph"],
-                    success_url: successUrl,
-                    cancel_url: cancelUrl,
+                    success_url: payload.successUrl,
+                    cancel_url: payload.cancelUrl,
                     metadata: {
                         userId: req.userId,
                         token,
