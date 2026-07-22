@@ -303,7 +303,7 @@ const getVisaSecondChanceDeadlineDate = (application) => {
 
 
 //sets visa application to second chance function
-export const setVisaSecondChance = (application) => {
+const setVisaSecondChance = (application) => {
   if (!application) return application;
 
   const secondChanceDeadlineDate = getVisaSecondChanceDeadlineDate(application);

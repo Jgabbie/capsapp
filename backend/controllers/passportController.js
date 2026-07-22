@@ -316,7 +316,7 @@ const getPassportSecondChanceDeadlineDate = (application) => {
 
 
 //set second chance for a passport application, if applicable, returns the updated application object.
-export const setPassportSecondChance = (application) => {
+const setPassportSecondChance = (application) => {
   if (!application) return application;
 
   const secondChanceDeadlineDate = getPassportSecondChanceDeadlineDate(application);
