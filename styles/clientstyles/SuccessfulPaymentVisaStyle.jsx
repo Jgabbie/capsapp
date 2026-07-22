@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     },
     buttonTextPrimary: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 12,
         fontFamily: 'Montserrat_600SemiBold',
     },
 });
