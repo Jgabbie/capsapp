@@ -988,7 +988,7 @@ const createCheckoutSession = async (req, res) => {
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
-                        { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
+                        // { name: "Convenience Fee", description: "Payment processing and service fee", quantity: 1, amount: convenienceFeeCents, currency: "PHP" }
                     ],
                     payment_method_types: ["qrph"],
                     success_url: successUrl,
