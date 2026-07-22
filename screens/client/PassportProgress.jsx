@@ -1205,11 +1205,27 @@ export default function PassportApplication() {
                     return;
                 }
 
+                const successDeepLink = Linking.createURL('passportprogress', {
+                    queryParams: {
+                        applicationId: application._id,
+                        payment: 'success',
+                    },
+                });
+
+                const cancelDeepLink = Linking.createURL('passportprogress', {
+                    queryParams: {
+                        applicationId: application._id,
+                        payment: 'cancel',
+                    },
+                });
+
                 const payload = {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
                     totalPrice: isPenalty ? 1500 : 2000,
                     packageName: isPenalty ? 'Passport Penalty Fee' : 'Passport Application',
+                    successUrl: successDeepLink,
+                    cancelUrl: cancelDeepLink
                 };
 
                 // Send request to create checkout session

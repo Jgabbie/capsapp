@@ -1347,6 +1347,30 @@ export default function VisaProgress() {
                     return;
                 }
 
+                const successDeepLink = Linking.createURL('visaprogress', {
+                    queryParams: {
+                        applicationId: application._id,
+                        payment: 'success',
+                        type: isDeliveryPayment
+                            ? 'delivery'
+                            : isPenaltyPayment
+                                ? 'penalty'
+                                : 'service',
+                    },
+                });
+
+                const cancelDeepLink = Linking.createURL('visaprogress', {
+                    queryParams: {
+                        applicationId: application._id,
+                        payment: 'cancel',
+                        type: isDeliveryPayment
+                            ? 'delivery'
+                            : isPenaltyPayment
+                                ? 'penalty'
+                                : 'service',
+                    },
+                });
+
                 const payload = {
                     applicationId: application._id,
                     applicationNumber: application.applicationNumber,
@@ -1355,6 +1379,8 @@ export default function VisaProgress() {
                         : isPenaltyPayment
                             ? 1500
                             : servicePrice,
+                    successUrl: successDeepLink,
+                    cancelUrl: cancelDeepLink
                 };
 
                 const endpoint = isDeliveryPayment
