@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 
 
+import faqsRoutes from "./routes/faqsRoutes.js";
 import paymentMethodRoutes from "./routes/paymentmethodRoutes.js";
 import dfaLocationRoutes from "./routes/dfalocationRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -65,6 +66,7 @@ app.use("/api/preferences", preferenceRoutes);
 app.use("/api/recommendations", recommendationsRoutes);
 app.use("/api/dfa-locations", dfaLocationRoutes);
 app.use("/api/payment-methods", paymentMethodRoutes);
+app.use("/api/faqs", faqsRoutes);
 
 app.get("/", (req, res) => {
     res.send("TRAVEX API Running");

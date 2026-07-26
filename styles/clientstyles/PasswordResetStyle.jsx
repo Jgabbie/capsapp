@@ -56,7 +56,7 @@ const PasswordResetStyle = StyleSheet.create({
         fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         marginLeft: 25,
-        marginBottom: 0,
+        marginBottom: 5,
         marginTop: 3,
     },
     button: {
