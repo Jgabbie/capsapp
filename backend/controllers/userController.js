@@ -240,6 +240,13 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid username or password" });
         }
 
+        if (user.loginBlockedUntil && user.loginBlockedUntil > Date.now()) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many failed login attempts. Try again in 5 minutes."
+            });
+        }
+
         const storedPasswordHash = user.hashedPassword || user.password || user.hashed_password;
         if (!storedPasswordHash) {
             logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
@@ -248,8 +255,23 @@ const loginUser = async (req, res) => {
 
         const isMatch = await bcrypt.compare(normalizedPassword, storedPasswordHash);
         if (!isMatch) {
-            logAction('LOGIN_FAILED', null, { "Failed Login": `Attempted username: ${normalizedUsername}` });
-            return res.status(401).json({ success: false, message: "Invalid username or password" });
+            user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+            if (user.loginAttempts >= 3) {
+                user.loginBlockedUntil = new Date(Date.now() + 5 * 60 * 1000);
+                user.loginAttempts = 0;
+            }
+
+            await user.save();
+
+            await logAction("LOGIN_FAILED", user._id, {
+                Username: normalizedUsername
+            });
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid username or password"
+            });
         }
 
         if (!user.isAccountVerified && !user.isVerified) {
@@ -260,10 +282,13 @@ const loginUser = async (req, res) => {
         const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
         const hashedOtp = await bcrypt.hash(rawOtp, 10);
 
-        user.loginOtp = hashedOtp;
-        user.loginOtpExpireAt = Date.now() + 1 * 60 * 1000;
-        user.loginOtpAttempts = 0;
-        user.loginOtpBlockedUntil = 0;
+        user.loginAttempts = 0;
+        user.loginBlockedUntil = null;
+
+        user.verifyOtp = hashedOtp;
+        user.verifyOtpExpireAt = Date.now() + 1 * 60 * 1000;
+        user.otpAttempts = 0;
+        user.otpBlockedUntil = 0;
         await user.save();
 
         await sendLoginOtpEmail(user, rawOtp);
@@ -299,7 +324,7 @@ const loginUser = async (req, res) => {
 //get all users function
 const getUsers = async (req, res) => {
     try {
-        const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
+        const users = await User.find().select("-password -hashedPassword -verifyOtp -resetOtp -refreshToken -emailVerifyToken -verifyOtp -otpAttempts -otpBlockedUntil");
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -310,7 +335,7 @@ const getUsers = async (req, res) => {
 //get user by ID function
 const getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp -emailVerifyToken -loginOtp -loginOtpAttempts -loginOtpBlockedUntil");
+        const user = await User.findById(req.params.id).select("-password -hashedPassword -verifyOtp -resetOtp -emailVerifyToken -verifyOtp -otpAttempts -otpBlockedUntil");
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -332,9 +357,9 @@ const updateUser = async (req, res) => {
         delete updateData.verifyOtp;
         delete updateData.resetOtp;
         delete updateData.emailVerifyToken;
-        delete updateData.loginOtp;
-        delete updateData.loginOtpAttempts;
-        delete updateData.loginOtpBlockedUntil;
+        delete updateData.verifyOtp;
+        delete updateData.otpAttempts;
+        delete updateData.otpBlockedUntil;
 
         if (req.body.phonenum) updateData.phone = req.body.phonenum;
 
@@ -355,9 +380,18 @@ const sendResetOtp = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
+        if (user.resetOtpBlockedUntil && user.resetOtpBlockedUntil > Date.now()) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many incorrect OTP attempts. Try again in 5 minutes."
+            });
+        }
+
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOtp = otp;
-        user.resetOtpExpireAt = Date.now() + 1 * 60 * 1000;
+        user.resetOtpExpireAt = Date.now() + 1 * 70 * 1000;
+        user.resetOtpAttempts = 0;
+        user.resetOtpBlockedUntil = 0;
         await user.save();
 
         const transporter = nodemailer.createTransport({
@@ -387,8 +421,34 @@ const checkResetOtp = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
-        if (user.resetOtp !== otp) return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+        if (user.resetOtpBlockedUntil && user.resetOtpBlockedUntil > Date.now()) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many incorrect OTP attempts. Try again in 5 minutes."
+            });
+        }
+
+        if (user.resetOtp !== otp) {
+            user.resetOtpAttempts = (user.resetOtpAttempts || 0) + 1;
+
+            if (user.resetOtpAttempts >= 3) {
+                user.resetOtpBlockedUntil = Date.now() + 5 * 60 * 1000;
+                user.resetOtpAttempts = 0;
+            }
+
+            await user.save();
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
+            });
+        }
+
         if (user.resetOtpExpireAt < Date.now()) return res.status(400).json({ success: false, message: "OTP has expired" });
+
+        user.resetOtpAttempts = 0;
+        user.resetOtpBlockedUntil = 0;
 
         const resetToken = crypto.randomBytes(32).toString("hex");
         user.resetOtp = resetToken;
@@ -414,8 +474,11 @@ const resetPassword = async (req, res) => {
 
         user.password = hashedPassword;
         user.hashedPassword = hashedPassword;
+
         user.resetOtp = "";
         user.resetOtpExpireAt = 0;
+        user.resetOtpAttempts = 0;
+        user.resetOtpBlockedUntil = 0;
         await user.save();
 
         res.status(200).json({ success: true, message: "Password updated successfully" });
@@ -512,10 +575,10 @@ const sendLoginOtp = async (req, res) => {
         const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
         const hashedOtp = await bcrypt.hash(rawOtp, 10);
 
-        user.loginOtp = hashedOtp;
-        user.loginOtpExpireAt = Date.now() + 1 * 60 * 1000;
-        user.loginOtpAttempts = 0;
-        user.loginOtpBlockedUntil = 0;
+        user.verifyOtp = hashedOtp;
+        user.verifyOtpExpireAt = Date.now() + 1 * 70 * 1000;
+        user.otpAttempts = 0;
+        user.otpBlockedUntil = 0;
         await user.save();
 
         await sendLoginOtpEmail(user, rawOtp);
@@ -535,31 +598,31 @@ const verifyLoginOtp = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-        if (user.loginOtpBlockedUntil && user.loginOtpBlockedUntil > Date.now()) {
+        if (user.otpBlockedUntil && user.otpBlockedUntil > Date.now()) {
             return res.status(429).json({ success: false, message: "Too many attempts. Try again in 5 minutes." });
         }
 
-        if (!user.loginOtp || !user.loginOtpExpireAt || user.loginOtpExpireAt < Date.now()) {
+        if (!user.verifyOtp || !user.verifyOtpExpireAt || user.verifyOtpExpireAt < Date.now()) {
             return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
         }
 
-        const otpMatches = await bcrypt.compare(String(otp), String(user.loginOtp));
+        const otpMatches = await bcrypt.compare(String(otp), String(user.verifyOtp));
         if (!otpMatches) {
-            user.loginOtpAttempts = (user.loginOtpAttempts || 0) + 1;
+            user.otpAttempts = (user.otpAttempts || 0) + 1;
 
-            if (user.loginOtpAttempts >= 5) {
-                user.loginOtpBlockedUntil = Date.now() + 5 * 60 * 1000;
-                user.loginOtpAttempts = 0;
+            if (user.otpAttempts >= 3) {
+                user.otpBlockedUntil = Date.now() + 5 * 60 * 1000;
+                user.otpAttempts = 0;
             }
 
             await user.save();
             return res.status(400).json({ success: false, message: "Invalid OTP" });
         }
 
-        user.loginOtp = "";
-        user.loginOtpExpireAt = 0;
-        user.loginOtpAttempts = 0;
-        user.loginOtpBlockedUntil = 0;
+        user.verifyOtp = "";
+        user.verifyOtpExpireAt = 0;
+        user.otpAttempts = 0;
+        user.otpBlockedUntil = 0;
         await user.save();
 
         logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });

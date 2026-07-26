@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ImageBackground, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { api } from '../../utils/api'
 
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -15,55 +16,6 @@ import {
     Montserrat_700Bold
 } from '@expo-google-fonts/montserrat';
 
-
-
-const faqData = [
-    {
-        category: 'Bookings',
-        question: 'How do I book a tour package?',
-        answer: 'Go to Destinations, choose a package, then follow the booking steps. You will receive a booking reference after submission.'
-    },
-    {
-        category: 'Bookings',
-        question: 'Can I cancel a booking?',
-        answer: 'Yes. Open My Bookings, choose a booking, and submit a cancellation request with the required proof.'
-    },
-    {
-        category: 'Payments',
-        question: 'What payment methods are supported?',
-        answer: 'Payments are processed through the available options shown during checkout. If you need help, contact support.'
-    },
-    {
-        category: 'Quotations',
-        question: 'How do I request a quotation?',
-        answer: 'Use the quotation request page to submit your travel details. Our team will send a quote once reviewed.'
-    },
-    {
-        category: 'Account',
-        question: 'How do I reset my password?',
-        answer: 'Use the Reset Password page and follow the instructions sent to your email.'
-    },
-    {
-        category: 'Services',
-        question: 'Do you offer visa and passport services?',
-        answer: 'Yes. Visit the Services page for passport and visa assistance options.'
-    },
-    {
-        category: 'Services',
-        question: 'What documents do I need to prepare?',
-        answer: 'Refer to the requirements section above for a general list. Specific services may have additional requirements.'
-    },
-    {
-        category: 'Services',
-        question: 'How long does the process take?',
-        answer: 'Processing times vary by the DFA office and Embassy and the type of service you are applying for. After submission, you will receive updates on your application status.'
-    },
-    {
-        category: 'Services',
-        question: 'Can I reschedule my appointment?',
-        answer: 'Rescheduling policies depend on the DFA office. If you need to change your appointment, please contact the DFA office directly.'
-    }
-];
 
 export default function FAQs() {
     const [fontsLoaded] = useFonts({
@@ -79,13 +31,15 @@ export default function FAQs() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [expandedIndex, setExpandedIndex] = useState(null);
+    const [faqData, setFaqData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
 
     //generate unique categories from the FAQ data and include an "All" option
     const categories = useMemo(() => {
         const unique = new Set(faqData.map((item) => item.category));
         return ['All', ...Array.from(unique)];
-    }, []);
+    }, [faqData]);
 
 
     //filter the FAQ data based on the search term and active category, using useMemo for performance optimization
@@ -96,7 +50,7 @@ export default function FAQs() {
             const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
             return matchesTerm && matchesCategory;
         });
-    }, [activeCategory, searchTerm]);
+    }, [faqData, activeCategory, searchTerm]);
 
 
     //toggle the expanded state of an accordion item based on its index
@@ -104,9 +58,39 @@ export default function FAQs() {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    if (!fontsLoaded) return null;
+    if (!fontsLoaded || loading) {
+        return (
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}
+            >
+                <ActivityIndicator size="large" color="#305797" />
+            </View>
+        );
+    }
 
+    useEffect(() => {
+        fetchFAQs();
+    }, []);
 
+    const fetchFAQs = async () => {
+        try {
+            setLoading(true);
+
+            const response = await api.get(
+                `${process.env.EXPO_PUBLIC_API_URL}/faqs/get-faqs`
+            );
+
+            setFaqData(response.data);
+        } catch (error) {
+            console.error("Failed to fetch FAQs:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
 
