@@ -69,6 +69,7 @@ export default function ResetPassConfirm() {
         if (!val) return "Password is required.";
         if (val.length < 8) return "Must be at least 8 characters.";
         if (!/[A-Z]/.test(val)) return "Must contain 1 uppercase letter.";
+        if (!/[a-z]/.test(val)) return "Must contain 1 lowercase letter.";
         if (!/[0-9]/.test(val)) return "Must contain 1 number.";
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(val)) return "Must contain 1 special character.";
         return "";

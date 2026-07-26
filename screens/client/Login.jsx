@@ -166,7 +166,7 @@ export default function Login() {
     //handle OTP verification function with role checks
     const handleVerifyOTP = async () => {
         if (otp.length !== 6) {
-            setErrorOtp("OTP must be 6 digits.");
+            setErrorOtp("OTP is required");
             return;
         }
 

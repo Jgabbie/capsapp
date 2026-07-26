@@ -87,7 +87,7 @@ export default function PasswordReset() {
     //handle verifying the OTP entered by the user, checking its length and sending it to the server for validation, navigating to the password reset confirmation screen upon success
     const handleVerifyOTP = async () => {
         if (otp.length !== 6) {
-            setErrorOtp("OTP must be 6 digits.");
+            setErrorOtp("OTP is required");
             return;
         }
 

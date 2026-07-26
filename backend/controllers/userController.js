@@ -469,6 +469,18 @@ const resetPassword = async (req, res) => {
         const user = await User.findOne({ resetOtp: token, resetOtpExpireAt: { $gt: Date.now() } });
         if (!user) return res.status(400).json({ success: false, message: "Invalid or expired session. Please request a new OTP." });
 
+        const isSamePassword = await bcrypt.compare(
+            newPassword,
+            user.hashedPassword || user.password
+        );
+
+        if (isSamePassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be different from your current password."
+            });
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
