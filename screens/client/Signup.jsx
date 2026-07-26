@@ -155,7 +155,11 @@ export default function Signup() {
         setUser(prev => ({ ...prev, [field]: finalValue }));
 
         const fieldError = validateField(field, finalValue);
-        setErrors(prev => ({ ...prev, [field]: fieldError }));
+
+        setErrors(prev => ({
+            ...prev,
+            [field]: fieldError
+        }));
 
         // Clear the general backend error if the user starts fixing fields
         setBackendError("");
@@ -208,7 +212,26 @@ export default function Signup() {
                 setBackendError(response.data.message || "Signup failed");
             }
         } catch (err) {
-            setBackendError(err.response?.data?.message || "Network Error");
+            const message = err.response?.data?.message || "Network Error";
+
+            if (message === "Username already exists") {
+                setErrors(prev => ({
+                    ...prev,
+                    username: "Username already exists."
+                }));
+            } else if (message === "Email already exists") {
+                setErrors(prev => ({
+                    ...prev,
+                    email: "Email is already registered."
+                }));
+            } else if (message === "Phone number already registered") {
+                setErrors(prev => ({
+                    ...prev,
+                    phonenum: "Phone number already registered."
+                }));
+            } else {
+                setBackendError(message);
+            }
         } finally {
             setLoading(false);
         }
@@ -370,9 +393,6 @@ export default function Signup() {
                             )}
                         </View>
                         {errors.confirmpassword ? <Text style={SignupStyle.fieldError}>{errors.confirmpassword}</Text> : null}
-
-                        {/* BACKEND ERROR DISPLAY (Username/Email taken) */}
-                        {backendError ? <Text style={SignupStyle.generalError}>{backendError}</Text> : null}
 
                         {/* TERMS AND CONDITIONS */}
                         <View style={SignupStyle.termsContainer}>

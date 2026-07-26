@@ -171,14 +171,16 @@ const createUser = async (req, res) => {
             return res.status(400).json({ message: "Username, email, and password are required" });
         }
 
-        const existingUser = await User.findOne({ $or: [{ username }, { email }, { phonenum }, { phone: phonenum }] });
+        const existingUser = await User.findOne({ $or: [{ username }, { email }, { phone: phonenum }] });
         if (existingUser) {
             if (existingUser.username === username) {
                 return res.status(400).json({ message: "Username already exists" });
             } else if (existingUser.email === email) {
                 return res.status(400).json({ message: "Email already exists" });
-            } else if (existingUser.phonenum === phonenum || existingUser.phone === phonenum) {
-                return res.status(400).json({ message: "Phone number already registered" });
+            } else if (existingUser.phone === phonenum) {
+                return res.status(400).json({
+                    message: "Phone number already registered"
+                });
             }
             return res.status(400).json({ message: "Username or email already exists" });
         }
@@ -194,7 +196,7 @@ const createUser = async (req, res) => {
             firstname,
             lastname,
             email,
-            phone: phone || phonenum || "",
+            phone: phonenum,
             password: hashedPassword,
             hashedPassword,
             role: roleValue,

@@ -104,7 +104,18 @@ export default function ResetPassConfirm() {
                 setIsSuccessModalOpen(true)
             }
         } catch (err) {
-            showMessage(err.response?.data?.message || "Failed to reset password")
+            if (
+                err.response?.data?.message ===
+                "New password must be different from your current password."
+            ) {
+                setErrorPassword(
+                    "New password must be different from your current password."
+                );
+            } else {
+                showMessage(
+                    err.response?.data?.message || "Failed to reset password"
+                );
+            }
         } finally {
             setLoading(false)
         }
