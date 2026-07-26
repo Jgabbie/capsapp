@@ -58,6 +58,27 @@ export default function FAQs() {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
+    const fetchFAQs = async () => {
+        try {
+            setLoading(true);
+
+            const response = await api.get(
+                `/faqs/get-faqs`
+            );
+
+            setFaqData(response.data);
+        } catch (error) {
+            console.error("Failed to fetch FAQs:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchFAQs();
+    }, []);
+
+
     if (!fontsLoaded || loading) {
         return (
             <View
@@ -71,27 +92,6 @@ export default function FAQs() {
             </View>
         );
     }
-
-    useEffect(() => {
-        fetchFAQs();
-    }, []);
-
-    const fetchFAQs = async () => {
-        try {
-            setLoading(true);
-
-            const response = await api.get(
-                `${process.env.EXPO_PUBLIC_API_URL}/faqs/get-faqs`
-            );
-
-            setFaqData(response.data);
-        } catch (error) {
-            console.error("Failed to fetch FAQs:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
 
 
     return (

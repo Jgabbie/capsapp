@@ -91,6 +91,16 @@ export default function Login() {
             return;
         }
 
+        if (normalizedUsername.length < 8) {
+            setError("Username Input must be at least 8 characters");
+            return;
+        }
+
+        if (normalizedPassword.length < 8) {
+            setError("Password Input must be at least 8 characters");
+            return;
+        }
+
         setError("");
         setLoading(true);
 
@@ -304,7 +314,7 @@ export default function Login() {
                         setError("");
                         cs.navigate("signup");
                     }}>
-                        <Text style={LoginStyle.loginLinks}>Signup here</Text>
+                        <Text style={LoginStyle.loginLinks}> Signup here</Text>
                     </TouchableOpacity>
 
                     <Text style={LoginStyle.loginLinksDivider}>|</Text>
@@ -315,7 +325,7 @@ export default function Login() {
                         setError("");
                         cs.navigate("passwordreset");
                     }}>
-                        <Text style={LoginStyle.loginLinks}>Forgot password</Text>
+                        <Text style={LoginStyle.loginLinks}>Forgot your password?</Text>
                     </TouchableOpacity>
                 </View>
 

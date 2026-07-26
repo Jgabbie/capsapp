@@ -112,7 +112,7 @@ const PasswordResetStyle = StyleSheet.create({
     bottomLogo: {
         width: 140,
         height: 80,
-        marginTop: 255,
+        marginTop: 130,
         marginBottom: 20,
         alignSelf: 'center',
     },
