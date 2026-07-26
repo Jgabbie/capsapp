@@ -724,7 +724,7 @@ export default function Packages({ navigation, route }) {
                                     min={1} max={maxDaysAvailable} step={1}
                                     selectedStyle={{ backgroundColor: '#305797' }} markerStyle={{ backgroundColor: '#305797' }}
                                 />
-                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15 }}>Up to {daysValue[0]} days</Text>
+                                <Text style={{ color: '#555', fontSize: 12, alignSelf: 'flex-start', marginLeft: 15, fontFamily: "Montserrat_500Medium" }}>Up to {daysValue[0]} days</Text>
                             </View>
 
                             {tagOptions.length > 0 && (

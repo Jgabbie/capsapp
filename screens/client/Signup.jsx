@@ -118,6 +118,7 @@ export default function Signup() {
                 if (!value) errorMsg = "Password is required.";
                 else if (value.length < 8) errorMsg = "Password must be at least 8 characters.";
                 else if (!/[A-Z]/.test(value)) errorMsg = "Password must contain at least one uppercase letter.";
+                else if (!/[a-z]/.test(value)) errorMsg = "Password must contain at least one lowercase letter.";
                 else if (!/[0-9]/.test(value)) errorMsg = "Password must contain at least one number.";
                 else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) errorMsg = "Password must contain at least one special character.";
                 break;

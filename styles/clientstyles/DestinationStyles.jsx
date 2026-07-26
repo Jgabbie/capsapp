@@ -99,8 +99,9 @@ const DestinationStyles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     paddingHorizontal: 20,
-
-    borderColor: "#dbe3ef"
+    borderColor: "#dbe3ef",
+    borderWidth: 1,
+    fontFamily: "Montserrat_500Medium",
   },
 
   searchInput: {
@@ -961,7 +962,8 @@ const DestinationStyles = StyleSheet.create({
 
   filterPillText: {
     fontSize: 13,
-    color: "#555"
+    color: "#555",
+    fontFamily: "Montserrat_500Medium",
   },
 
   budgetInputRow: {
@@ -979,19 +981,22 @@ const DestinationStyles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: '#fff',
     color: '#333',
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: "Montserrat_500Medium",
   },
 
   budgetInputText: {
     marginHorizontal: 15,
     color: '#555',
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: "Montserrat_500Medium",
   },
 
   daysInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    fontFamily: "Montserrat_500Medium",
   },
 
   daysInputBox: {
@@ -1020,7 +1025,8 @@ const DestinationStyles = StyleSheet.create({
     color: '#777',
     marginTop: 6,
     marginBottom: 10,
-    paddingHorizontal: 5
+    paddingHorizontal: 5,
+    fontFamily: "Montserrat_500Medium",
   },
 
   arrangementModalCard: {

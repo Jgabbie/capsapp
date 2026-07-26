@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, TouchableOpacity, TextInput, Image, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
+import { View, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from 'expo-image';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from "expo-constants";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";

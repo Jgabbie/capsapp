@@ -920,7 +920,9 @@ export default function PackageDetails({ route, navigation }) {
 
                                 {activeTab === "inclusions" && (
                                     <>
-                                        <Text style={DestinationStyles.sectionTitle}>INCLUSIONS</Text>
+                                        <View style={DestinationStyles.sectionPill}>
+                                            <Text style={DestinationStyles.sectionTitle}>INCLUSIONS</Text>
+                                        </View>
                                         {fullPkg.packageInclusions?.length > 0 ? fullPkg.packageInclusions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
                                                 <Text style={DestinationStyles.tabItemDot}>✓</Text>
@@ -930,7 +932,9 @@ export default function PackageDetails({ route, navigation }) {
                                             </View>
                                         )) : <Text style={DestinationStyles.sectionText}>None specified.</Text>}
 
-                                        <Text style={[DestinationStyles.sectionTitle, { marginTop: 20 }]}>EXCLUSIONS</Text>
+                                        <View style={DestinationStyles.sectionPill}>
+                                            <Text style={[DestinationStyles.sectionTitle]}>EXCLUSIONS</Text>
+                                        </View>
                                         {fullPkg.packageExclusions?.length > 0 ? fullPkg.packageExclusions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
                                                 <Text style={DestinationStyles.tabItemDot}>✕</Text>
@@ -944,7 +948,9 @@ export default function PackageDetails({ route, navigation }) {
 
                                 {activeTab === "terms" && (
                                     <>
-                                        <Text style={DestinationStyles.sectionTitle}>TERMS AND CONDITIONS</Text>
+                                        <View style={DestinationStyles.sectionPill}>
+                                            <Text style={DestinationStyles.sectionTitle}>TERMS AND CONDITIONS</Text>
+                                        </View>
                                         {fullPkg.packageTermsConditions?.length > 0 ? fullPkg.packageTermsConditions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
                                                 <Text style={DestinationStyles.tabItemDot}>•</Text>
