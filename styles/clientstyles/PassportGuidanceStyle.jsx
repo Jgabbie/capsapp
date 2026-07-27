@@ -295,7 +295,7 @@ const PassportGuidanceStyle = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 12,
         height: 48,
-        marginBottom: 20,
+        marginBottom: 5,
     },
     inputText: {
         flex: 1,

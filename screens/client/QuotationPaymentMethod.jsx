@@ -335,7 +335,8 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
                     passportFile: uploadedTravelerFiles[idx]?.passport || null,
-                    photoFile: uploadedTravelerFiles[idx]?.photo || null
+                    photoFile: uploadedTravelerFiles[idx]?.photo || null,
+                    visaFile: travelerUploads[idx]?.visa || null,
                 }));
 
                 const mappedBookingDetails = {

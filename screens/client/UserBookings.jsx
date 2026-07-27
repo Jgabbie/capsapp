@@ -38,8 +38,6 @@ export default function UserBookings() {
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [bookings, setBookings] = useState([])
 
-
-
     //filter States
     const [searchText, setSearchText] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
@@ -71,6 +69,12 @@ export default function UserBookings() {
         title: '',
         message: '',
         reopenCancelModal: false,
+    });
+
+    const [cancelErrors, setCancelErrors] = useState({
+        reason: '',
+        otherReason: '',
+        file: '',
     });
 
 
@@ -335,6 +339,11 @@ export default function UserBookings() {
                 base64,
                 isPdf,
             });
+
+            setCancelErrors(prev => ({
+                ...prev,
+                file: '',
+            }));
         } catch (error) {
             console.error('Cancellation file picker error:', error);
 
@@ -391,33 +400,27 @@ export default function UserBookings() {
 
     //handle booking cancellation with validation for reason and image proof
     const handleCancelBooking = async () => {
+        const errors = {
+            reason: '',
+            otherReason: '',
+            file: '',
+        };
+
         if (!cancelReason) {
-            showFeedbackModal({
-                type: 'warning',
-                title: 'Reason Required',
-                message: 'Please select a cancellation reason.',
-                reopenCancelModal: true,
-            });
-            return;
+            errors.reason = 'Please select a cancellation reason.';
         }
 
         if (cancelReason === 'Other' && !cancelOtherReason.trim()) {
-            showFeedbackModal({
-                type: 'warning',
-                title: 'Reason Required',
-                message: 'Please specify your cancellation reason.',
-                reopenCancelModal: true,
-            });
-            return;
+            errors.otherReason = 'Please specify your cancellation reason.';
         }
 
         if (!cancelImage) {
-            showFeedbackModal({
-                type: 'warning',
-                title: 'File Required',
-                message: 'Uploading at least one file is required.',
-                reopenCancelModal: true,
-            });
+            errors.file = 'Uploading at least one file is required.';
+        }
+
+        setCancelErrors(errors);
+
+        if (errors.reason || errors.otherReason || errors.file) {
             return;
         }
 
@@ -439,7 +442,16 @@ export default function UserBookings() {
             setLoadingCancel(false);
             setCancelModalOpen(false);
 
-            setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); setCancelImage(null);
+            setCancelReason('');
+            setCancelOtherReason('');
+            setCancelComments('');
+            setCancelImage(null);
+
+            setCancelErrors({
+                reason: '',
+                otherReason: '',
+                file: '',
+            });
 
             showFeedbackModal({
                 type: 'success',
@@ -992,12 +1004,26 @@ export default function UserBookings() {
                                     <Text style={[ModalStyle.modalText, { marginBottom: 20, textAlign: 'center', color: '#555' }]}>Are you sure you want to cancel this booking?</Text>
 
                                     <TouchableOpacity
-                                        style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 10, backgroundColor: '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                                        style={{ width: '100%', borderWidth: 1, borderColor: cancelErrors.reason ? '#dc2626' : '#ccc', borderRadius: 8, padding: 12, marginBottom: 10, backgroundColor: '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                                         onPress={() => setShowCancelReasonDropdown(!showCancelReasonDropdown)}
                                     >
                                         <Text style={{ color: cancelReason ? '#333' : '#888', fontFamily: 'Montserrat_400Regular' }}>{cancelReason || 'Select a reason'}</Text>
                                         <Ionicons name="chevron-down" size={16} color="#888" />
                                     </TouchableOpacity>
+
+                                    {cancelErrors.reason ? (
+                                        <Text
+                                            style={{
+                                                color: '#dc2626',
+                                                fontSize: 12,
+                                                marginBottom: 10,
+                                                alignSelf: 'flex-start',
+                                                fontFamily: 'Montserrat_500Medium',
+                                            }}
+                                        >
+                                            {cancelErrors.reason}
+                                        </Text>
+                                    ) : null}
 
                                     {showCancelReasonDropdown && (
                                         <View style={{ width: '100%', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' }}>
@@ -1005,7 +1031,15 @@ export default function UserBookings() {
                                                 <TouchableOpacity
                                                     key={reason}
                                                     style={{ padding: 12, borderBottomWidth: idx === 2 ? 0 : 1, borderBottomColor: '#eee' }}
-                                                    onPress={() => { setCancelReason(reason); setShowCancelReasonDropdown(false); }}
+                                                    onPress={() => {
+                                                        setCancelReason(reason);
+                                                        setShowCancelReasonDropdown(false);
+
+                                                        setCancelErrors(prev => ({
+                                                            ...prev,
+                                                            reason: '',
+                                                        }));
+                                                    }}
                                                 >
                                                     <Text style={{ color: '#333', fontFamily: 'Montserrat_400Regular' }}>{reason}</Text>
                                                 </TouchableOpacity>
@@ -1015,7 +1049,13 @@ export default function UserBookings() {
 
                                     {cancelReason === 'Other' && (
                                         <TextInput
-                                            style={UserBookingsStyle.cancelSpecify}
+                                            style={[
+                                                UserBookingsStyle.cancelSpecify,
+                                                cancelErrors.otherReason && {
+                                                    borderColor: '#dc2626',
+                                                    borderWidth: 1,
+                                                },
+                                            ]}
                                             placeholder="Please specify"
                                             placeholderTextColor="#999"
                                             value={cancelOtherReason}
@@ -1028,9 +1068,30 @@ export default function UserBookings() {
                                                     .replace(/^\s+/, "");
 
                                                 setCancelOtherReason(cleanedReason);
+
+                                                setCancelErrors(prev => ({
+                                                    ...prev,
+                                                    otherReason: '',
+                                                }));
                                             }}
                                         />
                                     )}
+                                    {cancelErrors.otherReason ? (
+                                        <Text
+                                            style={{
+                                                color: '#dc2626',
+                                                fontSize: 12,
+                                                marginTop: -6,
+                                                marginBottom: 10,
+                                                alignSelf: 'flex-start',
+                                                fontFamily: 'Montserrat_500Medium',
+                                            }}
+                                        >
+                                            {cancelErrors.otherReason}
+                                        </Text>
+                                    ) : null}
+
+
 
                                     <TextInput
                                         style={UserBookingsStyle.cancelAdditional}
@@ -1052,7 +1113,13 @@ export default function UserBookings() {
 
                                     <View style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}>
                                         <TouchableOpacity
-                                            style={UserBookingsStyle.cancelUploadButton}
+                                            style={[
+                                                UserBookingsStyle.cancelUploadButton,
+                                                cancelErrors.file && {
+                                                    borderColor: '#dc2626',
+                                                    borderWidth: 1,
+                                                },
+                                            ]}
                                             onPress={pickCancelImage}
                                         >
                                             <Ionicons name="push-outline" size={18} color="#305797" style={{ marginRight: 8 }} />
@@ -1060,6 +1127,20 @@ export default function UserBookings() {
                                                 Upload file
                                             </Text>
                                         </TouchableOpacity>
+
+                                        {cancelErrors.file ? (
+                                            <Text
+                                                style={{
+                                                    color: '#dc2626',
+                                                    fontSize: 12,
+                                                    marginTop: 6,
+                                                    textAlign: 'center',
+                                                    fontFamily: 'Montserrat_500Medium',
+                                                }}
+                                            >
+                                                {cancelErrors.file}
+                                            </Text>
+                                        ) : null}
 
                                         {cancelImage && (
                                             <View

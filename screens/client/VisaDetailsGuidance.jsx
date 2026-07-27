@@ -97,6 +97,12 @@ export default function VisaDetailsGuidance() {
     const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
+    const [errors, setErrors] = useState({
+        preferredDate: '',
+        preferredTime: '',
+        purpose: '',
+    });
+
 
     //load full service details if not already loaded
     useEffect(() => {
@@ -180,6 +186,10 @@ export default function VisaDetailsGuidance() {
         }
 
         setPreferredDate(pendingPreferredDate)
+        setErrors(prev => ({
+            ...prev,
+            preferredDate: '',
+        }));
         setShowDatePicker(false)
     }
 
@@ -194,9 +204,32 @@ export default function VisaDetailsGuidance() {
             return
         }
 
-        if (!preferredDate || !preferredTime || !purpose.trim()) {
-            Alert.alert('Missing fields', 'Please fill in preferred date, preferred time, and purpose of travel.')
-            return
+        const validationErrors = {
+            preferredDate: '',
+            preferredTime: '',
+            purpose: '',
+        };
+
+        if (!preferredDate) {
+            validationErrors.preferredDate = 'Please select a preferred date.';
+        }
+
+        if (!preferredTime) {
+            validationErrors.preferredTime = 'Please select a preferred time.';
+        }
+
+        if (!purpose.trim()) {
+            validationErrors.purpose = 'Please enter your purpose of travel.';
+        }
+
+        setErrors(validationErrors);
+
+        if (
+            validationErrors.preferredDate ||
+            validationErrors.preferredTime ||
+            validationErrors.purpose
+        ) {
+            return;
         }
 
         try {
@@ -457,7 +490,13 @@ export default function VisaDetailsGuidance() {
                     </Text>
 
                     <TouchableOpacity
-                        style={VisaDetailsGuidanceStyle.inputContainer}
+                        style={[
+                            VisaDetailsGuidanceStyle.inputContainer,
+                            errors.preferredDate && {
+                                borderColor: '#dc2626',
+                                borderWidth: 1,
+                            },
+                        ]}
                         onPress={openPreferredDatePicker}
                         activeOpacity={0.75}
                     >
@@ -495,9 +534,30 @@ export default function VisaDetailsGuidance() {
                             />
                         )}
                     </TouchableOpacity>
+                    {errors.preferredDate ? (
+                        <Text
+                            style={{
+                                color: '#dc2626',
+                                fontSize: 12,
+                                marginBottom: 10,
+                                fontFamily: 'Montserrat_500Medium',
+                            }}
+                        >
+                            {errors.preferredDate}
+                        </Text>
+                    ) : null}
 
                     <Text style={VisaDetailsGuidanceStyle.formLabel}>Preferred time</Text>
-                    <TouchableOpacity style={VisaDetailsGuidanceStyle.inputContainer} onPress={() => setShowTimePickerModal(true)}>
+                    <TouchableOpacity
+                        style={[
+                            VisaDetailsGuidanceStyle.inputContainer,
+                            errors.preferredTime && {
+                                borderColor: '#dc2626',
+                                borderWidth: 1,
+                            },
+                        ]}
+                        onPress={() => setShowTimePickerModal(true)}
+                    >
                         <Text style={[VisaDetailsGuidanceStyle.inputText, !preferredTime && VisaDetailsGuidanceStyle.inputTextPlaceholder]}>
                             {preferredTime || 'Select time'}
                         </Text>
@@ -509,11 +569,34 @@ export default function VisaDetailsGuidance() {
                             <Ionicons name="time-outline" size={20} color="#9ca3af" />
                         )}
                     </TouchableOpacity>
+                    {errors.preferredTime ? (
+                        <Text
+                            style={{
+                                color: '#dc2626',
+                                fontSize: 12,
+                                marginBottom: 10,
+                                fontFamily: 'Montserrat_500Medium',
+                            }}
+                        >
+                            {errors.preferredTime}
+                        </Text>
+                    ) : null}
 
                     <Text style={VisaDetailsGuidanceStyle.formLabel}>Purpose of travel</Text>
                     <TextInput
                         maxLength={150}
-                        style={[VisaDetailsGuidanceStyle.inputContainer, { height: 100, textAlignVertical: 'top', paddingTop: 12 }]}
+                        style={[
+                            VisaDetailsGuidanceStyle.inputContainer,
+                            {
+                                height: 100,
+                                textAlignVertical: 'top',
+                                paddingTop: 12,
+                            },
+                            errors.purpose && {
+                                borderColor: '#dc2626',
+                                borderWidth: 1,
+                            },
+                        ]}
                         placeholder="Share your purpose of travel"
                         placeholderTextColor="#9ca3af"
                         multiline
@@ -528,8 +611,24 @@ export default function VisaDetailsGuidance() {
                                 .replace(/^\s+/, "");
 
                             setPurpose(cleanedPurpose);
+                            setErrors(prev => ({
+                                ...prev,
+                                purpose: '',
+                            }));
                         }}
                     />
+                    {errors.purpose ? (
+                        <Text
+                            style={{
+                                color: '#dc2626',
+                                fontSize: 12,
+                                marginBottom: 10,
+                                fontFamily: 'Montserrat_500Medium',
+                            }}
+                        >
+                            {errors.purpose}
+                        </Text>
+                    ) : null}
 
                     <TouchableOpacity style={VisaDetailsGuidanceStyle.submitButton} onPress={submitApplication} disabled={isSubmitting}>
                         {isSubmitting ? (
@@ -721,7 +820,17 @@ export default function VisaDetailsGuidance() {
                         <ScrollView style={{ width: '100%' }}>
                             {timeSlots.map((slot, i) => (
                                 <TouchableOpacity key={i} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: '#f3f4f6', alignItems: 'center' }}
-                                    onPress={() => { setPreferredTime(slot); setShowTimePickerModal(false); }}>
+                                    onPress={() => {
+                                        setPreferredTime(slot);
+
+                                        setErrors(prev => ({
+                                            ...prev,
+                                            preferredTime: '',
+                                        }));
+
+                                        setShowTimePickerModal(false);
+                                    }}
+                                >
                                     <Text style={{ fontSize: 16, fontFamily: preferredTime === slot ? "Montserrat_700Bold" : "Roboto_500Medium", color: preferredTime === slot ? '#305797' : '#374151' }}>{slot}</Text>
                                 </TouchableOpacity>
                             ))}

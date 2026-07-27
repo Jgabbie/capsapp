@@ -279,15 +279,15 @@ export default function PaymentMethod({ route, navigation }) {
                 const safeInfantCount = parseInt(setupData?.travelerCounts?.infant) || 0;
                 const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
 
-                const isDepositPayment = String(paymentType || '').toLowerCase() === 'deposit';
+                const isDepositPayment =
+                    String(paymentType || '').toLowerCase() === 'deposit';
 
+                // Use the discounted deposit calculated in PaymentMode
                 const depositAmount = isDepositPayment
-                    ? (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount
+                    ? Number(amountToPay || 0)
                     : safeAmount;
 
-                const finalAmountToPay = isDepositPayment
-                    ? (setupData?.pkg?.packageDeposit || 0) * calculatedTravelersCount
-                    : safeAmount;
+                const finalAmountToPay = depositAmount;
 
                 let parsedStartDate = "TBD";
                 let parsedEndDate = "TBD";
@@ -337,6 +337,15 @@ export default function PaymentMethod({ route, navigation }) {
                             name: `traveler-${travelerIndex + 1}-photo.jpg`
                         });
                     }
+
+                    if (travelerUpload.visa) {
+                        travelerFileEntries.push({
+                            travelerIndex,
+                            field: 'visa',
+                            uri: travelerUpload.visa,
+                            name: `traveler-${travelerIndex + 1}-visa.jpg`
+                        });
+                    }
                 });
 
                 const uploadedTravelerFiles = {};
@@ -381,7 +390,8 @@ export default function PaymentMethod({ route, navigation }) {
                     passportNo: p.passport || p.passportNo || 'N/A',
                     passportExpiry: p.expiry || p.passportExpiry || null,
                     passportFile: uploadedTravelerFiles[idx]?.passport || null,
-                    photoFile: uploadedTravelerFiles[idx]?.photo || null
+                    photoFile: uploadedTravelerFiles[idx]?.photo || null,
+                    visaFile: uploadedTravelerFiles[idx]?.visa || null
                 }));
 
 

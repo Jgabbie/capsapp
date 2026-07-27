@@ -209,6 +209,10 @@ export default function VisaProgress() {
     const [isDateSelectedModalOpen, setIsDateSelectedModalOpen] = useState(false);
     const [isPassportReleaseOptionSelectedModalOpen, setIsPassportReleaseOptionSelectedModalOpen] = useState(false);
 
+    const [releaseErrors, setReleaseErrors] = useState({
+        deliveryAddress: '',
+    });
+
 
     useEffect(() => {
         fetchPaymentMethods();
@@ -1611,8 +1615,17 @@ export default function VisaProgress() {
             return
         }
 
-        if (passportReleaseOption === 'delivery' && deliveryAddress.trim() === "") {
-            notification.warning({ message: 'Please provide a delivery address before choosing delivery option.' });
+        const errors = {
+            deliveryAddress: '',
+        };
+
+        if (passportReleaseOption === 'delivery' && !deliveryAddress.trim()) {
+            errors.deliveryAddress = 'Please provide your delivery address.';
+        }
+
+        setReleaseErrors(errors);
+
+        if (errors.deliveryAddress) {
             return;
         }
 
@@ -1915,11 +1928,16 @@ export default function VisaProgress() {
                                         autoCorrect={false}
                                         onChangeText={(text) => {
                                             const cleanedAddress = text
-                                                .replace(/[^a-zA-Z0-9\s.,'#&()/:;\-]/g, "")
+                                                .replace(/[^a-zA-Z0-9\s.'#&()/:;\-]/g, "")
                                                 .replace(/[^\S\r\n]{2,}/g, " ")
                                                 .replace(/^\s+/, "");
 
                                             setDeliveryAddress(cleanedAddress);
+
+                                            setReleaseErrors(prev => ({
+                                                ...prev,
+                                                deliveryAddress: '',
+                                            }));
                                         }}
                                         placeholder="Enter your complete delivery address"
                                         placeholderTextColor="#9ca3af"
@@ -1928,7 +1946,7 @@ export default function VisaProgress() {
                                         style={{
                                             minHeight: 110,
                                             borderWidth: 1,
-                                            borderColor: '#d1d5db',
+                                            borderColor: releaseErrors.deliveryAddress ? '#dc2626' : '#d1d5db',
                                             borderRadius: 12,
                                             paddingHorizontal: 14,
                                             paddingVertical: 12,
@@ -1938,6 +1956,18 @@ export default function VisaProgress() {
                                             fontFamily: 'Montserrat_400Regular',
                                         }}
                                     />
+                                    {releaseErrors.deliveryAddress ? (
+                                        <Text
+                                            style={{
+                                                color: '#dc2626',
+                                                fontSize: 12,
+                                                marginTop: 4,
+                                                fontFamily: 'Montserrat_500Medium',
+                                            }}
+                                        >
+                                            {releaseErrors.deliveryAddress}
+                                        </Text>
+                                    ) : null}
                                 </View>
                             )}
 
@@ -2143,7 +2173,7 @@ export default function VisaProgress() {
                 {isDeliveryFeeStage && !isDeliveryFeePaid && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
-                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP ---.</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP {application.deliveryFee}.</Text>
                         {isDeliveryPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
                                 A manual delivery fee payment is already pending verification.

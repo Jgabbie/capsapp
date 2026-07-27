@@ -107,6 +107,11 @@ export default function PassportGuidanceReNew() {
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
 
+    const [errors, setErrors] = useState({
+        dfaLocation: '',
+        preferredDate: '',
+        preferredTime: '',
+    });
 
     const fetchDfaLocations = async () => {
         try {
@@ -182,6 +187,11 @@ export default function PassportGuidanceReNew() {
         }
 
         setPreferredDate(pendingPreferredDate)
+        setErrors(prev => ({
+            ...prev,
+            preferredDate: '',
+        }));
+
         setShowDatePicker(false)
     }
 
@@ -193,9 +203,32 @@ export default function PassportGuidanceReNew() {
             return
         }
 
-        if (!dfaLocation || !preferredDate || !preferredTime) {
-            Alert.alert('Missing fields', 'Please fill in DFA location, preferred date, and preferred time.')
-            return
+        const validationErrors = {
+            dfaLocation: '',
+            preferredDate: '',
+            preferredTime: '',
+        };
+
+        if (!dfaLocation) {
+            validationErrors.dfaLocation = 'Please select a DFA location.';
+        }
+
+        if (!preferredDate) {
+            validationErrors.preferredDate = 'Please select a preferred date.';
+        }
+
+        if (!preferredTime) {
+            validationErrors.preferredTime = 'Please select a preferred time.';
+        }
+
+        setErrors(validationErrors);
+
+        if (
+            validationErrors.dfaLocation ||
+            validationErrors.preferredDate ||
+            validationErrors.preferredTime
+        ) {
+            return;
         }
 
         try {
@@ -272,19 +305,41 @@ export default function PassportGuidanceReNew() {
                     </View>
 
                     <Text style={PassportGuidanceStyle.formLabel}>Select DFA location <Text style={{ color: 'red' }}>*</Text></Text>
-                    <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowDfaModal(true)}>
+                    <TouchableOpacity style={[
+                        PassportGuidanceStyle.inputContainer,
+                        errors.dfaLocation && {
+                            borderColor: '#dc2626',
+                            borderWidth: 1,
+                        },
+                    ]} onPress={() => setShowDfaModal(true)}>
                         <Text style={[PassportGuidanceStyle.inputText, !dfaLocation && PassportGuidanceStyle.inputTextPlaceholder]}>
                             {dfaLocation || 'Choose a DFA site'}
                         </Text>
                         <Ionicons name="chevron-down" size={20} color="#9ca3af" />
                     </TouchableOpacity>
+                    {errors.dfaLocation ? (
+                        <Text style={{
+                            color: '#dc2626',
+                            fontSize: 12,
+                            marginBottom: 10,
+                            fontFamily: 'Montserrat_500Medium',
+                        }}>
+                            {errors.dfaLocation}
+                        </Text>
+                    ) : null}
 
                     <Text style={PassportGuidanceStyle.formLabel}>
                         Preferred date <Text style={{ color: 'red' }}>*</Text>
                     </Text>
 
                     <TouchableOpacity
-                        style={PassportGuidanceStyle.inputContainer}
+                        style={[
+                            PassportGuidanceStyle.inputContainer,
+                            errors.preferredDate && {
+                                borderColor: '#dc2626',
+                                borderWidth: 1,
+                            },
+                        ]}
                         onPress={openPreferredDatePicker}
                         activeOpacity={0.75}
                     >
@@ -322,9 +377,25 @@ export default function PassportGuidanceReNew() {
                             />
                         )}
                     </TouchableOpacity>
+                    {errors.preferredDate ? (
+                        <Text style={{
+                            color: '#dc2626',
+                            fontSize: 12,
+                            marginBottom: 10,
+                            fontFamily: 'Montserrat_500Medium',
+                        }}>
+                            {errors.preferredDate}
+                        </Text>
+                    ) : null}
 
                     <Text style={PassportGuidanceStyle.formLabel}>Preferred time <Text style={{ color: 'red' }}>*</Text></Text>
-                    <TouchableOpacity style={PassportGuidanceStyle.inputContainer} onPress={() => setShowTimePickerModal(true)}>
+                    <TouchableOpacity style={[
+                        PassportGuidanceStyle.inputContainer,
+                        errors.preferredTime && {
+                            borderColor: '#dc2626',
+                            borderWidth: 1,
+                        },
+                    ]} onPress={() => setShowTimePickerModal(true)}>
                         <Text style={[PassportGuidanceStyle.inputText, !preferredTime && PassportGuidanceStyle.inputTextPlaceholder]}>
                             {preferredTime || 'Select time'}
                         </Text>
@@ -336,6 +407,16 @@ export default function PassportGuidanceReNew() {
                             <Ionicons name="time-outline" size={20} color="#9ca3af" />
                         )}
                     </TouchableOpacity>
+                    {errors.preferredTime ? (
+                        <Text style={{
+                            color: '#dc2626',
+                            fontSize: 12,
+                            marginBottom: 10,
+                            fontFamily: 'Montserrat_500Medium',
+                        }}>
+                            {errors.preferredTime}
+                        </Text>
+                    ) : null}
 
                     <TouchableOpacity style={PassportGuidanceStyle.submitButton} onPress={submitApplication} disabled={isSubmitting}>
                         <Text style={PassportGuidanceStyle.submitText}>{isSubmitting ? 'Submitting...' : 'Submit request'}</Text>
@@ -524,7 +605,14 @@ export default function PassportGuidanceReNew() {
                         <ScrollView style={{ width: '100%' }}>
                             {timeSlots.map((slot, i) => (
                                 <TouchableOpacity key={i} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: '#f3f4f6', alignItems: 'center' }}
-                                    onPress={() => { setPreferredTime(slot); setShowTimePickerModal(false); }}>
+                                    onPress={() => {
+                                        setPreferredTime(slot);
+                                        setErrors(prev => ({
+                                            ...prev,
+                                            preferredTime: '',
+                                        }));
+                                        setShowTimePickerModal(false);
+                                    }}>
                                     <Text style={{ fontSize: 16, fontFamily: preferredTime === slot ? "Montserrat_700Bold" : "Roboto_500Medium", color: preferredTime === slot ? '#305797' : '#374151' }}>{slot}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -551,6 +639,11 @@ export default function PassportGuidanceReNew() {
                                     }}
                                     onPress={() => {
                                         setDfaLocation(loc.location);
+
+                                        setErrors(prev => ({
+                                            ...prev,
+                                            dfaLocation: '',
+                                        }));
                                         setShowDfaModal(false);
                                     }}
                                 >
