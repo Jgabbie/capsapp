@@ -940,6 +940,7 @@ const createCheckoutSession = async (req, res) => {
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
+    const user = await User.findById(userId).select("username email");
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -983,8 +984,8 @@ const createCheckoutSession = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1029,6 +1030,7 @@ const createCheckoutSessionDeliveryFee = async (req, res) => {
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
+    const user = await User.findById(userId).select("username email");
 
     try {
         const token = crypto.randomUUID();
@@ -1072,8 +1074,8 @@ const createCheckoutSessionDeliveryFee = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1121,6 +1123,7 @@ const createCheckoutSessionPassportPenalty = async (req, res) => {
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
+    const user = await User.findById(userId).select("username email");
 
     try {
         const token = crypto.randomUUID();
@@ -1164,8 +1167,8 @@ const createCheckoutSessionPassportPenalty = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1213,6 +1216,7 @@ const createCheckoutSessionVisaPenalty = async (req, res) => {
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
+    const user = await User.findById(userId).select("username email");
 
     try {
         const token = crypto.randomUUID();
@@ -1256,8 +1260,8 @@ const createCheckoutSessionVisaPenalty = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1305,6 +1309,7 @@ const createCheckoutSessionPassport = async (req, res) => {
 
     // Safely handle both flat payloads and nested { paymentPayload } structures
     const actualPayload = paymentPayload || req.body;
+    const user = await User.findById(userId).select("username email");
 
     try {
         const token = crypto.randomUUID();
@@ -1348,8 +1353,8 @@ const createCheckoutSessionPassport = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1392,6 +1397,7 @@ const createCheckoutSessionPassport = async (req, res) => {
 
 //checkout session for visa application payment
 const createCheckoutSessionVisa = async (req, res) => {
+    const user = await User.findById(req.userId).select("username email");
     const { applicationId, applicationNumber, totalPrice, successUrl, cancelUrl } = req.body;
     const userId = req.userId;
 
@@ -1433,8 +1439,8 @@ const createCheckoutSessionVisa = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                        email: actualPayload.leadEmail || "capsapp@example.com",
+                        name: user.username || "CapsApp User",
+                        email: user.email || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1475,6 +1481,7 @@ const createCheckoutSessionVisa = async (req, res) => {
 //checkout session for deposit payment
 const createCheckoutSessionDeposit = async (req, res) => {
     const userId = req.userId;
+    const user = await User.findById(userId).select("username email");
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -1538,8 +1545,8 @@ const createCheckoutSessionDeposit = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: username.username || "Test User",
-                        email: email.email || "test@example.com",
+                        name: user.username || "Test User",
+                        email: user.email || "test@example.com",
                     },
                     line_items: [
                         {
@@ -1592,6 +1599,7 @@ const createCheckoutSessionQuotation = async (req, res) => {
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     const paymentType = "qr_ph"
+    const user = await User.findById(userId).select("username email");
 
     try {
         if (!process.env.PAYMONGO_SECRET_KEY) {
@@ -1656,8 +1664,8 @@ const createCheckoutSessionQuotation = async (req, res) => {
                 data: {
                     attributes: {
                         billing: {
-                            name: actualPayload.leadEmail ? "User" : "CapsApp User",
-                            email: actualPayload.leadEmail || "capsapp@example.com",
+                            name: user.username || "CapsApp User",
+                            email: user.email || "capsapp@example.com",
                         },
                         line_items: [
                             {
@@ -2655,6 +2663,7 @@ const handlePayMongoWebhook = async (req, res) => {
 const createCheckoutToken = async (req, res) => {
     const userId = req.userId;
     const { totalPrice, amount, bookingId } = req.body;
+
 
     const token = crypto.randomUUID();
 
