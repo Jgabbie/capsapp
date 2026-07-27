@@ -84,7 +84,7 @@ const createManualPaymentDeliveryFee = async (req, res) => {
             userId,
             applicationId,
             amount: Number(amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const { invoiceNumber } = await generateTransactionInvoiceNumber();
@@ -175,7 +175,7 @@ const createManualPaymentPassportPenalty = async (req, res) => {
             userId,
             applicationId,
             amount: Number(amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const { invoiceNumber } = await generateTransactionInvoiceNumber();
@@ -266,7 +266,7 @@ const createManualPaymentVisaPenalty = async (req, res) => {
             userId,
             applicationId,
             amount: Number(amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const reference = generateTransactionReference();
@@ -356,7 +356,7 @@ const createManualPaymentPassport = async (req, res) => {
             userId,
             applicationId,
             amount: Number(amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const reference = generateTransactionReference();
@@ -448,7 +448,7 @@ const createManualPaymentVisa = async (req, res) => {
             userId,
             applicationId,
             amount,
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
 
@@ -561,7 +561,7 @@ const createManualPayment = async (req, res) => {
             userId,
             bookingId: finalBookingId,
             amount: Number(amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const { invoiceNumber } = await generateTransactionInvoiceNumber();
@@ -682,7 +682,7 @@ const createManualPaymentDeposit = async (req, res) => {
             userId,
             bookingId,
             amount: Number(amount?.amount ?? amount),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const reference = generateTransactionReference();
@@ -810,7 +810,7 @@ const createManualPaymentQuotation = async (req, res) => {
             userId,
             bookingId,
             amount,
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const reference = generateTransactionReference();
@@ -1049,7 +1049,7 @@ const createCheckoutSessionDeliveryFee = async (req, res) => {
             userId,
             applicationId: applicationIdToUse,
             amount: Number(priceToUse),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
@@ -1142,7 +1142,7 @@ const createCheckoutSessionPassportPenalty = async (req, res) => {
             userId,
             applicationId: applicationIdToUse,
             amount: Number(priceToUse),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
@@ -1235,7 +1235,7 @@ const createCheckoutSessionVisaPenalty = async (req, res) => {
             userId,
             applicationId: applicationIdToUse,
             amount: Number(priceToUse),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
@@ -1328,7 +1328,7 @@ const createCheckoutSessionPassport = async (req, res) => {
             userId,
             applicationId: applicationIdToUse,
             amount: Number(priceToUse),
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const payMongoSecret = process.env.PAYMONGO_SECRET_KEY;
@@ -1507,7 +1507,7 @@ const createCheckoutSessionDeposit = async (req, res) => {
             userId,
             bookingId,
             amount: totalPrice,
-            expiresAt: dayjs().add(5, 'minutes').toDate()
+            expiresAt: dayjs().add(1, 'minutes').toDate()
         });
 
         const bookingReference = paymentPayload.bookingReference;
@@ -2681,7 +2681,7 @@ const createCheckoutToken = async (req, res) => {
         userId,
         bookingId,
         amount: parsedAmount,
-        expiresAt: dayjs().add(5, 'minutes').toDate(),
+        expiresAt: dayjs().add(1, 'minutes').toDate(),
     });
 
     res.status(201).json({ token });
