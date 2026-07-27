@@ -153,7 +153,27 @@ export default function PaymentMode({ route, navigation }) {
             ? travelDateComputation
             : maxAllowedDate;
 
-        const depositAmount = (setupData?.pkg?.packageDeposit || 0) * travelerTotal;
+        const originalPackagePrice = Number(setupData?.pkg?.price || setupData?.packagePricePerPax || 0);
+        const discountPercent = Number(setupData?.pkg?.packageDiscountPercent || 0);
+
+        const discountedPackagePrice =
+            discountPercent > 0
+                ? originalPackagePrice * (1 - discountPercent / 100)
+                : originalPackagePrice;
+
+        // Deposit percentage based on the original package settings
+        const originalDepositPerPax = Number(setupData?.pkg?.packageDeposit || 0);
+
+        const depositRate =
+            originalPackagePrice > 0
+                ? originalDepositPerPax / originalPackagePrice
+                : 0;
+
+        // Apply the same percentage to the discounted package price
+        const discountedDepositPerPax = discountedPackagePrice * depositRate;
+
+        const depositAmount = discountedDepositPerPax * travelerTotal;
+
         const remainingAmount = Math.max(totalAmount - depositAmount, 0);
 
         const paymentDates = [];

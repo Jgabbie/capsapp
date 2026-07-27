@@ -136,6 +136,7 @@ export default function QuotationForm({ route, navigation }) {
     const [isFlightDateModalOpen, setFlightDateModalOpen] = useState(false);
     const [isFlightTimeModalOpen, setFlightTimeModalOpen] = useState(false);
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
+    const [isMissingInfoModalVisible, setMissingInfoModalVisible] = useState(false);
 
     //auto-adjust group minimum
     useEffect(() => {
@@ -201,23 +202,30 @@ export default function QuotationForm({ route, navigation }) {
         if (!totalTravelers || totalTravelers < 1) newErrors.travelers = "Please enter the number of travelers";
         if (totalTravelers > maxAllowed) newErrors.travelers = `Total travelers exceed allowed maximum (${maxAllowed}).`;
 
-        if (packageCategory !== 'Land Arrangement') {
-            if (!preferredAirlines.trim() && airlines.length > 0) {
-                if (showCustomAirlineInput && !customAirline.trim()) {
-                    newErrors.customAirline = "Please enter your preferred airline";
-                } else if (!showCustomAirlineInput) {
-                    newErrors.preferredAirlines = "Please provide your preferred airlines";
-                }
+        // Preferred Airlines
+        if (packageCategory !== "Land Arrangement") {
+            if (!preferredAirlines.trim()) {
+                newErrors.preferredAirlines = "Please provide your preferred airline";
+            } else if (
+                preferredAirlines === "Other" &&
+                !customAirline.trim()
+            ) {
+                newErrors.customAirline =
+                    "Please enter your preferred airline";
             }
         }
 
+        // Preferred Hotels
         if (!preferredHotels.trim()) {
-            if (showCustomHotelInput && !customHotel.trim()) {
-                newErrors.customHotel = "Please enter your preferred hotel";
-            } else if (!showCustomHotelInput) {
-                newErrors.preferredHotels = "Please provide your preferred hotels";
-            }
+            newErrors.preferredHotels = "Please provide your preferred hotel";
+        } else if (
+            preferredHotels === "Other" &&
+            !customHotel.trim()
+        ) {
+            newErrors.customHotel =
+                "Please enter your preferred hotel";
         }
+
         if (!preferredDate) newErrors.preferredDate = "Please select your preferred date";
 
         if (packageCategory === 'Land Arrangement') {
@@ -237,7 +245,7 @@ export default function QuotationForm({ route, navigation }) {
     //submit quotation form
     const handleSubmit = async () => {
         if (!validate()) {
-            Alert.alert("Missing Information", "Please fix the highlighted errors before submitting.");
+            setMissingInfoModalVisible(true);
             return;
         }
 
@@ -633,6 +641,7 @@ export default function QuotationForm({ route, navigation }) {
                                 maxLength={50}
                                 style={[QuotationFormStyle.textInput, errors.flightAirline && QuotationFormStyle.inputErrorBorder]}
                                 placeholder="Enter airline name"
+                                placeholderTextColor="#9ca3af"
                                 value={flightAirline}
                                 autoCapitalize="words"
                                 autoCorrect={false}
@@ -966,6 +975,89 @@ export default function QuotationForm({ route, navigation }) {
                             <Text style={QuotationFormStyle.submitButtonText}>Continue</Text>
                         </TouchableOpacity>
 
+                    </View>
+                </View>
+            </Modal>
+
+            {/* MISSING INFORMATION MODAL */}
+            <Modal
+                visible={isMissingInfoModalVisible}
+                transparent
+                animationType="fade"
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View
+                        style={[
+                            ModalStyle.modalBox,
+                            {
+                                width: "90%",
+                                padding: 25,
+                                alignItems: "center",
+                                borderRadius: 12,
+                            },
+                        ]}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                position: "absolute",
+                                top: 15,
+                                right: 15,
+                                padding: 5,
+                            }}
+                            onPress={() => setMissingInfoModalVisible(false)}
+                        >
+                            <Ionicons name="close" size={24} color="#888" />
+                        </TouchableOpacity>
+
+                        <View style={[QuotationFormStyle.modalIconContainer, { backgroundColor: "#fef3c7" }]}>
+                            <Ionicons
+                                name="alert"
+                                size={32}
+                                color="#f59e0b"
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                fontFamily: "Montserrat_700Bold",
+                                fontSize: 22,
+                                textAlign: "center",
+                                marginTop: 20,
+                                marginBottom: 12,
+                            }}
+                        >
+                            Missing Information
+                        </Text>
+
+                        <Text
+                            style={{
+                                fontFamily: "Montserrat_400Regular",
+                                fontSize: 14,
+                                color: "#555",
+                                textAlign: "center",
+                                lineHeight: 22,
+                                marginBottom: 25,
+                                paddingHorizontal: 10,
+                            }}
+                        >
+                            Please complete all required fields highlighted in red before submitting your quotation request.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[
+                                QuotationFormStyle.submitButton,
+                                {
+                                    width: "80%",
+                                    height: 45,
+                                    marginTop: 0,
+                                },
+                            ]}
+                            onPress={() => setMissingInfoModalVisible(false)}
+                        >
+                            <Text style={QuotationFormStyle.submitButtonText}>
+                                OK
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

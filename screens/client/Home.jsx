@@ -240,6 +240,8 @@ export default function Home({ route }) {
     const [contactMessage, setContactMessage] = useState('')
     const [submittingContact, setSubmittingContact] = useState(false)
     const [emailError, setEmailError] = useState('')
+    const [nameError, setNameError] = useState('');
+    const [messageError, setMessageError] = useState('');
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false)
     const [isSubjectModalVisible, setSubjectModalVisible] = useState(false)
 
@@ -703,6 +705,17 @@ export default function Home({ route }) {
 
     //handle contact form submission, ensuring the email matches the user's email and sending the data to the backend
     const handleContactSubmit = async () => {
+
+        if (contactName.trim().length < 2) {
+            setNameError("Name must be at least 2 characters.");
+            return;
+        }
+
+        if (contactMessage.trim().length < 10) {
+            setMessageError("Message must be at least 10 characters.");
+            return;
+        }
+
         if (!user || contactEmail.toLowerCase() !== user.email.toLowerCase()) {
             setEmailError('Please use the email associated with your account.');
             return;
@@ -725,6 +738,8 @@ export default function Home({ route }) {
             setContactSubject('');
             setContactMessage('');
             setEmailError('');
+            setNameError('');
+            setMessageError('');
 
         } catch (error) {
             console.error("Contact submit error:", error.message);
@@ -734,7 +749,15 @@ export default function Home({ route }) {
         }
     }
 
-    const isContactFormValid = contactName.trim() !== '' && contactEmail.trim() !== '' && contactSubject.trim() !== '' && contactMessage.trim() !== '' && emailError === '';
+    const isContactFormValid =
+        contactName.trim().length >= 2 &&
+        contactEmail.trim() !== '' &&
+        contactSubject.trim() !== '' &&
+        contactMessage.trim().length >= 10 &&
+        !nameError &&
+        !emailError &&
+        !messageError;
+
 
     if (!fontsLoaded) return null;
 
@@ -1070,23 +1093,34 @@ export default function Home({ route }) {
                         <View style={HomeStyle.contactCard}>
                             <Text style={HomeStyle.contactCardTitle}>You have an inquiry? Send us a message!</Text>
 
-                            <TextInput
-                                maxLength={50}
-                                style={HomeStyle.contactInput}
-                                placeholder="Your Name"
-                                placeholderTextColor="#999"
-                                value={contactName}
-                                onChangeText={(text) => {
-                                    const cleanedName = text
-                                        .replace(/[^a-zA-Z\s'-]/g, "")
-                                        .replace(/\s{2,}/g, " ")
-                                        .replace(/^\s+/, "");
+                            <View style={HomeStyle.inputWrapper}>
+                                <TextInput
+                                    maxLength={50}
+                                    style={[HomeStyle.contactInput, nameError ? HomeStyle.inputErrorBorder : null, { marginBottom: 0 }]}
+                                    placeholder="Your Name"
+                                    placeholderTextColor="#999"
+                                    value={contactName}
+                                    onChangeText={(text) => {
+                                        const cleanedName = text
+                                            .replace(/[^a-zA-Z\s'-]/g, "")
+                                            .replace(/\s{2,}/g, " ")
+                                            .replace(/^\s+/, "");
 
-                                    setContactName(cleanedName);
-                                }}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
+                                        setContactName(cleanedName);
+
+                                        if (cleanedName.trim().length === 0) {
+                                            setNameError("");
+                                        } else if (cleanedName.trim().length < 2) {
+                                            setNameError("Name must be at least 2 characters.");
+                                        } else {
+                                            setNameError("");
+                                        }
+                                    }}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                                {nameError ? <Text style={HomeStyle.errorText}>{nameError}</Text> : null}
+                            </View>
 
                             <View style={HomeStyle.inputWrapper}>
                                 <TextInput
@@ -1124,24 +1158,35 @@ export default function Home({ route }) {
                                 </View>
                             </TouchableOpacity>
 
-                            <TextInput
-                                maxLength={200}
-                                style={HomeStyle.contactTextArea}
-                                placeholder="Your Message"
-                                placeholderTextColor="#999"
-                                multiline={true}
-                                numberOfLines={4}
-                                textAlignVertical="top"
-                                value={contactMessage}
-                                onChangeText={(text) => {
-                                    const cleanedMessage = text
-                                        .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;+\-]/g, "")
-                                        .replace(/[^\S\r\n]{2,}/g, " ")
-                                        .replace(/^\s+/, "");
+                            <View style={HomeStyle.inputWrapper}>
+                                <TextInput
+                                    maxLength={200}
+                                    style={[HomeStyle.contactInput, messageError ? HomeStyle.inputErrorBorder : null, { marginBottom: 0 }]}
+                                    placeholder="Your Message"
+                                    placeholderTextColor="#999"
+                                    multiline={true}
+                                    numberOfLines={4}
+                                    textAlignVertical="top"
+                                    value={contactMessage}
+                                    onChangeText={(text) => {
+                                        const cleanedMessage = text
+                                            .replace(/[^a-zA-Z0-9\s.,!?'"@&()/:;+\-]/g, "")
+                                            .replace(/[^\S\r\n]{2,}/g, " ")
+                                            .replace(/^\s+/, "");
 
-                                    setContactMessage(cleanedMessage);
-                                }}
-                            />
+                                        setContactMessage(cleanedMessage);
+
+                                        if (cleanedMessage.trim().length === 0) {
+                                            setMessageError("");
+                                        } else if (cleanedMessage.trim().length < 10) {
+                                            setMessageError("Message must be at least 10 characters.");
+                                        } else {
+                                            setMessageError("");
+                                        }
+                                    }}
+                                />
+                                {messageError ? <Text style={HomeStyle.errorText}>{messageError}</Text> : null}
+                            </View>
 
                             <TouchableOpacity
                                 style={[HomeStyle.contactSubmitBtn, !isContactFormValid && HomeStyle.contactSubmitBtnDisabled]}

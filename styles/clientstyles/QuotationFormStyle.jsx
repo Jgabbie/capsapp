@@ -317,6 +317,7 @@ const QuotationFormStyle = StyleSheet.create({
     dropdownButton: {
         flexDirection: "row",
         justifyContent: "space-between",
+        fontFamily: "Montserrat_400Regular",
         alignItems: "center",
         backgroundColor: "#fff",
         borderWidth: 1,
@@ -388,12 +389,13 @@ const QuotationFormStyle = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
-        elevation: 4
+        elevation: 4,
+        paddingHorizontal: 20,
     },
     submitButtonText: {
         fontFamily: "Montserrat_700Bold",
         color: "#fff",
-        fontSize: 15
+        fontSize: 12
     },
     modalIconContainer: {
         width: 64,

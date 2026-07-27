@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
+import { View, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions, Text } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from 'expo-image';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -291,8 +291,8 @@ export default function Wishlist() {
                     <Text style={[WishlistStyle.filterLabel, { marginTop: 15 }]}>Price</Text>
                     <View style={{ alignItems: 'center' }}>
                         <View style={WishlistStyle.budgetValuesRow}>
-                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Roboto_500Medium' }}>₱{priceRange[0].toLocaleString()}</Text>
-                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Roboto_500Medium' }}>₱{priceRange[1].toLocaleString()}</Text>
+                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Montserrat_500Medium' }}>₱{priceRange[0].toLocaleString()}</Text>
+                            <Text style={{ fontSize: 12, color: '#555', fontFamily: 'Montserrat_500Medium' }}>₱{priceRange[1].toLocaleString()}</Text>
                         </View>
                         <MultiSlider
                             values={priceRange}

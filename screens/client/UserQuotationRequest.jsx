@@ -8,6 +8,7 @@ import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import styles from "../../styles/clientstyles/UserQuotationRequestStyle";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 
 import {
   useFonts,
@@ -324,16 +325,19 @@ export default function UserQuotationRequest({ route, navigation }) {
 
       {/* --- MODAL: SUCCESS REVISION --- */}
       <Modal transparent visible={isRevisionModalOpen} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContentCentered}>
-            <Text style={styles.modalTitleCentered}>Revision Requested</Text>
-            <View style={{ alignItems: 'center', marginVertical: 15 }}>
-              <Ionicons name="checkmark-circle" size={60} color="#00bf63" />
+        <View style={ModalStyle.modalOverlay}>
+          <View style={ModalStyle.modalBox}>
+            <View style={ModalStyle.modalIconContainer}>
+
+              <Ionicons name="checkmark" size={32} color="#059669" />
             </View>
-            <Text style={styles.modalTextCentered}>Your revision request has been submitted.</Text>
-            <TouchableOpacity style={styles.modalPrimaryBtnFull} onPress={() => { setIsRevisionModalOpen(false); fetchQuotation(); }}>
-              <Text style={styles.modalPrimaryBtnTextFull}>Continue</Text>
+            <Text style={ModalStyle.modalTitle}>Revision Requested</Text>
+            <Text style={ModalStyle.modalText}>Your revision request has been submitted.</Text>
+
+            <TouchableOpacity style={ModalStyle.modalButton} onPress={() => { setIsRevisionModalOpen(false); fetchQuotation(); }}>
+              <Text style={ModalStyle.modalButtonText}>Continue</Text>
             </TouchableOpacity>
+
           </View>
         </View>
       </Modal>

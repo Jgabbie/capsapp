@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Platform, KeyboardAvoidingView, Dimensions, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, KeyboardAvoidingView, Dimensions, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from 'expo-image';
@@ -160,6 +160,18 @@ export default function PackageDetails({ route, navigation }) {
     const packageId = route?.params?.id || passedPkg?._id || passedPkg?.id;
 
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
+
+
+    const showAlertModal = (title, message) => {
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setIsAlertModalOpen(true);
+    };
+
+
     //fetch reviews data for the package
     const fetchReviewsData = async () => {
         try {
@@ -200,7 +212,7 @@ export default function PackageDetails({ route, navigation }) {
             let currentPkg = passedPkg;
 
             if (!packageId && !currentPkg) {
-                Alert.alert("Error", "No package data found.");
+                showAlertModal("Error", "No package data found.");
                 navigation.goBack();
                 return;
             }
@@ -211,7 +223,7 @@ export default function PackageDetails({ route, navigation }) {
                     currentPkg = response.data.find(p => p._id === packageId || p.id === packageId);
 
                     if (!currentPkg) {
-                        Alert.alert("Error", "Package not found in database.");
+                        showAlertModal("Error", "Package not found in database.");
                         navigation.goBack();
                         return;
                     }
@@ -349,10 +361,6 @@ export default function PackageDetails({ route, navigation }) {
 
     //check availability of a specific date in the package's specific dates
     const handlePrimaryAction = () => {
-        if (!user) {
-            Alert.alert("Login Required", "Please login to proceed.");
-            return;
-        }
 
         //  NEW: Check if a Visa is required first!
         if (fullPkg?.packageType === "international") {
@@ -367,7 +375,7 @@ export default function PackageDetails({ route, navigation }) {
     //wishlist handling function
     const handleWishlistAdd = async () => {
         if (!user) {
-            Alert.alert("Login Required", "Please login to save to your wishlist.");
+            showAlertModal("Login Required", "Please login to save to your wishlist.");
             return;
         }
         try {
@@ -383,9 +391,9 @@ export default function PackageDetails({ route, navigation }) {
         } catch (error) {
             const errorMsg = error.response?.data?.message?.toLowerCase() || "";
             if (errorMsg.includes("already") || error.response?.status === 400) {
-                Alert.alert("Notice", "Package already in your wishlist");
+                showAlertModal("Notice", "Package already in your wishlist");
             } else {
-                Alert.alert("Error", "Failed to add to wishlist.");
+                showAlertModal("Error", "Failed to add to wishlist.");
             }
         }
     };
@@ -404,12 +412,12 @@ export default function PackageDetails({ route, navigation }) {
     //submit or update a review for the package
     const handleSubmitReview = async () => {
         if (!user) {
-            Alert.alert("Login Required", "Please login to submit a review.");
+            showAlertModal("Login Required", "Please login to submit a review.");
             return;
         }
 
         if (!reviewForm.rating || !reviewForm.comment.trim()) {
-            Alert.alert("Required", "Please provide a rating and a comment.");
+            showAlertModal("Required", "Please provide a rating and a comment.");
             return;
         }
 
@@ -451,7 +459,7 @@ export default function PackageDetails({ route, navigation }) {
             setIsEditingReview(false);
             await fetchReviewsData();
         } catch (error) {
-            Alert.alert("Error", "Unable to submit review.");
+            showAlertModal("Error", "Unable to submit review.");
         } finally {
             setIsSubmittingReview(false);
         }
@@ -483,7 +491,7 @@ export default function PackageDetails({ route, navigation }) {
             setReviewSuccessMessage("Review deleted successfully!");
             setIsReviewSuccessModalOpen(true);
         } catch (error) {
-            Alert.alert("Error", "Unable to delete review.");
+            showAlertModal("Error", "Unable to delete review.");
         } finally {
             setIsSubmittingReview(false);
         }
@@ -1099,7 +1107,14 @@ export default function PackageDetails({ route, navigation }) {
                                 style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsPassportRequiredModalOpen(false);
-                                    setIsVisaRequiredModalOpen(true);
+
+                                    if (fullPkg?.visaRequired) {
+                                        // Package requires a visa
+                                        setIsVisaRequiredModalOpen(true);
+                                    } else {
+                                        // No visa required, continue directly
+                                        setIsArrangementModalOpen(true);
+                                    }
                                 }}
                             >
                                 <Text style={DestinationStyles.visaButtonText}>Yes — I have a passport</Text>
@@ -1138,7 +1153,12 @@ export default function PackageDetails({ route, navigation }) {
                                 style={DestinationStyles.visaPrimaryButton}
                                 onPress={() => {
                                     setIsRecommendPassportModalOpen(false);
-                                    setIsVisaRequiredModalOpen(true);
+
+                                    if (fullPkg?.visaRequired) {
+                                        setIsVisaRequiredModalOpen(true);
+                                    } else {
+                                        setIsArrangementModalOpen(true);
+                                    }
                                 }}
                             >
                                 <Text style={DestinationStyles.visaButtonText}>Continue to Booking</Text>
@@ -1281,6 +1301,15 @@ export default function PackageDetails({ route, navigation }) {
                         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                             {/*  NEW: Filtering Logic implemented right before the map! */}
                             {(() => {
+
+                                const basePrice = Number(fullPkg.price || 0);
+                                const discountPercent = Number(fullPkg.packageDiscountPercent || 0);
+
+                                const discountedPrice =
+                                    discountPercent > 0
+                                        ? basePrice * (1 - discountPercent / 100)
+                                        : basePrice;
+
                                 const filteredDates = (fullPkg?.packageSpecificDate || []).filter(range => {
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
@@ -1344,25 +1373,86 @@ export default function PackageDetails({ route, navigation }) {
                                                         Dates: {formatShortDate(range.startdaterange)} - {formatShortDate(range.enddaterange)}
                                                     </Text>
                                                 </View>
-                                                <View style={DestinationStyles.priceRowDate}>
-                                                    <Text style={[
-                                                        DestinationStyles.priceTextDate,
-                                                        isDisabled && { color: '#9ca3af' }
-                                                    ]}>
-                                                        {formatPeso(fullPkg.price || 0)} / pax
-                                                        {range.extrarate > 0 && (
-                                                            <Text style={{ color: isDisabled ? '#9ca3af' : '#64748b', fontSize: 12 }}>
-                                                                {` + ${formatPeso(range.extrarate)} extra`}
-                                                            </Text>
-                                                        )}
-                                                    </Text>
-                                                    <View style={DestinationStyles.slotsBadge}>
-                                                        <Text style={[
-                                                            DestinationStyles.slotsBadgeText,
-                                                            (range.slots <= 10 && range.slots > 0) && { color: '#b91c1c' },
-                                                            isDisabled && { color: '#9ca3af', fontWeight: 'bold' }
-                                                        ]}>
-                                                            {isPastOrToday ? "Date Passed" : isSoldOut ? "Sold Out" : `${range.slots} slots left`}
+                                                <View
+                                                    style={[
+                                                        DestinationStyles.priceRowDate,
+                                                        {
+                                                            alignItems: "flex-start",
+                                                            justifyContent: "space-between",
+                                                        },
+                                                    ]}
+                                                >
+                                                    <View style={{ flex: 1, paddingRight: 10 }}>
+                                                        <Text
+                                                            style={[
+                                                                DestinationStyles.priceTextDate,
+                                                                isDisabled && { color: "#9ca3af" }
+                                                            ]}
+                                                        >
+                                                            {discountPercent > 0 && (
+                                                                <Text
+                                                                    style={{
+                                                                        textDecorationLine: "line-through",
+                                                                        color: isDisabled ? "#9ca3af" : "#94a3b8",
+                                                                        fontSize: 12,
+                                                                    }}
+                                                                >
+                                                                    {formatPeso(basePrice)}{"\n"}
+                                                                </Text>
+                                                            )}
+
+                                                            {formatPeso(discountedPrice)} / pax
+
+                                                            {range.extrarate > 0 && (
+                                                                <Text
+                                                                    style={{
+                                                                        color: isDisabled ? "#9ca3af" : "#64748b",
+                                                                        fontSize: 12,
+                                                                    }}
+                                                                >
+                                                                    {"\n"}+ {formatPeso(range.extrarate)} extra
+                                                                </Text>
+                                                            )}
+
+                                                            {discountPercent > 0 && (
+                                                                <Text
+                                                                    style={{
+                                                                        color: "#16a34a",
+                                                                        fontSize: 12,
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                >
+                                                                    {"\n"}(-{discountPercent}%)
+                                                                </Text>
+                                                            )}
+                                                        </Text>
+                                                    </View>
+
+                                                    <View
+                                                        style={[
+                                                            DestinationStyles.slotsBadge,
+                                                            {
+                                                                alignSelf: "flex-start",
+                                                                marginLeft: 10,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <Text
+                                                            style={[
+                                                                DestinationStyles.slotsBadgeText,
+                                                                range.slots <= 10 &&
+                                                                range.slots > 0 && { color: "#b91c1c" },
+                                                                isDisabled && {
+                                                                    color: "#9ca3af",
+                                                                    fontWeight: "bold",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            {isPastOrToday
+                                                                ? "Date Passed"
+                                                                : isSoldOut
+                                                                    ? "Sold Out"
+                                                                    : `${range.slots} slots left`}
                                                         </Text>
                                                     </View>
                                                 </View>
@@ -1401,7 +1491,15 @@ export default function PackageDetails({ route, navigation }) {
                                     onPress={() => {
                                         setIsDateModalOpen(false);
                                         const dateString = `${formatFullDate(selectedSchedule.startdaterange)} - ${formatFullDate(selectedSchedule.enddaterange)}`;
-                                        const finalPrice = (fullPkg.price || 0) + (selectedSchedule.extrarate || 0);
+                                        const basePrice = Number(fullPkg.price || 0);
+                                        const discountPercent = Number(fullPkg.packageDiscountPercent || 0);
+
+                                        const discountedPrice =
+                                            discountPercent > 0
+                                                ? basePrice * (1 - discountPercent / 100)
+                                                : basePrice;
+
+                                        const finalPrice = discountedPrice + Number(selectedSchedule.extrarate || 0);
 
                                         navigation.navigate("quotationallin", {
                                             pkg: fullPkg.rawPackage,
@@ -1417,6 +1515,67 @@ export default function PackageDetails({ route, navigation }) {
                                 </TouchableOpacity>
                             </View>
                         </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+            <Modal
+                transparent
+                animationType="fade"
+                visible={isAlertModalOpen}
+                onRequestClose={() => setIsAlertModalOpen(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <View style={ModalStyle.modalIconContainer}
+                            style={[
+                                ModalStyle.modalIconContainer,
+                                {
+                                    backgroundColor:
+                                        alertTitle === "Error"
+                                            ? "#FEE2E2"
+                                            : alertTitle === "Notice"
+                                                ? "#DBEAFE"
+                                                : "#FEF3C7",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name={
+                                    alertTitle === "Error"
+                                        ? "close-"
+                                        : alertTitle === "Notice"
+                                            ? "information-"
+                                            : "alert-"
+                                }
+                                size={32}
+                                color={
+                                    alertTitle === "Error"
+                                        ? "#dc2626"
+                                        : alertTitle === "Notice"
+                                            ? "#2563eb"
+                                            : "#f59e0b"
+                                }
+                            />
+                        </View>
+
+                        <Text style={ModalStyle.modalTitle}>
+                            {alertTitle}
+                        </Text>
+
+                        <Text style={ModalStyle.modalText}>
+                            {alertMessage}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
+                            onPress={() => setIsAlertModalOpen(false)}
+                        >
+                            <Text style={ModalStyle.modalButtonText}>
+                                OK
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

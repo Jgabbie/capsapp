@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal } from 'react-native';
+import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Pressable } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import { useUser } from '../../context/UserContext';
@@ -82,6 +82,13 @@ export default function QuotationForm2({ route, navigation }) {
             message,
             type,
         });
+    };
+
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
     };
 
 
@@ -472,6 +479,134 @@ export default function QuotationForm2({ route, navigation }) {
                         </View>
                     </TouchableOpacity>
                 </TouchableOpacity>
+            </Modal>
+
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={() =>
+                    setAlertModal((prev) => ({ ...prev, visible: false }))
+                }
+            >
+                <Pressable
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 25,
+                    }}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={{
+                            width: '100%',
+                            maxWidth: 340,
+                            backgroundColor: '#ffffff',
+                            borderRadius: 22,
+                            paddingHorizontal: 26,
+                            paddingTop: 24,
+                            paddingBottom: 22,
+                            alignItems: 'center',
+                            elevation: 8,
+                        }}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : alertModal.type === 'info'
+                                                ? '#dbeafe'
+                                                : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 32,
+                                    fontFamily: 'Montserrat_700Bold',
+                                    color:
+                                        alertModal.type === 'error'
+                                            ? '#dc2626'
+                                            : alertModal.type === 'warning'
+                                                ? '#d97706'
+                                                : alertModal.type === 'info'
+                                                    ? '#305797'
+                                                    : '#059669',
+                                }}
+                            >
+                                {alertModal.type === 'error'
+                                    ? '×'
+                                    : alertModal.type === 'warning'
+                                        ? '!'
+                                        : alertModal.type === 'info'
+                                            ? 'i'
+                                            : '✓'}
+                            </Text>
+                        </View>
+
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Montserrat_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
         </SafeAreaView>
     );

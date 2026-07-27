@@ -116,48 +116,91 @@ export default function QuotationPaymentMode({ route, navigation }) {
 
     //compute payment schedule
     const scheduleData = useMemo(() => {
-        const getFrequencyWeeks = (val) => {
-            if (val === 'Every week') return 1;
-            if (val === 'Every 3 weeks') return 3;
+        const getFrequencyWeeks = (value) => {
+            if (value === "Every week") return 1;
+            if (value === "Every 3 weeks") return 3;
             return 2;
         };
 
-        const freqWeeks = getFrequencyWeeks(frequency);
-        const today = dayjs().startOf('day');
+        const frequencyWeeks = getFrequencyWeeks(frequency);
+
+        const today = dayjs().startOf("day");
+
         let travelDateComputation = today;
 
-        const rawTravelDate = quotation?.travelDate?.startDate || (quotation?.selectedDate ? quotation.selectedDate.split(' - ')[0] : null);
+        const rawTravelDate =
+            quotation?.travelDetails?.travelDate?.split(" - ")[0] ||
+            quotation?.quotationDetails?.travelDate?.split(" - ")[0] ||
+            quotation?.selectedDate?.split(" - ")[0] ||
+            null;
+
         if (rawTravelDate) {
-            const parsedJsDate = parseDateStringSafe(rawTravelDate);
-            if (parsedJsDate) travelDateComputation = dayjs(parsedJsDate).startOf('day');
+            const parsed = parseDateStringSafe(rawTravelDate);
+            if (parsed) {
+                travelDateComputation = dayjs(parsed).startOf("day");
+            }
         }
 
-        const maxAllowedDate = today.add(45, 'day');
-        const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate) ? travelDateComputation : maxAllowedDate;
+        const maxAllowedDate = today.add(45, "day");
 
-        const depositAmount = (travelDetails.totalDeposit || 0) * travelerTotal;
-        const remainingAmount = Math.max(totalAmount - depositAmount, 0);
+        const dueCutoffDate = travelDateComputation.isBefore(maxAllowedDate)
+            ? travelDateComputation
+            : maxAllowedDate;
+
+        const depositAmount =
+            (travelDetails?.totalDeposit || 0) * travelerTotal;
+
+        const remainingAmount = Math.max(
+            totalAmount - depositAmount,
+            0
+        );
 
         const paymentDates = [];
-        let nextDate = today.add(freqWeeks, 'week');
 
-        while (nextDate.isBefore(dueCutoffDate) || nextDate.isSame(dueCutoffDate, 'day')) {
+        let nextDate = today.add(frequencyWeeks, "week");
+
+        while (
+            nextDate.isBefore(dueCutoffDate) ||
+            nextDate.isSame(dueCutoffDate)
+        ) {
             paymentDates.push(nextDate);
-            nextDate = nextDate.add(freqWeeks, 'week');
+            nextDate = nextDate.add(frequencyWeeks, "week");
         }
 
-        if (paymentDates.length === 0) paymentDates.push(dueCutoffDate.subtract(1, 'day'));
+        if (paymentDates.length === 0) {
+            paymentDates.push(dueCutoffDate.subtract(1, "day"));
+        }
 
         const installmentCount = paymentDates.length;
-        const installmentAmount = installmentCount ? remainingAmount / installmentCount : 0;
+
+        const installmentAmount = installmentCount
+            ? remainingAmount / installmentCount
+            : 0;
 
         const schedule = [
-            { label: 'Deposit', amount: depositAmount, date: today.toISOString() },
-            ...paymentDates.map((date, index) => ({ label: `Installment ${index + 1}`, amount: installmentAmount, date: date.toISOString() }))
+            {
+                label: "Deposit",
+                amount: depositAmount,
+                date: today.toISOString(),
+            },
+            ...paymentDates.map((date, index) => ({
+                label: `Installment ${index + 1}`,
+                amount: installmentAmount,
+                date: date.toISOString(),
+            })),
         ];
 
-        return { schedule, depositAmount };
-    }, [frequency, travelerTotal, totalAmount, quotation]);
+        return {
+            schedule,
+            depositAmount,
+        };
+    }, [
+        frequency,
+        travelerTotal,
+        totalAmount,
+        quotation,
+        travelDetails?.totalDeposit,
+    ]);
 
 
     //proceed function
@@ -178,10 +221,6 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
     const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
     const displayTravelDate = quotation?.selectedDate ? quotation.selectedDate : (quotation?.travelDate?.startDate ? `${dayjs(quotation.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(quotation.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
-
-
-
-
 
     return (
         <SafeAreaView style={QuotationPaymentStyle.safeArea}>
