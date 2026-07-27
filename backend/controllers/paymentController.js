@@ -1433,8 +1433,8 @@ const createCheckoutSessionVisa = async (req, res) => {
             data: {
                 attributes: {
                     billing: {
-                        name: "CapsApp User",
-                        email: "capsapp@example.com",
+                        name: actualPayload.leadEmail ? "User" : "CapsApp User",
+                        email: actualPayload.leadEmail || "capsapp@example.com",
                     },
                     line_items: [
                         { name: pkgName, quantity: 1, amount: testAmount, currency: "PHP" },
@@ -1656,8 +1656,8 @@ const createCheckoutSessionQuotation = async (req, res) => {
                 data: {
                     attributes: {
                         billing: {
-                            name: "Test User",
-                            email: "test@example.com",
+                            name: actualPayload.leadEmail ? "User" : "CapsApp User",
+                            email: actualPayload.leadEmail || "capsapp@example.com",
                         },
                         line_items: [
                             {
