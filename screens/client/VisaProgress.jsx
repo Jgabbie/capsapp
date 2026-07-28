@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Linking, Modal, Platform, TouchableWithoutFeedback, Image, ToastAndroid, Pressable, BackHandler } from "react-native";
 import * as ExpoLinking from 'expo-linking';
+import Pdf from "react-native-pdf";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -2995,40 +2996,66 @@ export default function VisaProgress() {
                     </TouchableOpacity>
                 </Modal>
 
-                <Modal visible={!!requirementPreview} transparent animationType="fade" onRequestClose={() => setRequirementPreview(null)}>
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-                        <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
-                                <Text numberOfLines={1} style={{ flex: 1, fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 14, marginRight: 12 }}>
-                                    {requirementPreview?.name || 'Preview'}
-                                </Text>
-                                <TouchableOpacity onPress={() => setRequirementPreview(null)}>
-                                    <Ionicons name="close" size={24} color="#6b7280" />
-                                </TouchableOpacity>
-                            </View>
+                <Modal
+                    visible={!!requirementPreview}
+                    animationType="slide"
+                    onRequestClose={() => setRequirementPreview(null)}
+                >
+                    <View style={{ flex: 1, backgroundColor: "#fff" }}>
 
-                            {requirementPreview?.kind === 'image' ? (
-                                <View style={{ width: '100%', aspectRatio: 1, backgroundColor: '#111827' }}>
-                                    <Image source={{ uri: requirementPreview.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-                                </View>
-                            ) : (
-                                <View style={{ padding: 24, alignItems: 'center' }}>
-                                    <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                                        <Ionicons name="document-text-outline" size={38} color="#305797" />
-                                    </View>
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#1f2937', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>PDF Ready to Preview</Text>
-                                    <Text style={{ color: '#6b7280', fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: 18 }}>
-                                        PDF preview currently uses your device share sheet so you can open it in your preferred PDF app.
-                                    </Text>
-                                    <TouchableOpacity
-                                        onPress={shareRequirementPreviewPdf}
-                                        style={{ backgroundColor: '#305797', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18 }}
-                                    >
-                                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>Share PDF</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
+                        <View
+                            style={{
+                                height: 60,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                paddingHorizontal: 16,
+                                borderBottomWidth: 1,
+                                borderBottomColor: "#eee",
+                            }}
+                        >
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    flex: 1,
+                                    fontWeight: "600",
+                                    fontSize: 16,
+                                }}
+                            >
+                                {requirementPreview?.name}
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={() => setRequirementPreview(null)}
+                            >
+                                <Ionicons name="close" size={28} />
+                            </TouchableOpacity>
                         </View>
+
+                        {requirementPreview?.kind === "document" ? (
+                            <View style={{ flex: 1 }}>
+                                {requirementPreview?.kind === "document" && requirementPreview?.uri ? (
+                                    <Pdf
+                                        source={{ uri: requirementPreview.uri }}
+                                        style={{ flex: 1 }}
+                                    />
+                                ) : requirementPreview?.kind === "image" && requirementPreview?.uri ? (
+                                    <Image
+                                        source={{ uri: requirementPreview.uri }}
+                                        style={{ flex: 1, resizeMode: "contain" }}
+                                    />
+                                ) : null}
+                            </View>
+                        ) : requirementPreview?.uri ? (
+                            <Image
+                                source={{ uri: requirementPreview.uri }}
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                    resizeMode: "contain",
+                                }}
+                            />
+                        ) : null}
                     </View>
                 </Modal>
 
@@ -3115,7 +3142,7 @@ export default function VisaProgress() {
                 </Modal>
 
             </ScrollView>
-        </View>
+        </View >
     );
 }
 

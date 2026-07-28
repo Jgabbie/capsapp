@@ -218,13 +218,6 @@ const createManualPaymentPassportPenalty = async (req, res) => {
                             <p style="margin:0;"><strong>Total Paid:</strong> ₱${Number(amount).toFixed(2)}</p>
                         </div>
                         <p style="margin:0;">Thank you for choosing M&RC Travel and Tours!</p>
-                        <hr style="margin:30px 0; border:none; border-top:1px solid #eee;" />
-                        <div style="max-width:520px; margin:auto; padding:15px; text-align:center; color:#555; font-size:12px;">
-                            <p style="font-size:10px; margin-bottom:5px;">This is an automated message, please do not reply.</p>
-                            <p>M&RC Travel and Tours</p>
-                            <p>info1@mrctravels.com</p>
-                            <p>&copy; ${new Date().getFullYear()} M&RC Travel and Tours. All rights reserved.</p>
-                        </div>
                     `,
                 })
             });
