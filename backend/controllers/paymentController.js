@@ -1658,7 +1658,7 @@ const createCheckoutSessionQuotation = async (req, res) => {
         };
 
 
-        const response = await apiFetch.post(
+        const response = await axios.post(
             "https://api.paymongo.com/v1/checkout_sessions",
             {
                 data: {
