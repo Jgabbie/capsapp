@@ -994,6 +994,7 @@ const createCheckoutSession = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token: tokenToUse,
@@ -1084,6 +1085,7 @@ const createCheckoutSessionDeliveryFee = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token,
@@ -1177,6 +1179,7 @@ const createCheckoutSessionPassportPenalty = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token,
@@ -1270,6 +1273,7 @@ const createCheckoutSessionVisaPenalty = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token,
@@ -1363,6 +1367,7 @@ const createCheckoutSessionPassport = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: actualPayload.successUrl || successUrl,
                     cancel_url: actualPayload.cancelUrl || cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token,
@@ -1449,6 +1454,7 @@ const createCheckoutSessionVisa = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
+                    send_email_receipt: true,
                     metadata: {
                         userId: req.userId,
                         token,
@@ -1566,6 +1572,7 @@ const createCheckoutSessionDeposit = async (req, res) => {
                     payment_method_types: ["qrph"],
                     success_url: successUrl,
                     cancel_url: cancelUrl,
+                    send_email_receipt: true,
                     metadata,
                     show_description: true,
                     show_line_items: true,
@@ -1685,6 +1692,7 @@ const createCheckoutSessionQuotation = async (req, res) => {
                         payment_method_types: ["qrph"],
                         success_url: successUrl,
                         cancel_url: cancelUrl,
+                        send_email_receipt: true,
                         metadata,
                         show_description: true,
                         show_line_items: true,

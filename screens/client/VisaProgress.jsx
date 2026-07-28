@@ -2006,7 +2006,7 @@ export default function VisaProgress() {
 
                         {isApplicationPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
-                                A manual payment is already pending verification for this application.
+                                A pending payment transaction already exists for this application.
                             </Text>
                         )}
 
@@ -2176,7 +2176,7 @@ export default function VisaProgress() {
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP {application.deliveryFee}.</Text>
                         {isDeliveryPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
-                                A manual delivery fee payment is already pending verification.
+                                A pending payment transaction already exists for this application.
                             </Text>
                         )}
 
@@ -2342,11 +2342,19 @@ export default function VisaProgress() {
                 {/* PENALTY FEE */}
                 {showPenaltyPaymentSection && (
                     <View style={VisaProgressStyle.card}>
-                        <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={VisaProgressStyle.cardTitle}>Penalty Payment</Text>
+
+                        <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>
+                            <Text style={{ color: '#6b7280', fontSize: 12, fontFamily: 'Montserrat_500Medium' }}>Penalty Fee</Text>
+                            <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#305797', fontSize: 18, marginTop: 6 }}>
+                                ₱ 1,500.00
+                            </Text>
+                        </View>
+
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
                         {isPenaltyPaymentDisabled && (
                             <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
-                                A manual penalty payment is already pending verification.
+                                A pending payment transaction already exists for this application.
                             </Text>
                         )}
 
@@ -2522,7 +2530,7 @@ export default function VisaProgress() {
 
 
                 {/* UPLOAD REQUIREMENTS */}
-                {normalizedAppStatus === 'payment completed' && visibleRequirements.length > 0 && (
+                {normalizedAppStatus === 'payment completed' && visibleRequirements.length > 0 && (!isOnPenalty || hasSecondChance) && (
                     <View style={VisaProgressStyle.card}>
                         <Text style={VisaProgressStyle.cardTitle}>Upload Requirements</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>

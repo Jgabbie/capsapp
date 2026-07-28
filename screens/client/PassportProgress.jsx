@@ -2035,7 +2035,7 @@ export default function PassportApplication() {
                 {/* PENALTY FEE */}
                 {showPenaltyPaymentSection && (
                     <View style={PassportProgressStyle.card}>
-                        <Text style={PassportProgressStyle.cardTitle}>Application Payment</Text>
+                        <Text style={PassportProgressStyle.cardTitle}>Penalty Payment</Text>
                         <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the penalty fee of PHP 1,500.00. Before you can continue with your application</Text>
 
                         <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', padding: 12, borderRadius: 8, marginBottom: 12, alignItems: 'center' }}>

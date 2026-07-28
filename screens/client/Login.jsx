@@ -115,7 +115,7 @@ export default function Login() {
                 const normalizedRole = normalizeRole(role);
 
                 if (normalizedRole !== "users" && normalizedRole !== "customer") {
-                    setError("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    setError("Unauthorized role. Only Customers can sign in.");
                     return;
                 }
 
@@ -133,7 +133,7 @@ export default function Login() {
                 const normalizedRole = normalizeRole(role);
 
                 if (normalizedRole !== "users" && normalizedRole !== "customer") {
-                    setError("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    setError("Unauthorized role. Only Customers can sign in.");
                     return;
                 }
 
@@ -182,7 +182,7 @@ export default function Login() {
                 const normalizedRole = normalizeRole(role);
 
                 if (normalizedRole !== "users" && normalizedRole !== "customer") {
-                    setErrorOtp("Unauthorized role. Only Customers can sign in to the mobile app.");
+                    setErrorOtp("Unauthorized role. Only Customers can sign in.");
                     return;
                 }
 
