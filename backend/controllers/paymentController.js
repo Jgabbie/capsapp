@@ -1700,7 +1700,7 @@ const createCheckoutSessionQuotation = async (req, res) => {
             }
         );
 
-        res.json(response);
+        return res.status(200).json(response.data);
     } catch (error) {
         console.error("PayMongo error:", error.response?.data || error.message);
         res.status(500).json({ error: error.response?.data || error.message });
