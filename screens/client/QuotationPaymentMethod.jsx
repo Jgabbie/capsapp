@@ -459,7 +459,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                         cancelUrl: cancelDeepLink,
                     };
 
-                    const response = await api.post('/payment/create-checkout-session', { paymentPayload }, withUserHeader(user?._id));
+                    const response = await api.post('/payment/create-checkout-session-quotation', { paymentPayload }, withUserHeader(user?._id));
                     const checkoutUrl = response.data?.data?.attributes?.checkout_url;
 
                     setLoading(false);
