@@ -178,7 +178,12 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                 return;
             }
 
-            const safeAmount = Number(travelDetails?.totalPrice || amountToPay || 0);
+            const fullAmount = Number(travelDetails?.totalPrice || 0);
+
+            const safeAmount =
+                    paymentType === "deposit"
+                        ? Number(amountToPay)
+                        : Number(travelDetails?.totalPrice || amountToPay || 0);
 
             if (isExistingBooking) {
                 if (method === 'manual') {
@@ -358,7 +363,7 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     medicalRequest: medicalData?.medical === 'Y' ? "Y" : "N",
                     purchaseInsurance: medicalData?.insurance1 === 'Y' ? "Y" : "N",
                     ownInsurance: medicalData?.insurance2 === 'Y' ? "Y" : "N",
-                    totalPrice: safeAmount,
+                    totalPrice: fullAmount,
                     emergencyContact: emergency?.contact || "N/A",
                     emergencyEmail: emergency?.email || "N/A",
                     emergencyName: emergency?.fullName || "N/A",
