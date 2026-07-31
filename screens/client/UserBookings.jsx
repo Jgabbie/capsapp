@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Image, Pressable, BackHandler } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Image, Pressable, BackHandler, RefreshControl } from 'react-native'
 import React, { useMemo, useState, useCallback } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -35,6 +35,7 @@ export default function UserBookings() {
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
     const [loadingCancel, setLoadingCancel] = useState(false)
     const [bookings, setBookings] = useState([])
 
@@ -174,9 +175,18 @@ export default function UserBookings() {
     //fetch bookings from backend and map them to include computed status, formatted dates, and traveler count
     const fetchBookings = async () => {
         if (!user?._id) return;
+
+        if (refreshing) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
-            setLoading(true)
-            const response = await api.get('/booking/my-bookings', withUserHeader(user._id))
+            const response = await api.get(
+                "/booking/my-bookings",
+                withUserHeader(user._id)
+            );
 
             let fetchedBookings = [];
             if (Array.isArray(response.data)) {
@@ -242,7 +252,11 @@ export default function UserBookings() {
             console.error("Booking Error:", error.response?.data || error.message);
             setBookings([])
         } finally {
-            setLoading(false)
+            if (refreshing) {
+                setRefreshing(false);
+            } else {
+                setLoading(false);
+            }
         }
     }
 
@@ -482,6 +496,14 @@ export default function UserBookings() {
                 style={UserBookingsStyle.container}
                 contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => fetchBookings(true)}
+                        colors={['#305797']}
+                        tintColor="#305797"
+                    />
+                }
             >
                 <Text style={UserBookingsStyle.title}>My Bookings</Text>
                 <Text style={UserBookingsStyle.subtitle}>Track your latest reservations and payment status.</Text>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, Pressable, BackHandler } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, Pressable, BackHandler, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
@@ -53,6 +53,7 @@ export default function UserApplications() {
 
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState('Status');
     const [applicationDateFilter, setApplicationDateFilter] = useState(null);
@@ -61,9 +62,15 @@ export default function UserApplications() {
     const [showDateModal, setShowDateModal] = useState(false);
 
 
-    const fetchApplications = async () => {
+    const fetchApplications = async (isRefreshing = false) => {
         if (!user?._id) return;
-        setLoading(true);
+
+        if (isRefreshing) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
             const [visaRes, passportRes] = await Promise.all([
                 api.get('/visa/applications', withUserHeader(user._id)),
@@ -88,27 +95,31 @@ export default function UserApplications() {
                 ref: p.applicationNumber
             }));
 
-            const combined = [...visas, ...passports].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const combined = [...visas, ...passports].sort(
+                (a, b) => new Date(b.date) - new Date(a.date)
+            );
+
             setApplications(combined);
         } catch (error) {
-            Alert.alert("Error", error.response?.data?.message || "Could not load applications.");
+            Alert.alert(
+                "Error",
+                error.response?.data?.message || "Could not load applications."
+            );
         } finally {
-            setLoading(false);
+            if (isRefreshing) {
+                setRefreshing(false);
+            } else {
+                setLoading(false);
+            }
         }
     };
 
+
     //fetch applications on component mount and when user changes
     useEffect(() => {
-        if (!user?._id) return;
-
         fetchApplications();
-
-        const interval = setInterval(() => {
-            fetchApplications();
-        }, 5000); // refresh every 5 seconds
-
-        return () => clearInterval(interval);
     }, [user?._id]);
+
 
     //filter applications based on search text, status filter, and date filter
     const statusOptions = useMemo(() => {
@@ -190,7 +201,18 @@ export default function UserApplications() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={{ padding: 20, flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => fetchApplications(true)}
+                        colors={['#305797']}     // Android
+                        tintColor="#305797"      // iOS
+                    />
+                }
+            >
                 <View style={UserApplicationsStyle.headerContainer}>
                     <Text style={UserApplicationsStyle.title}>My Applications</Text>
                     <Text style={UserApplicationsStyle.subtitle}>Track your ongoing visa and passport applications.</Text>

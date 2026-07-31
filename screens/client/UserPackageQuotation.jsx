@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, Pressable, BackHandler } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Image, TouchableWithoutFeedback, Pressable, BackHandler, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -34,6 +34,7 @@ export default function UserPackageQuotation() {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [quotations, setQuotations] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     //filtering States
     const [searchText, setSearchText] = useState("");
@@ -47,18 +48,32 @@ export default function UserPackageQuotation() {
 
 
     //fetch quotations from the server for the logged-in user
-    const fetchQuotations = async () => {
+    const fetchQuotations = async (isRefreshing = false) => {
         if (!user?._id) return;
-        setLoading(true);
+
+        if (isRefreshing) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
-            const response = await api.get("/quotation/my-quotations", withUserHeader(user._id));
+            const response = await api.get(
+                "/quotation/my-quotations",
+                withUserHeader(user._id)
+            );
+
             setQuotations(response.data || []);
         } catch (error) {
             console.error("Fetch Error:", error);
             Alert.alert("Error", "Unable to load your quotation requests.");
             setQuotations([]);
         } finally {
-            setLoading(false);
+            if (isRefreshing) {
+                setRefreshing(false);
+            } else {
+                setLoading(false);
+            }
         }
     };
 
@@ -208,6 +223,14 @@ export default function UserPackageQuotation() {
                 style={UserPackageQuotationStyle.container}
                 contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => fetchQuotations(true)}
+                        colors={['#305797']}
+                        tintColor="#305797"
+                    />
+                }
             >
                 <Text style={UserPackageQuotationStyle.title}>My Quotation Requests</Text>
                 <Text style={UserPackageQuotationStyle.subtitle}>Review your customized package quotation requests.</Text>

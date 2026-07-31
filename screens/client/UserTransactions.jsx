@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform, Pressable, BackHandler } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, SafeAreaView, Alert, Platform, Pressable, BackHandler, RefreshControl } from 'react-native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Ionicons } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -55,6 +55,7 @@ export default function UserTransactions() {
     const { user } = useUser()
     const [isSidebarVisible, setSidebarVisible] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
     const [getTransac, setTransac] = useState([])
 
     const [searchText, setSearchText] = useState('')
@@ -157,23 +158,44 @@ export default function UserTransactions() {
     };
 
 
-    //useEffect to fetch transactions from the server when the component mounts or when the user ID changes
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            if (!user?._id) return;
-            try {
-                setLoading(true);
-                const response = await api.get('/transaction/my-transactions', withUserHeader(user._id))
-                const transactions = response.data.transactions || response.data || [];
-                setTransac(Array.isArray(transactions) ? transactions : []);
-            } catch (error) {
-                console.error("Transaction Error:", error.response?.data || error.message);
-            } finally {
-                setLoading(false)
+    const fetchTransactions = async (isRefreshing = false) => {
+        if (!user?._id) return;
+
+        if (isRefreshing) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
+        try {
+            const response = await api.get(
+                '/transaction/my-transactions',
+                withUserHeader(user._id)
+            );
+
+            const transactions =
+                response.data.transactions || response.data || [];
+
+            setTransac(Array.isArray(transactions) ? transactions : []);
+        } catch (error) {
+            console.error(
+                "Transaction Error:",
+                error.response?.data || error.message
+            );
+        } finally {
+            if (isRefreshing) {
+                setRefreshing(false);
+            } else {
+                setLoading(false);
             }
         }
-        fetchTransactions()
-    }, [user?._id])
+    };
+
+
+    //useEffect to fetch transactions from the server when the component mounts or when the user ID changes
+    useEffect(() => {
+        fetchTransactions();
+    }, [user?._id]);
 
 
     //filter transaction function
@@ -653,7 +675,18 @@ export default function UserTransactions() {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView contentContainerStyle={UserTransactionStyle.container} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={UserTransactionStyle.container}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => fetchTransactions(true)}
+                        colors={['#305797']}
+                        tintColor="#305797"
+                    />
+                }
+            >
 
                 <Text style={UserTransactionStyle.title}>My Transactions</Text>
                 <Text style={UserTransactionStyle.subtitle}>View your payment history and receipts.</Text>
