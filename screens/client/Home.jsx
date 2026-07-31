@@ -253,6 +253,13 @@ export default function Home({ route }) {
         'Travel Agency Inquiry'
     ]
 
+
+    const [recentTours, setRecentTours] = useState([]);
+    const [recentToursLoading, setRecentToursLoading] = useState(false);
+    const recentToursRef = useRef(null);
+    const [recentTourIndex, setRecentTourIndex] = useState(0);
+
+
     // Featured Package Modal States
     const [featuredModalVisible, setFeaturedModalVisible] = useState(false)
     const [featuredPackage, setFeaturedPackage] = useState(null)
@@ -624,6 +631,54 @@ export default function Home({ route }) {
     }, [])
 
 
+    const fetchRecentTours = async () => {
+        try {
+            setRecentToursLoading(true);
+
+            const response = await api.get("/recent-tours/get-recent-tours");
+
+            setRecentTours(response.data || []);
+        } catch (error) {
+            console.error("Failed to fetch recent tours:", error);
+        } finally {
+            setRecentToursLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRecentTours();
+    }, []);
+
+
+    useEffect(() => {
+        if (recentTours.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setRecentTourIndex(prev => {
+                const next =
+                    prev === recentTours.length - 1 ? 0 : prev + 1;
+
+                recentToursRef.current?.scrollTo({
+                    x: next * (width - 40),
+                    animated: true,
+                });
+
+                return next;
+            });
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [recentTours]);
+
+
+    const handleRecentTourScroll = (event) => {
+        const index = Math.round(
+            event.nativeEvent.contentOffset.x / (width - 40)
+        );
+
+        setRecentTourIndex(index);
+    };
+
 
     //get featured package function
     const getFeaturedPackage = () => {
@@ -970,6 +1025,68 @@ export default function Home({ route }) {
                                     })}
                                 </ScrollView>
                             )}
+
+
+                            <View style={HomeStyle.recentToursSection}>
+                                <Text style={HomeStyle.recentToursTitle}>
+                                    RECENT TOURS
+                                </Text>
+
+                                <Text style={HomeStyle.recentToursSubtitle}>
+                                    Explore highlights from our latest travel adventures and discover unforgettable destinations our clients have experienced.
+                                </Text>
+
+                                {recentToursLoading ? (
+                                    <ActivityIndicator
+                                        size="large"
+                                        color="#305797"
+                                        style={{ marginVertical: 20 }}
+                                    />
+                                ) : (
+                                    <>
+                                        <ScrollView
+                                            ref={recentToursRef}
+                                            horizontal
+                                            pagingEnabled
+                                            showsHorizontalScrollIndicator={false}
+                                            onMomentumScrollEnd={handleRecentTourScroll}
+                                        >
+                                            {recentTours.map((tour, index) => (
+                                                <View
+                                                    key={tour._id || index}
+                                                    style={{
+                                                        width: width - 40,
+                                                        marginHorizontal: 5,
+                                                    }}
+                                                >
+                                                    <Image
+                                                        source={{ uri: tour.image }}
+                                                        style={{
+                                                            width: "100%",
+                                                            height: 240,
+                                                            borderRadius: 18,
+                                                        }}
+                                                        contentFit="cover"
+                                                    />
+                                                </View>
+                                            ))}
+                                        </ScrollView>
+
+                                        <View style={HomeStyle.carouselDots}>
+                                            {recentTours.map((_, index) => (
+                                                <View
+                                                    key={index}
+                                                    style={[
+                                                        HomeStyle.dot,
+                                                        recentTourIndex === index &&
+                                                        HomeStyle.activeDot,
+                                                    ]}
+                                                />
+                                            ))}
+                                        </View>
+                                    </>
+                                )}
+                            </View>
                         </>
                     )}
 

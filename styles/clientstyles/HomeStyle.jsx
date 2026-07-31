@@ -62,6 +62,25 @@ const HomeStyle = StyleSheet.create({
         letterSpacing: 0.2,
         paddingLeft: 5
     },
+    recentToursSection: {
+        marginTop: 20,
+        marginBottom: 30,
+    },
+    recentToursTitle: {
+        fontSize: 24,
+        fontFamily: "Montserrat_700Bold",
+        color: "#305797",
+        textAlign: "center",
+    },
+    recentToursSubtitle: {
+        fontSize: 13,
+        color: "#777",
+        textAlign: "center",
+        marginTop: 8,
+        marginBottom: 20,
+        paddingHorizontal: 25,
+        lineHeight: 20,
+    },
     // --- HERO BANNER ---
     heroContainer: {
         width: width,
