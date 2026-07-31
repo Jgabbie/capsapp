@@ -1063,7 +1063,7 @@ export default function Home({ route }) {
                                                         source={{ uri: tour.image }}
                                                         style={{
                                                             width: "100%",
-                                                            height: 240,
+                                                            height: 345,
                                                             borderRadius: 18,
                                                         }}
                                                         contentFit="cover"
