@@ -1704,7 +1704,7 @@ export default function VisaProgress() {
 
     const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
     const hasSecondChance = application?.secondChance === true;
-    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance;
+    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance && normalizedStatus !== 'rejected';
 
 
     const shouldShow =

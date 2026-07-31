@@ -61,46 +61,54 @@ export default function UserApplications() {
     const [showDateModal, setShowDateModal] = useState(false);
 
 
+    const fetchApplications = async () => {
+        if (!user?._id) return;
+        setLoading(true);
+        try {
+            const [visaRes, passportRes] = await Promise.all([
+                api.get('/visa/applications', withUserHeader(user._id)),
+                api.get('/passport/applications', withUserHeader(user._id))
+            ]);
+
+            const visas = (visaRes.data || []).map(v => ({
+                key: v._id,
+                type: 'Visa',
+                serviceName: v.serviceName || 'Visa Application',
+                date: v.createdAt,
+                status: Array.isArray(v.status) ? v.status[0] : v.status,
+                ref: v.applicationNumber
+            }));
+
+            const passports = (passportRes.data || []).map(p => ({
+                key: p._id,
+                type: 'Passport',
+                serviceName: p.applicationType || 'Passport Application',
+                date: p.createdAt,
+                status: p.status,
+                ref: p.applicationNumber
+            }));
+
+            const combined = [...visas, ...passports].sort((a, b) => new Date(b.date) - new Date(a.date));
+            setApplications(combined);
+        } catch (error) {
+            Alert.alert("Error", error.response?.data?.message || "Could not load applications.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     //fetch applications on component mount and when user changes
     useEffect(() => {
-        const fetchApplications = async () => {
-            if (!user?._id) return;
-            setLoading(true);
-            try {
-                const [visaRes, passportRes] = await Promise.all([
-                    api.get('/visa/applications', withUserHeader(user._id)),
-                    api.get('/passport/applications', withUserHeader(user._id))
-                ]);
+        if (!user?._id) return;
 
-                const visas = (visaRes.data || []).map(v => ({
-                    key: v._id,
-                    type: 'Visa',
-                    serviceName: v.serviceName || 'Visa Application',
-                    date: v.createdAt,
-                    status: Array.isArray(v.status) ? v.status[0] : v.status,
-                    ref: v.applicationNumber
-                }));
-
-                const passports = (passportRes.data || []).map(p => ({
-                    key: p._id,
-                    type: 'Passport',
-                    serviceName: p.applicationType || 'Passport Application',
-                    date: p.createdAt,
-                    status: p.status,
-                    ref: p.applicationNumber
-                }));
-
-                const combined = [...visas, ...passports].sort((a, b) => new Date(b.date) - new Date(a.date));
-                setApplications(combined);
-            } catch (error) {
-                Alert.alert("Error", error.response?.data?.message || "Could not load applications.");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchApplications();
-    }, [user?._id]);
 
+        const interval = setInterval(() => {
+            fetchApplications();
+        }, 5000); // refresh every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [user?._id]);
 
     //filter applications based on search text, status filter, and date filter
     const statusOptions = useMemo(() => {
