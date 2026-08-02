@@ -429,7 +429,7 @@ export default function UserBookings() {
         }
 
         if (!cancelImage) {
-            errors.file = 'Uploading at least one file is required.';
+            errors.file = 'Uploading a file is required.';
         }
 
         setCancelErrors(errors);
@@ -581,13 +581,6 @@ export default function UserBookings() {
                                 />
                             </TouchableOpacity>
                         </View>
-
-
-                        {(statusFilter !== 'All' || bookingDateFilter || travelDateFilter) && (
-                            <TouchableOpacity onPress={() => { setStatusFilter('All'); setBookingDateFilter(null); setTravelDateFilter(null); }}>
-                                <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
-                            </TouchableOpacity>
-                        )}
                     </View>
                 </View>
 
@@ -1246,7 +1239,7 @@ export default function UserBookings() {
                                         <Text
                                             style={UserBookingsStyle.uploadNote}
                                         >
-                                            Uploading at least one JPG, PNG, or PDF file is required.
+                                            Uploading a JPG, PNG, or PDF file is required.
                                         </Text>
                                     </View>
 

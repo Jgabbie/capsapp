@@ -750,12 +750,6 @@ export default function UserTransactions() {
                             </TouchableOpacity>
                         </View>
 
-
-                        {(statusFilter !== 'Status' || dateFilter) && (
-                            <TouchableOpacity onPress={() => { setStatusFilter('Status'); setDateFilter(null); }} style={{ justifyContent: 'center', paddingHorizontal: 5 }}>
-                                <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
-                            </TouchableOpacity>
-                        )}
                     </View>
                 </View>
 

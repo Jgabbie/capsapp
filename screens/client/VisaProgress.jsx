@@ -1755,52 +1755,629 @@ export default function VisaProgress() {
                 <View style={VisaProgressStyle.card}>
                     <Text style={VisaProgressStyle.cardTitle}>Application Info</Text>
 
+                    {/* Penalty */}
                     {showPenaltyPaymentSection && (
-                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#b91c1c', fontFamily: 'Montserrat_600SemiBold' }}>You are currently on Penalty, kindly pay the penalty fee to continue with your application.</Text>
-                        </View>
-                    )}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#FEF2F2",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#DC2626",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="warning"
+                                size={24}
+                                color="#DC2626"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
 
-                    {normalizedAppStatus === 'passport released' && application.deliveryFee !== "" && application.passportReleaseOption === 'delivery' && (
-                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            {application.deliveryFee === 0 ? (
-                                <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
-                                    The delivery details are not yet provided.
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#991B1B",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Penalty Fee Required
                                 </Text>
-                            ) : (
-                                <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
-                                    The delivery details are {application.deliveryFee} pesos and the date is {dayjs(application.deliveryDate).format('MMM D, YYYY')}
+
+                                <Text
+                                    style={{
+                                        color: "#7F1D1D",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    A penalty fee must be paid before you can continue with your application.
                                 </Text>
-                            )}
+                            </View>
                         </View>
                     )}
 
-                    {normalizedAppStatus === 'passport released' && application.passportReleaseOption === 'pickup' && (
-                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>
-                                Kindly pickup your passport from the M&RC office. We will email you once it's ready for pickup.
-                            </Text>
+                    {normalizedAppStatus === "application submitted" && !hasChosenSuggestedSchedule && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#EFF6FF",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#3B82F6",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="document-text"
+                                size={24}
+                                color="#2563EB"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#1E40AF",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Application Submitted
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#1D4ED8",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your application has been submitted successfully. Please wait while M&amp;RC reviews your application.
+                                </Text>
+                            </View>
                         </View>
                     )}
 
-                    {normalizedAppStatus === 'documents approved' && (
-                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Documents Approved</Text>
+                    {hasChosenSuggestedSchedule && normalizedAppStatus === "application submitted" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#EFF6FF",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#3B82F6",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="calendar"
+                                size={24}
+                                color="#2563EB"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#1E40AF",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Preferred Appointment Submitted
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#1D4ED8",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    You have submitted your preferred appointment date. Please wait while M&RC reviews and confirms your appointment schedule.
+                                </Text>
+                            </View>
                         </View>
                     )}
 
-                    {normalizedAppStatus === 'rejected' && (
-                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#96050c', fontFamily: 'Montserrat_600SemiBold' }}>Documents Rejected</Text>
+
+                    {normalizedAppStatus.toLowerCase() === "application approved" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#ECFDF5",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#10B981",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={24}
+                                color="#10B981"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#065F46",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Application Approved
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#047857",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your application has been approved. You may now proceed with the required payment to continue your application.
+                                </Text>
+                            </View>
                         </View>
                     )}
 
-                    {normalizedAppStatus !== 'application submitted' && normalizedAppStatus !== 'application approved' && normalizedAppStatus !== 'payment completed' && normalizedAppStatus !== 'documents uploaded' &&
-                        normalizedAppStatus !== 'documents approved' && normalizedAppStatus !== 'embassy approved' && normalizedAppStatus !== 'passport released' && normalizedAppStatus !== 'rejected' && (
-                            <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                                <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
+                    {normalizedAppStatus.toLowerCase() === "payment completed" && !showPenaltyPaymentSection && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#ECFDF5",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#10B981",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="card"
+                                size={24}
+                                color="#10B981"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#065F46",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Payment Completed
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#047857",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your payment has been received successfully. Please upload the required documents to continue the application process.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {normalizedAppStatus.toLowerCase() === "documents uploaded" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#EFF6FF",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#3B82F6",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="cloud-upload"
+                                size={24}
+                                color="#2563EB"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#1E40AF",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Documents Uploaded
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#1D4ED8",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your required documents have been uploaded successfully. They are currently being reviewed by M&amp;RC.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+
+
+
+
+
+
+                    {/* Passport Released - Delivery */}
+                    {normalizedAppStatus === "passport released" &&
+                        application.deliveryFee !== "" &&
+                        application.passportReleaseOption === "delivery" && (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-start",
+                                    backgroundColor: "#ECFDF5",
+                                    borderLeftWidth: 5,
+                                    borderLeftColor: "#10B981",
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <Ionicons
+                                    name="car"
+                                    size={24}
+                                    color="#10B981"
+                                    style={{ marginRight: 12, marginTop: 2 }}
+                                />
+
+                                <View style={{ flex: 1 }}>
+                                    <Text
+                                        style={{
+                                            color: "#065F46",
+                                            fontFamily: "Montserrat_700Bold",
+                                            fontSize: 15,
+                                        }}
+                                    >
+                                        Passport Delivery
+                                    </Text>
+
+                                    {application.deliveryFee === 0 ? (
+                                        <Text
+                                            style={{
+                                                color: "#047857",
+                                                fontFamily: "Montserrat_500Medium",
+                                                marginTop: 4,
+                                                lineHeight: 20,
+                                            }}
+                                        >
+                                            Your delivery details will be provided soon. Please check back later.
+                                        </Text>
+                                    ) : (
+                                        <Text
+                                            style={{
+                                                color: "#047857",
+                                                fontFamily: "Montserrat_500Medium",
+                                                marginTop: 4,
+                                                lineHeight: 20,
+                                            }}
+                                        >
+                                            Delivery Fee: ₱{application.deliveryFee}
+                                            {"\n"}
+                                            Delivery Date:{" "}
+                                            {dayjs(application.deliveryDate).format("MMM D, YYYY")}
+                                        </Text>
+                                    )}
+                                </View>
                             </View>
                         )}
+
+                    {/* Passport Released - Pickup */}
+                    {normalizedAppStatus === "passport released" &&
+                        application.passportReleaseOption === "pickup" && (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-start",
+                                    backgroundColor: "#ECFDF5",
+                                    borderLeftWidth: 5,
+                                    borderLeftColor: "#10B981",
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <Ionicons
+                                    name="business"
+                                    size={24}
+                                    color="#10B981"
+                                    style={{ marginRight: 12, marginTop: 2 }}
+                                />
+
+                                <View style={{ flex: 1 }}>
+                                    <Text
+                                        style={{
+                                            color: "#065F46",
+                                            fontFamily: "Montserrat_700Bold",
+                                            fontSize: 15,
+                                        }}
+                                    >
+                                        Passport Ready for Pickup
+                                    </Text>
+
+                                    <Text
+                                        style={{
+                                            color: "#047857",
+                                            fontFamily: "Montserrat_500Medium",
+                                            marginTop: 4,
+                                            lineHeight: 20,
+                                        }}
+                                    >
+                                        Kindly pick up your passport from the M&RC office. You'll receive an email once it is ready for collection.
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+                    {/* Documents Approved */}
+                    {normalizedAppStatus === "documents approved" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#ECFDF5",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#10B981",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={24}
+                                color="#10B981"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#065F46",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Documents Approved
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#047857",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your submitted documents have been reviewed and approved successfully.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {normalizedAppStatus === "embassy approved" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#ECFDF5",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#10B981",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="ribbon"
+                                size={24}
+                                color="#10B981"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#065F46",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Embassy Approved
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#047857",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Congratulations! The embassy has officially approved your visa application. Your application has successfully completed the embassy review process.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Rejected */}
+                    {normalizedAppStatus === "rejected" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#FEF2F2",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#DC2626",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="close-circle"
+                                size={24}
+                                color="#DC2626"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#991B1B",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Application Rejected
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#7F1D1D",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your application has been rejected. Please review the provided remarks or contact M&RC for further assistance.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* General Reminder */}
+                    {normalizedAppStatus !== "application submitted" &&
+                        normalizedAppStatus !== "application approved" &&
+                        normalizedAppStatus !== "payment completed" &&
+                        normalizedAppStatus !== "documents uploaded" &&
+                        normalizedAppStatus !== "documents approved" &&
+                        normalizedAppStatus !== "embassy approved" &&
+                        normalizedAppStatus !== "passport released" &&
+                        normalizedAppStatus !== "rejected" && (
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-start",
+                                    backgroundColor: "#FFFBEB",
+                                    borderLeftWidth: 5,
+                                    borderLeftColor: "#F59E0B",
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <Ionicons
+                                    name="information-circle"
+                                    size={24}
+                                    color="#D97706"
+                                    style={{ marginRight: 12, marginTop: 2 }}
+                                />
+
+                                <View style={{ flex: 1 }}>
+                                    <Text
+                                        style={{
+                                            color: "#92400E",
+                                            fontFamily: "Montserrat_700Bold",
+                                            fontSize: 15,
+                                        }}
+                                    >
+                                        Progress Update
+                                    </Text>
+
+                                    <Text
+                                        style={{
+                                            color: "#B45309",
+                                            fontFamily: "Montserrat_500Medium",
+                                            marginTop: 4,
+                                            lineHeight: 20,
+                                        }}
+                                    >
+                                        Refer to the Progress Tracker below to monitor the latest status of your application.
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+                    {normalizedAppStatus.toLowerCase() === "passport released" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#ECFDF5",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#15803D",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="checkmark-done-circle"
+                                size={24}
+                                color="#15803D"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#15803D",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Passport Released!
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#15803D",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Your passport has been released and is now ready for pickup or has been dispatched for delivery, depending on the release option you selected.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
 
                     <View style={VisaProgressStyle.infoRow}>
                         <Text style={VisaProgressStyle.infoLabel}>Reference</Text>

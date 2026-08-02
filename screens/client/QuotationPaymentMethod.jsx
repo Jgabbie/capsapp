@@ -181,9 +181,9 @@ export default function QuotationPaymentMethod({ route, navigation }) {
             const fullAmount = Number(travelDetails?.totalPrice || 0);
 
             const safeAmount =
-                    paymentType === "deposit"
-                        ? Number(amountToPay)
-                        : Number(travelDetails?.totalPrice || amountToPay || 0);
+                paymentType === "deposit"
+                    ? Number(amountToPay)
+                    : Number(travelDetails?.totalPrice || amountToPay || 0);
 
             if (isExistingBooking) {
                 if (method === 'manual') {
@@ -222,7 +222,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
                     const realCheckoutToken = tokenRes.data?.token;
 
                     const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: route.params.existingReference, mode: 'online' } });
-                    const cancelDeepLink = Linking.createURL('paymentmethod');
+                    const cancelDeepLink = Linking.createURL('home', {
+                        queryParams: {
+                            payment: 'cancelled',
+                        },
+                    });
 
                     const paymentPayload = {
                         bookingId: route.params.existingBookingId,
@@ -447,7 +451,11 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
                 } else {
                     const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
-                    const cancelDeepLink = Linking.createURL('paymentmethod');
+                    const cancelDeepLink = Linking.createURL('home', {
+                        queryParams: {
+                            payment: 'cancelled',
+                        },
+                    });
 
                     const paymentPayload = {
                         bookingId: newBookingId,

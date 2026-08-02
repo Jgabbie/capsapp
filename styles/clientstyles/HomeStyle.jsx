@@ -75,6 +75,7 @@ const HomeStyle = StyleSheet.create({
     recentToursSubtitle: {
         fontSize: 13,
         color: "#777",
+        fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         marginTop: 8,
         marginBottom: 20,

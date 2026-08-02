@@ -1,6 +1,7 @@
 import { View, TouchableOpacity, Image, Text } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
+import { DeviceEventEmitter } from "react-native";
 import HeaderStyle from '../styles/componentstyles/HeaderStyle'
 import { useUser } from '../context/UserContext'
 import { api, withUserHeader } from '../utils/api'
@@ -36,13 +37,20 @@ export default function Header({ openSidebar }) {
     useEffect(() => {
         fetchUnread();
 
-        // Keep the badge updated whenever the user navigates back to the current screen
-        const unsubscribe = cs.addListener('focus', () => {
+        const unsubscribeFocus = cs.addListener("focus", () => {
             fetchUnread();
         });
 
-        return unsubscribe;
-    }, [user?._id, cs]);
+        const subscription = DeviceEventEmitter.addListener(
+            "notificationsUpdated",
+            fetchUnread
+        );
+
+        return () => {
+            unsubscribeFocus();
+            subscription.remove();
+        };
+    }, [user?._id]);
 
     return (
         <View style={HeaderStyle.headerContainer}>

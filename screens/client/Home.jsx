@@ -260,6 +260,9 @@ export default function Home({ route }) {
     const [recentTourIndex, setRecentTourIndex] = useState(0);
 
 
+    const [paymentCancelledModal, setPaymentCancelledModal] = useState(false);
+
+
     // Featured Package Modal States
     const [featuredModalVisible, setFeaturedModalVisible] = useState(false)
     const [featuredPackage, setFeaturedPackage] = useState(null)
@@ -270,6 +273,18 @@ export default function Home({ route }) {
 
     const hasShownFeaturedModalRef = useRef(false);
     const hasHandledPreferenceModalRef = useRef(false);
+
+
+    useEffect(() => {
+        if (route?.params?.payment === "cancelled") {
+            setPaymentCancelledModal(true);
+
+            // Remove the parameter so it doesn't show again
+            cs.setParams?.({
+                payment: undefined,
+            });
+        }
+    }, [route?.params?.payment]);
 
     // Reset when the user logs out or another user logs in.
     useEffect(() => {
@@ -1479,7 +1494,6 @@ export default function Home({ route }) {
                         {/* Header */}
                         <Text style={{
                             fontSize: 24,
-                            fontWeight: '700',
                             color: '#305797',
                             marginBottom: 8,
                             fontFamily: 'Montserrat_700Bold'
@@ -1748,6 +1762,80 @@ export default function Home({ route }) {
                         >
                             Please wait while we send your inquiry.
                         </Text>
+                    </View>
+                </View>
+            </Modal>
+
+
+            <Modal
+                visible={paymentCancelledModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setPaymentCancelledModal(false)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <View
+                        style={{
+                            width: "85%",
+                            backgroundColor: "#fff",
+                            borderRadius: 15,
+                            padding: 24,
+                            alignItems: "center",
+                        }}
+                    >
+                        <Ionicons
+                            name="close-circle"
+                            size={100}
+                            color="#ff7a7a"
+                        />
+
+                        <Text
+                            style={{
+                                fontSize: 22,
+                                marginTop: 5,
+                                fontFamily: 'Montserrat_700Bold',
+                            }}
+                        >
+                            Payment Cancelled
+                        </Text>
+
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                marginTop: 10,
+                                color: "#777",
+                                fontFamily: 'Montserrat_400Regular',
+                            }}
+                        >
+                            Your payment was cancelled. No charges have been made.
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={() => setPaymentCancelledModal(false)}
+                            style={{
+                                marginTop: 20,
+                                backgroundColor: "#305797",
+                                paddingHorizontal: 30,
+                                paddingVertical: 12,
+                                borderRadius: 8,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: "#fff",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                OK
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

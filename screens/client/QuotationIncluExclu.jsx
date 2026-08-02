@@ -188,7 +188,7 @@ export default function QuotationIncluExclu({ route, navigation }) {
                             style={QuotationIncluExcluStyle.primaryButton}
                             onPress={() => navigation.navigate('quotationuploads', { quotation })}
                         >
-                            <Text style={QuotationIncluExcluStyle.primaryButtonText}>Upload Valid ID</Text>
+                            <Text style={QuotationIncluExcluStyle.primaryButtonText}>Upload Documents</Text>
                         </TouchableOpacity>
 
                         {/* Back Button (Goes Backward) */}

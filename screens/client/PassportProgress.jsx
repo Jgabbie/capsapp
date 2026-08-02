@@ -833,6 +833,12 @@ export default function PassportApplication() {
         ? application.suggestedAppointmentSchedules
         : [];
 
+    const hasChosenSuggestedSchedule = Boolean(
+        String(application?.suggestedAppointmentScheduleChosen?.date || '').trim() ||
+        String(application?.suggestedAppointmentScheduleChosen?.time || '').trim()
+    );
+
+
 
     //function to get the most relevant date for a specific status, checking status history and other date fields
     const getStatusSetDate = (app) => {
@@ -1684,7 +1690,7 @@ export default function PassportApplication() {
     const status = application?.status?.toLowerCase();
     const isOnPenalty = application?.onPenalty === true || application?.penaltyOn === true;
     const hasSecondChance = application?.secondChance === true;
-    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance && normalizedStatus !== 'rejected';;
+    const showPenaltyPaymentSection = isOnPenalty && !hasSecondChance && application?.status?.toLowerCase() !== 'rejected';
 
     const shouldShow =
         status === 'payment completed' ||
@@ -1731,40 +1737,516 @@ export default function PassportApplication() {
 
                 <Text style={PassportProgressStyle.title}>Passport Details</Text>
 
+                {/* Penalty */}
+                {showPenaltyPaymentSection && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#FEF2F2",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#DC2626",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="warning"
+                            size={24}
+                            color="#DC2626"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#991B1B",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Penalty Fee Required
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#7F1D1D",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                A penalty fee must be paid before your passport application can continue.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {appStatus.toLowerCase() === "application submitted" && !hasChosenSuggestedSchedule && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#EFF6FF",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#3B82F6",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="document-text"
+                            size={24}
+                            color="#2563EB"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#1E40AF",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Application Submitted
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#1D4ED8",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your application has been submitted successfully. Please wait while M&amp;RC reviews your application.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {hasChosenSuggestedSchedule && appStatus.toLowerCase() === "application submitted" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#EFF6FF",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#3B82F6",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="calendar"
+                            size={24}
+                            color="#2563EB"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#1E40AF",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Preferred Appointment Submitted
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#1D4ED8",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                You have submitted your preferred appointment date. Please wait while M&amp;RC reviews and confirms your Embassy appointment schedule.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {appStatus.toLowerCase() === "application approved" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#ECFDF5",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#10B981",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color="#10B981"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#065F46",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Application Approved
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#047857",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your application has been approved. You may now proceed with the required payment to continue your application.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {appStatus.toLowerCase() === "payment completed" && !showPenaltyPaymentSection && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#ECFDF5",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#10B981",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="card"
+                            size={24}
+                            color="#10B981"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#065F46",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Payment Completed
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#047857",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your payment has been received successfully. Please upload the required documents to continue the application process.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {appStatus.toLowerCase() === "documents uploaded" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#EFF6FF",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#3B82F6",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="cloud-upload"
+                            size={24}
+                            color="#2563EB"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#1E40AF",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Documents Uploaded
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#1D4ED8",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your required documents have been uploaded successfully. They are currently being reviewed by M&amp;RC.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Documents Approved */}
+                {appStatus.toLowerCase() === "documents approved" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#ECFDF5",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#10B981",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color="#10B981"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#065F46",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Documents Approved
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#047857",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your uploaded documents have been reviewed and approved. Please wait for the next update.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* DFA Approved */}
+                {appStatus.toLowerCase() === "dfa approved" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#ECFDF5",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#16A34A",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="ribbon"
+                            size={24}
+                            color="#16A34A"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#166534",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Congratulations!
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#15803D",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                The DFA has officially approved your passport application.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Rejected */}
+                {appStatus.toLowerCase() === "rejected" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#FEF2F2",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#DC2626",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="close-circle"
+                            size={24}
+                            color="#DC2626"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#991B1B",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Application Rejected
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#7F1D1D",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your passport application has been rejected. Please review the remarks or contact support for assistance.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* General Reminder */}
+                {appStatus.toLowerCase() !== "application submitted" &&
+                    appStatus.toLowerCase() !== "application approved" &&
+                    appStatus.toLowerCase() !== "payment completed" &&
+                    appStatus.toLowerCase() !== "documents uploaded" &&
+                    appStatus.toLowerCase() !== "documents approved" &&
+                    appStatus.toLowerCase() !== "dfa approved" &&
+                    appStatus.toLowerCase() !== "passport released" &&
+                    appStatus.toLowerCase() !== "rejected" && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#FFFBEB",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#F59E0B",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="information-circle"
+                                size={24}
+                                color="#D97706"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#92400E",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Track Your Progress
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#B45309",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    Refer to the Progress Tracker below to monitor the current status of your passport application.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                {appStatus.toLowerCase() === "passport released" && (
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            backgroundColor: "#ECFDF5",
+                            borderLeftWidth: 5,
+                            borderLeftColor: "#15803D",
+                            padding: 14,
+                            borderRadius: 12,
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Ionicons
+                            name="checkmark-done-circle"
+                            size={24}
+                            color="#15803D"
+                            style={{ marginRight: 12, marginTop: 2 }}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                style={{
+                                    color: "#15803D",
+                                    fontFamily: "Montserrat_700Bold",
+                                    fontSize: 15,
+                                }}
+                            >
+                                Passport Released!
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: "#15803D",
+                                    fontFamily: "Montserrat_500Medium",
+                                    marginTop: 4,
+                                    lineHeight: 20,
+                                }}
+                            >
+                                Your passport has been released and is now ready for pickup or has been dispatched for delivery, depending on the release option you selected.
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
                 {/* Application Info Card */}
                 <View style={PassportProgressStyle.card}>
                     <Text style={PassportProgressStyle.cardTitle}>Application Info</Text>
-
-                    {showPenaltyPaymentSection && (
-                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#b91c1c', fontFamily: 'Montserrat_600SemiBold' }}>You are currently on Penalty, kindly pay the penalty fee to continue with your application.</Text>
-                        </View>
-                    )}
-
-                    {appStatus.toLowerCase() === 'documents approved' && (
-                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Documents Approved</Text>
-                        </View>
-                    )}
-
-                    {appStatus.toLowerCase() === 'dfa approved' && (
-                        <View style={{ backgroundColor: '#ecfdf4', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#059669', fontFamily: 'Montserrat_600SemiBold' }}>Congratulations! Your documents have been approved by the DFA.</Text>
-                        </View>
-                    )}
-
-                    {appStatus.toLowerCase() === 'rejected' && (
-                        <View style={{ backgroundColor: '#fee2e2', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                            <Text style={{ color: '#96050c', fontFamily: 'Montserrat_600SemiBold' }}>Documents Rejected</Text>
-                        </View>
-                    )}
-
-                    {appStatus.toLowerCase() !== 'application submitted' && appStatus.toLowerCase() !== 'application approved' && appStatus.toLowerCase() !== 'payment completed' && appStatus.toLowerCase() !== 'documents uploaded' &&
-                        appStatus.toLowerCase() !== 'documents approved' && appStatus.toLowerCase() !== 'dfa approved' && appStatus.toLowerCase() !== 'passport released' && appStatus.toLowerCase() !== 'rejected' && (
-                            <View style={{ backgroundColor: '#fdfdec', padding: 8, borderRadius: 8, marginBottom: 10 }}>
-                                <Text style={{ color: '#969405', fontFamily: 'Montserrat_600SemiBold' }}>Kindly Refer to the Progress Tracker to Track your Application</Text>
-                            </View>
-                        )}
 
                     <View style={PassportProgressStyle.infoRow}>
                         <Text style={PassportProgressStyle.infoLabel}>Reference</Text>

@@ -9,6 +9,7 @@ import { Calendar } from 'react-native-calendars'
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import PassportGuidanceStyle from '../../styles/clientstyles/PassportGuidanceStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle';
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
@@ -104,6 +105,7 @@ export default function PassportGuidanceNew() {
     const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showDfaModal, setShowDfaModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [showInvalidDateModal, setShowInvalidDateModal] = useState(false);
 
     const [errors, setErrors] = useState({
         dfaLocation: '',
@@ -156,11 +158,8 @@ export default function PassportGuidanceNew() {
         const selectedDay = dayjs(dateString).day()
 
         if (selectedDay === 0 || selectedDay === 6) {
-            Alert.alert(
-                'Invalid Date',
-                'Appointments are only available from Monday to Friday.'
-            )
-            return
+            setShowInvalidDateModal(true);
+            return;
         }
 
         setPendingPreferredDate(dateString)
@@ -173,11 +172,8 @@ export default function PassportGuidanceNew() {
         const selectedDay = dayjs(pendingPreferredDate).day()
 
         if (selectedDay === 0 || selectedDay === 6) {
-            Alert.alert(
-                'Invalid Date',
-                'Appointments are only available from Monday to Friday.'
-            )
-            return
+            setShowInvalidDateModal(true);
+            return;
         }
 
         setPreferredDate(pendingPreferredDate)
@@ -674,6 +670,47 @@ export default function PassportGuidanceNew() {
                         <Text style={PassportGuidanceStyle.modalDesc}>Your passport application has been submitted successfully. Kindly wait for your application to be approved.</Text>
                         <TouchableOpacity style={PassportGuidanceStyle.modalButton} onPress={() => { setShowSuccessModal(false); cs.navigate('userapplications'); }}>
                             <Text style={PassportGuidanceStyle.modalButtonText}>Continue</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                transparent
+                animationType="fade"
+                visible={showInvalidDateModal}
+                onRequestClose={() => setShowInvalidDateModal(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <View
+                            style={[
+                                ModalStyle.modalIconContainer,
+                                { backgroundColor: "#FEF3C7" }
+                            ]}
+                        >
+                            <Ionicons
+                                name="warning-outline"
+                                size={32}
+                                color="#d97706"
+                            />
+                        </View>
+
+                        <Text style={ModalStyle.modalTitle}>
+                            Invalid Date
+                        </Text>
+
+                        <Text style={ModalStyle.modalText}>
+                            Appointments are only available from Monday to Friday. Please select a weekday.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
+                            onPress={() => setShowInvalidDateModal(false)}
+                        >
+                            <Text style={ModalStyle.modalButtonText}>
+                                Got It
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>

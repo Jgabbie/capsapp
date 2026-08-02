@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, DeviceEventEmitter } from 'react-native';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
@@ -90,9 +90,22 @@ export default function Notifications() {
     //mark all notifications as read
     const handleMarkAllRead = async () => {
         if (unreadCount === 0) return;
+
         try {
-            await api.patch('/notifications/read-all', {}, withUserHeader(user._id));
-            setNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
+            await api.patch(
+                "/notifications/read-all",
+                {},
+                withUserHeader(user._id)
+            );
+
+            setNotifs(prev =>
+                prev.map(n => ({
+                    ...n,
+                    isRead: true,
+                }))
+            );
+
+            DeviceEventEmitter.emit("notificationsUpdated");
         } catch (e) {
             console.error("Mark all read error:", e.message);
         }
@@ -107,7 +120,15 @@ export default function Notifications() {
         if (!item.isRead) {
             try {
                 await api.patch(`/notifications/${item._id}/read`, {}, withUserHeader(user._id));
-                setNotifs(prev => prev.map(n => n._id === item._id ? { ...n, isRead: true } : n));
+                setNotifs(prev =>
+                    prev.map(n =>
+                        n._id === item._id
+                            ? { ...n, isRead: true }
+                            : n
+                    )
+                );
+
+                DeviceEventEmitter.emit("notificationsUpdated");
             } catch (e) {
                 console.error("Mark as read error:", e.message);
             }

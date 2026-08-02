@@ -41,6 +41,8 @@ export default function Profile() {
 
 
     //modals & Pickers
+    const [confirmPreferencesModalVisible, setConfirmPreferencesModalVisible] = useState(false);
+    const [preferencesSuccessModalVisible, setPreferencesSuccessModalVisible] = useState(false);
     const [confirmModalVisible, setConfirmModalVisible] = useState(false)
     const [successModalVisible, setSuccessModalVisible] = useState(false)
     const [genderModalVisible, setGenderModalVisible] = useState(false)
@@ -51,6 +53,7 @@ export default function Profile() {
     //user data states
     const [profileImage, setProfileImage] = useState('')
     const [selectedReviewToDelete, setSelectedReviewToDelete] = useState(null)
+    const [reviewDeletedModalVisible, setReviewDeletedModalVisible] = useState(false);
     const [userData, setUserData] = useState({
         username: "",
         firstname: "",
@@ -424,16 +427,25 @@ export default function Profile() {
     //save preferences function
     const savePreferences = async () => {
         setSavingPreferences(true);
+
         try {
-            await api.post('/preferences/save', {
-                moods: preferences.moods,
-                tours: preferences.tours
-            }, withUserHeader(user._id));
+            await api.post(
+                "/preferences/save",
+                {
+                    moods: preferences.moods,
+                    tours: preferences.tours,
+                },
+                withUserHeader(user._id)
+            );
+
             setOriginalPreferences(preferences);
             setEditingPreferences(false);
-            showMessage('Preferences saved successfully!');
+
+            setConfirmPreferencesModalVisible(false);
+            setPreferencesSuccessModalVisible(true);
         } catch (error) {
-            showMessage('Failed to save preferences');
+            showMessage("Failed to save preferences");
+            setConfirmPreferencesModalVisible(false);
         } finally {
             setSavingPreferences(false);
         }
@@ -477,14 +489,20 @@ export default function Profile() {
             )
 
             setRecentReviews(prev =>
-                prev.filter(review => String(review._id || review.id) !== String(selectedReviewToDelete._id || selectedReviewToDelete.id))
-            )
+                prev.filter(review =>
+                    String(review._id || review.id) !==
+                    String(selectedReviewToDelete._id || selectedReviewToDelete.id)
+                )
+            );
+
+            setDeleteReviewModalVisible(false);
+            setReviewDeletedModalVisible(true);
+            return;
             showMessage('Review deleted successfully.')
         } catch (error) {
             console.error('Delete review error:', error.response?.data || error.message)
             showMessage('Unable to delete review.')
         } finally {
-            setDeleteReviewModalVisible(false)
             setSelectedReviewToDelete(null)
         }
     }
@@ -1093,7 +1111,7 @@ export default function Profile() {
                         <View style={ProfileStyle.actionContainer}>
                             <TouchableOpacity
                                 style={[ProfileStyle.saveButton, (preferences.moods.length !== 3 || preferences.tours.length < 1) && ProfileStyle.saveButtonDisabled]}
-                                onPress={savePreferences}
+                                onPress={() => setConfirmPreferencesModalVisible(true)}
                                 disabled={savingPreferences || preferences.moods.length !== 3 || preferences.tours.length < 1}
                             >
                                 {savingPreferences ? <ActivityIndicator color="#fff" size="small" /> : <Text style={ProfileStyle.buttonText}><Ionicons name="save-outline" size={16} color="#fff" /> Save</Text>}
@@ -1122,9 +1140,9 @@ export default function Profile() {
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => handleDeleteReviewPress(review)}
-                                    style={{ backgroundColor: '#fee2e2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 }}
+                                    style={{ alignItems: "center", justifyContent: "center", backgroundColor: "#992A46", height: 35, borderRadius: 8, paddingHorizontal: 10, marginTop: -4 }}
                                 >
-                                    <Text style={{ fontFamily: 'Montserrat_700Bold', color: '#dc2626', fontSize: 11, textTransform: 'uppercase' }}>
+                                    <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Montserrat_600SemiBold", }}>
                                         Delete
                                     </Text>
                                 </TouchableOpacity>
@@ -1302,6 +1320,130 @@ export default function Profile() {
                                     <Text style={ModalStyle.modalButtonText}>Cancel</Text>
                                 </TouchableOpacity>
                             </View>
+                        </View>
+                    </View>
+                </Modal>
+
+
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={reviewDeletedModalVisible}
+                    onRequestClose={() => setReviewDeletedModalVisible(false)}
+                >
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+
+                            <View style={ModalStyle.modalIconContainer}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={32}
+                                    color="#059669"
+                                />
+                            </View>
+
+                            <Text style={ModalStyle.modalTitle}>
+                                Review Deleted
+                            </Text>
+
+                            <Text style={ModalStyle.modalText}>
+                                Your review has been deleted successfully.
+                            </Text>
+
+                            <TouchableOpacity
+                                style={ModalStyle.modalButton}
+                                onPress={() => setReviewDeletedModalVisible(false)}
+                            >
+                                <Text style={ModalStyle.modalButtonText}>
+                                    Got It
+                                </Text>
+                            </TouchableOpacity>
+
+                        </View>
+                    </View>
+                </Modal>
+
+
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={confirmPreferencesModalVisible}
+                    onRequestClose={() => setConfirmPreferencesModalVisible(false)}
+                >
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+
+                            <Text style={ModalStyle.modalTitle}>
+                                Confirm Changes
+                            </Text>
+
+                            <Text style={ModalStyle.modalText}>
+                                Are you sure you want to save your updated preferences?
+                            </Text>
+
+                            <View style={ModalStyle.modalButtonContainer}>
+                                <TouchableOpacity
+                                    style={ModalStyle.modalButton}
+                                    onPress={savePreferences}
+                                >
+                                    <Text style={ModalStyle.modalButtonText}>
+                                        Save
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={ModalStyle.modalCancelButton}
+                                    onPress={() =>
+                                        setConfirmPreferencesModalVisible(false)
+                                    }
+                                >
+                                    <Text style={ModalStyle.modalButtonText}>
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                        </View>
+                    </View>
+                </Modal>
+
+
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={preferencesSuccessModalVisible}
+                    onRequestClose={() => setPreferencesSuccessModalVisible(false)}
+                >
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+
+                            <View style={ModalStyle.modalIconContainer}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={32}
+                                    color="#059669"
+                                />
+                            </View>
+
+                            <Text style={ModalStyle.modalTitle}>
+                                Change Successful
+                            </Text>
+
+                            <Text style={ModalStyle.modalText}>
+                                Your preferences have been updated successfully.
+                            </Text>
+
+                            <TouchableOpacity
+                                style={ModalStyle.modalButton}
+                                onPress={() =>
+                                    setPreferencesSuccessModalVisible(false)
+                                }
+                            >
+                                <Text style={ModalStyle.modalButtonText}>
+                                    Got It
+                                </Text>
+                            </TouchableOpacity>
+
                         </View>
                     </View>
                 </Modal>

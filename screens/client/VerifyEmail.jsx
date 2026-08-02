@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
 import * as Linking from 'expo-linking';
 import { API_BASE_URL } from '../../utils/api';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import {
@@ -11,7 +12,6 @@ import {
     Montserrat_600SemiBold,
     Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
-
 
 export default function VerifyEmail() {
     const [fontsLoaded] = useFonts({
@@ -28,8 +28,6 @@ export default function VerifyEmail() {
     const [message, setMessage] = useState('Verifying your account...');
     const [debugInfo, setDebugInfo] = useState('');
 
-
-    //useEffect to handle email verification when the component mounts or when the route changes
     useEffect(() => {
         let isMounted = true;
 
@@ -47,7 +45,7 @@ export default function VerifyEmail() {
                 if (!token || !email) {
                     if (!isMounted) return;
                     setStatus('failed');
-                    setMessage('Invalid verification link.');
+                    setMessage('Invalid verification link or missing credentials.');
                     setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
                     return;
                 }
@@ -58,18 +56,18 @@ export default function VerifyEmail() {
                 if (!isMounted) return;
                 if (resp.ok) {
                     setStatus('success');
-                    setMessage('Your account has been successfully verified. Redirecting to login...');
-                    setTimeout(() => navigation.navigate('login'), 3000);
+                    setMessage('Your account has been successfully verified! You can now log in.');
+                    setTimeout(() => navigation.navigate('login'), 3500);
                 } else {
                     const text = await resp.text();
                     setStatus('failed');
-                    setMessage(`Verification failed (${resp.status}).`);
+                    setMessage(`Verification failed (Status Code: ${resp.status}).`);
                     setDebugInfo(`API_BASE_URL: ${API_BASE_URL}\nResponse: ${text || 'No response body'}`);
                 }
             } catch (err) {
                 if (!isMounted) return;
                 setStatus('failed');
-                setMessage(err.message || 'Verification error');
+                setMessage(err.message || 'An unexpected verification error occurred.');
                 setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
             }
         };
@@ -104,34 +102,76 @@ export default function VerifyEmail() {
         };
     }, [navigation, route]);
 
-
-
-
+    if (!fontsLoaded) {
+        return null;
+    }
 
     return (
         <View style={styles.container}>
-            {status === 'verifying' && (
-                <>
-                    <ActivityIndicator size="large" color="#305797" />
-                    <Text style={styles.title}>Verifying account...</Text>
-                    <Text style={styles.message}>{message}</Text>
-                </>
-            )}
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.card}>
+                    {/* Verifying State */}
+                    {status === 'verifying' && (
+                        <View style={styles.stateWrapper}>
+                            <View style={[ModalStyle.modalIconContainer, styles.blueBadge]}>
+                                <ActivityIndicator size="large" color="#305797" />
+                            </View>
+                            <Text style={styles.title}>Verifying Account</Text>
+                            <Text style={styles.message}>{message}</Text>
+                        </View>
+                    )}
 
-            {status === 'success' && (
-                <>
-                    <Text style={styles.success}>Your account is successfully verified</Text>
-                    <Text style={styles.message}>{message}</Text>
-                </>
-            )}
+                    {/* Success State */}
+                    {status === 'success' && (
+                        <View style={styles.stateWrapper}>
+                            <View style={ModalStyle.modalIconContainer}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={32}
+                                    color="#059669"
+                                />
+                            </View>
+                            <Text style={styles.title}>Email Verified!</Text>
+                            <Text style={styles.message}>{message}</Text>
 
-            {status === 'failed' && (
-                <>
-                    <Text style={styles.failed}>Verification failed</Text>
-                    <Text style={styles.message}>{message}</Text>
-                    {debugInfo ? <Text style={styles.debug}>{debugInfo}</Text> : null}
-                </>
-            )}
+                            <TouchableOpacity
+                                style={styles.primaryButton}
+                                activeOpacity={0.8}
+                                onPress={() => navigation.navigate('login')}
+                            >
+                                <Text style={styles.primaryButtonText}>Continue to Login</Text>
+                                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={styles.buttonIcon} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Failed State */}
+                    {status === 'failed' && (
+                        <View style={styles.stateWrapper}>
+                            <View style={[ModalStyle.modalIconContainer, styles.failedBadge]}>
+                                <Ionicons name="close" size={32} color="#DC2626" />
+                            </View>
+                            <Text style={styles.title}>Verification Failed</Text>
+                            <Text style={styles.message}>{message}</Text>
+
+                            <TouchableOpacity
+                                style={styles.primaryButton}
+                                activeOpacity={0.8}
+                                onPress={() => navigation.navigate('login')}
+                            >
+                                <Text style={styles.primaryButtonText}>Back to Login</Text>
+                            </TouchableOpacity>
+
+                            {debugInfo ? (
+                                <View style={styles.debugBox}>
+                                    <Text style={styles.debugTitle}>Debug Details</Text>
+                                    <Text style={styles.debugText}>{debugInfo}</Text>
+                                </View>
+                            ) : null}
+                        </View>
+                    )}
+                </View>
+            </SafeAreaView>
         </View>
     );
 }
@@ -139,36 +179,105 @@ export default function VerifyEmail() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+    },
+    safeArea: {
+        flex: 1,
         justifyContent: 'center',
-        padding: 22,
-        backgroundColor: '#fff'
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    card: {
+        width: '100%',
+        maxWidth: 400,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        paddingVertical: 36,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 16,
+        elevation: 4,
+    },
+    stateWrapper: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    blueBadge: {
+        backgroundColor: '#EFF6FF',
+    },
+    failedBadge: {
+        backgroundColor: '#FEF2F2',
     },
     title: {
-        marginTop: 14,
-        fontSize: 18,
-        color: '#305797',
-        fontWeight: '700'
+        fontSize: 22,
+        fontFamily: 'Montserrat_700Bold',
+        color: '#1E293B',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     message: {
-        marginTop: 8,
-        color: '#64748b',
-        textAlign: 'center'
-    },
-    success: {
-        fontSize: 20,
-        color: '#059669',
-        fontWeight: '800'
-    },
-    failed: {
-        fontSize: 20,
-        color: '#b91c1c',
-        fontWeight: '800'
-    },
-    debug: {
-        marginTop: 10,
-        color: '#94a3b8',
+        fontSize: 14,
+        fontFamily: 'Montserrat_400Regular',
+        color: '#64748B',
         textAlign: 'center',
-        fontSize: 12
-    }
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    primaryButton: {
+        width: '100%',
+        height: 52,
+        backgroundColor: '#305797',
+        borderRadius: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+    },
+    primaryButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontFamily: 'Montserrat_600SemiBold',
+    },
+    buttonIcon: {
+        marginLeft: 8,
+    },
+    debugBox: {
+        marginTop: 24,
+        width: '100%',
+        backgroundColor: '#F1F5F9',
+        borderRadius: 10,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    debugTitle: {
+        fontSize: 11,
+        fontFamily: 'Montserrat_600SemiBold',
+        color: '#94A3B8',
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+        marginBottom: 4,
+    },
+    debugText: {
+        color: '#64748B',
+        fontSize: 11,
+        fontFamily: 'Montserrat_400Regular',
+    },
+});
+
+const ModalStyle = StyleSheet.create({
+    modalIconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: '#ECFDF5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
 });

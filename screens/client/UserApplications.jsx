@@ -7,6 +7,7 @@ import { Calendar } from 'react-native-calendars';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import UserApplicationsStyle from '../../styles/clientstyles/UserApplicationsStyle';
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api, withUserHeader } from '../../utils/api';
 import { useUser } from '../../context/UserContext';
 
@@ -282,19 +283,6 @@ export default function UserApplications() {
                                     />
                                 </TouchableOpacity>
                             </View>
-
-
-                            {(statusFilter !== 'Status' && statusFilter !== 'All') || applicationDateFilter ? (
-                                <TouchableOpacity
-                                    style={UserApplicationsStyle.clearFilterBtn}
-                                    onPress={() => {
-                                        setStatusFilter('Status');
-                                        setApplicationDateFilter(null);
-                                    }}
-                                >
-                                    <Ionicons name="refresh-circle" size={30} color="#ff4d4f" />
-                                </TouchableOpacity>
-                            ) : null}
                         </View>
                     </View>
 
@@ -359,54 +347,81 @@ export default function UserApplications() {
                 visible={showStatusModal}
                 transparent
                 animationType="fade"
-                onRequestClose={() => setShowStatusModal(false)}
             >
                 <TouchableOpacity
-                    style={UserApplicationsStyle.modalOverlay}
+                    style={ModalStyle.modalOverlay}
                     activeOpacity={1}
                     onPress={() => setShowStatusModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={UserApplicationsStyle.modalContainer}>
-                            <View style={UserApplicationsStyle.modalHeaderRow}>
-                                <Text style={UserApplicationsStyle.modalTitleText}>Select Status</Text>
-                                <TouchableOpacity onPress={() => setShowStatusModal(false)}>
-                                    <Ionicons name="close" size={22} color="#9ca3af" />
-                                </TouchableOpacity>
-                            </View>
+                        <View
+                            style={[
+                                ModalStyle.modalBox,
+                                {
+                                    width: "85%",
+                                    paddingVertical: 10,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: "center",
+                                    fontSize: 18,
+                                    fontFamily: "Montserrat_700Bold",
+                                    color: "#305797",
+                                    marginVertical: 15,
+                                }}
+                            >
+                                Select Status
+                            </Text>
 
-                            <View style={UserApplicationsStyle.tagContainer}>
-                                {statusOptions.map((status) => {
-                                    const isSelected =
-                                        (statusFilter === 'Status' && status === 'All') || status === statusFilter;
-                                    return (
-                                        <TouchableOpacity
-                                            key={status}
-                                            style={[
-                                                UserApplicationsStyle.modalStatusTag,
-                                                isSelected && UserApplicationsStyle.modalStatusTagSelected,
-                                            ]}
-                                            onPress={() => {
-                                                setStatusFilter(status);
-                                                setShowStatusModal(false);
-                                            }}
-                                        >
-                                            <Text
-                                                style={[
-                                                    UserApplicationsStyle.modalStatusText,
-                                                    isSelected && UserApplicationsStyle.modalStatusTextSelected,
-                                                ]}
-                                            >
-                                                {status}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
+                            {[
+                                "All",
+                                "Pending",
+                                "Application Submitted",
+                                "Payment Completed",
+                                "Documents Uploaded",
+                                "Processing",
+                                "Ready for Pickup",
+                                "Released",
+                                "Rejected",
+                            ].map((status, index) => (
+                                <TouchableOpacity
+                                    key={status}
+                                    style={[
+                                        UserApplicationsStyle.modalOption,
+                                        {
+                                            borderTopWidth: index === 0 ? 0 : 1,
+                                            borderTopColor: "#f0f0f0",
+                                        },
+                                    ]}
+                                    onPress={() => {
+                                        setStatusFilter(status);
+                                        setShowStatusModal(false);
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            fontSize: 15,
+                                            color:
+                                                statusFilter === status
+                                                    ? "#305797"
+                                                    : "#555",
+                                            fontFamily:
+                                                statusFilter === status
+                                                    ? "Montserrat_700Bold"
+                                                    : "Montserrat_400Regular",
+                                        }}
+                                    >
+                                        {status}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
             </Modal>
+
 
             <Modal
                 visible={showDateModal}

@@ -50,7 +50,7 @@ export default function PassportGuidance() {
                 </ImageBackground>
 
                 <View style={PassportGuidanceStyle.headerContainer}>
-                    <Text style={PassportGuidanceStyle.title}>Passport Assistance</Text>
+                    <Text style={PassportGuidanceStyle.title}>Passport Application Assistance</Text>
                     <Text style={PassportGuidanceStyle.subtitle}>Select the passport service you need.</Text>
                 </View>
 

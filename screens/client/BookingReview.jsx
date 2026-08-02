@@ -207,7 +207,7 @@ export default function BookingReview({ route, navigation }) {
                         style={BookingReviewStyle.smallProceedButton}
                         onPress={handleNext}
                     >
-                        <Text style={BookingReviewStyle.smallProceedButtonText}>Next: Upload {documentLabel}</Text>
+                        <Text style={BookingReviewStyle.smallProceedButtonText}>Upload Documents</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity

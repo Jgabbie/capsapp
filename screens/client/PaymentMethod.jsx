@@ -241,14 +241,9 @@ export default function PaymentMethod({ route, navigation }) {
                         }
                     });
 
-                    const cancelDeepLink = Linking.createURL('paymentmethod', {
+                    const cancelDeepLink = Linking.createURL('home', {
                         queryParams: {
-                            packageId: String(targetPackageId),
-                            existingPackageId: String(targetPackageId),
-                            existingBookingId: String(params.existingBookingId),
-                            existingReference: String(params.existingReference || ''),
-                            amountToPay: String(finalAmountToPay),
-                            paymentType: String(paymentType || 'Full Payment'),
+                            payment: 'cancelled',
                         },
                     });
 
@@ -496,7 +491,11 @@ export default function PaymentMethod({ route, navigation }) {
 
                 } else {
                     const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: bookingRef, mode: 'online' } });
-                    const cancelDeepLink = Linking.createURL('paymentmethod');
+                    const cancelDeepLink = Linking.createURL('home', {
+                        queryParams: {
+                            payment: 'cancelled',
+                        },
+                    });
 
                     const paymentPayload = {
                         bookingId: newBookingId,

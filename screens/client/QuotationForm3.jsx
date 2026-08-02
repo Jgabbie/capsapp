@@ -132,7 +132,7 @@ export default function QuotationForm3({ route, navigation }) {
                         style={QuotationAllInStyle.proceedButton}
                         onPress={handleNext}
                     >
-                        <Text style={QuotationAllInStyle.proceedButtonText}>Next: Terms & Conditions</Text>
+                        <Text style={QuotationAllInStyle.proceedButtonText}>Next: Disclaimers</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity

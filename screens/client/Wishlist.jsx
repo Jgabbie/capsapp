@@ -59,6 +59,7 @@ export default function Wishlist() {
 
     //modal States
     const [modalVisible, setModalVisible] = useState(false);
+    const [removedModalVisible, setRemovedModalVisible] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
 
     //filter States
@@ -212,13 +213,23 @@ export default function Wishlist() {
     //handle removing an item from the wishlist, sending a delete request to the server and updating local state
     const handleRemoveConfirm = async () => {
         if (!itemToRemove) return;
+
         try {
             await api.delete('/wishlist/remove', {
                 data: { packageId: itemToRemove.id },
                 ...withUserHeader(user?._id)
             });
+
             setPackages(prev => prev.filter(p => p.id !== itemToRemove.id));
+
+            // Close confirmation modal
             setModalVisible(false);
+
+            // Clear selected item
+            setItemToRemove(null);
+
+            // Show success modal
+            setRemovedModalVisible(true);
         } catch (err) {
             Alert.alert("Error", "Could not remove package from wishlist.");
             setModalVisible(false);
@@ -478,25 +489,6 @@ export default function Wishlist() {
                                                 VIEW DETAILS
                                             </Text>
                                         </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            style={WishlistStyle.removeButton}
-                                            activeOpacity={0.85}
-                                            onPress={() => {
-                                                setItemToRemove(item);
-                                                setModalVisible(true);
-                                            }}
-                                        >
-                                            <Ionicons
-                                                name="trash-outline"
-                                                size={15}
-                                                color="#ffffff"
-                                            />
-
-                                            <Text style={WishlistStyle.removeButtonText}>
-                                                REMOVE
-                                            </Text>
-                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -522,6 +514,44 @@ export default function Wishlist() {
                                 <Text style={ModalStyle.modalButtonText}>Cancel</Text>
                             </TouchableOpacity>
                         </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+            {/* PACKAGE REMOVED SUCCESS MODAL */}
+            <Modal
+                transparent
+                animationType="fade"
+                visible={removedModalVisible}
+                onRequestClose={() => setRemovedModalVisible(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <View style={ModalStyle.modalIconContainer}>
+                            <Ionicons
+                                name="checkmark"
+                                size={32}
+                                color="#059669"
+                            />
+                        </View>
+
+                        <Text style={ModalStyle.modalTitle}>
+                            Package Removed
+                        </Text>
+
+                        <Text style={ModalStyle.modalText}>
+                            The package has been removed from your wishlist successfully.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
+                            onPress={() => setRemovedModalVisible(false)}
+                        >
+                            <Text style={ModalStyle.modalButtonText}>
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

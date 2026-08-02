@@ -322,16 +322,6 @@ export default function UserPackageQuotation() {
                             </View>
                         </View>
 
-
-                        {hasActiveFilters && (
-                            <TouchableOpacity
-                                style={[UserPackageQuotationStyle.clearFilterBtn, { marginLeft: 8 }]}
-                                onPress={clearFilters}
-                            >
-                                <Ionicons name="refresh-circle" size={32} color="#ff4d4f" />
-                            </TouchableOpacity>
-                        )}
-
                     </View>
                 </View>
 

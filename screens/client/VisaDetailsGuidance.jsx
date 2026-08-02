@@ -9,6 +9,7 @@ import { Calendar } from 'react-native-calendars'
 
 import Sidebar from '../../components/Sidebar'
 import VisaDetailsGuidanceStyle from '../../styles/clientstyles/VisaDetailsGuidanceStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle';
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
@@ -96,6 +97,7 @@ export default function VisaDetailsGuidance() {
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [showTimePickerModal, setShowTimePickerModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [showInvalidDateModal, setShowInvalidDateModal] = useState(false);
 
     const [errors, setErrors] = useState({
         preferredDate: '',
@@ -161,10 +163,7 @@ export default function VisaDetailsGuidance() {
         const selectedDay = dayjs(dateString).day()
 
         if (selectedDay === 0 || selectedDay === 6) {
-            Alert.alert(
-                'Invalid Date',
-                'Appointments are only available from Monday to Friday.'
-            )
+            setShowInvalidDateModal(true);
             return
         }
 
@@ -178,11 +177,8 @@ export default function VisaDetailsGuidance() {
         const selectedDay = dayjs(pendingPreferredDate).day()
 
         if (selectedDay === 0 || selectedDay === 6) {
-            Alert.alert(
-                'Invalid Date',
-                'Appointments are only available from Monday to Friday.'
-            )
-            return
+            setShowInvalidDateModal(true);
+            return;
         }
 
         setPreferredDate(pendingPreferredDate)
@@ -857,6 +853,47 @@ export default function VisaDetailsGuidance() {
 
                         <TouchableOpacity style={VisaDetailsGuidanceStyle.modalButton} onPress={handleContinue}>
                             <Text style={VisaDetailsGuidanceStyle.modalButtonText}>Continue</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                transparent
+                animationType="fade"
+                visible={showInvalidDateModal}
+                onRequestClose={() => setShowInvalidDateModal(false)}
+            >
+                <View style={ModalStyle.modalOverlay}>
+                    <View style={ModalStyle.modalBox}>
+                        <View
+                            style={[
+                                ModalStyle.modalIconContainer,
+                                { backgroundColor: "#FEF3C7" }
+                            ]}
+                        >
+                            <Ionicons
+                                name="warning-outline"
+                                size={32}
+                                color="#d97706"
+                            />
+                        </View>
+
+                        <Text style={ModalStyle.modalTitle}>
+                            Invalid Date
+                        </Text>
+
+                        <Text style={ModalStyle.modalText}>
+                            Appointments are only available from Monday to Friday. Please select a weekday.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={ModalStyle.modalButton}
+                            onPress={() => setShowInvalidDateModal(false)}
+                        >
+                            <Text style={ModalStyle.modalButtonText}>
+                                Got It
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
