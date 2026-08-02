@@ -7,6 +7,7 @@ import dayjs from 'dayjs'
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
+import * as Sharing from 'expo-sharing';
 
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
@@ -361,7 +362,7 @@ export default function UserTransactions() {
     };
 
 
-    // Save the receipt without opening it
+// Save or share the receipt (iOS and Android compatible)
     const saveReceiptDirectly = async ({
         sourceUri,
         fileName,
@@ -379,12 +380,35 @@ export default function UserTransactions() {
             );
         }
 
-        if (
-            Platform.OS !== 'android' ||
-            !FileSystem.StorageAccessFramework
-        ) {
+        // --- iOS FLOW ---
+        if (Platform.OS === 'ios') {
+            const isSharingAvailable = await Sharing.isAvailableAsync();
+
+            if (!isSharingAvailable) {
+                throw new Error('Sharing is not available on this device.');
+            }
+
+            // Copy file to temporary document directory with final filename
+                const targetUri = `${FileSystem.documentDirectory}${fileName}`;
+            await FileSystem.copyAsync({
+                from: sourceUri,
+                to: targetUri,
+            });
+
+            // Open iOS native share sheet ("Save to Files", AirDrop, etc.)
+            await Sharing.shareAsync(targetUri, {
+                UTI: 'com.adobe.pdf',
+                mimeType: 'application/pdf',
+                dialogTitle: 'Receipt PDF',
+            });
+
+            return targetUri;
+        }
+
+        // --- ANDROID FLOW ---
+        if (!FileSystem.StorageAccessFramework) {
             throw new Error(
-                'Direct saving to Downloads is currently available only on Android.'
+                'Direct saving to Downloads is currently unavailable.'
             );
         }
 

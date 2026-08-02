@@ -3,7 +3,8 @@ import { StyleSheet } from "react-native";
 const SignupStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 200
+        paddingTop: 200,
+        alignItems: 'center',
     },
     signupSecondHeading: {
         fontSize: 26,
@@ -11,14 +12,14 @@ const SignupStyle = StyleSheet.create({
         color: "#305797",
         marginTop: 0,
         marginBottom: 0,
-        marginHorizontal: 20,
+        // marginHorizontal: 20,
         textAlign: "center"
     },
     signupLabel: {
         fontSize: 12,
         fontFamily: "Montserrat_500Medium",
         color: "#305797",
-        marginLeft: 20,
+        marginLeft: 10,
         marginBottom: 2
     },
     signupInputs: {
@@ -27,7 +28,7 @@ const SignupStyle = StyleSheet.create({
         borderRadius: 8,
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
-        marginLeft: 20,
+        marginLeft: 10,
         marginBottom: 8,
         width: 350,
         height: 40,
@@ -38,7 +39,7 @@ const SignupStyle = StyleSheet.create({
     fullNameContainer: {
         flexDirection: "row",
         width: 350,
-        marginLeft: 20,
+        marginLeft: 10,
         justifyContent: "space-between"
     },
     nameInputs: {
@@ -60,7 +61,7 @@ const SignupStyle = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
-        marginLeft: 20,
+        marginLeft: 10,
         marginBottom: 8,
         width: 350,
         height: 40,
@@ -81,7 +82,7 @@ const SignupStyle = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
-        marginLeft: 20,
+        marginLeft: 10,
         marginBottom: 8,
         width: 350,
         height: 40,
@@ -108,7 +109,7 @@ const SignupStyle = StyleSheet.create({
     fieldError: {
         color: "#ff1616",
         fontSize: 10,
-        marginLeft: 25,
+        marginLeft: 15,
         marginBottom: 8,
         marginTop: -5,
     },
@@ -116,7 +117,7 @@ const SignupStyle = StyleSheet.create({
         color: "#ff1616",
         fontSize: 10,
         fontFamily: "Montserrat_500Medium",
-        marginLeft: 20,
+        marginLeft: 10,
         marginBottom: 10,
         marginTop: 5,
     },
@@ -127,7 +128,7 @@ const SignupStyle = StyleSheet.create({
         marginRight: 4,
     },
     signupLinksContainer: {
-        marginLeft: 20,
+        marginLeft: 10,
         marginTop: 5,
         marginBottom: 15
     },
@@ -137,7 +138,7 @@ const SignupStyle = StyleSheet.create({
         backgroundColor: "#305797",
         width: 350,
         height: 40,
-        marginLeft: 20,
+        marginLeft: 10,
         borderRadius: 8,
         elevation: 2
     },

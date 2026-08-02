@@ -244,8 +244,9 @@ export default function Login() {
             source={require("../../assets/images/Login BG Mobile.png")}
             style={LoginStyle.container}
             resizeMode='cover'
+            imageStyle={{ resizeMode: 'cover', width: '100%', height: '100%' }}
         >
-            <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <Text style={LoginStyle.loginHeading}>Welcome</Text>
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 

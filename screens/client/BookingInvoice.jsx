@@ -8,6 +8,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing';
 
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -971,121 +972,124 @@ export default function BookingInvoice({ route, navigation }) {
 
     // Save generated PDFs directly
     // Save the PDF without opening the file or share sheet
-    const saveOrSharePdf = async ({
-        sourceUri,
-        fileName,
-        successTitle = 'Download Complete',
-    }) => {
-        if (!sourceUri) {
-            throw new Error('Generated PDF URI is missing.');
+const saveOrSharePdf = async ({
+    sourceUri,
+    fileName,
+    successTitle = 'Download Complete',
+}) => {
+    if (!sourceUri) {
+        throw new Error('Generated PDF URI is missing.');
+    }
+
+    const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
+
+    if (!sourceInfo.exists) {
+        throw new Error('The generated PDF could not be found.');
+    }
+
+    // --- iOS FLOW ---
+    if (Platform.OS === 'ios') {
+        const isSharingAvailable = await Sharing.isAvailableAsync();
+
+        if (!isSharingAvailable) {
+            throw new Error('Sharing is not available on this device.');
         }
 
-        const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
+        // Moves file to a temporary document directory path with original filename
+            const targetUri = `${FileSystem.documentDirectory}${fileName}`;
+        await FileSystem.copyAsync({
+            from: sourceUri,
+            to: targetUri,
+        });
 
-        if (!sourceInfo.exists) {
-            throw new Error('The generated PDF could not be found.');
-        }
+        // Opens native iOS share sheet (allows "Save to Files", AirDrop, Mail, etc.)
+        await Sharing.shareAsync(targetUri, {
+            UTI: 'com.adobe.pdf',
+            mimeType: 'application/pdf',
+            dialogTitle: successTitle,
+        });
 
-        if (
-            Platform.OS !== 'android' ||
-            !FileSystem.StorageAccessFramework
-        ) {
-            throw new Error(
-                'Direct saving to the public Downloads folder is currently available only on Android.'
-            );
-        }
+        return targetUri;
+    }
 
-        const SAF = FileSystem.StorageAccessFramework;
-
-        let directoryUri = await getSavedPdfDirectory();
-
-        /*
-         * Try the previously selected Downloads folder first.
-         */
-        if (directoryUri) {
-            try {
-                const destinationUri =
-                    await writePdfToAndroidDirectory({
-                        sourceUri,
-                        directoryUri,
-                        fileName,
-                    });
-
-                const savedFileInfo =
-                    await FileSystem.getInfoAsync(destinationUri);
-
-                if (!savedFileInfo.exists) {
-                    throw new Error(
-                        'The PDF was not written successfully.'
-                    );
-                }
-
-                showAlertModal(
-                    successTitle,
-                    `${fileName} was saved in your Downloads folder.`,
-                    'success'
-                );
-
-                return destinationUri;
-            } catch (savedFolderError) {
-                console.warn(
-                    'Previously selected Downloads folder is unavailable:',
-                    savedFolderError
-                );
-
-                await clearSavedPdfDirectory();
-                directoryUri = null;
-            }
-        }
-
-        /*
-         * Open the Android folder selector directly at Download.
-         * The user only needs to approve this folder once.
-         */
-        const initialDownloadUri =
-            typeof SAF.getUriForDirectoryInRoot === 'function'
-                ? SAF.getUriForDirectoryInRoot('Download')
-                : null;
-
-        const permission =
-            await SAF.requestDirectoryPermissionsAsync(
-                initialDownloadUri
-            );
-
-        if (!permission.granted || !permission.directoryUri) {
-            throw new Error(
-                'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
-            );
-        }
-
-        await rememberPdfDirectory(
-            permission.directoryUri
+    // --- ANDROID FLOW ---
+    if (!FileSystem.StorageAccessFramework) {
+        throw new Error(
+            'Direct saving to the public Downloads folder is currently unavailable.'
         );
+    }
 
-        const destinationUri =
-            await writePdfToAndroidDirectory({
+    const SAF = FileSystem.StorageAccessFramework;
+    let directoryUri = await getSavedPdfDirectory();
+
+    if (directoryUri) {
+        try {
+            const destinationUri = await writePdfToAndroidDirectory({
                 sourceUri,
-                directoryUri: permission.directoryUri,
+                directoryUri,
                 fileName,
             });
 
-        const savedFileInfo =
-            await FileSystem.getInfoAsync(destinationUri);
+            const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
 
-        if (!savedFileInfo.exists) {
-            throw new Error(
-                'The PDF could not be saved to the selected folder.'
+            if (!savedFileInfo.exists) {
+                throw new Error('The PDF was not written successfully.');
+            }
+
+            showAlertModal(
+                successTitle,
+                `${fileName} was saved in your Downloads folder.`,
+                'success'
             );
+
+            return destinationUri;
+        } catch (savedFolderError) {
+            console.warn(
+                'Previously selected Downloads folder is unavailable:',
+                savedFolderError
+            );
+            await clearSavedPdfDirectory();
+            directoryUri = null;
         }
+    }
 
-        showAlertModal(
-            successTitle,
-            `${fileName} was saved in your Downloads folder.`,
-            'success'
+    const initialDownloadUri =
+        typeof SAF.getUriForDirectoryInRoot === 'function'
+            ? SAF.getUriForDirectoryInRoot('Download')
+            : null;
+
+    const permission = await SAF.requestDirectoryPermissionsAsync(
+        initialDownloadUri
+    );
+
+    if (!permission.granted || !permission.directoryUri) {
+        throw new Error(
+            'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
         );
+    }
 
-        return destinationUri;
-    };
+    await rememberPdfDirectory(permission.directoryUri);
+
+    const destinationUri = await writePdfToAndroidDirectory({
+        sourceUri,
+        directoryUri: permission.directoryUri,
+        fileName,
+    });
+
+    const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
+
+    if (!savedFileInfo.exists) {
+        throw new Error('The PDF could not be saved to the selected folder.');
+    }
+
+    showAlertModal(
+        successTitle,
+        `${fileName} was saved in your Downloads folder.`,
+        'success'
+    );
+
+    return destinationUri;
+};
 
 
     //helper function to generate and download registration forms as PDF
