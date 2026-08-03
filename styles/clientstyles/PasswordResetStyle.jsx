@@ -5,7 +5,6 @@ const PasswordResetStyle = StyleSheet.create({
         flex: 1,
         paddingTop: 105,
         alignItems: "center",
-        justifyContent: "center",
     },
     heading: {
         fontSize: 28,
