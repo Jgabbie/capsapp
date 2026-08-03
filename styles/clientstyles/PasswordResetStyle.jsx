@@ -24,6 +24,7 @@ const PasswordResetStyle = StyleSheet.create({
         textAlign: "center"
     },
     label: {
+        width: 350,
         fontSize: 14,
         fontFamily: "Montserrat_500Medium",
         color: "#305797",
@@ -81,6 +82,7 @@ const PasswordResetStyle = StyleSheet.create({
         fontFamily: "Montserrat_500Medium"
     },
     linksContainer: {
+        width: 350,
         alignItems: "flex-start", //  Changed from "center" to "flex-start"
         //marginLeft: 20,           //  Added left margin to match the input and button
         marginBottom: 20
