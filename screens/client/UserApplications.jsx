@@ -124,9 +124,12 @@ export default function UserApplications() {
 
     //filter applications based on search text, status filter, and date filter
     const statusOptions = useMemo(() => {
-        const uniqueStatuses = [...new Set(applications
-            .map((app) => String(app.status || '').trim())
-            .filter(Boolean))];
+        const uniqueStatuses = [...new Set(
+            applications
+                .map((app) => String(app.status || '').trim())
+                .filter(Boolean)
+        )];
+
         return ['All', ...uniqueStatuses];
     }, [applications]);
 
@@ -375,17 +378,7 @@ export default function UserApplications() {
                                 Select Status
                             </Text>
 
-                            {[
-                                "All",
-                                "Pending",
-                                "Application Submitted",
-                                "Payment Completed",
-                                "Documents Uploaded",
-                                "Processing",
-                                "Ready for Pickup",
-                                "Released",
-                                "Rejected",
-                            ].map((status, index) => (
+                            {statusOptions.map((status, index) => (
                                 <TouchableOpacity
                                     key={status}
                                     style={[

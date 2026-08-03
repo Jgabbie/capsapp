@@ -63,6 +63,10 @@ export default function Packages({ navigation, route }) {
     const [visibleCount, setVisibleCount] = useState(10);
 
 
+    const [wishlistModalVisible, setWishlistModalVisible] = useState(false);
+    const [wishlistAction, setWishlistAction] = useState("");
+
+
     //get availability status based on slots
     const getAvailabilityStatus = (slots) => {
         if (slots === undefined || slots === null) return "Available";
@@ -247,7 +251,8 @@ export default function Packages({ navigation, route }) {
                     next.delete(pId);
                     return next;
                 });
-                showToast('Package removed from your wishlist.');
+                setWishlistAction("removed");
+                setWishlistModalVisible(true);
             } catch (error) {
                 console.error('Remove wishlist error', error.message);
                 showToast('Failed to remove from wishlist. Please try again.');
@@ -269,7 +274,8 @@ export default function Packages({ navigation, route }) {
                 });
                 setWishlistedIds(wIds);
                 setWishlistEntryMap(wMap);
-                showToast('Package added to your wishlist.');
+                setWishlistAction("added");
+                setWishlistModalVisible(true);
             } catch (error) {
                 console.error('Add wishlist error', error.message);
                 showToast('Failed to add to wishlist. Please try again.');
@@ -753,6 +759,115 @@ export default function Packages({ navigation, route }) {
                     </View>
                 </View>
             </Modal>
+
+
+
+            <Modal
+                visible={wishlistModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setWishlistModalVisible(false)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.45)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        padding: 20,
+                    }}
+                >
+                    <View
+                        style={{
+                            backgroundColor: "#fff",
+                            borderRadius: 18,
+                            width: "85%",
+                            padding: 25,
+                            alignItems: "center",
+                        }}
+                    >
+                        <View
+                            style={{
+                                width: 70,
+                                height: 70,
+                                borderRadius: 35,
+                                backgroundColor:
+                                    wishlistAction === "added"
+                                        ? "#e8f8ee"
+                                        : "#fdecec",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    wishlistAction === "added"
+                                        ? "heart-outline"
+                                        : "heart-dislike-outline"
+                                }
+                                size={42}
+                                color={
+                                    wishlistAction === "added"
+                                        ? "#10b54f"
+                                        : "#e83838"
+                                }
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                fontSize: 22,
+                                fontFamily: "Montserrat_700Bold",
+                                color: "#222",
+                                marginBottom: 10,
+                                textAlign: "center",
+                            }}
+                        >
+                            {wishlistAction === "added"
+                                ? "Added!"
+                                : "Removed!"}
+                        </Text>
+
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                color: "#666",
+                                fontFamily: "Montserrat_500Medium",
+                                marginBottom: 24,
+                                lineHeight: 22,
+                            }}
+                        >
+                            {wishlistAction === "added"
+                                ? "The package has been added to your wishlist."
+                                : "The package has been removed from your wishlist."}
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={() => setWishlistModalVisible(false)}
+                            style={{
+                                backgroundColor: "#305797",
+                                paddingVertical: 12,
+                                width: "100%",
+                                borderRadius: 10,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: "#fff",
+                                    textAlign: "center",
+                                    fontFamily: "Montserrat_600SemiBold",
+                                    fontSize: 16,
+                                }}
+                            >
+                                OK
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+
             <Chatbot />
         </View>
     );
