@@ -251,14 +251,14 @@ export default function Login() {
                 <Text style={LoginStyle.loginSecondHeading}>Login Here</Text>
 
                 <View style={LoginStyle.inputWrapper}>
-                    <Text style={LoginStyle.loginLabel}>Username <Text style={{ color: 'red' }}>*</Text></Text>
+                    <Text style={LoginStyle.loginLabel}>Username or Email <Text style={{ color: 'red' }}>*</Text></Text>
                     <TextInput
                         placeholder="Enter username"
                         placeholderTextColor="#6b7280"
                         maxLength={30}
                         style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
                         onChangeText={(e) => {
-                            const cleaned = e.replace(/[^A-Za-z0-9]/g, '');
+                            const cleaned = e.replace(/[^A-Za-z0-9@._-]/g, '');
                             setUsername(cleaned);
                             setError("");
                         }}
