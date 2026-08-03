@@ -59,6 +59,7 @@ const PasswordResetStyle = StyleSheet.create({
         height: 25,
     },
     fieldError: {
+        width: 350,
         color: "#ff1616",
         fontFamily: "Montserrat_400Regular",
         fontSize: 12,
@@ -72,7 +73,6 @@ const PasswordResetStyle = StyleSheet.create({
         backgroundColor: "#305797",
         width: 350,
         height: 45,
-        marginLeft: 10,
         borderRadius: 8,
         elevation: 2
     },

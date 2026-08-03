@@ -3,7 +3,8 @@ import { StyleSheet } from "react-native";
 const ResetPassConfirmStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 105
+        paddingTop: 105,
+        alignItems: "center",
     },
     heading: {
         fontSize: 28,
@@ -18,14 +19,13 @@ const ResetPassConfirmStyle = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Montserrat_500Medium",
         color: "#305797",
-        marginLeft: 20,
+        width: 350,
         marginBottom: 4
     },
     //  NEW: Wrapper for the input to hold the absolute positioned eye icon
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 20,
         marginBottom: 8,
         width: 350,
         height: 45,
@@ -56,9 +56,10 @@ const ResetPassConfirmStyle = StyleSheet.create({
         justifyContent: 'center',
     },
     fieldError: {
+        width: 350,
         color: "#ff1616",
         fontSize: 12,
-        marginLeft: 25,
+        marginLeft: 10,
         marginBottom: 15,
         marginTop: -5,
     },
@@ -68,7 +69,7 @@ const ResetPassConfirmStyle = StyleSheet.create({
         backgroundColor: "#305797",
         width: 350,
         height: 45,
-        marginLeft: 20,
+        width: 350,
         borderRadius: 8,
         marginTop: 10,
         elevation: 2
@@ -83,8 +84,8 @@ const ResetPassConfirmStyle = StyleSheet.create({
         height: 25, // Keeps the layout fixed so the button never jumps
     },
     linkContainer: {
-        alignItems: 'flex-start', //  Changed from 'center' to 'flex-start'
-        marginLeft: 20,           //  Added margin to align with your inputs
+        alignItems: 'flex-start', //  Changed from 'center' to 'flex-start' 
+        width: 350,         //  Added margin to align with your inputs
         marginBottom: 15,
         marginTop: 5,
     },
