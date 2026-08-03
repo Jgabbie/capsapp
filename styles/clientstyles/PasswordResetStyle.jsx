@@ -3,7 +3,9 @@ import { StyleSheet } from "react-native";
 const PasswordResetStyle = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 105
+        paddingTop: 105,
+        alignItems: "center",
+        justifyContent: "center",
     },
     heading: {
         fontSize: 28,
@@ -26,7 +28,7 @@ const PasswordResetStyle = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Montserrat_500Medium",
         color: "#305797",
-        marginLeft: 25,
+        //marginLeft: 10,
         marginBottom: 5
     },
     input: {
@@ -35,7 +37,7 @@ const PasswordResetStyle = StyleSheet.create({
         borderRadius: 8,
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
-        marginLeft: 20,
+        //marginLeft: 10,
         marginBottom: 8,
         width: 350,
         height: 45,
@@ -55,7 +57,7 @@ const PasswordResetStyle = StyleSheet.create({
         color: "#ff1616",
         fontFamily: "Montserrat_400Regular",
         fontSize: 12,
-        marginLeft: 25,
+        marginLeft: 10,
         marginBottom: 5,
         marginTop: 3,
     },
@@ -65,7 +67,7 @@ const PasswordResetStyle = StyleSheet.create({
         backgroundColor: "#305797",
         width: 350,
         height: 45,
-        marginLeft: 20,
+        marginLeft: 10,
         borderRadius: 8,
         elevation: 2
     },
@@ -76,7 +78,7 @@ const PasswordResetStyle = StyleSheet.create({
     },
     linksContainer: {
         alignItems: "flex-start", //  Changed from "center" to "flex-start"
-        marginLeft: 20,           //  Added left margin to match the input and button
+        //marginLeft: 20,           //  Added left margin to match the input and button
         marginBottom: 20
     },
     linkText: {
