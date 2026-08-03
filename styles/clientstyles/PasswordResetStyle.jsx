@@ -63,7 +63,6 @@ const PasswordResetStyle = StyleSheet.create({
         color: "#ff1616",
         fontFamily: "Montserrat_400Regular",
         fontSize: 12,
-        marginLeft: 10,
         marginBottom: 5,
         marginTop: 3,
     },

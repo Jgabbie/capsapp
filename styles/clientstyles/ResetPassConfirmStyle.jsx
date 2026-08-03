@@ -59,7 +59,6 @@ const ResetPassConfirmStyle = StyleSheet.create({
         width: 350,
         color: "#ff1616",
         fontSize: 12,
-        marginLeft: 10,
         marginBottom: 15,
         marginTop: -5,
     },
