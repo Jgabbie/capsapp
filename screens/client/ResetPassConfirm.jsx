@@ -136,71 +136,76 @@ export default function ResetPassConfirm() {
                 {/*  1. NEW LOGO: Placed exactly on top of the title */}
                 <Text style={ResetPassConfirmStyle.heading}>Set New Password</Text>
 
-                <Text style={ResetPassConfirmStyle.label}>New Password <Text style={{ color: 'red' }}>*</Text></Text>
-                <View style={ResetPassConfirmStyle.passwordContainer}>
-                    <TextInput
-                        style={[ResetPassConfirmStyle.input, errorPassword ? ResetPassConfirmStyle.inputErrorBorder : null]}
-                        placeholder="Enter new password"
-                        placeholderTextColor="#6b7280"
-                        secureTextEntry={!showPassword}
-                        maxLength={20}
-                        value={password}
-                        onChangeText={(text) => {
-                            const cleanedPassword = text.replace(
-                                /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
-                                ""
-                            );
+                <View style={ResetPassConfirmStyle.inputWrapper}>
+                    <Text style={ResetPassConfirmStyle.label}>New Password <Text style={{ color: 'red' }}>*</Text></Text>
+                    <View style={ResetPassConfirmStyle.passwordContainer}>
+                        <TextInput
+                            style={[ResetPassConfirmStyle.input, errorPassword ? ResetPassConfirmStyle.inputErrorBorder : null]}
+                            placeholder="Enter new password"
+                            placeholderTextColor="#6b7280"
+                            secureTextEntry={!showPassword}
+                            maxLength={20}
+                            value={password}
+                            onChangeText={(text) => {
+                                const cleanedPassword = text.replace(
+                                    /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                    ""
+                                );
 
-                            setPassword(cleanedPassword);
-                            setErrorPassword("");
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                    {/*  2. CONDITIONAL EYE ICON */}
-                    {password.length > 0 && (
-                        <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
-                            <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
-                        </TouchableOpacity>
-                    )}
-                </View>
-                {/*  3. FIXED ERROR CONTAINER */}
-                <View style={ResetPassConfirmStyle.errorContainer}>
-                    {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
+                                setPassword(cleanedPassword);
+                                setErrorPassword("");
+                            }}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        {/*  2. CONDITIONAL EYE ICON */}
+                        {password.length > 0 && (
+                            <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                                <Ionicons name={showPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    {/*  3. FIXED ERROR CONTAINER */}
+                    <View style={ResetPassConfirmStyle.errorContainer}>
+                        {errorPassword ? <Text style={ResetPassConfirmStyle.fieldError}>{errorPassword}</Text> : null}
+                    </View>
                 </View>
 
-                <Text style={ResetPassConfirmStyle.label}>Confirm Password <Text style={{ color: 'red' }}>*</Text></Text>
-                <View style={ResetPassConfirmStyle.passwordContainer}>
-                    <TextInput
-                        style={[ResetPassConfirmStyle.input, errorConfirm ? ResetPassConfirmStyle.inputErrorBorder : null]}
-                        placeholder="Confirm new password"
-                        placeholderTextColor="#6b7280"
-                        secureTextEntry={!showConfirmPassword}
-                        maxLength={20}
-                        value={confirmPassword}
-                        onChangeText={(text) => {
-                            const cleanedPassword = text.replace(
-                                /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
-                                ""
-                            );
+                <View style={ResetPassConfirmStyle.inputWrapper}>
+                    <Text style={ResetPassConfirmStyle.label}>Confirm Password <Text style={{ color: 'red' }}>*</Text></Text>
+                    <View style={ResetPassConfirmStyle.passwordContainer}>
+                        <TextInput
+                            style={[ResetPassConfirmStyle.input, errorConfirm ? ResetPassConfirmStyle.inputErrorBorder : null]}
+                            placeholder="Confirm new password"
+                            placeholderTextColor="#6b7280"
+                            secureTextEntry={!showConfirmPassword}
+                            maxLength={20}
+                            value={confirmPassword}
+                            onChangeText={(text) => {
+                                const cleanedPassword = text.replace(
+                                    /[^a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/g,
+                                    ""
+                                );
 
-                            setConfirmPassword(cleanedPassword);
-                            setErrorConfirm("");
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                    {/*  CONDITIONAL EYE ICON */}
-                    {confirmPassword.length > 0 && (
-                        <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                            <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
-                        </TouchableOpacity>
-                    )}
+                                setConfirmPassword(cleanedPassword);
+                                setErrorConfirm("");
+                            }}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        {/*  CONDITIONAL EYE ICON */}
+                        {confirmPassword.length > 0 && (
+                            <TouchableOpacity style={ResetPassConfirmStyle.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={22} color="#94a3b8" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    {/*  FIXED ERROR CONTAINER */}
+                    <View style={ResetPassConfirmStyle.errorContainer}>
+                        {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
+                    </View>
                 </View>
-                {/*  FIXED ERROR CONTAINER */}
-                <View style={ResetPassConfirmStyle.errorContainer}>
-                    {errorConfirm ? <Text style={ResetPassConfirmStyle.fieldError}>{errorConfirm}</Text> : null}
-                </View>
+
 
                 {/*  4. REMEMBER PASSWORD LINK (On top of Confirm Button) */}
                 <View style={ResetPassConfirmStyle.linkContainer}>

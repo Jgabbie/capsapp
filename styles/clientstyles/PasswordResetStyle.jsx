@@ -31,6 +31,10 @@ const PasswordResetStyle = StyleSheet.create({
         marginBottom: 5,
         textAlign: "left",
     },
+    inputWrapper: {
+        width: 350,
+        marginBottom: 10,
+    },
     input: {
         fontSize: 14,
         borderWidth: 1,
