@@ -11,7 +11,7 @@ const SignupStyle = StyleSheet.create({
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
         marginTop: 0,
-        marginBottom: 0,
+        marginBottom: 10,
         // marginHorizontal: 20,
         textAlign: "center"
     },

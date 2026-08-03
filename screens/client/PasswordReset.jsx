@@ -123,7 +123,7 @@ export default function PasswordReset() {
 
     return (
         <ImageBackground
-            source={require("../../assets/images/Forgot BG Mobile.png")}
+            source={require("../../assets/images/forgot_bg_mobile.png")}
             style={PasswordResetStyle.container}
             resizeMode='cover'
         >

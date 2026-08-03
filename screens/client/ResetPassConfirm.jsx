@@ -127,7 +127,7 @@ export default function ResetPassConfirm() {
 
     return (
         <ImageBackground
-            source={require("../../assets/images/Forgot BG Mobile.png")}
+            source={require("../../assets/images/forgot_bg_mobile.png")}
             style={ResetPassConfirmStyle.container}
             resizeMode='cover'
         >

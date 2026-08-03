@@ -244,7 +244,7 @@ export default function Signup() {
 
     return (
         <ImageBackground
-            source={require("../../assets/images/Signup BG Mobile.png")}
+            source={require("../../assets/images/signup_bg_mobile.png")}
             style={SignupStyle.container}
             resizeMode='cover'
         >
