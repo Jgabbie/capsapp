@@ -1175,12 +1175,11 @@ export default function BookingInvoice({ route, navigation }) {
                         <style>
                             @page { 
                                 size: A4 portrait; 
-                                margin: 0mm; /* Let internal container padding handle margins on iOS */
+                                margin: 0; 
                             }
 
                             * {
                                 box-sizing: border-box;
-                                /* Forces iOS WebKit print engine to preserve table header and background colors */
                                 -webkit-print-color-adjust: exact !important;
                                 print-color-adjust: exact !important;
                             }
@@ -1193,19 +1192,22 @@ export default function BookingInvoice({ route, navigation }) {
                                 padding: 0; 
                             }
 
+                            /* FIX: Replace min-height with fixed A4 height calculation */
                             .page { 
+                                height: 297mm; 
+                                max-height: 297mm;
                                 page-break-after: always; 
                                 break-after: page; 
                                 position: relative; 
                                 box-sizing: border-box; 
-                                min-height: 297mm; 
-                                padding: 12mm 14mm 14mm 14mm; /* Ensures reliable document margins on iOS */
+                                padding: 12mm 14mm 14mm 14mm; 
                                 overflow: hidden; 
                             }
 
-                            .page.last-page { 
-                                page-break-after: auto; 
-                                break-after: auto; 
+                            /* Don't break after the last page */
+                            .page.last-page, .page:last-child { 
+                                page-break-after: avoid !important; 
+                                break-after: avoid !important; 
                             }
 
                             .header-gold { 

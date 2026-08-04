@@ -527,7 +527,8 @@ export default function UserTransactions() {
                         <style>
                             @page { 
                                 size: A4; 
-                                margin: 12mm 10mm; 
+                                /* Adjust page-level print margin */
+                                margin: 15mm 12mm; 
                             }
                             * {
                                 -webkit-print-color-adjust: exact !important;
@@ -536,8 +537,9 @@ export default function UserTransactions() {
                             }
                             body { 
                                 font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif; 
+                                /* Add inner margin/padding to body content */
                                 margin: 0; 
-                                padding: 0; 
+                                padding: 10px 15px; 
                                 color: #111827; 
                                 background-color: #ffffff; 
                             }
@@ -842,7 +844,15 @@ export default function UserTransactions() {
                 </html>
             `;
 
-            const { uri } = await Print.printToFileAsync({ html: htmlContent });
+            const { uri } = await Print.printToFileAsync({
+                html: htmlContent,
+                margins: {
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                    bottom: 20,
+                },
+            });
 
             const safeReference = sanitizeFileName(selectedTransaction.reference || 'receipt');
             const date = dayjs().format('MM-DD-YYYY');
