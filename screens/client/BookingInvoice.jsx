@@ -1160,7 +1160,6 @@ export default function BookingInvoice({ route, navigation }) {
 
 
     //helper function to generate and download registration forms as PDF
-    //helper function to generate and download registration forms as PDF
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
 
@@ -1175,7 +1174,7 @@ export default function BookingInvoice({ route, navigation }) {
                         <style>
                             @page { 
                                 size: A4 portrait; 
-                                margin: 0; 
+                                margin: 10mm 12mm; 
                             }
 
                             * {
@@ -1184,30 +1183,29 @@ export default function BookingInvoice({ route, navigation }) {
                                 print-color-adjust: exact !important;
                             }
 
-                            body { 
+                            html, body { 
                                 font-family: 'Helvetica', sans-serif; 
                                 color: #000; 
-                                font-size: 12px; 
+                                font-size: 11px; 
                                 margin: 0; 
                                 padding: 0; 
+                                background: #fff;
                             }
 
-                            /* FIX: Replace min-height with fixed A4 height calculation */
                             .page { 
-                                height: 297mm; 
-                                max-height: 297mm;
+                                box-sizing: border-box; 
+                                padding: 0; 
+                                width: 100%;
                                 page-break-after: always; 
                                 break-after: page; 
-                                position: relative; 
-                                box-sizing: border-box; 
-                                padding: 12mm 14mm 14mm 14mm; 
-                                overflow: hidden; 
+                                page-break-inside: avoid;
+                                break-inside: avoid;
                             }
 
-                            /* Don't break after the last page */
-                            .page.last-page, .page:last-child { 
-                                page-break-after: avoid !important; 
-                                break-after: avoid !important; 
+                            /* Prevent trailing blank page at the end */
+                            .page:last-child, .page.last-page { 
+                                page-break-after: auto !important; 
+                                break-after: auto !important; 
                             }
 
                             .header-gold { 
@@ -1215,9 +1213,9 @@ export default function BookingInvoice({ route, navigation }) {
                                 border: 1px solid #000; 
                                 text-align: center; 
                                 font-weight: bold; 
-                                padding: 5px; 
-                                margin-bottom: 12px; 
-                                font-size: 12px; 
+                                padding: 4px; 
+                                margin-bottom: 10px; 
+                                font-size: 11px; 
                                 text-transform: uppercase; 
                             }
 
@@ -1226,9 +1224,9 @@ export default function BookingInvoice({ route, navigation }) {
                                 border: 1px solid #000; 
                                 font-weight: bold; 
                                 padding: 4px 5px; 
-                                margin-top: 12px; 
-                                margin-bottom: 8px; 
-                                font-size: 12px; 
+                                margin-top: 10px; 
+                                margin-bottom: 6px; 
+                                font-size: 11px; 
                                 text-transform: uppercase; 
                             }
 
@@ -1240,9 +1238,9 @@ export default function BookingInvoice({ route, navigation }) {
 
                             th, td { 
                                 border: 1px solid #000; 
-                                padding: 4px; 
+                                padding: 3px 4px; 
                                 text-align: left; 
-                                font-size: 12px; 
+                                font-size: 10px; 
                             }
 
                             th { 
@@ -1251,24 +1249,21 @@ export default function BookingInvoice({ route, navigation }) {
                                 font-weight: bold; 
                             }
 
-                            .info-grid { display: table; width: 100%; margin-bottom: 12px; }
+                            .info-grid { display: table; width: 100%; margin-bottom: 8px; }
                             .info-row { display: table-row; }
-                            .info-col { display: table-cell; padding-bottom: 6px; padding-right: 8px;}
-                            .label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 2px; text-transform: uppercase; }
-                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 12px; }
-                            p { text-align: justify; line-height: 1.15; margin-bottom: 4px; font-size: 12px; }
-                            .p-text { text-align: justify; line-height: 1.15; margin-bottom: 4px; font-size: 12px; }
-                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 12px;}
-                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 20px; }
-                            .sig-line { border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; font-weight: bold; font-size: 10px; display: flex; align-items: flex-end; justify-content: center; height: 14px; }
-                            .flex-container { display: flex; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 12px;}
+                            .info-col { display: table-cell; padding-bottom: 4px; padding-right: 8px;}
+                            .label { font-weight: bold; font-size: 10px; display: block; margin-bottom: 2px; text-transform: uppercase; }
+                            .value { border-bottom: 1px solid #000; padding-bottom: 2px; width: 100%; display: inline-block; min-height: 12px; font-size: 11px; }
+                            p, .p-text { text-align: justify; line-height: 1.15; margin-bottom: 4px; font-size: 10px; }
+                            .red-text { color: #d32f2f; font-weight: bold; font-style: italic; font-size: 10px;}
+                            .sig-box { width: 45%; display: inline-block; text-align: center; margin-top: 15px; }
+                            .sig-line { border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 2px; font-weight: bold; font-size: 10px; display: flex; align-items: flex-end; justify-content: center; height: 14px; }
+                            .flex-container { display: flex; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 10px;}
                             .flex-col { flex: 1; }
-                            .logo-container { text-align: center; margin-bottom: 10px; }
-                            .logo-container img { width: 80px; height: auto; object-fit: contain; }
-                            .yes-no-box { display: inline-block; width: 30px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 3px; font-size: 10px;}
-                            .detail-box { border: 1px solid #000; min-height: 32px; width: 100%; padding: 4px; font-size: 10px; margin-top: 5px; margin-bottom: 12px; }
-                            .note-text { font-size: 10px; font-style: italic; color: #555; }
-                            .small-text { font-size: 10px; }
+                            .logo-container { text-align: center; margin-bottom: 6px; }
+                            .logo-container img { width: 70px; height: auto; object-fit: contain; }
+                            .yes-no-box { display: inline-block; width: 28px; border: 1px solid #000; text-align: center; font-weight: bold; padding: 2px; font-size: 10px;}
+                            .detail-box { border: 1px solid #000; min-height: 24px; width: 100%; padding: 4px; font-size: 10px; margin-top: 4px; margin-bottom: 8px; }
                         </style>
 
                     </head>
