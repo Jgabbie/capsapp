@@ -9,6 +9,7 @@ import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import Pdf from "react-native-pdf";
 import * as Sharing from 'expo-sharing';
 
 import Header from "../../components/Header";
@@ -366,11 +367,75 @@ export default function BookingInvoice({ route, navigation }) {
 
 
     //helper functions to check file types
-    const isImageFile = (url) => {
-        if (!url) return false;
-        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-        const lowerUrl = url.toLowerCase();
-        return imageExtensions.some(ext => lowerUrl.includes(ext));
+    const isImageFile = (file = {}) => {
+        const type = String(file.mimeType || file.type || "").toLowerCase();
+
+        if (type.startsWith("image/")) {
+            return true;
+        }
+
+        const uri = String(file.uri || file.url || "").toLowerCase();
+
+        return (
+            uri.endsWith(".jpg") ||
+            uri.endsWith(".jpeg") ||
+            uri.endsWith(".png") ||
+            uri.endsWith(".gif") ||
+            uri.endsWith(".webp")
+        );
+    };
+
+    const previewDocument = (fileOrUrl) => {
+        if (!fileOrUrl) return;
+
+        const file =
+            typeof fileOrUrl === "string"
+                ? {
+                    uri: fileOrUrl,
+                    name: "Document",
+                }
+                : fileOrUrl;
+
+        const uri = file.uri || file.url;
+
+        if (!uri) {
+            showAlertModal(
+                "Preview",
+                "Preview unavailable.",
+                "warning"
+            );
+            return;
+        }
+
+        if (isImageFile(file)) {
+            setDocumentPreview({
+                uri,
+                name: file.fileName || file.name || "Image",
+                type: "image",
+                kind: "image",
+            });
+            return;
+        }
+
+        if (
+            String(file.mimeType || file.type || "").includes("pdf") ||
+            uri.toLowerCase().includes(".pdf")
+        ) {
+            setDocumentPreview({
+                uri,
+                name: file.fileName || file.name || "PDF",
+                type: "pdf",
+                kind: "pdf",
+            });
+            return;
+        }
+
+        setDocumentPreview({
+            uri,
+            name: file.fileName || file.name || "Document",
+            type: "other",
+            kind: "other",
+        });
     };
 
     const isPdfFile = (url) => {
@@ -616,16 +681,6 @@ export default function BookingInvoice({ route, navigation }) {
                 'error'
             );
         }
-    };
-
-
-    //preview document function
-    const previewDocument = (file) => {
-        if (!file?.uri) return;
-        setDocumentPreview({
-            uri: file.uri,
-            name: file.fileName || file.name || 'Selected file'
-        });
     };
 
 
@@ -1105,12 +1160,12 @@ export default function BookingInvoice({ route, navigation }) {
 
 
     //helper function to generate and download registration forms as PDF
+    //helper function to generate and download registration forms as PDF
     const handleDownloadRegistrationForms = async () => {
         setIsGeneratingPdf(true);
 
         try {
             const logoDataUri = await getLogoDataUri();
-
 
             const htmlContent = `
                 <html>
@@ -1118,15 +1173,82 @@ export default function BookingInvoice({ route, navigation }) {
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
                         <style>
-                            @page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }
-                            body { font-family: 'Helvetica', sans-serif; color: #000; font-size: 12px; margin: 0; padding: 0; }
-                            .page { page-break-after: always; break-after: page; position: relative; box-sizing: border-box; height: 267mm; overflow: hidden; }
-                            .page.last-page { page-break-after: auto; break-after: auto; }
-                            .header-gold { background-color: #FFD700; border: 1px solid #000; text-align: center; font-weight: bold; padding: 5px; margin-bottom: 12px; font-size: 12px; text-transform: uppercase; }
-                            .header-blue { background-color: #ADD8E6; border: 1px solid #000; font-weight: bold; padding: 4px 5px; margin-top: 12px; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-                            th, td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 12px; }
-                            th { background-color: #ADD8E6; text-align: center; font-weight: bold; }
+                            @page { 
+                                size: A4 portrait; 
+                                margin: 0mm; /* Let internal container padding handle margins on iOS */
+                            }
+
+                            * {
+                                box-sizing: border-box;
+                                /* Forces iOS WebKit print engine to preserve table header and background colors */
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            body { 
+                                font-family: 'Helvetica', sans-serif; 
+                                color: #000; 
+                                font-size: 12px; 
+                                margin: 0; 
+                                padding: 0; 
+                            }
+
+                            .page { 
+                                page-break-after: always; 
+                                break-after: page; 
+                                position: relative; 
+                                box-sizing: border-box; 
+                                min-height: 297mm; 
+                                padding: 12mm 14mm 14mm 14mm; /* Ensures reliable document margins on iOS */
+                                overflow: hidden; 
+                            }
+
+                            .page.last-page { 
+                                page-break-after: auto; 
+                                break-after: auto; 
+                            }
+
+                            .header-gold { 
+                                background-color: #FFD700 !important; 
+                                border: 1px solid #000; 
+                                text-align: center; 
+                                font-weight: bold; 
+                                padding: 5px; 
+                                margin-bottom: 12px; 
+                                font-size: 12px; 
+                                text-transform: uppercase; 
+                            }
+
+                            .header-blue { 
+                                background-color: #ADD8E6 !important; 
+                                border: 1px solid #000; 
+                                font-weight: bold; 
+                                padding: 4px 5px; 
+                                margin-top: 12px; 
+                                margin-bottom: 8px; 
+                                font-size: 12px; 
+                                text-transform: uppercase; 
+                            }
+
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin-top: 5px; 
+                            }
+
+                            th, td { 
+                                border: 1px solid #000; 
+                                padding: 4px; 
+                                text-align: left; 
+                                font-size: 12px; 
+                            }
+
+                            th { 
+                                background-color: #ADD8E6 !important; 
+                                text-align: center; 
+                                font-weight: bold; 
+                            }
+
                             .info-grid { display: table; width: 100%; margin-bottom: 12px; }
                             .info-row { display: table-row; }
                             .info-col { display: table-cell; padding-bottom: 6px; padding-right: 8px;}
@@ -2273,30 +2395,107 @@ export default function BookingInvoice({ route, navigation }) {
                 </ScrollView>
             )}
 
-            <Modal visible={!!documentPreview} transparent animationType="fade" onRequestClose={() => setDocumentPreview(null)}>
-                <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 }}
-                    activeOpacity={1}
-                    onPress={() => setDocumentPreview(null)}
+            <Modal
+                visible={!!documentPreview}
+                animationType="fade"
+                transparent
+                onRequestClose={() => setDocumentPreview(null)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.85)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
                 >
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={() => { }}
-                        style={{ width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden' }}
+                    <View
+                        style={{
+                            width: "95%",
+                            height: "85%",
+                            backgroundColor: "#fff",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                        }}
                     >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
-                            <Text numberOfLines={1} style={{ flex: 1, marginRight: 12, fontFamily: 'Montserrat_700Bold', fontSize: 14, color: '#1f2937' }}>
-                                {documentPreview?.name || 'Selected file'}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: 15,
+                                borderBottomWidth: 1,
+                                borderColor: "#ddd",
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontWeight: "600",
+                                    fontSize: 16,
+                                    flex: 1,
+                                }}
+                                numberOfLines={1}
+                            >
+                                {documentPreview?.name}
                             </Text>
-                            <TouchableOpacity onPress={() => setDocumentPreview(null)}>
-                                <Ionicons name="close" size={24} color="#6b7280" />
+
+                            <TouchableOpacity
+                                onPress={() => setDocumentPreview(null)}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={28}
+                                    color="#000"
+                                />
                             </TouchableOpacity>
                         </View>
-                        <View style={{ width: '100%', aspectRatio: 1, backgroundColor: '#111827' }}>
-                            <Image source={{ uri: documentPreview?.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-                        </View>
-                    </TouchableOpacity>
-                </TouchableOpacity>
+
+                        {documentPreview?.type === "image" ? (
+                            <Image
+                                source={{ uri: documentPreview.uri }}
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                }}
+                                resizeMode="contain"
+                            />
+                        ) : documentPreview?.type === "pdf" ? (
+                            <Pdf
+                                source={{ uri: documentPreview.uri }}
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                }}
+                                trustAllCerts={false}
+                            />
+                        ) : (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    padding: 20,
+                                }}
+                            >
+                                <Ionicons
+                                    name="document-outline"
+                                    size={70}
+                                    color="#999"
+                                />
+
+                                <Text
+                                    style={{
+                                        marginTop: 15,
+                                        color: "#666",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    Preview is unavailable for this file type.
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
             </Modal>
 
             <Modal visible={isProceedModalOpen} transparent animationType="fade">

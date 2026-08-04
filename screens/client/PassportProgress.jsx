@@ -908,14 +908,16 @@ export default function PassportApplication() {
         if (isImageSource(file)) {
             setRequirementPreview({
                 uri,
-                name: file.name || 'Image preview',
-                kind: 'image',
+                name: file.name || "Image preview",
+                type: file.type || "image",
+                kind: "image",
             });
         } else {
             setRequirementPreview({
                 uri,
-                name: file.name || (typeof fileOrUrl === 'string' ? fileOrUrl.split('/').pop() : 'Document'),
-                kind: 'document',
+                name: file.name || "PDF preview",
+                type: "application/pdf",
+                kind: "pdf",
             });
         }
     };
@@ -3319,65 +3321,107 @@ export default function PassportApplication() {
 
             <Modal
                 visible={!!requirementPreview}
-                animationType="slide"
+                animationType="fade"
+                transparent
                 onRequestClose={() => setRequirementPreview(null)}
             >
-                <View style={{ flex: 1, backgroundColor: "#fff" }}>
-
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.85)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
                     <View
                         style={{
-                            height: 75,
-                            paddingTop: 10,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            paddingHorizontal: 16,
-                            borderBottomWidth: 1,
-                            borderBottomColor: "#eee",
+                            width: "95%",
+                            height: "85%",
+                            backgroundColor: "#fff",
+                            borderRadius: 12,
+                            overflow: "hidden",
                         }}
                     >
-                        <Text
-                            numberOfLines={1}
+                        {/* Header */}
+                        <View
                             style={{
-                                flex: 1,
-                                fontWeight: "600",
-                                fontSize: 16,
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: 15,
+                                borderBottomWidth: 1,
+                                borderBottomColor: "#ddd",
                             }}
                         >
-                            {requirementPreview?.name}
-                        </Text>
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    flex: 1,
+                                    fontSize: 16,
+                                    fontWeight: "600",
+                                    marginRight: 12,
+                                }}
+                            >
+                                {requirementPreview?.name}
+                            </Text>
 
-                        <TouchableOpacity
-                            onPress={() => setRequirementPreview(null)}
-                        >
-                            <Ionicons name="close" size={28} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {requirementPreview?.kind === "document" ? (
-                        <View style={{ flex: 1 }}>
-                            {requirementPreview?.kind === "document" && requirementPreview?.uri ? (
-                                <Pdf
-                                    source={{ uri: requirementPreview.uri }}
-                                    style={{ flex: 1 }}
+                            <TouchableOpacity
+                                onPress={() => setRequirementPreview(null)}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={28}
+                                    color="#000"
                                 />
-                            ) : requirementPreview?.kind === "image" && requirementPreview?.uri ? (
-                                <Image
-                                    source={{ uri: requirementPreview.uri }}
-                                    style={{ flex: 1, resizeMode: "contain" }}
-                                />
-                            ) : null}
+                            </TouchableOpacity>
                         </View>
-                    ) : requirementPreview?.uri ? (
-                        <Image
-                            source={{ uri: requirementPreview.uri }}
-                            style={{
-                                flex: 1,
-                                width: "100%",
-                                resizeMode: "contain",
-                            }}
-                        />
-                    ) : null}
+
+                        {/* Preview */}
+                        {requirementPreview?.kind === "image" ? (
+                            <Image
+                                source={{ uri: requirementPreview.uri }}
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                }}
+                                resizeMode="contain"
+                            />
+                        ) : requirementPreview?.kind === "pdf" ? (
+                            <Pdf
+                                source={{ uri: requirementPreview.uri }}
+                                style={{
+                                    flex: 1,
+                                    width: "100%",
+                                }}
+                                trustAllCerts={false}
+                            />
+                        ) : (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    padding: 20,
+                                }}
+                            >
+                                <Ionicons
+                                    name="document-outline"
+                                    size={70}
+                                    color="#999"
+                                />
+
+                                <Text
+                                    style={{
+                                        marginTop: 15,
+                                        color: "#666",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    Preview is unavailable for this file type.
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
             </Modal>
 

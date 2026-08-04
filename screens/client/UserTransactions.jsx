@@ -362,7 +362,7 @@ export default function UserTransactions() {
     };
 
 
-// Save or share the receipt (iOS and Android compatible)
+    // Save or share the receipt (iOS and Android compatible)
     const saveReceiptDirectly = async ({
         sourceUri,
         fileName,
@@ -389,7 +389,7 @@ export default function UserTransactions() {
             }
 
             // Copy file to temporary document directory with final filename
-                const targetUri = `${FileSystem.documentDirectory}${fileName}`;
+            const targetUri = `${FileSystem.documentDirectory}${fileName}`;
             await FileSystem.copyAsync({
                 from: sourceUri,
                 to: targetUri,
@@ -523,49 +523,227 @@ export default function UserTransactions() {
             const htmlContent = `
                 <html>
                     <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+                        <meta charset="utf-8" />
                         <style>
-                            @page { size: A4; margin: 12mm 4mm; }
-                            body { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; color: #111827; background: #fff; }
-                            .paper { background: #fff; border: none; border-radius: 6px; padding: 22px 12px; min-height: 273mm; box-sizing: border-box; }
-                            .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid #1f2a44; padding-bottom: 14px; margin-bottom: 18px; }
-                            .header-left { display: flex; gap: 12px; align-items: flex-start; flex: 1; }
-                            .logo { width: 64px; height: 64px; object-fit: contain; }
-                            .company-name { color: #000; font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-                            .company-details { font-size: 11px; color: #555; line-height: 1.35; }
-                            .title { font-size: 30px; color: #000; margin: 0; font-weight: 500; white-space: nowrap; }
-                            .meta-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0; margin-bottom: 18px; }
-                            .billed-to { flex: 1; min-width: 220px; }
-                            .billed-to .label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 5px; display: block; }
-                            .billed-to .name { font-size: 16px; font-weight: 700; margin: 0; color: #000; }
-                            .meta-grid { display: flex; gap: 0; min-width: 330px; }
-                            .meta-box { min-width: 110px; border: 1px solid #d1d5db; padding: 12px 10px; text-align: center; }
-                            .meta-box.primary { background: #1f2a44; color: #fff; border-color: #1f2a44; }
-                            .meta-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: inherit; margin-bottom: 8px; display: block; }
-                            .meta-value { font-size: 13px; font-weight: 700; color: inherit; }
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                            thead tr { border-bottom: 1px solid #000; }
-                            th { background: transparent; color: #000; padding: 6px 0; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-                            tbody tr { border-bottom: 1px solid #000; }
-                            td { padding: 8px 0; font-size: 11px; color: #6b7280; }
-                            th.right, td.right { text-align: right; }
-                            .bottom-grid { display: flex; justify-content: space-between; gap: 28px; align-items: flex-start; }
-                            .bank { flex: 1; font-size: 11px; color: #555; line-height: 1.5; }
-                            .bank-title { font-size: 11px; font-weight: 700; color: #1f2a44; text-transform: uppercase; margin-bottom: 4px; }
-                            .bank-section { margin-bottom: 12px; }
-                            .divider { height: 1px; background: #000; width: 72%; margin: 6px 0 10px; }
-                            .summary { min-width: 240px; }
-                            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 12px; color: #6b7280; }
-                            .summary-row .value { font-weight: 700; color: #000; }
-                            .summary-row.total { border-top: 1px solid #000; margin-top: 6px; padding-top: 12px; font-size: 13px; }
+                            @page { 
+                                size: A4; 
+                                margin: 12mm 10mm; 
+                            }
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                                box-sizing: border-box;
+                            }
+                            body { 
+                                font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif; 
+                                margin: 0; 
+                                padding: 0; 
+                                color: #111827; 
+                                background-color: #ffffff; 
+                            }
+                            .paper { 
+                                background: #ffffff; 
+                                padding: 10px; 
+                                width: 100%;
+                                min-height: 100vh;
+                                position: relative;
+                            }
+
+                            /* FULL PAGE OVERLAY WATERMARK */
+                            .watermark {
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                width: 100%;
+                                text-align: center;
+                                z-index: 0;
+                                pointer-events: none;
+                                white-space: nowrap;
+                            }
+                            .watermark-text {
+                                font-size: 130px;
+                                font-weight: 900;
+                                letter-spacing: 8px;
+                                color: ${statusColor};
+                                opacity: 0.12;
+                                transform: rotate(-30deg);
+                                display: inline-block;
+                            }
+
+                            .header { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: flex-start; 
+                                border-bottom: 2px solid #1f2a44; 
+                                padding-bottom: 14px; 
+                                margin-bottom: 18px; 
+                                position: relative;
+                                z-index: 1;
+                            }
+                            .header-left { 
+                                display: flex; 
+                                gap: 12px; 
+                                align-items: flex-start; 
+                            }
+                            .logo { 
+                                width: 64px; 
+                                height: 64px; 
+                                object-fit: contain; 
+                            }
+                            .company-name { 
+                                color: #000; 
+                                font-weight: 700; 
+                                font-size: 16px; 
+                                margin-bottom: 2px; 
+                            }
+                            .company-details { 
+                                font-size: 11px; 
+                                color: #555; 
+                                line-height: 1.35; 
+                            }
+                            .title { 
+                                font-size: 26px; 
+                                color: #000; 
+                                margin: 0; 
+                                font-weight: 700; 
+                            }
+                            .meta-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: flex-start; 
+                                margin-bottom: 24px; 
+                                position: relative;
+                                z-index: 1;
+                            }
+                            .billed-to .label { 
+                                font-size: 10px; 
+                                font-weight: 700; 
+                                color: #6b7280; 
+                                text-transform: uppercase; 
+                                margin-bottom: 5px; 
+                                display: block; 
+                            }
+                            .billed-to .name { 
+                                font-size: 15px; 
+                                font-weight: 700; 
+                                color: #000; 
+                            }
+                            .meta-grid { 
+                                display: flex; 
+                            }
+                            .meta-box { 
+                                min-width: 100px; 
+                                border: 1px solid #d1d5db; 
+                                padding: 10px; 
+                                text-align: center; 
+                                background-color: #ffffff;
+                            }
+                            .meta-box.primary { 
+                                background-color: #1f2a44 !important; 
+                                color: #ffffff !important; 
+                                border-color: #1f2a44; 
+                            }
+                            .meta-label { 
+                                font-size: 9px; 
+                                font-weight: 700; 
+                                text-transform: uppercase; 
+                                margin-bottom: 6px; 
+                                display: block; 
+                            }
+                            .meta-value { 
+                                font-size: 12px; 
+                                font-weight: 700; 
+                            }
+
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin-top: 10px;
+                                margin-bottom: 24px; 
+                                position: relative;
+                                z-index: 1;
+                            }
+                            thead tr { 
+                                background-color: #f3f4f6 !important; 
+                                border-bottom: 2px solid #1f2a44; 
+                            }
+                            th { 
+                                color: #1f2a44 !important; 
+                                padding: 10px 8px; 
+                                font-size: 10px; 
+                                font-weight: 700; 
+                                text-transform: uppercase; 
+                            }
+                            tbody tr { 
+                                border-bottom: 1px solid #e5e7eb; 
+                            }
+                            td { 
+                                padding: 12px 8px; 
+                                font-size: 11px; 
+                                color: #374151; 
+                            }
+                            th.right, td.right { 
+                                text-align: right; 
+                            }
+
+                            .bottom-grid { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                gap: 20px; 
+                                position: relative;
+                                z-index: 1;
+                            }
+                            .bank { 
+                                flex: 1; 
+                                font-size: 10px; 
+                                color: #555; 
+                                line-height: 1.4; 
+                            }
+                            .bank-title { 
+                                font-weight: 700; 
+                                color: #1f2a44; 
+                                text-transform: uppercase; 
+                                margin-bottom: 2px; 
+                            }
+                            .bank-section { 
+                                margin-bottom: 10px; 
+                            }
+                            .divider { 
+                                height: 1px; 
+                                background-color: #e5e7eb; 
+                                margin: 8px 0; 
+                            }
+                            .summary { 
+                                min-width: 220px; 
+                            }
+                            .summary-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                padding: 6px 0; 
+                                font-size: 11px; 
+                                color: #4b5563; 
+                            }
+                            .summary-row .value { 
+                                font-weight: 700; 
+                                color: #000; 
+                            }
+                            .summary-row.total { 
+                                border-top: 2px solid #1f2a44; 
+                                margin-top: 4px; 
+                                padding-top: 8px; 
+                                font-size: 13px; 
+                                font-weight: 700;
+                                color: #1f2a44;
+                            }
                         </style>
                     </head>
                     <body>
-                        <div class="paper" style="position:relative;">
-                            <div style="position:absolute; top:45%; left:0; right:0; text-align:center; z-index:1; pointer-events:none;">
-                                <div style="font-size:84px; color: ${statusColor}; opacity:0.08; font-weight:800; transform: rotate(-20deg);">${statusLabel}</div>
+                        <div class="paper">
+                            <div class="watermark">
+                                <span class="watermark-text">${statusLabel}</span>
                             </div>
-                            <div style="position:relative; z-index:2;">
+
                             <div class="header">
                                 <div class="header-left">
                                     ${logoDataUri ? `<img class="logo" src="${logoDataUri}" />` : ''}
@@ -582,7 +760,6 @@ export default function UserTransactions() {
                                 </div>
                                 <h1 class="title">INVOICE ${invoiceNumber}</h1>
                             </div>
-                        </div>
 
                             <div class="meta-row">
                                 <div class="billed-to">
@@ -595,8 +772,8 @@ export default function UserTransactions() {
                                         <div class="meta-value">${receiptDate}</div>
                                     </div>
                                     <div class="meta-box primary">
-                                        <span class="meta-label">AMOUNT TO PAY</span>
-                                        <div class="meta-value">${receiptAmount}</div>
+                                        <span class="meta-label" style="color:#ffffff;">AMOUNT TO PAY</span>
+                                        <div class="meta-value" style="color:#ffffff;">${receiptAmount}</div>
                                     </div>
                                     <div class="meta-box">
                                         <span class="meta-label">REFERENCE</span>
@@ -608,10 +785,10 @@ export default function UserTransactions() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>QTY</th>
-                                        <th>DESCRIPTION</th>
-                                        <th class="right">UNIT PRICE</th>
-                                        <th class="right">AMOUNT</th>
+                                        <th style="width: 10%;">QTY</th>
+                                        <th style="width: 50%;">DESCRIPTION</th>
+                                        <th class="right" style="width: 20%;">UNIT PRICE</th>
+                                        <th class="right" style="width: 20%;">AMOUNT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -664,6 +841,7 @@ export default function UserTransactions() {
                     </body>
                 </html>
             `;
+
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
             const safeReference = sanitizeFileName(selectedTransaction.reference || 'receipt');
