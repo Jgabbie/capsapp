@@ -3326,7 +3326,8 @@ export default function PassportApplication() {
 
                     <View
                         style={{
-                            height: 60,
+                            height: 75,
+                            paddingTop: 10,
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "space-between",

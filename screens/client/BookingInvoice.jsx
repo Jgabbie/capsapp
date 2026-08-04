@@ -8,6 +8,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Asset } from 'expo-asset';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 
 import Header from "../../components/Header";
@@ -578,31 +579,42 @@ export default function BookingInvoice({ route, navigation }) {
 
     //document upload and preview functions for travelers
     const pickDocumentImage = async (travelerIndex, docType) => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            base64: true,
-            quality: 0.7
-        });
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['image/*', 'application/pdf'],
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
 
-        if (!result.canceled) {
-            const image = result.assets[0];
+            if (result.canceled || !result.assets?.length) {
+                return;
+            }
+
+            const file = result.assets[0];
+
             if (docType === 'passport') {
                 setPassportUploadLists(prev => ({
                     ...prev,
-                    [travelerIndex]: image
+                    [travelerIndex]: file
                 }));
             } else if (docType === 'photo') {
                 setPhotoUploadLists(prev => ({
                     ...prev,
-                    [travelerIndex]: image
+                    [travelerIndex]: file
                 }));
             } else if (docType === 'visa') {
                 setVisaUploadLists(prev => ({
                     ...prev,
-                    [travelerIndex]: image
+                    [travelerIndex]: file
                 }));
             }
+        } catch (error) {
+            console.error('Document picker error:', error);
+            showAlertModal(
+                'Error',
+                'Failed to select the document.',
+                'error'
+            );
         }
     };
 
@@ -1425,7 +1437,14 @@ export default function BookingInvoice({ route, navigation }) {
             <style>
                 @page {
                     size: A4 portrait;
-                    margin: 12mm;
+                    margin: 0mm; /* Let container div handle margins for iOS WebKit consistency */
+                }
+
+                * {
+                    box-sizing: border-box;
+                    /* Crucial for forcing background colors on iOS WebKit print engine */
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
                 }
 
                 body {
@@ -1434,9 +1453,15 @@ export default function BookingInvoice({ route, navigation }) {
                     margin: 0;
                     padding: 0;
                     font-size: 11px;
+                    background-color: #ffffff;
                 }
 
-                /* Table-based layouts replace Flexbox for WebKit/iOS print stability */
+                /* Wrap content inside a container to guarantee side/top/bottom margins on iOS */
+                .page-container {
+                    padding: 40px 35px;
+                    width: 100%;
+                }
+
                 .table-layout {
                     width: 100%;
                     border-collapse: collapse;
@@ -1464,7 +1489,7 @@ export default function BookingInvoice({ route, navigation }) {
 
                 .divider {
                     height: 3px;
-                    background: #1f2b4d;
+                    background-color: #1f2b4d !important;
                     margin: 20px 0;
                 }
 
@@ -1482,7 +1507,7 @@ export default function BookingInvoice({ route, navigation }) {
                     margin-bottom: 6px;
                 }
 
-                /* Invoice Summary Grid */
+                /* Invoice Summary Grid with forced backgrounds */
                 .summary-table {
                     width: 100%;
                     border-collapse: collapse;
@@ -1493,11 +1518,13 @@ export default function BookingInvoice({ route, navigation }) {
                     padding: 10px 6px;
                     text-align: center;
                     border: 1px solid #ddd;
+                    background-color: #f9f9f9;
                 }
 
+                /* Dark Blue Header Block */
                 .summary-dark {
-                    background: #1f2b4d;
-                    color: white;
+                    background-color: #1f2b4d !important;
+                    color: #ffffff !important;
                 }
 
                 .summary-title {
@@ -1576,7 +1603,7 @@ export default function BookingInvoice({ route, navigation }) {
             </head>
 
             <body>
-
+            <div class="page-container">
             <!-- Header Section -->
             <table class="table-layout">
                 <tr>
@@ -1721,7 +1748,7 @@ export default function BookingInvoice({ route, navigation }) {
                     </td>
                 </tr>
             </table>
-
+            </div>
             </body>
             </html>
         `;
