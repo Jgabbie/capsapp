@@ -972,124 +972,124 @@ export default function BookingInvoice({ route, navigation }) {
 
     // Save generated PDFs directly
     // Save the PDF without opening the file or share sheet
-const saveOrSharePdf = async ({
-    sourceUri,
-    fileName,
-    successTitle = 'Download Complete',
-}) => {
-    if (!sourceUri) {
-        throw new Error('Generated PDF URI is missing.');
-    }
-
-    const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
-
-    if (!sourceInfo.exists) {
-        throw new Error('The generated PDF could not be found.');
-    }
-
-    // --- iOS FLOW ---
-    if (Platform.OS === 'ios') {
-        const isSharingAvailable = await Sharing.isAvailableAsync();
-
-        if (!isSharingAvailable) {
-            throw new Error('Sharing is not available on this device.');
+    const saveOrSharePdf = async ({
+        sourceUri,
+        fileName,
+        successTitle = 'Download Complete',
+    }) => {
+        if (!sourceUri) {
+            throw new Error('Generated PDF URI is missing.');
         }
 
-        // Moves file to a temporary document directory path with original filename
-            const targetUri = `${FileSystem.documentDirectory}${fileName}`;
-        await FileSystem.copyAsync({
-            from: sourceUri,
-            to: targetUri,
-        });
+        const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
 
-        // Opens native iOS share sheet (allows "Save to Files", AirDrop, Mail, etc.)
-        await Sharing.shareAsync(targetUri, {
-            UTI: 'com.adobe.pdf',
-            mimeType: 'application/pdf',
-            dialogTitle: successTitle,
-        });
+        if (!sourceInfo.exists) {
+            throw new Error('The generated PDF could not be found.');
+        }
 
-        return targetUri;
-    }
+        // --- iOS FLOW ---
+        if (Platform.OS === 'ios') {
+            const isSharingAvailable = await Sharing.isAvailableAsync();
 
-    // --- ANDROID FLOW ---
-    if (!FileSystem.StorageAccessFramework) {
-        throw new Error(
-            'Direct saving to the public Downloads folder is currently unavailable.'
-        );
-    }
-
-    const SAF = FileSystem.StorageAccessFramework;
-    let directoryUri = await getSavedPdfDirectory();
-
-    if (directoryUri) {
-        try {
-            const destinationUri = await writePdfToAndroidDirectory({
-                sourceUri,
-                directoryUri,
-                fileName,
-            });
-
-            const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
-
-            if (!savedFileInfo.exists) {
-                throw new Error('The PDF was not written successfully.');
+            if (!isSharingAvailable) {
+                throw new Error('Sharing is not available on this device.');
             }
 
-            showAlertModal(
-                successTitle,
-                `${fileName} was saved in your Downloads folder.`,
-                'success'
-            );
+            // Moves file to a temporary document directory path with original filename
+            const targetUri = `${FileSystem.documentDirectory}${fileName}`;
+            await FileSystem.copyAsync({
+                from: sourceUri,
+                to: targetUri,
+            });
 
-            return destinationUri;
-        } catch (savedFolderError) {
-            console.warn(
-                'Previously selected Downloads folder is unavailable:',
-                savedFolderError
-            );
-            await clearSavedPdfDirectory();
-            directoryUri = null;
+            // Opens native iOS share sheet (allows "Save to Files", AirDrop, Mail, etc.)
+            await Sharing.shareAsync(targetUri, {
+                UTI: 'com.adobe.pdf',
+                mimeType: 'application/pdf',
+                dialogTitle: successTitle,
+            });
+
+            return targetUri;
         }
-    }
 
-    const initialDownloadUri =
-        typeof SAF.getUriForDirectoryInRoot === 'function'
-            ? SAF.getUriForDirectoryInRoot('Download')
-            : null;
+        // --- ANDROID FLOW ---
+        if (!FileSystem.StorageAccessFramework) {
+            throw new Error(
+                'Direct saving to the public Downloads folder is currently unavailable.'
+            );
+        }
 
-    const permission = await SAF.requestDirectoryPermissionsAsync(
-        initialDownloadUri
-    );
+        const SAF = FileSystem.StorageAccessFramework;
+        let directoryUri = await getSavedPdfDirectory();
 
-    if (!permission.granted || !permission.directoryUri) {
-        throw new Error(
-            'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
+        if (directoryUri) {
+            try {
+                const destinationUri = await writePdfToAndroidDirectory({
+                    sourceUri,
+                    directoryUri,
+                    fileName,
+                });
+
+                const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
+
+                if (!savedFileInfo.exists) {
+                    throw new Error('The PDF was not written successfully.');
+                }
+
+                showAlertModal(
+                    successTitle,
+                    `${fileName} was saved in your Downloads folder.`,
+                    'success'
+                );
+
+                return destinationUri;
+            } catch (savedFolderError) {
+                console.warn(
+                    'Previously selected Downloads folder is unavailable:',
+                    savedFolderError
+                );
+                await clearSavedPdfDirectory();
+                directoryUri = null;
+            }
+        }
+
+        const initialDownloadUri =
+            typeof SAF.getUriForDirectoryInRoot === 'function'
+                ? SAF.getUriForDirectoryInRoot('Download')
+                : null;
+
+        const permission = await SAF.requestDirectoryPermissionsAsync(
+            initialDownloadUri
         );
-    }
 
-    await rememberPdfDirectory(permission.directoryUri);
+        if (!permission.granted || !permission.directoryUri) {
+            throw new Error(
+                'Downloads folder access was not granted. Select the Download folder and press "Use this folder".'
+            );
+        }
 
-    const destinationUri = await writePdfToAndroidDirectory({
-        sourceUri,
-        directoryUri: permission.directoryUri,
-        fileName,
-    });
+        await rememberPdfDirectory(permission.directoryUri);
 
-    const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
+        const destinationUri = await writePdfToAndroidDirectory({
+            sourceUri,
+            directoryUri: permission.directoryUri,
+            fileName,
+        });
 
-    if (!savedFileInfo.exists) {
-        throw new Error('The PDF could not be saved to the selected folder.');
-    }
+        const savedFileInfo = await FileSystem.getInfoAsync(destinationUri);
 
-    showAlertModal(
-        successTitle,
-        `${fileName} was saved in your Downloads folder.`,
-        'success'
-    );
+        if (!savedFileInfo.exists) {
+            throw new Error('The PDF could not be saved to the selected folder.');
+        }
 
-    return destinationUri;
-};
+        showAlertModal(
+            successTitle,
+            `${fileName} was saved in your Downloads folder.`,
+            'success'
+        );
+
+        return destinationUri;
+    };
 
 
     //helper function to generate and download registration forms as PDF
@@ -1410,324 +1410,263 @@ const saveOrSharePdf = async ({
 
 
     //helper function to generate and download invoice as PDF
+    // helper function to generate and download invoice as PDF
     const handleDownloadInvoice = async () => {
         setIsGeneratingInvoicePdf(true);
 
         try {
             const logoDataUri = await getLogoDataUri();
 
+            const htmlContent = `
+            <html>
+            <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
-            const htmlContent =
-                `<html>
-                <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-                <style>
-                    @page {
-                        size: A4;
-                        margin: 12mm;
-                    }
-
-                    body {
-                        font-family: Helvetica, Arial, sans-serif;
-                        color: #333;
-                        margin: 0;
-                        padding: 0;
-                        font-size: 11px;
-                    }
-
-                    .header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                    }
-
-                    .company-block {
-                        display: flex;
-                        gap: 12px;
-                        width: 60%;
-                    }
-
-                    .logo {
-                        width: 70px;
-                        height: 70px;
-                        object-fit: contain;
-                    }
-
-                    .company-name {
-                        font-size: 18px;
-                        font-weight: bold;
-                        color: #1f2b4d;
-                        margin-bottom: 4px;
-                    }
-
-                    .muted {
-                        color: #666;
-                        line-height: 1.4;
-                    }
-
-                    .invoice-title {
-                        font-size: 32px;
-                        font-weight: 600;
-                        color: #1f2b4d;
-                    }
-
-                    .divider {
-                        height: 3px;
-                        background: #1f2b4d;
-                        margin: 25px 0;
-                    }
-
-                    .bill-row {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 25px;
-                    }
-
-                    .bill-to {
-                        width: 40%;
-                    }
-
-                    .label {
-                        font-size: 10px;
-                        font-weight: bold;
-                        color: #777;
-                        text-transform: uppercase;
-                        margin-bottom: 4px;
-                    }
-
-                    .customer {
-                        font-size: 18px;
-                        font-weight: bold;
-                        margin-bottom: 6px;
-                    }
-
-                    .summary-grid {
-                        width: 55%;
-                        display: flex;
-                        border: 1px solid #ddd;
-                    }
-
-                    .summary-col {
-                        flex: 1;
-                        padding: 12px;
-                        text-align: center;
-                    }
-
-                    .summary-dark {
-                        background: #1f2b4d;
-                        color: white;
-                    }
-
-                    .summary-title {
-                        font-size: 10px;
-                        font-weight: bold;
-                        margin-bottom: 6px;
-                    }
-
-                    .summary-value {
-                        font-size: 14px;
-                        font-weight: bold;
-                    }
-
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 15px;
-                    }
-
-                    th {
-                        border-bottom: 2px solid #1f2b4d;
-                        padding: 10px 4px;
-                        text-align: left;
-                        font-size: 10px;
-                    }
-
-                    td {
-                        border-bottom: 1px solid #eee;
-                        padding: 10px 4px;
-                        font-size: 10px;
-                    }
-
-                    .right {
-                        text-align: right;
-                    }
-
-                    .center {
-                        text-align: center;
-                    }
-
-                    .schedule-section {
-                        margin-top: 30px;
-                    }
-
-                    .schedule-title {
-                        font-weight: bold;
-                        font-size: 12px;
-                        margin-bottom: 10px;
-                        color: #666;
-                    }
-
-                    .footer {
-                        margin-top: 35px;
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 20px;
-                    }
-
-                    .bank {
-                        width: 50%;
-                    }
-
-                    .totals {
-                        width: 35%;
-                    }
-
-                    .total-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 10px 0;
-                        border-bottom: 2px solid #1f2b4d;
-                    }
-
-                    .total-label {
-                        font-weight: bold;
-                    }
-
-                    .total-value {
-                        font-weight: bold;
-                    }
-
-                    .remaining {
-                        color: #b91c1c;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-
-                    .thank-you {
-                        margin-top: 10px;
-                        text-align: right;
-                        font-weight: bold;
-                    }
-                </style>
-                </head>
-
-                <body>
-
-                <div class="header">
-
-                    <div class="company-block">
-                        ${logoDataUri
-                    ? `<img src="${logoDataUri}" class="logo" />`
-                    : ''
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 12mm;
                 }
 
-                        <div>
-                            <div class="company-name">
-                                M&RC Travel and Tours
-                            </div>
+                body {
+                    font-family: 'Helvetica', Arial, sans-serif;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                    font-size: 11px;
+                }
 
-                            <div class="muted">
-                                2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1<br/>
-                                Parañaque City, Philippines<br/>
-                                1709 PHL<br/>
-                                +63 969 055 4806<br/>
-                                info1@mrctravels.com
-                            </div>
-                        </div>
-                    </div>
+                /* Table-based layouts replace Flexbox for WebKit/iOS print stability */
+                .table-layout {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
 
-                    <div class="invoice-title">
+                .company-name {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #1f2b4d;
+                    margin-bottom: 4px;
+                }
+
+                .muted {
+                    color: #666;
+                    line-height: 1.4;
+                }
+
+                .invoice-title {
+                    font-size: 28px;
+                    font-weight: 600;
+                    color: #1f2b4d;
+                    text-align: right;
+                    vertical-align: top;
+                }
+
+                .divider {
+                    height: 3px;
+                    background: #1f2b4d;
+                    margin: 20px 0;
+                }
+
+                .label {
+                    font-size: 10px;
+                    font-weight: bold;
+                    color: #777;
+                    text-transform: uppercase;
+                    margin-bottom: 4px;
+                }
+
+                .customer {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 6px;
+                }
+
+                /* Invoice Summary Grid */
+                .summary-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    border: 1px solid #ddd;
+                }
+
+                .summary-col {
+                    padding: 10px 6px;
+                    text-align: center;
+                    border: 1px solid #ddd;
+                }
+
+                .summary-dark {
+                    background: #1f2b4d;
+                    color: white;
+                }
+
+                .summary-title {
+                    font-size: 10px;
+                    font-weight: bold;
+                    margin-bottom: 6px;
+                }
+
+                .summary-value {
+                    font-size: 13px;
+                    font-weight: bold;
+                }
+
+                /* Items Table */
+                table.invoice-items {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                }
+
+                table.invoice-items th {
+                    border-bottom: 2px solid #1f2b4d;
+                    padding: 8px 4px;
+                    text-align: left;
+                    font-size: 10px;
+                }
+
+                table.invoice-items td {
+                    border-bottom: 1px solid #eee;
+                    padding: 8px 4px;
+                    font-size: 10px;
+                }
+
+                .right { text-align: right; }
+                .center { text-align: center; }
+
+                .schedule-section {
+                    margin-top: 25px;
+                }
+
+                .schedule-title {
+                    font-weight: bold;
+                    font-size: 11px;
+                    margin-bottom: 8px;
+                    color: #666;
+                }
+
+                /* Footer Section */
+                .footer-table {
+                    width: 100%;
+                    margin-top: 30px;
+                    border-collapse: collapse;
+                }
+
+                .total-row {
+                    border-bottom: 1px solid #ddd;
+                    padding: 6px 0;
+                }
+
+                .total-row.final {
+                    border-bottom: 2px solid #1f2b4d;
+                }
+
+                .remaining {
+                    color: #b91c1c;
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+
+                .thank-you {
+                    margin-top: 10px;
+                    text-align: right;
+                    font-weight: bold;
+                }
+            </style>
+            </head>
+
+            <body>
+
+            <!-- Header Section -->
+            <table class="table-layout">
+                <tr>
+                    <td style="width: 60%; vertical-align: top;">
+                        <table style="border-collapse: collapse;">
+                            <tr>
+                                ${logoDataUri ? `<td style="vertical-align: top; padding-right: 12px;"><img src="${logoDataUri}" style="width: 65px; height: 65px; object-fit: contain;" /></td>` : ''}
+                                <td style="vertical-align: top;">
+                                    <div class="company-name">M&RC Travel and Tours</div>
+                                    <div class="muted">
+                                        2nd Floor #1 Cor Fatima street, San Antonio Avenue Valley 1<br/>
+                                        Parañaque City, Philippines<br/>
+                                        1709 PHL<br/>
+                                        +63 969 055 4806<br/>
+                                        info1@mrctravels.com
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td class="invoice-title">
                         Invoice ${booking?.invoiceNumber || invoiceNumber}
-                    </div>
-
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="bill-row">
-
-                    <div class="bill-to">
-                        <div class="label">Bill To</div>
-
-                        <div class="customer">
-                            ${customerName.toUpperCase()}
-                        </div>
-
-                        <div>${bookingDetails?.leadContact || user?.phonenum || '--'}</div>
-                        <div>Reference: ${reference}</div>
-                        <div>Travel Date: ${formattedTravelDate}</div>
-                    </div>
-
-                    <div class="summary-grid">
-
-                        <div class="summary-col">
-                            <div class="summary-title">DATE</div>
-                            <div class="summary-value">
-                                ${issueDate.format('MM/DD/YYYY')}
-                            </div>
-                        </div>
-
-                        <div class="summary-col summary-dark">
-                            <div class="summary-title">TOTAL PRICE</div>
-                            <div class="summary-value">
-                                PHP ${formatPesoNumber(previewTotalAmount)}
-                            </div>
-                        </div>
-
-                        <div class="summary-col">
-                            <div class="summary-title">DUE DATE</div>
-                            <div class="summary-value">
-                                ${dueDateDisplay.format('MM/DD/YYYY')}
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <table>
-
-                <thead>
-                <tr>
-                    <th>DATE</th>
-                    <th>ACTIVITY</th>
-                    <th>DESCRIPTION</th>
-                    <th class="center">QTY</th>
-                    <th class="right">RATE</th>
-                    <th class="right">AMOUNT</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                ${previewInvoiceItems.map(item => `
-                <tr>
-                    <td>${dayjs(item.date).format('MM/DD/YYYY')}</td>
-                    <td>${item.activity}</td>
-                    <td>${item.description}</td>
-                    <td class="center">${item.qty}</td>
-                    <td class="right">PHP ${formatPesoNumber(item.rate)}</td>
-                    <td class="right">
-                        PHP ${formatPesoNumber(
-                    Number(item.qty || 0) * Number(item.rate || 0)
-                )}
                     </td>
                 </tr>
-                `).join('')}
+            </table>
 
+            <div class="divider"></div>
+
+            <!-- Bill To & Summary Grid Section -->
+            <table class="table-layout" style="margin-bottom: 20px;">
+                <tr>
+                    <td style="width: 45%; vertical-align: top;">
+                        <div class="label">Bill To</div>
+                        <div class="customer">${customerName.toUpperCase()}</div>
+                        <div class="muted">${bookingDetails?.leadContact || user?.phonenum || '--'}</div>
+                        <div class="muted">Reference: ${reference}</div>
+                        <div class="muted">Travel Date: ${formattedTravelDate}</div>
+                    </td>
+                    <td style="width: 55%; vertical-align: top;">
+                        <table class="summary-table">
+                            <tr>
+                                <td class="summary-col">
+                                    <div class="summary-title">DATE</div>
+                                    <div class="summary-value">${issueDate.format('MM/DD/YYYY')}</div>
+                                </td>
+                                <td class="summary-col summary-dark">
+                                    <div class="summary-title" style="color: #fff;">TOTAL PRICE</div>
+                                    <div class="summary-value" style="color: #fff;">PHP ${formatPesoNumber(previewTotalAmount)}</div>
+                                </td>
+                                <td class="summary-col">
+                                    <div class="summary-title">DUE DATE</div>
+                                    <div class="summary-value">${dueDateDisplay.format('MM/DD/YYYY')}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Invoice Items Table -->
+            <table class="invoice-items">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>ACTIVITY</th>
+                        <th>DESCRIPTION</th>
+                        <th class="center">QTY</th>
+                        <th class="right">RATE</th>
+                        <th class="right">AMOUNT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${previewInvoiceItems.map(item => `
+                        <tr>
+                            <td>${dayjs(item.date).format('MM/DD/YYYY')}</td>
+                            <td>${item.activity}</td>
+                            <td>${item.description}</td>
+                            <td class="center">${item.qty}</td>
+                            <td class="right">PHP ${formatPesoNumber(item.rate)}</td>
+                            <td class="right">PHP ${formatPesoNumber(Number(item.qty || 0) * Number(item.rate || 0))}</td>
+                        </tr>
+                    `).join('')}
                 </tbody>
-                </table>
+            </table>
 
-                ${paymentMode === 'Deposit' && paymentSchedule.length > 0
-                    ? `
+            <!-- Payment Schedule Section -->
+            ${paymentMode === 'Deposit' && paymentSchedule.length > 0 ? `
                 <div class="schedule-section">
-
-                    <div class="schedule-title">
-                        PAYMENT SCHEDULE (${String(paymentFrequency).toUpperCase()})
-                    </div>
-
-                    <table>
+                    <div class="schedule-title">PAYMENT SCHEDULE (${String(paymentFrequency).toUpperCase()})</div>
+                    <table class="invoice-items">
                         <thead>
                             <tr>
                                 <th>DESCRIPTION</th>
@@ -1736,108 +1675,63 @@ const saveOrSharePdf = async ({
                                 <th class="right">STATUS</th>
                             </tr>
                         </thead>
-
                         <tbody>
                             ${paymentSchedule.map(row => `
-                            <tr>
-                                <td>${row.label}</td>
-                                <td>${dayjs(row.date).format('MMM D, YYYY')}</td>
-                                <td class="right">
-                                    PHP ${formatPesoNumber(row.amount)}
-                                </td>
-                                <td
-                                    class="right"
-                                    style="
-                                    font-weight:bold;
-                                    color:
-                                    ${row.status === 'PAID'
-                            ? '#389e0d'
-                            : row.status === 'PENDING'
-                                ? '#d97706'
-                                : row.status === 'FAILED'
-                                    ? '#cf1322'
-                                    : '#6b7280'
-                        };
-                                    "
-                                >
-                                    ${row.status}
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td>${row.label}</td>
+                                    <td>${dayjs(row.date).format('MMM D, YYYY')}</td>
+                                    <td class="right">PHP ${formatPesoNumber(row.amount)}</td>
+                                    <td class="right" style="font-weight: bold; color: ${row.status === 'PAID' ? '#389e0d' : row.status === 'PENDING' ? '#d97706' : '#cf1322'
+                };">
+                                        ${row.status}
+                                    </td>
+                                </tr>
                             `).join('')}
                         </tbody>
                     </table>
-
                 </div>
-                `
-                    : ''
-                }
+            ` : ''}
 
-                <div class="footer">
+            <!-- Footer & Totals Section -->
+            <table class="footer-table">
+                <tr>
+                    <td style="width: 50%; vertical-align: top; padding-right: 20px;">
+                        <div class="muted" style="margin-bottom: 8px;">Payment to be deposited in below bank details:</div>
+                        <div class="label" style="color: #000;">PESO ACCOUNT:</div>
+                        <div class="muted">BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</div>
+                        <div class="muted">ACCOUNT NAME: M&RC TRAVEL AND TOURS</div>
+                        <div class="muted">ACCOUNT NUMBER: 006830132692</div>
+                    </td>
+                    <td style="width: 50%; vertical-align: top;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr class="total-row">
+                                <td style="font-weight: bold;">TOTAL PRICE</td>
+                                <td class="right" style="font-weight: bold;">PHP ${formatPesoNumber(previewTotalAmount)}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td style="font-weight: bold;">PAID TO DATE</td>
+                                <td class="right" style="font-weight: bold;">PHP ${formatPesoNumber(paidAmount)}</td>
+                            </tr>
+                            <tr class="total-row final">
+                                <td class="remaining">REMAINING BAL.</td>
+                                <td class="right remaining">PHP ${formatPesoNumber(Math.max(previewTotalAmount - paidAmount, 0))}</td>
+                            </tr>
+                        </table>
+                        <div class="thank-you">THANK YOU.</div>
+                    </td>
+                </tr>
+            </table>
 
-                    <div class="bank">
+            </body>
+            </html>
+        `;
 
-                        <div style="margin-bottom:10px;">
-                            Payment to be deposited in below bank details:
-                        </div>
-
-                        <div><strong>PESO ACCOUNT:</strong></div>
-                        <div>BANK: BDO UNIBANK - TRIDENT TOWER BRANCH</div>
-                        <div>ACCOUNT NAME: M&RC TRAVEL AND TOURS</div>
-                        <div>ACCOUNT NUMBER: 006830132692</div>
-
-                    </div>
-
-                    <div class="totals">
-
-                        <div class="total-row">
-                            <span class="total-label">TOTAL PRICE</span>
-                            <span class="total-value">
-                                PHP ${formatPesoNumber(previewTotalAmount)}
-                            </span>
-                        </div>
-
-                        <div class="total-row">
-                            <span class="total-label">PAID TO DATE</span>
-                            <span class="total-value">
-                                PHP ${formatPesoNumber(paidAmount)}
-                            </span>
-                        </div>
-
-                        <div class="total-row remaining">
-                            <span>REMAINING BAL.</span>
-                            <span>
-                                PHP ${formatPesoNumber(
-                    Math.max(previewTotalAmount - paidAmount, 0)
-                )}
-                            </span>
-                        </div>
-
-                        <div class="thank-you">
-                            THANK YOU.
-                        </div>
-
-                    </div>
-
-                </div>
-
-                </body>
-                </html>
-                `;
-
-            const { uri } = await Print.printToFileAsync({
-                html: htmlContent,
-            });
+            const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
             const safeReference = sanitizeFileName(reference || 'booking');
-            const invoiceValue =
-                booking?.invoiceNumber ||
-                invoiceNumber ||
-                safeReference;
-
+            const invoiceValue = booking?.invoiceNumber || invoiceNumber || safeReference;
             const date = dayjs().format('MM-DD-YYYY');
-            const fileName = `Booking-Invoice-${sanitizeFileName(
-                invoiceValue
-            )}_${date}.pdf`;
+            const fileName = `Booking-Invoice-${sanitizeFileName(invoiceValue)}_${date}.pdf`;
 
             await saveOrSharePdf({
                 sourceUri: uri,
@@ -1846,15 +1740,10 @@ const saveOrSharePdf = async ({
             });
 
         } catch (error) {
-            console.error(
-                'Invoice PDF download error:',
-                error
-            );
-
+            console.error('Invoice PDF download error:', error);
             showAlertModal(
                 'Download Failed',
-                error?.message ||
-                'Could not download the invoice PDF.',
+                error?.message || 'Could not download the invoice PDF.',
                 'error'
             );
         } finally {

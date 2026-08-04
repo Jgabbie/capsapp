@@ -253,7 +253,7 @@ export default function Login() {
                 <View style={LoginStyle.inputWrapper}>
                     <Text style={LoginStyle.loginLabel}>Username or Email <Text style={{ color: 'red' }}>*</Text></Text>
                     <TextInput
-                        placeholder="Enter username"
+                        placeholder="Enter username or email"
                         placeholderTextColor="#6b7280"
                         maxLength={30}
                         style={[LoginStyle.loginInputs, getError ? LoginStyle.inputErrorBorder : null]}
