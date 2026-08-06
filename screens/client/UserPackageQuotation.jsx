@@ -171,7 +171,15 @@ export default function UserPackageQuotation() {
         }
     };
 
-    const statusOptions = ["All", "Pending", "Booked", "Cancelled", "Under Review", "Revision Requested"];
+    const statusOptions = useMemo(() => {
+        const mappedStatuses = quotations
+            .map((item) => item.status)
+            .filter((status) => status);
+
+        const uniqueStatuses = [...new Set(mappedStatuses)];
+
+        return ["All", ...uniqueStatuses];
+    }, [quotations]);
 
 
     //date picker handler
