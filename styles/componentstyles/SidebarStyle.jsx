@@ -39,6 +39,7 @@ const SidebarStyle = StyleSheet.create({
         fontSize: 14,
     },
     userHandle: {
+        width: 150,
         color: '#fff',
         fontFamily: 'Montserrat_400Regular',
         fontSize: 12

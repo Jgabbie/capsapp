@@ -380,7 +380,9 @@ const sendResetOtp = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if (!user) {
+            return res.status(200).json({ success: true, message: "OTP sent successfully" });
+        }
 
         if (user.resetOtpBlockedUntil && user.resetOtpBlockedUntil > Date.now()) {
             return res.status(429).json({

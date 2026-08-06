@@ -71,7 +71,6 @@ const PasswordResetStyle = StyleSheet.create({
         color: "#ff1616",
         fontSize: 12,
         marginBottom: 5,
-        marginTop: 3,
         fontFamily: 'Montserrat_400Regular',
         textAlign: 'center',
     },
@@ -110,7 +109,7 @@ const PasswordResetStyle = StyleSheet.create({
         borderColor: "#305797",
         width: 200,
         height: 50,
-        marginBottom: 10,
+        marginBottom: 8,
         backgroundColor: "#f9f9f9",
         color: "#000"
     },

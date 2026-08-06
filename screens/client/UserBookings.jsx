@@ -1244,11 +1244,11 @@ export default function UserBookings() {
                                     </View>
 
                                     <View style={ModalStyle.modalButtonContainer}>
-                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#305797', flex: 1, marginRight: 5 }]} onPress={() => { setCancelModalOpen(false); setCancelImage(null); setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); }}>
-                                            <Text style={ModalStyle.modalButtonTextSmall}>Keep Booking</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#8B0000', flex: 1, marginLeft: 5 }]} onPress={handleCancelBooking}>
+                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#305797', flex: 1, marginLeft: 5 }]} onPress={handleCancelBooking}>
                                             <Text style={ModalStyle.modalButtonTextSmall}>Cancel Booking</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={[ModalStyle.modalButton, { backgroundColor: '#8B0000', flex: 1, marginRight: 5 }]} onPress={() => { setCancelModalOpen(false); setCancelImage(null); setCancelReason(''); setCancelOtherReason(''); setCancelComments(''); }}>
+                                            <Text style={ModalStyle.modalButtonTextSmall}>Keep Booking</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </>

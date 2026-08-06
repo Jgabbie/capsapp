@@ -109,9 +109,10 @@ const SignupStyle = StyleSheet.create({
     fieldError: {
         color: "#ff1616",
         fontSize: 10,
-        marginLeft: 15,
+        marginLeft: 8,
         marginBottom: 8,
         marginTop: -5,
+        fontFamily: "Montserrat_400Regular",
     },
     generalError: {
         color: "#ff1616",

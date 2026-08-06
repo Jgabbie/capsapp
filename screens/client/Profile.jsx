@@ -1298,6 +1298,15 @@ export default function Profile() {
                 <Modal transparent animationType='fade' visible={successModalVisible} onRequestClose={() => setSuccessModalVisible(false)}>
                     <View style={ModalStyle.modalOverlay}>
                         <View style={ModalStyle.modalBox}>
+
+                            <View style={ModalStyle.modalIconContainer}>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={32}
+                                    color="#059669"
+                                />
+                            </View>
+
                             <Text style={ModalStyle.modalTitle}>Change Successful</Text>
                             <Text style={ModalStyle.modalText}>Your profile has been updated successfully!</Text>
                             <TouchableOpacity style={ModalStyle.modalButton} onPress={() => { setEditing(false); setSuccessModalVisible(false); }}>

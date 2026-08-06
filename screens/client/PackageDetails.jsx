@@ -75,8 +75,9 @@ const isFullyPaidBooking = (booking, packageId) => {
 //component to handle video playback for package videos
 function PackageVideo({ source }) {
     const player = useVideoPlayer(source, (player) => {
-        player.loop = true;
         player.play();
+        player.loop = true;
+        player.volume = 0.4;
     });
 
     return (
@@ -680,7 +681,7 @@ export default function PackageDetails({ route, navigation }) {
                         </View>
                     </View>
 
-                    <View style={{ paddingHorizontal: 16 }}>
+                    <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
                         <View style={[DestinationStyles.wishlistContainer, { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 5 }]}>
                             <TouchableOpacity style={[DestinationStyles.wishlistButton, { flex: 1 }]} onPress={handleWishlistAdd}>
                                 <Ionicons
@@ -844,7 +845,7 @@ export default function PackageDetails({ route, navigation }) {
                     ) : (
                         <>
                             <View style={DestinationStyles.tabRow}>
-                                {["itinerary", "inclusions", "terms"].map((tab) => {
+                                {["itinerary", "inclusions and exclusions", "terms and conditions"].map((tab) => {
                                     const isActive = activeTab === tab;
                                     return (
                                         <TouchableOpacity
@@ -926,7 +927,7 @@ export default function PackageDetails({ route, navigation }) {
                                     );
                                 })}
 
-                                {activeTab === "inclusions" && (
+                                {activeTab === "inclusions and exclusions" && (
                                     <>
                                         <View style={DestinationStyles.sectionPill}>
                                             <Text style={DestinationStyles.sectionTitle}>INCLUSIONS</Text>
@@ -954,7 +955,7 @@ export default function PackageDetails({ route, navigation }) {
                                     </>
                                 )}
 
-                                {activeTab === "terms" && (
+                                {activeTab === "terms and conditions" && (
                                     <>
                                         <View style={DestinationStyles.sectionPill}>
                                             <Text style={DestinationStyles.sectionTitle}>TERMS AND CONDITIONS</Text>
