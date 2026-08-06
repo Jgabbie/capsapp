@@ -2752,33 +2752,22 @@ export default function BookingInvoice({ route, navigation }) {
                     onPress={closeAlertModal}
                 >
                     <Pressable
-                        style={{
-                            width: '100%',
-                            maxWidth: 340,
-                            backgroundColor: '#ffffff',
-                            borderRadius: 22,
-                            paddingHorizontal: 26,
-                            paddingTop: 24,
-                            paddingBottom: 22,
-                            alignItems: 'center',
-                        }}
+                        style={ModalStyle.modalBox}
                         onPress={event => event.stopPropagation()}
                     >
                         <View
-                            style={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: 32,
-                                backgroundColor:
-                                    alertModal.type === 'error'
-                                        ? '#fee2e2'
-                                        : alertModal.type === 'warning'
-                                            ? '#fef3c7'
-                                            : '#d1fae5',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginBottom: 18,
-                            }}
+                            style={[
+                                ModalStyle.modalIconContainer,
+                                {
+                                    backgroundColor:
+                                        alertModal.type === 'error'
+                                            ? '#fee2e2'
+                                            : alertModal.type === 'warning'
+                                                ? '#fef3c7'
+                                                : '#d1fae5',
+                                    marginBottom: 10,
+                                }
+                            ]}
                         >
                             <Ionicons
                                 name={

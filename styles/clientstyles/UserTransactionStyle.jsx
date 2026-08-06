@@ -197,7 +197,6 @@ export default StyleSheet.create({
     },
     modalOptionText: {
         fontSize: 16,
-        color: '#305797',
         fontFamily: 'Montserrat_500Medium'
     },
 

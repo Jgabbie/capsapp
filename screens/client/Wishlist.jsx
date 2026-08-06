@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions, Text } from 'react-native';
+import { View, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Platform, Dimensions, Text, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from 'expo-image';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -64,7 +64,8 @@ export default function Wishlist() {
 
     //filter States
     const [searchText, setSearchText] = useState("");
-    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
+    const [isAvailabilityModalOpen, setAvailabilityModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [selectedAvailability, setSelectedAvailability] = useState("All");
 
@@ -264,7 +265,7 @@ export default function Wishlist() {
                         <TextInput
                             maxLength={50}
                             style={WishlistStyle.searchInput}
-                            placeholder="Search by destination or package name"
+                            placeholder="Search by package name"
                             placeholderTextColor="#9ca3af"
                             value={searchText}
                             autoCorrect={false}
@@ -283,7 +284,7 @@ export default function Wishlist() {
                     <View style={WishlistStyle.dropdownRow}>
                         <View style={{ flex: 1, marginRight: 8 }}>
                             <Text style={WishlistStyle.filterLabel}>Category</Text>
-                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('category')}>
+                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => setCategoryModalOpen(true)}>
                                 <Text style={WishlistStyle.dropdownText}>{selectedCategory}</Text>
                                 <Ionicons name="chevron-down" size={14} color="#6b7280" />
                             </TouchableOpacity>
@@ -291,7 +292,7 @@ export default function Wishlist() {
 
                         <View style={{ flex: 1, marginLeft: 8 }}>
                             <Text style={WishlistStyle.filterLabel}>Availability</Text>
-                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => toggleDropdown('availability')}>
+                            <TouchableOpacity style={WishlistStyle.dropdownButton} onPress={() => setAvailabilityModalOpen(true)}>
                                 <Text style={WishlistStyle.dropdownText}>{selectedAvailability}</Text>
                                 <Ionicons name="chevron-down" size={14} color="#6b7280" />
                             </TouchableOpacity>
@@ -315,25 +316,69 @@ export default function Wishlist() {
                     </View>
                 </View>
 
-                {/* Dropdown Modals mapped to new layout position */}
-                {activeDropdown === 'category' && (
-                    <View style={[WishlistStyle.dropdownMenu, { top: 165, left: 15 }]}>
-                        {categoriesList.map(cat => (
-                            <TouchableOpacity key={cat} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedCategory(cat); setActiveDropdown(null); }}>
-                                <Text style={WishlistStyle.dropdownMenuItemText}>{cat}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
-                {activeDropdown === 'availability' && (
-                    <View style={[WishlistStyle.dropdownMenu, { top: 165, right: 15 }]}>
-                        {availabilitiesList.map(avail => (
-                            <TouchableOpacity key={avail} style={WishlistStyle.dropdownMenuItem} onPress={() => { setSelectedAvailability(avail); setActiveDropdown(null); }}>
-                                <Text style={WishlistStyle.dropdownMenuItemText}>{avail}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                <Modal visible={isCategoryModalOpen} transparent animationType="fade">
+                    <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setCategoryModalOpen(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={[ModalStyle.modalBox, { width: '85%', paddingVertical: 10 }]}>
+                                <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
+                                    Select Category
+                                </Text>
+                                {categoriesList.map((cat, index) => (
+                                    <TouchableOpacity
+                                        key={cat}
+                                        style={{
+                                            paddingVertical: 15,
+                                            alignItems: 'center',
+                                            borderTopWidth: index === 0 ? 0 : 1,
+                                            borderTopColor: '#f0f0f0'
+                                        }}
+                                        onPress={() => { setSelectedCategory(cat); setCategoryModalOpen(false); }}
+                                    >
+                                        <Text style={{
+                                            fontSize: 15,
+                                            color: selectedCategory === cat ? '#305797' : '#555',
+                                            fontFamily: selectedCategory === cat ? 'Montserrat_700Bold' : 'Montserrat_400Regular'
+                                        }}>
+                                            {cat}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+
+                <Modal visible={isAvailabilityModalOpen} transparent animationType="fade">
+                    <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setAvailabilityModalOpen(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={[ModalStyle.modalBox, { width: '85%', paddingVertical: 10 }]}>
+                                <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
+                                    Select Availability
+                                </Text>
+                                {availabilitiesList.map((avail, index) => (
+                                    <TouchableOpacity
+                                        key={avail}
+                                        style={{
+                                            paddingVertical: 15,
+                                            alignItems: 'center',
+                                            borderTopWidth: index === 0 ? 0 : 1,
+                                            borderTopColor: '#f0f0f0'
+                                        }}
+                                        onPress={() => { setSelectedAvailability(avail); setAvailabilityModalOpen(false); }}
+                                    >
+                                        <Text style={{
+                                            fontSize: 15,
+                                            color: selectedAvailability === avail ? '#305797' : '#555',
+                                            fontFamily: selectedAvailability === avail ? 'Montserrat_700Bold' : 'Montserrat_400Regular'
+                                        }}>
+                                            {avail}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
 
                 <View style={WishlistStyle.packagesHeader}>
                     <Text style={WishlistStyle.packagesTitle}>Packages</Text>

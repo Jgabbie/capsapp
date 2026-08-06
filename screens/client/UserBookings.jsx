@@ -638,7 +638,7 @@ export default function UserBookings() {
                             <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
                                 Select Status
                             </Text>
-                            {['All', 'Not Paid', 'Pending', 'Fully Paid', 'Cancelled'].map((status, index) => (
+                            {['All', 'Not Paid', 'Pending', 'Fully Paid', 'Cancelled', 'Cancellation Requested'].map((status, index) => (
                                 <TouchableOpacity
                                     key={status}
                                     style={[
@@ -1272,30 +1272,10 @@ export default function UserBookings() {
                 >
                     <TouchableWithoutFeedback>
                         <View
-                            style={[
-                                ModalStyle.modalBox,
-                                {
-                                    width: '86%',
-                                    padding: 24,
-                                    alignItems: 'center',
-                                },
-                            ]}
+                            style={ModalStyle.modalBox}
                         >
                             <View
-                                style={{
-                                    width: 72,
-                                    height: 72,
-                                    borderRadius: 36,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    marginBottom: 16,
-                                    backgroundColor:
-                                        feedbackModal.type === 'success'
-                                            ? '#edf8f0'
-                                            : feedbackModal.type === 'error'
-                                                ? '#fff1f0'
-                                                : '#fffbe6',
-                                }}
+                                style={ModalStyle.modalIconContainer}
                             >
                                 <Ionicons
                                     name={
@@ -1317,48 +1297,24 @@ export default function UserBookings() {
                             </View>
 
                             <Text
-                                style={{
-                                    fontFamily: 'Montserrat_700Bold',
-                                    fontSize: 19,
-                                    color: '#1e293b',
-                                    textAlign: 'center',
-                                    marginBottom: 10,
-                                }}
+                                style={ModalStyle.modalTitle}
                             >
                                 {feedbackModal.title}
                             </Text>
 
                             <Text
-                                style={{
-                                    fontFamily: 'Montserrat_400Regular',
-                                    fontSize: 14,
-                                    lineHeight: 21,
-                                    color: '#64748b',
-                                    textAlign: 'center',
-                                    marginBottom: 22,
-                                }}
+                                style={ModalStyle.modalText}
                             >
                                 {feedbackModal.message}
                             </Text>
 
                             <TouchableOpacity
-                                style={{
-                                    width: '100%',
-                                    minHeight: 46,
-                                    borderRadius: 10,
-                                    backgroundColor: '#305797',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}
+                                style={ModalStyle.modalButton}
                                 activeOpacity={0.8}
                                 onPress={closeFeedbackModal}
                             >
                                 <Text
-                                    style={{
-                                        color: '#ffffff',
-                                        fontFamily: 'Montserrat_700Bold',
-                                        fontSize: 14,
-                                    }}
+                                    style={ModalStyle.modalButtonText}
                                 >
                                     OK
                                 </Text>

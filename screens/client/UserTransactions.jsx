@@ -12,6 +12,7 @@ import * as Sharing from 'expo-sharing';
 import Header from '../../components/Header'
 import Sidebar from '../../components/Sidebar'
 import UserTransactionStyle from '../../styles/clientstyles/UserTransactionStyle'
+import ModalStyle from '../../styles/componentstyles/ModalStyle'
 import { api, withUserHeader } from '../../utils/api'
 import { useUser } from '../../context/UserContext'
 
@@ -1064,7 +1065,7 @@ export default function UserTransactions() {
                                 style={[UserTransactionStyle.modalOption, { borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#f0f0f0' }]}
                                 onPress={() => { setStatusFilter(opt); setStatusModalVisible(false); }}
                             >
-                                <Text style={[UserTransactionStyle.modalOptionText, { fontFamily: statusFilter === opt ? 'Montserrat_700Bold' : 'Roboto_500Medium' }]}>
+                                <Text style={[UserTransactionStyle.modalOptionText, { fontFamily: statusFilter === opt ? 'Montserrat_700Bold' : 'Montserrat_400Regular' }]}>
                                     {opt}
                                 </Text>
                             </TouchableOpacity>
@@ -1467,43 +1468,26 @@ export default function UserTransactions() {
                 onRequestClose={closeAlertModal}
             >
                 <Pressable
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 25,
-                    }}
+                    style={ModalStyle.modalOverlay}
                     onPress={closeAlertModal}
                 >
                     <Pressable
-                        style={{
-                            width: '100%',
-                            maxWidth: 340,
-                            backgroundColor: '#ffffff',
-                            borderRadius: 22,
-                            paddingHorizontal: 26,
-                            paddingTop: 24,
-                            paddingBottom: 22,
-                            alignItems: 'center',
-                        }}
+                        style={ModalStyle.modalBox}
                         onPress={event => event.stopPropagation()}
                     >
                         <View
-                            style={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: 32,
-                                backgroundColor:
-                                    alertModal.type === 'error'
-                                        ? '#fee2e2'
-                                        : alertModal.type === 'warning'
-                                            ? '#fef3c7'
-                                            : '#d1fae5',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginBottom: 18,
-                            }}
+                            style={[
+                                ModalStyle.modalIconContainer,
+                                {
+                                    backgroundColor:
+                                        alertModal.type === 'error'
+                                            ? '#fee2e2'
+                                            : alertModal.type === 'warning'
+                                                ? '#fef3c7'
+                                                : '#d1fae5',
+                                    marginBottom: 10,
+                                }
+                            ]}
                         >
                             <Ionicons
                                 name={
@@ -1525,49 +1509,24 @@ export default function UserTransactions() {
                         </View>
 
                         <Text
-                            style={{
-                                color: '#1f2937',
-                                fontFamily: 'Montserrat_700Bold',
-                                fontSize: 18,
-                                lineHeight: 24,
-                                textAlign: 'center',
-                                marginBottom: 10,
-                            }}
+                            style={ModalStyle.modalTitle}
                         >
                             {alertModal.title}
                         </Text>
 
                         <Text
-                            style={{
-                                color: '#6b7280',
-                                fontFamily: 'Montserrat_400Regular',
-                                fontSize: 14,
-                                lineHeight: 21,
-                                textAlign: 'center',
-                                marginBottom: 22,
-                            }}
+                            style={ModalStyle.modalText}
                         >
                             {alertModal.message}
                         </Text>
 
                         <TouchableOpacity
-                            style={{
-                                minWidth: 110,
-                                backgroundColor: '#305797',
-                                borderRadius: 10,
-                                paddingHorizontal: 28,
-                                paddingVertical: 12,
-                                alignItems: 'center',
-                            }}
+                            style={ModalStyle.modalButton}
                             activeOpacity={0.8}
                             onPress={closeAlertModal}
                         >
                             <Text
-                                style={{
-                                    color: '#ffffff',
-                                    fontFamily: 'Montserrat_600SemiBold',
-                                    fontSize: 14,
-                                }}
+                                style={ModalStyle.modalButtonText}
                             >
                                 Got It
                             </Text>

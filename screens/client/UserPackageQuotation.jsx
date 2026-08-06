@@ -10,6 +10,7 @@ import Sidebar from "../../components/Sidebar";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import UserPackageQuotationStyle from "../../styles/clientstyles/UserPackageQuotationStyle";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 
 import {
     useFonts,
@@ -156,14 +157,10 @@ export default function UserPackageQuotation() {
     const getStatusStyle = (status) => {
         const s = String(status || '').trim().toLowerCase();
         switch (s) {
-            case 'approved':
-            case 'successful':
             case 'booked':
                 return { bg: '#f6ffed', text: '#389e0d', border: '#b7eb8f' }; // Green
             case 'pending':
                 return { bg: '#fffbe6', text: '#d48806', border: '#ffe58f' }; // Gold/Yellow
-            case 'rejected':
-                return { bg: '#fff1f0', text: '#cf1322', border: '#ffa39e' }; // Red
             case 'under review':
                 return { bg: '#e6f7ff', text: '#0958d9', border: '#91caff' }; // Blue
             case 'revision requested':
@@ -174,7 +171,7 @@ export default function UserPackageQuotation() {
         }
     };
 
-    const statusOptions = ["All", "Successful", "Pending", "Cancelled", "Approved", "Rejected", "Under Review", "Revision Requested"];
+    const statusOptions = ["All", "Pending", "Booked", "Cancelled", "Under Review", "Revision Requested"];
 
 
     //date picker handler
@@ -404,14 +401,10 @@ export default function UserPackageQuotation() {
                     onPress={() => setShowStatusModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={UserPackageQuotationStyle.modalContainer}>
-                            <View style={UserPackageQuotationStyle.modalHeaderRow}>
-                                <Text style={UserPackageQuotationStyle.modalTitleText}>Select Status</Text>
-                                <TouchableOpacity onPress={() => setShowStatusModal(false)}>
-                                    <Ionicons name="close" size={22} color="#999" />
-                                </TouchableOpacity>
-                            </View>
-
+                        <View style={[ModalStyle.modalBox, { width: '85%', paddingVertical: 10 }]}>
+                            <Text style={{ textAlign: 'center', fontSize: 18, fontFamily: 'Montserrat_700Bold', color: '#305797', marginVertical: 15 }}>
+                                Select Status
+                            </Text>
                             <View style={UserPackageQuotationStyle.tagContainer}>
                                 {statusOptions.map((status) => {
                                     const isSelected = status === statusFilter;

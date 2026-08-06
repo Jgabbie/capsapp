@@ -386,6 +386,7 @@ export default function UserApplications() {
                                         {
                                             borderTopWidth: index === 0 ? 0 : 1,
                                             borderTopColor: "#f0f0f0",
+                                            paddingVertical: 12,
                                         },
                                     ]}
                                     onPress={() => {
