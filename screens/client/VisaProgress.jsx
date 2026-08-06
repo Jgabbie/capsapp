@@ -15,6 +15,7 @@ import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import VisaProgressStyle from "../../styles/clientstyles/VisaProgressStyle";
 import PaymentStyle from '../../styles/clientstyles/PaymentStyle';
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 
@@ -215,6 +216,31 @@ export default function VisaProgress() {
     });
 
 
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+    });
+
+    // Function to show the modal
+    const showAlertModal = (title, message) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+        });
+    };
+
+    // Function to close the modal
+    const closeAlertModal = () => {
+        setAlertModal({
+            visible: false,
+            title: '',
+            message: '',
+        });
+    };
+
+
     useEffect(() => {
         fetchPaymentMethods();
     }, []);
@@ -258,14 +284,6 @@ export default function VisaProgress() {
     };
 
 
-    //simple notification shim using Alert
-    const notification = {
-        error: ({ message }) => Alert.alert('Error', String(message || '')),
-        warning: ({ message }) => Alert.alert('Warning', String(message || '')),
-        success: ({ message }) => Alert.alert('Success', String(message || '')),
-    };
-
-
     //show toast message for Android or notification for iOS
     const showToast = (message) => {
         if (Platform.OS === 'android') {
@@ -273,7 +291,7 @@ export default function VisaProgress() {
             return;
         }
 
-        notification.success({ message });
+        showAlertModal('Success', String(message || ''));
     };
 
 
@@ -369,7 +387,7 @@ export default function VisaProgress() {
         const selectedDate = dayjs(dateString);
 
         if (selectedDate.day() === 0 || selectedDate.day() === 6) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'Appointments are only available from Monday to Friday.'
             );
@@ -386,7 +404,7 @@ export default function VisaProgress() {
         const selectedDate = dayjs(pendingCustomPreferredDate);
 
         if (selectedDate.isBefore(rawMinimumCustomDate, 'day')) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'The appointment must be scheduled at least 14 days from today.'
             );
@@ -394,7 +412,7 @@ export default function VisaProgress() {
         }
 
         if (selectedDate.day() === 0 || selectedDate.day() === 6) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'Appointments are only available from Monday to Friday.'
             );
@@ -426,7 +444,7 @@ export default function VisaProgress() {
             }
         } catch (e) {
             console.error(e);
-            notification.error({ message: 'Could not pick image' });
+            showAlertModal('Error', 'Could not pick image');
         }
     };
 
@@ -493,13 +511,13 @@ export default function VisaProgress() {
 
             const asset = res.assets?.[0] || res;
             if (!asset?.uri) {
-                notification.error({ message: 'Could not read selected file. Please try again.' });
+                showAlertModal('Error', 'Could not read selected file. Please try again.');
                 return;
             }
 
             const pickedFile = normalizePickedDocument(asset);
             if (pickedFile.size && pickedFile.size > MAX_REQUIREMENT_FILE_SIZE) {
-                notification.warning({ message: 'File must be 3 MB or smaller.' });
+                showAlertModal('Warning', 'File must be 3 MB or smaller.');
                 return;
             }
 
@@ -515,7 +533,7 @@ export default function VisaProgress() {
             showToast('File selected');
         } catch (e) {
             console.error(e);
-            notification.error({ message: 'Failed to pick file' });
+            showAlertModal('Error', 'Failed to pick file');
         }
     };
 
@@ -568,7 +586,7 @@ export default function VisaProgress() {
     //submit all selected files, validating required documents and file sizes, then upload to backend
     const submitAllSelectedFiles = async () => {
         if (!selectedFiles || Object.keys(selectedFiles).length === 0) {
-            notification.warning({ message: 'No files selected' });
+            showAlertModal('Warning', 'No files selected');
             return;
         }
 
@@ -582,13 +600,13 @@ export default function VisaProgress() {
             : orderedRequirements;
 
         if (resubmissionRequested && requiredRequirements.length === 0) {
-            notification.warning({ message: 'No document is currently marked for resubmission.' });
+            showAlertModal('Warning', 'No document is currently marked for resubmission.');
             return;
         }
 
         const missingRequirements = requiredRequirements.filter(req => !selectedFiles[req.key]);
         if (missingRequirements.length > 0) {
-            notification.warning({ message: 'Please upload all required documents before submitting.' });
+            showAlertModal('Warning', 'Please upload all required documents before submitting.');
             return;
         }
 
@@ -597,7 +615,7 @@ export default function VisaProgress() {
             .find(file => file?.size && file.size > MAX_REQUIREMENT_FILE_SIZE);
 
         if (oversizedFile) {
-            notification.warning({ message: `${oversizedFile.name || 'Selected file'} must be 3 MB or smaller.` });
+            showAlertModal('Warning', `${oversizedFile.name || 'Selected file'} must be 3 MB or smaller.`);
             return;
         }
 
@@ -638,7 +656,7 @@ export default function VisaProgress() {
             setShowDocumentsSuccessModal(true);
         } catch (e) {
             console.error(e);
-            notification.error({ message: 'Failed to submit files' });
+            showAlertModal('Error', 'Failed to submit files');
         } finally {
             setUploadingAll(false);
         }
@@ -793,7 +811,7 @@ export default function VisaProgress() {
         try {
             await Linking.openURL(url);
         } catch (e) {
-            notification.error({ message: 'Unable to open document' });
+            showAlertModal('Error', 'Unable to open document');
         }
     };
 
@@ -803,11 +821,11 @@ export default function VisaProgress() {
         const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
         const uri = file?.uri || file?.url;
         if (!uri) {
-            notification.error({ message: 'Preview unavailable' });
+            showAlertModal('Error', 'Preview unavailable');
             return;
         }
 
-        if (isImageSource(file)) {
+        if (isImageFile(file)) {
             setRequirementPreview({
                 uri,
                 name: file.name || "Image preview",
@@ -852,7 +870,7 @@ export default function VisaProgress() {
             });
         } catch (e) {
             console.error('Unable to share PDF:', e);
-            notification.error({ message: 'Unable to share PDF' });
+            showAlertModal('Error', 'Unable to share PDF');
         }
     };
 
@@ -1095,7 +1113,7 @@ export default function VisaProgress() {
                 }
             } catch (err) {
                 console.error('Failed to fetch application:', err);
-                notification.error({ message: 'Failed to load visa application details' });
+                showAlertModal('Error', 'Failed to load visa application details');
             } finally {
                 setLoading(false);
             }
@@ -1144,7 +1162,7 @@ export default function VisaProgress() {
     const beforeUpload = (file) => {
         const isLt3M = file.size / 1024 / 1024 < 3;
         if (!isLt3M) {
-            notification.error({ message: 'Image/PDF must be smaller than 3MB!', placement: 'topRight' });
+            showAlertModal('Error', 'Image/PDF must be smaller than 3MB!');
         }
         return isLt3M || Upload.LIST_IGNORE;
     };
@@ -1153,7 +1171,7 @@ export default function VisaProgress() {
     //submit documents
     const handleSubmitDocuments = async () => {
         if (uploading) {
-            notification.warning({ message: "Please wait until uploads finish", placement: 'topRight' });
+            showAlertModal('Warning', 'Please wait until uploads finish');
             return;
         }
 
@@ -1177,12 +1195,12 @@ export default function VisaProgress() {
             });
 
             if (missingRequirements.length > 0) {
-                notification.warning({ message: "Please upload all required documents before submitting.", placement: 'topRight' });
+                showAlertModal('Warning', 'Please upload all required documents before submitting.');
                 return;
             }
 
             if (resubmissionRequested && orderedRequirements.length === 0) {
-                notification.warning({ message: "The requested document is not available for upload.", placement: 'topRight' });
+                showAlertModal('Warning', 'The requested document is not available for upload.');
                 return;
             }
 
@@ -1222,7 +1240,7 @@ export default function VisaProgress() {
             setIsDocumentsUploadedModalOpen(true);
         } catch (err) {
             console.error(err);
-            notification.error({ message: "Failed to submit documents", placement: 'topRight' });
+            showAlertModal('Error', 'Failed to submit documents');
         } finally {
             setUploading(false);
         }
@@ -1257,17 +1275,17 @@ export default function VisaProgress() {
                 : servicePendingManualPayment;
 
         if (hasPendingPayment) {
-            notification.warning({ message: 'You already have a pending manual payment for this application. Please wait for verification.' });
+            showAlertModal('Warning', 'You already have a pending manual payment for this application. Please wait for verification.');
             return;
         }
 
         if (isDeliveryPayment && deliveryFeeAmount <= 0) {
-            notification.warning({ message: 'Delivery fee is not available yet. Please wait for admin to send it.' });
+            showAlertModal('Warning', 'Delivery fee is not available yet. Please wait for admin to send it.');
             return;
         }
 
         if (method === 'manual' && !proofImage) {
-            notification.warning({ message: 'Please upload a receipt first.' });
+            showAlertModal('Warning', 'Please upload a receipt first.');
             return;
         }
 
@@ -1280,7 +1298,7 @@ export default function VisaProgress() {
 
                 if (!proofImage?.uri) {
                     console.error('Invalid proof image structure:', proofImage);
-                    notification.error({ message: 'Invalid proof image. Please try again.' });
+                    showAlertModal('Error', 'Invalid proof image. Please try again.');
                     setPaymentLoading(false);
                     setCreatingPayment(false);
                     return;
@@ -1348,7 +1366,7 @@ export default function VisaProgress() {
 
             } else if (method === 'paymongo') {
                 if (!application) {
-                    notification.error({ message: 'Application not found.' });
+                    showAlertModal('Error', 'Application not found.');
                     return;
                 }
 
@@ -1414,7 +1432,7 @@ export default function VisaProgress() {
                 response: err.response?.data,
                 status: err.response?.status,
             });
-            notification.error({ message: err.response?.data?.message || err.response?.data?.error || err.message || 'Payment failed' });
+            showAlertModal('Error', err.response?.data?.message || err.response?.data?.error || err.message || 'Payment failed');
         } finally {
             setPaymentLoading(false);
             setCreatingPayment(false);
@@ -1431,7 +1449,7 @@ export default function VisaProgress() {
             try { await Linking.openURL(src); } catch (e) { console.error(e); }
             return;
         }
-        notification.error({ message: 'Preview unavailable', placement: 'topRight' });
+        showAlertModal('Error', 'Preview unavailable');
     };
 
 
@@ -1458,11 +1476,11 @@ export default function VisaProgress() {
                 }],
             }));
 
-            notification.success({ message: 'File ready for submission', placement: 'topRight' });
+            showAlertModal('Success', 'File ready for submission');
             onSuccess('ok');
         } catch (err) {
             console.error(err);
-            notification.error({ message: 'Failed to process file', placement: 'topRight' });
+            showAlertModal('Error', 'Failed to process file');
             onError(err);
         } finally {
             setUploading(false);
@@ -1557,7 +1575,7 @@ export default function VisaProgress() {
     const handleConfirmSuggested = async () => {
 
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
-            notification.warning({ message: 'Please select an appointment option first.', placement: 'topRight' });
+            showAlertModal('Warning', 'Please select an appointment option first.');
             return;
         }
 
@@ -1566,7 +1584,7 @@ export default function VisaProgress() {
 
         if (selectedSuggestedIndex === 'others') {
             if (!customPreferredDate || !customPreferredTime) {
-                notification.warning({ message: 'Please fill in all custom date and time fields.', placement: 'topRight' });
+                showAlertModal('Warning', 'Please fill in all custom date and time fields.');
                 return;
             }
 
@@ -1577,7 +1595,7 @@ export default function VisaProgress() {
             const selected = normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedSuggestedIndex]);
 
             if (!selected?.date || !selected?.time) {
-                notification.error({ message: 'Selected option is missing date or time.', placement: 'topRight' });
+                showAlertModal('Error', 'Selected option is missing date or time.');
                 return;
             }
 
@@ -1601,7 +1619,7 @@ export default function VisaProgress() {
             setApplication(refreshed?.data || refreshed);
             setIsDateSelectedModalOpen(true);
         } catch (error) {
-            notification.error({ message: 'Failed to confirm appointment schedule.', placement: 'topRight' });
+            showAlertModal('Error', 'Failed to confirm appointment schedule.');
         } finally {
             setConfirmingSuggested(false);
         }
@@ -1611,7 +1629,7 @@ export default function VisaProgress() {
     //handle releasing the passport with the selected option, validating input and sending the choice to the server
     const handleReleaseOption = async () => {
         if (!passportReleaseOption) {
-            notification.warning({ message: 'Please select a release option first.' });
+            showAlertModal('Warning', 'Please select a release option first.');
             return
         }
 
@@ -1651,7 +1669,7 @@ export default function VisaProgress() {
 
         } catch (error) {
             console.error(error);
-            notification.error({ message: 'Failed to update release option.' });
+            showAlertModal('Error', 'Failed to update release option.');
         } finally {
             setSavingReleaseOption(false);
         }
@@ -2042,7 +2060,7 @@ export default function VisaProgress() {
                                     alignItems: "flex-start",
                                     backgroundColor: "#ECFDF5",
                                     borderLeftWidth: 5,
-                                    borderLeftColor: "#10B981",
+                                    borderLeftColor: "#15803D",
                                     padding: 14,
                                     borderRadius: 12,
                                     marginBottom: 12,
@@ -2051,14 +2069,14 @@ export default function VisaProgress() {
                                 <Ionicons
                                     name="car"
                                     size={24}
-                                    color="#10B981"
+                                    color="#15803D"
                                     style={{ marginRight: 12, marginTop: 2 }}
                                 />
 
                                 <View style={{ flex: 1 }}>
                                     <Text
                                         style={{
-                                            color: "#065F46",
+                                            color: "#15803D",
                                             fontFamily: "Montserrat_700Bold",
                                             fontSize: 15,
                                         }}
@@ -2069,7 +2087,7 @@ export default function VisaProgress() {
                                     {application.deliveryFee === 0 ? (
                                         <Text
                                             style={{
-                                                color: "#047857",
+                                                color: "#15803D",
                                                 fontFamily: "Montserrat_500Medium",
                                                 marginTop: 4,
                                                 lineHeight: 20,
@@ -2080,7 +2098,7 @@ export default function VisaProgress() {
                                     ) : (
                                         <Text
                                             style={{
-                                                color: "#047857",
+                                                color: "#15803D",
                                                 fontFamily: "Montserrat_500Medium",
                                                 marginTop: 4,
                                                 lineHeight: 20,
@@ -3535,23 +3553,23 @@ export default function VisaProgress() {
                 </Modal>
 
                 <Modal visible={showClaimPreferenceSuccessModal} transparent animationType="fade" onRequestClose={() => setShowClaimPreferenceSuccessModal(false)}>
-                    <TouchableOpacity style={VisaProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setShowClaimPreferenceSuccessModal(false)}>
+                    <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setShowClaimPreferenceSuccessModal(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={VisaProgressStyle.modalCard}>
-                                <View style={VisaProgressStyle.modalIconContainer}>
+                            <View style={ModalStyle.modalBox}>
+                                <View style={ModalStyle.modalIconContainer}>
                                     <Ionicons name="checkmark" size={32} color="#059669" />
                                 </View>
-                                <Text style={VisaProgressStyle.modalTitle}>
+                                <Text style={ModalStyle.modalTitle}>
                                     Claim Preference Submitted
                                 </Text>
-                                <Text style={VisaProgressStyle.modalDesc}>
+                                <Text style={ModalStyle.modalText}>
                                     Your claim preference has been submitted. Our team will review it shortly.
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setShowClaimPreferenceSuccessModal(false)}
-                                    style={VisaProgressStyle.modalButton}
+                                    style={ModalStyle.modalButton}
                                 >
-                                    <Text style={VisaProgressStyle.modalButtonText}>Got It</Text>
+                                    <Text style={ModalStyle.modalButtonText}>Got It</Text>
                                 </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>
@@ -3713,23 +3731,23 @@ export default function VisaProgress() {
                 </Modal>
 
                 <Modal visible={isDateSelectedModalOpen} transparent animationType="fade" onRequestClose={() => setIsDateSelectedModalOpen(false)}>
-                    <TouchableOpacity style={VisaProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
+                    <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setIsDateSelectedModalOpen(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={VisaProgressStyle.modalCard}>
-                                <View style={VisaProgressStyle.modalIconContainer}>
+                            <View style={ModalStyle.modalBox}>
+                                <View style={ModalStyle.modalIconContainer}>
                                     <Ionicons name="checkmark" size={32} color="#059669" />
                                 </View>
-                                <Text style={VisaProgressStyle.modalTitle}>
+                                <Text style={ModalStyle.modalTitle}>
                                     Appointment Date has been selected
                                 </Text>
-                                <Text style={VisaProgressStyle.modalDesc}>
+                                <Text style={ModalStyle.modalText}>
                                     Your appointment schedule has been confirmed. Please check your email for further instructions.
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setIsDateSelectedModalOpen(false)}
-                                    style={VisaProgressStyle.modalButton}
+                                    style={ModalStyle.modalButton}
                                 >
-                                    <Text style={VisaProgressStyle.modalButtonText}>Got It</Text>
+                                    <Text style={ModalStyle.modalButtonText}>Got It</Text>
                                 </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>
@@ -3737,23 +3755,23 @@ export default function VisaProgress() {
                 </Modal>
 
                 <Modal visible={showDocumentsSuccessModal} transparent animationType="fade">
-                    <TouchableOpacity style={VisaProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                    <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
                         <TouchableWithoutFeedback>
-                            <View style={VisaProgressStyle.modalCard}>
-                                <View style={VisaProgressStyle.modalIconContainer}>
+                            <View style={ModalStyle.modalBox}>
+                                <View style={ModalStyle.modalIconContainer}>
                                     <Ionicons name="checkmark" size={32} color="#059669" />
                                 </View>
-                                <Text style={VisaProgressStyle.modalTitle}>
+                                <Text style={ModalStyle.modalTitle}>
                                     Files Successfully Uploaded
                                 </Text>
-                                <Text style={VisaProgressStyle.modalDesc}>
+                                <Text style={ModalStyle.modalText}>
                                     Your files has been submitted. Our team will review it shortly.
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => setShowDocumentsSuccessModal(false)}
-                                    style={VisaProgressStyle.modalButton}
+                                    style={ModalStyle.modalButton}
                                 >
-                                    <Text style={VisaProgressStyle.modalButtonText}>Got It</Text>
+                                    <Text style={ModalStyle.modalButtonText}>Got It</Text>
                                 </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>

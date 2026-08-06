@@ -944,35 +944,25 @@ export default function QuotationForm({ route, navigation }) {
             {/*  NEW SUCCESS MODAL */}
             <Modal visible={isSuccessModalVisible} transparent animationType="fade">
                 <View style={ModalStyle.modalOverlay}>
-                    <View style={[ModalStyle.modalBox, { width: '90%', padding: 25, alignItems: 'center', borderRadius: 12 }]}>
-                        <TouchableOpacity
-                            style={{ position: 'absolute', top: 15, right: 15, padding: 5 }}
-                            onPress={() => {
-                                setSuccessModalVisible(false);
-                                navigation.navigate("userquotations");
-                            }}
-                        >
-                            <Ionicons name="close" size={24} color="#888" />
-                        </TouchableOpacity>
-
+                    <View style={ModalStyle.modalBox}>
                         <View style={QuotationFormStyle.modalIconContainer}><Ionicons name="checkmark" size={32} color="#059669" /></View>
 
-                        <Text style={{ fontFamily: "Montserrat_700Bold", fontSize: 22, textAlign: "center", marginTop: 20, marginBottom: 12 }}>
+                        <Text style={ModalStyle.modalTitle}>
                             Quotation Request Submitted
                         </Text>
 
-                        <Text style={{ fontFamily: "Montserrat_400Regular", fontSize: 14, color: "#555", textAlign: "center", lineHeight: 22, marginBottom: 25, paddingHorizontal: 10 }}>
+                        <Text style={ModalStyle.modalText}>
                             Your package quotation request has been submitted successfully. Please wait for your quotation to be generated.
                         </Text>
 
                         <TouchableOpacity
-                            style={[QuotationFormStyle.submitButton, { width: '80%', height: 45, marginTop: 0 }]}
+                            style={[ModalStyle.modalButton, { width: '80%', height: 45, marginTop: 0 }]}
                             onPress={() => {
                                 setSuccessModalVisible(false);
                                 navigation.navigate("userquotations");
                             }}
                         >
-                            <Text style={QuotationFormStyle.submitButtonText}>Continue</Text>
+                            <Text style={ModalStyle.modalButtonText}>Continue</Text>
                         </TouchableOpacity>
 
                     </View>
@@ -987,29 +977,10 @@ export default function QuotationForm({ route, navigation }) {
             >
                 <View style={ModalStyle.modalOverlay}>
                     <View
-                        style={[
-                            ModalStyle.modalBox,
-                            {
-                                width: "90%",
-                                padding: 25,
-                                alignItems: "center",
-                                borderRadius: 12,
-                            },
-                        ]}
+                        style={ModalStyle.modalBox}
                     >
-                        <TouchableOpacity
-                            style={{
-                                position: "absolute",
-                                top: 15,
-                                right: 15,
-                                padding: 5,
-                            }}
-                            onPress={() => setMissingInfoModalVisible(false)}
-                        >
-                            <Ionicons name="close" size={24} color="#888" />
-                        </TouchableOpacity>
 
-                        <View style={[QuotationFormStyle.modalIconContainer, { backgroundColor: "#fef3c7" }]}>
+                        <View style={[ModalStyle.modalIconContainer, { backgroundColor: "#fef3c7" }]}>
                             <Ionicons
                                 name="alert"
                                 size={32}
@@ -1018,43 +989,22 @@ export default function QuotationForm({ route, navigation }) {
                         </View>
 
                         <Text
-                            style={{
-                                fontFamily: "Montserrat_700Bold",
-                                fontSize: 22,
-                                textAlign: "center",
-                                marginTop: 20,
-                                marginBottom: 12,
-                            }}
+                            style={ModalStyle.modalTitle}
                         >
                             Missing Information
                         </Text>
 
                         <Text
-                            style={{
-                                fontFamily: "Montserrat_400Regular",
-                                fontSize: 14,
-                                color: "#555",
-                                textAlign: "center",
-                                lineHeight: 22,
-                                marginBottom: 25,
-                                paddingHorizontal: 10,
-                            }}
+                            style={ModalStyle.modalTextParagraph}
                         >
                             Please complete all required fields highlighted in red before submitting your quotation request.
                         </Text>
 
                         <TouchableOpacity
-                            style={[
-                                QuotationFormStyle.submitButton,
-                                {
-                                    width: "80%",
-                                    height: 45,
-                                    marginTop: 0,
-                                },
-                            ]}
+                            style={ModalStyle.modalButton}
                             onPress={() => setMissingInfoModalVisible(false)}
                         >
-                            <Text style={QuotationFormStyle.submitButtonText}>
+                            <Text style={ModalStyle.modalButtonText}>
                                 OK
                             </Text>
                         </TouchableOpacity>

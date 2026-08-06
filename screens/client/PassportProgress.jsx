@@ -15,10 +15,9 @@ import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
 import PassportProgressStyle from "../../styles/clientstyles/PassportProgressStyle";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
-import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
-import QRCodeRhon from '../../assets/images/QRCode_GCash_Rhon.jpg';
 
 import {
     useFonts,
@@ -156,6 +155,31 @@ export default function PassportApplication() {
     const paymentMethod = method;
 
 
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+    });
+
+    // Function to show the modal
+    const showAlertModal = (title, message) => {
+        setAlertModal({
+            visible: true,
+            title,
+            message,
+        });
+    };
+
+    // Function to close the modal
+    const closeAlertModal = () => {
+        setAlertModal({
+            visible: false,
+            title: '',
+            message: '',
+        });
+    };
+
+
     useEffect(() => {
         fetchPaymentMethods();
     }, []);
@@ -222,7 +246,7 @@ export default function PassportApplication() {
             const asset = result.assets[0];
 
             if (!asset?.uri) {
-                Alert.alert(
+                showAlertModal(
                     'Error',
                     'Could not read the selected file. Please try again.'
                 );
@@ -253,7 +277,7 @@ export default function PassportApplication() {
             }
 
             if (!fileSize) {
-                showFileValidationModal(
+                showAlertModal(
                     'File Size Unavailable',
                     'The size of this file could not be determined. Please select another file.'
                 );
@@ -266,7 +290,7 @@ export default function PassportApplication() {
                     (1024 * 1024)
                 ).toFixed(2);
 
-                showFileValidationModal(
+                showAlertModal(
                     'File Too Large',
                     `${asset.name || asset.fileName || 'The selected file'} is ${selectedSizeInMB} MB. The maximum allowed size is 3 MB.`
                 );
@@ -285,7 +309,7 @@ export default function PassportApplication() {
         } catch (error) {
             console.error('Failed to pick document:', error);
 
-            Alert.alert(
+            showAlertModal(
                 'Error',
                 'Could not open the file picker.'
             );
@@ -348,34 +372,6 @@ export default function PassportApplication() {
     const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
     const [confirmingSchedule, setConfirmingSchedule] = useState(false);
-
-
-    const [fileValidationModal, setFileValidationModal] = useState({
-        visible: false,
-        title: '',
-        message: '',
-    });
-
-
-    //function to show the file validation modal with a specific title and message
-    const showFileValidationModal = (title, message) => {
-        setFileValidationModal({
-            visible: true,
-            title,
-            message,
-        });
-    };
-
-
-    //close the file validation modal and reset its state
-    const closeFileValidationModal = () => {
-        setFileValidationModal({
-            visible: false,
-            title: '',
-            message: '',
-        });
-    };
-
 
     //format appointment time into 12-hour format with AM/PM, handling various input formats
     const formatAppointmentTime = (value) => {
@@ -535,7 +531,7 @@ export default function PassportApplication() {
         const selectedDate = dayjs(dateString);
 
         if (selectedDate.day() === 0 || selectedDate.day() === 6) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'Appointments are only available from Monday to Friday.'
             );
@@ -552,7 +548,7 @@ export default function PassportApplication() {
         const selectedDate = dayjs(pendingCustomPreferredDate);
 
         if (selectedDate.isBefore(rawMinimumCustomDate, 'day')) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'The appointment must be scheduled at least 14 days from today.'
             );
@@ -560,7 +556,7 @@ export default function PassportApplication() {
         }
 
         if (selectedDate.day() === 0 || selectedDate.day() === 6) {
-            Alert.alert(
+            showAlertModal(
                 'Invalid Date',
                 'Appointments are only available from Monday to Friday.'
             );
@@ -582,7 +578,7 @@ export default function PassportApplication() {
     //function to confirm the selected appointment schedule, either from suggested options or custom date/time
     const handleConfirmSchedule = async () => {
         if (selectedScheduleIndex === null) {
-            Alert.alert('Notice', 'Please select an appointment option first.');
+            showAlertModal('Notice', 'Please select an appointment option first.');
             return;
         }
 
@@ -595,7 +591,7 @@ export default function PassportApplication() {
             : normalizeScheduleSlot(application.suggestedAppointmentSchedules[selectedScheduleIndex]);
 
         if (!selected?.date || !selected?.time) {
-            Alert.alert('Error', 'Please provide both date and time.');
+            showAlertModal('Error', 'Please provide both date and time.');
             return;
         }
 
@@ -618,7 +614,7 @@ export default function PassportApplication() {
             setIsDateSelectedModalOpen(true);
         } catch (err) {
             console.error(err);
-            Alert.alert('Error', 'Failed to confirm appointment schedule.');
+            showAlertModal('Error', 'Failed to confirm appointment schedule.');
         } finally {
             setConfirmingSchedule(false);
         }
@@ -637,7 +633,7 @@ export default function PassportApplication() {
                 if (!res?.data) throw new Error('Application not found');
                 setApplication(res.data);
             } catch (err) {
-                Alert.alert('Error', 'Failed to load passport application details');
+                showAlertModal('Error', 'Failed to load passport application details');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -891,7 +887,7 @@ export default function PassportApplication() {
             });
         } catch (e) {
             console.error('Unable to share PDF:', e);
-            Alert.alert('Unable to share PDF');
+            showAlertModal('Unable to share PDF');
         }
     };
 
@@ -901,7 +897,7 @@ export default function PassportApplication() {
         const file = typeof fileOrUrl === 'string' ? { uri: fileOrUrl, name: 'Document' } : fileOrUrl;
         const uri = file?.uri || file?.url;
         if (!uri) {
-            Alert.alert('Preview unavailable', 'Could not preview this file');
+            showAlertModal('Preview unavailable', 'Could not preview this file');
             return;
         }
 
@@ -1087,7 +1083,7 @@ export default function PassportApplication() {
                         { status: 'Rejected' },
                         withUserHeader(user?._id)
                     );
-                    Alert.alert(
+                    showAlertModal(
                         'Application Rejected',
                         'Your application has been rejected due to missed deadline.'
                     );
@@ -1106,7 +1102,7 @@ export default function PassportApplication() {
         try {
             const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!permission.granted) {
-                Alert.alert('Permission required', 'Please allow photo library access to upload your receipt.');
+                showAlertModal('Permission required', 'Please allow photo library access to upload your receipt.');
                 return;
             }
 
@@ -1128,7 +1124,7 @@ export default function PassportApplication() {
             });
         } catch (error) {
             console.error('Failed to pick proof image:', error);
-            Alert.alert('Error', 'Could not open the photo library.');
+            showAlertModal('Error', 'Could not open the photo library.');
         }
     };
 
@@ -1155,12 +1151,12 @@ export default function PassportApplication() {
         const isPenalty = application?.onPenalty === true || application?.penaltyOn === true;
 
         if ((isPenalty && isPenaltyPaymentDisabled) || (!isPenalty && isApplicationPaymentDisabled)) {
-            Alert.alert('Notice', 'A pending payment transaction already exists for this application. Please wait for verification.');
+            showAlertModal('Notice', 'A pending payment transaction already exists for this application. Please wait for verification.');
             return;
         }
 
         if (method === 'manual' && !proofImage) {
-            Alert.alert('Warning', 'Please upload a receipt first.');
+            showAlertModal('Warning', 'Please upload a receipt first.');
             return;
         }
 
@@ -1211,7 +1207,7 @@ export default function PassportApplication() {
                 // Make sure application exists
 
                 if (!application) {
-                    Alert.alert('Error', 'Application not found.');
+                    showAlertModal('Error', 'Application not found.');
                     return;
                 }
 
@@ -1246,7 +1242,7 @@ export default function PassportApplication() {
                 if (checkoutUrl) {
                     Linking.openURL(checkoutUrl).catch(err => {
                         console.error('Failed to open PayMongo URL:', err);
-                        Alert.alert('Error', 'Could not open payment page. Please try again.');
+                        showAlertModal('Error', 'Could not open payment page. Please try again.');
                     });
                 } else {
                     console.error("PayMongo Response Structure:", paymongoResponse);
@@ -1266,7 +1262,7 @@ export default function PassportApplication() {
                 errorMessage = err.message;
             }
 
-            Alert.alert('Error', errorMessage);
+            showAlertModal('Error', errorMessage);
         } finally {
             setPaymentLoading(false);
         }
@@ -1406,7 +1402,7 @@ export default function PassportApplication() {
             window.open(src, '_blank', 'noopener,noreferrer');
             return;
         }
-        Alert.alert('Error', 'Preview unavailable');
+        showAlertModal('Error', 'Preview unavailable');
     };
 
 
@@ -1423,7 +1419,7 @@ export default function PassportApplication() {
     //handle the submission of uploaded documents, ensuring all required files are present and valid before sending them to the server
     const handleSubmit = async () => {
         if (uploading || uploadingAll) {
-            Alert.alert('Warning', "Please wait until uploads finish");
+            showAlertModal('Warning', "Please wait until uploads finish");
             return;
         }
 
@@ -1453,7 +1449,7 @@ export default function PassportApplication() {
             }
 
             if (!fileSize) {
-                Alert.alert(
+                showAlertModal(
                     'File Size Unavailable',
                     `${file.name || 'A selected file'} could not be validated. Please select it again.`
                 );
@@ -1466,7 +1462,7 @@ export default function PassportApplication() {
                     (1024 * 1024)
                 ).toFixed(2);
 
-                showFileValidationModal(
+                showAlertModal(
                     'File Too Large',
                     `The selected file is ${selectedSizeInMB} MB. The maximum allowed size is 3 MB.`
                 );
@@ -1477,16 +1473,16 @@ export default function PassportApplication() {
 
         if (!resubmissionRequested) {
             if (!selectedFiles.birthCertificate || !selectedFiles.applicationForm || !selectedFiles.govId) {
-                Alert.alert('Warning', "Please upload the required documents before submitting.");
+                showAlertModal('Warning', "Please upload the required documents before submitting.");
                 return;
             }
         } else {
             if (requestedResubmissionTargets.length === 0) {
-                Alert.alert('Warning', "No document is currently marked for resubmission.");
+                showAlertModal('Warning', "No document is currently marked for resubmission.");
                 return;
             }
             if (!requestedResubmissionTargets.some(hasSelectedFileForTarget)) {
-                Alert.alert('Warning', "Please upload the requested document before submitting.");
+                showAlertModal('Warning', "Please upload the requested document before submitting.");
                 return;
             }
         }
@@ -1505,7 +1501,7 @@ export default function PassportApplication() {
             const appendedOrder = [];
             if (selectedFiles.birthCertificate && isRequestedResubmissionTarget('birthCertificate')) {
                 if (!selectedFiles.birthCertificate?.uri) {
-                    Alert.alert('Error', 'PSA Birth Certificate file is invalid. Please reselect the file.');
+                    showAlertModal('Error', 'PSA Birth Certificate file is invalid. Please reselect the file.');
                     return;
                 }
                 formData.append('files', appendSelectedFile(selectedFiles.birthCertificate));
@@ -1514,7 +1510,7 @@ export default function PassportApplication() {
 
             if (selectedFiles.applicationForm && isRequestedResubmissionTarget('applicationForm')) {
                 if (!selectedFiles.applicationForm?.uri) {
-                    Alert.alert('Error', 'Application Form file is invalid. Please reselect the file.');
+                    showAlertModal('Error', 'Application Form file is invalid. Please reselect the file.');
                     return;
                 }
                 formData.append('files', appendSelectedFile(selectedFiles.applicationForm));
@@ -1523,7 +1519,7 @@ export default function PassportApplication() {
 
             if (selectedFiles.govId && isRequestedResubmissionTarget('govId')) {
                 if (!selectedFiles.govId?.uri) {
-                    Alert.alert('Error', 'Government-issued ID file is invalid. Please reselect the file.');
+                    showAlertModal('Error', 'Government-issued ID file is invalid. Please reselect the file.');
                     return;
                 }
                 formData.append('files', appendSelectedFile(selectedFiles.govId));
@@ -1533,7 +1529,7 @@ export default function PassportApplication() {
 
 
             if (!formData.has('files')) {
-                Alert.alert('Warning', "Please upload the required documents before submitting.");
+                showAlertModal('Warning', "Please upload the required documents before submitting.");
                 return;
             }
 
@@ -1581,7 +1577,7 @@ export default function PassportApplication() {
             setShowDocumentsSuccessModal(true);
         } catch (err) {
             console.error(err);
-            Alert.alert('Error', 'Failed to submit documents');
+            showAlertModal('Error', 'Failed to submit documents');
         } finally {
             setUploading(false);
             setUploadingAll(false);
@@ -1592,7 +1588,7 @@ export default function PassportApplication() {
     //handle confirmation of a suggested appointment schedule, validating the selection and sending it to the server
     const handleConfirmSuggested = async () => {
         if (!application?.suggestedAppointmentSchedules || selectedSuggestedIndex === null) {
-            Alert.alert('Notice', 'Please select an appointment option first.');
+            showAlertModal('Notice', 'Please select an appointment option first.');
             return;
         }
 
@@ -1601,7 +1597,7 @@ export default function PassportApplication() {
 
         if (selectedSuggestedIndex === 'others') {
             if (!customPreferredDate || !customPreferredTime) {
-                Alert.alert('Error', 'Please fill in all custom date and time fields.');
+                showAlertModal('Error', 'Please fill in all custom date and time fields.');
                 return;
             }
 
@@ -1614,7 +1610,7 @@ export default function PassportApplication() {
             );
 
             if (!selected?.date || !selected?.time) {
-                Alert.alert('Error', 'Selected option is missing date or time.');
+                showAlertModal('Error', 'Selected option is missing date or time.');
                 return;
             }
 
@@ -1639,7 +1635,7 @@ export default function PassportApplication() {
             setShowAppointmentSuccessModal(true);
             setIsDateSelectedModalOpen(true);
         } catch (error) {
-            Alert.alert('Error', 'Failed to confirm appointment schedule.');
+            showAlertModal('Error', 'Failed to confirm appointment schedule.');
         } finally {
             setConfirmingSuggested(false);
         }
@@ -2707,15 +2703,23 @@ export default function PassportApplication() {
                         <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 14 }}>
                             {passportRequirements.map((doc, idx, filteredDocs) => {
                                 const selectedFile = selectedFiles[doc.key];
-                                const uploadedUrl = uploadedDocuments[doc.key]
+
+                                const isResubmitTarget = resubmissionRequested && requestedResubmissionTargets.includes(doc.key);
+
+                                const rawUploadedUrl = uploadedDocuments[doc.key]
                                     || application?.submittedDocuments?.[doc.key]
                                     || (doc.key === 'birthCertificate' ? (uploadedDocuments.birthCertificate || application?.submittedDocuments?.birthCertificate) : null);
+
+                                const uploadedUrl = isResubmitTarget ? null : rawUploadedUrl;
+
                                 const hasFile = Boolean(uploadedUrl || selectedFile);
                                 const isValidRequirement = !isRequestedResubmissionTarget(doc.key);
 
                                 return (
                                     <View key={doc.key} style={{ paddingVertical: 12, borderBottomWidth: idx === filteredDocs.length - 1 ? 0 : 1, borderBottomColor: '#eef2f7' }}>
                                         <Text style={{ fontFamily: 'Montserrat_600SemiBold', color: '#1f2937', fontSize: 14 }}>{doc.label}</Text>
+
+                                        {/* The rest of your existing JSX rendering remains exactly the same below */}
                                         {isValidRequirement && (
                                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, backgroundColor: '#ecfdf3', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
                                                 <Ionicons name="checkmark-circle" size={14} color="#059669" />
@@ -3221,26 +3225,26 @@ export default function PassportApplication() {
             {/* Appointment Success Modal */}
             <Modal visible={showAppointmentSuccessModal} transparent animationType="fade" onRequestClose={() => setShowAppointmentSuccessModal(false)}>
                 <TouchableOpacity
-                    style={PassportProgressStyle.modalOverlay}
+                    style={ModalStyle.modalOverlay}
                     activeOpacity={1}
                     onPress={() => setShowAppointmentSuccessModal(false)}
                 >
                     <TouchableWithoutFeedback>
-                        <View style={PassportProgressStyle.modalCard}>
-                            <View style={PassportProgressStyle.modalIconContainer}>
+                        <View style={ModalStyle.modalBox}>
+                            <View style={ModalStyle.modalIconContainer}>
                                 <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={PassportProgressStyle.modalTitle}>
+                            <Text style={ModalStyle.modalTitle}>
                                 Appointment Date has been selected
                             </Text>
-                            <Text style={PassportProgressStyle.modalDesc}>
+                            <Text style={ModalStyle.modalText}>
                                 Your appointment schedule has been confirmed. Please check your email for further instructions.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowAppointmentSuccessModal(false)}
-                                style={PassportProgressStyle.modalButton}
+                                style={ModalStyle.modalButton}
                             >
-                                <Text style={PassportProgressStyle.modalButtonText}>Got It</Text>
+                                <Text style={ModalStyle.modalButtonText}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
@@ -3248,23 +3252,23 @@ export default function PassportApplication() {
             </Modal>
 
             <Modal visible={showDocumentsSuccessModal} transparent animationType="fade" onRequestClose={() => setShowDocumentsSuccessModal(false)}>
-                <TouchableOpacity style={PassportProgressStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
+                <TouchableOpacity style={ModalStyle.modalOverlay} activeOpacity={1} onPress={() => setShowDocumentsSuccessModal(false)}>
                     <TouchableWithoutFeedback>
-                        <View style={PassportProgressStyle.modalCard}>
-                            <View style={PassportProgressStyle.modalIconContainer}>
+                        <View style={ModalStyle.modalBox}>
+                            <View style={ModalStyle.modalIconContainer}>
                                 <Ionicons name="checkmark" size={32} color="#059669" />
                             </View>
-                            <Text style={PassportProgressStyle.modalTitle}>
+                            <Text style={ModalStyle.modalTitle}>
                                 Files Successfully Uploaded
                             </Text>
-                            <Text style={PassportProgressStyle.modalDesc}>
+                            <Text style={ModalStyle.modalText}>
                                 Your files has been submitted. Our team will review it shortly.
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowDocumentsSuccessModal(false)}
-                                style={PassportProgressStyle.modalButton}
+                                style={ModalStyle.modalButton}
                             >
-                                <Text style={PassportProgressStyle.modalButtonText}>Got It</Text>
+                                <Text style={ModalStyle.modalButtonText}>Got It</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
@@ -3426,94 +3430,47 @@ export default function PassportApplication() {
             </Modal>
 
 
-            {/* validation modal */}
             <Modal
-                visible={fileValidationModal.visible}
+                visible={alertModal.visible}
                 transparent
                 animationType="fade"
-                onRequestClose={closeFileValidationModal}
+                onRequestClose={closeAlertModal}
             >
                 <TouchableOpacity
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding: 20,
-                    }}
+                    style={ModalStyle.modalOverlay}
                     activeOpacity={1}
-                    onPress={closeFileValidationModal}
+                    onPress={closeAlertModal}
                 >
                     <TouchableWithoutFeedback>
-                        <View
-                            style={{
-                                backgroundColor: '#fff',
-                                borderRadius: 20,
-                                padding: 24,
-                                alignItems: 'center',
-                                width: '85%',
-                                maxWidth: 360,
-                            }}
-                        >
+                        <View style={ModalStyle.modalBox}>
+
+                            {/* Dynamically change icon/color based on whether it's an error or standard alert */}
                             <View
-                                style={{
-                                    width: 60,
-                                    height: 60,
-                                    borderRadius: 30,
-                                    backgroundColor: '#FEE2E2',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    marginBottom: 16,
-                                }}
+                                style={[
+                                    ModalStyle.modalIconContainer,
+                                    { backgroundColor: alertModal.title.toLowerCase().includes('error') ? '#fee2e2' : '#e0f2fe' }
+                                ]}
                             >
                                 <Ionicons
-                                    name="alert-circle-outline"
+                                    name={alertModal.title.toLowerCase().includes('error') ? "alert-circle-outline" : "information-circle-outline"}
                                     size={34}
-                                    color="#DC2626"
+                                    color={alertModal.title.toLowerCase().includes('error') ? "#DC2626" : "#0284C7"}
                                 />
                             </View>
 
-                            <Text
-                                style={{
-                                    fontFamily: 'Montserrat_700Bold',
-                                    fontSize: 18,
-                                    color: '#1f2937',
-                                    marginBottom: 8,
-                                    textAlign: 'center',
-                                }}
-                            >
-                                {fileValidationModal.title}
+                            <Text style={ModalStyle.modalTitle}>
+                                {alertModal.title}
                             </Text>
 
-                            <Text
-                                style={{
-                                    fontFamily: 'Montserrat_400Regular',
-                                    fontSize: 14,
-                                    color: '#6b7280',
-                                    textAlign: 'center',
-                                    marginBottom: 20,
-                                    lineHeight: 20,
-                                }}
-                            >
-                                {fileValidationModal.message}
+                            <Text style={ModalStyle.modalText}>
+                                {alertModal.message}
                             </Text>
 
                             <TouchableOpacity
-                                onPress={closeFileValidationModal}
-                                style={{
-                                    backgroundColor: '#305797',
-                                    borderRadius: 10,
-                                    paddingVertical: 12,
-                                    paddingHorizontal: 32,
-                                }}
+                                onPress={closeAlertModal}
+                                style={ModalStyle.modalButton}
                             >
-                                <Text
-                                    style={{
-                                        color: '#fff',
-                                        fontFamily: 'Montserrat_600SemiBold',
-                                        fontSize: 14,
-                                    }}
-                                >
+                                <Text style={ModalStyle.modalButtonText}>
                                     Got It
                                 </Text>
                             </TouchableOpacity>

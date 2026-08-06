@@ -36,10 +36,11 @@ const ModalStyle = StyleSheet.create({
         marginTop: 10
     },
     modalTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontFamily: "Montserrat_700Bold",
         color: "#305797",
-        marginBottom: 10
+        marginBottom: 10,
+        textAlign: "center"
     },
     modalTextParagraph: {
         fontSize: 13,
@@ -49,7 +50,7 @@ const ModalStyle = StyleSheet.create({
         marginBottom: 20
     },
     modalText: {
-        fontSize: 16,
+        fontSize: 14,
         fontFamily: "Montserrat_400Regular",
         textAlign: "center",
         color: "#333",

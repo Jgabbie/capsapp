@@ -110,7 +110,7 @@ const createBooking = async (req, res) => {
             bookingDetails: bookingDetails,
             reference: generateBookingReference(),
             status: "Not Paid",
-            expiresAt: dayjs().add(30, 'minutes').toDate()
+            expiresAt: dayjs().add(35, 'minutes').toDate()
         });
 
         const packageDoc = await Package.findById(packageId)

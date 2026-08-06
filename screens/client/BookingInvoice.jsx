@@ -16,6 +16,7 @@ import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import BookingInvoiceStyle from "../../styles/clientstyles/BookingInvoiceStyle";
 import PaymentStyle from "../../styles/clientstyles/PaymentStyle";
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import { api, withUserHeader } from "../../utils/api";
 import { useUser } from "../../context/UserContext";
 import QRCodeMaricar from '../../assets/images/QRCode_GCash_Maricar.jpg';
@@ -797,7 +798,7 @@ export default function BookingInvoice({ route, navigation }) {
 
             showAlertModal(
                 'Success',
-                'Documents submitted successfully.',
+                'Documents Resubmitted successfully.',
                 'success'
             );
         } catch (error) {
@@ -1921,6 +1922,63 @@ export default function BookingInvoice({ route, navigation }) {
                     <Text style={BookingInvoiceStyle.pageTitle}>Booking Invoice</Text>
                     <Text style={BookingInvoiceStyle.pageSubtitle}>Review your balance and download the booking invoice.</Text>
 
+                    {documentsResubmissionRequired && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                backgroundColor: "#FEF2F2",
+                                borderLeftWidth: 5,
+                                borderLeftColor: "#DC2626",
+                                padding: 14,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}
+                        >
+                            <Ionicons
+                                name="warning"
+                                size={24}
+                                color="#DC2626"
+                                style={{ marginRight: 12, marginTop: 2 }}
+                            />
+
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={{
+                                        color: "#991B1B",
+                                        fontFamily: "Montserrat_700Bold",
+                                        fontSize: 15,
+                                    }}
+                                >
+                                    Resubmission Required
+                                </Text>
+
+                                <Text
+                                    style={{
+                                        color: "#7F1D1D",
+                                        fontFamily: "Montserrat_500Medium",
+                                        marginTop: 4,
+                                        lineHeight: 20,
+                                    }}
+                                >
+                                    A resubmission is required, kindly comply with the requested resubmission immediately to avoid any delays or issues in your booking.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {isPaidStatus && (
+                        <View style={BookingInvoiceStyle.reviewNoticeCard}>
+                            <View style={BookingInvoiceStyle.reviewNoticeContent}>
+                                <Text style={BookingInvoiceStyle.reviewNoticeTitle}>Booking is Fully Paid!</Text>
+                                <Text style={BookingInvoiceStyle.reviewNoticeText}>
+                                    Thank you for your booking! Your feedback helps us improve our services and assists fellow travelers. Share your experience now.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+
                     <View style={BookingInvoiceStyle.metaContainer}>
                         <View style={BookingInvoiceStyle.metaRow}>
                             <View style={BookingInvoiceStyle.metaItem}>
@@ -2135,18 +2193,6 @@ export default function BookingInvoice({ route, navigation }) {
                                         <Text style={BookingInvoiceStyle.checkoutButtonText}>Confirm & Proceed</Text>
                                     )}
                                 </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-
-                    {isPaidStatus && (
-                        <View style={BookingInvoiceStyle.reviewNoticeCard}>
-                            <Text style={BookingInvoiceStyle.reviewNoticeCheckmark}>✓</Text>
-                            <View style={BookingInvoiceStyle.reviewNoticeContent}>
-                                <Text style={BookingInvoiceStyle.reviewNoticeTitle}>YOU CAN NOW SUBMIT A REVIEW</Text>
-                                <Text style={BookingInvoiceStyle.reviewNoticeText}>
-                                    Thank you for your booking! Your feedback helps us improve our services and assists fellow travelers. Share your experience now.
-                                </Text>
                             </View>
                         </View>
                     )}
@@ -2702,13 +2748,7 @@ export default function BookingInvoice({ route, navigation }) {
                 onRequestClose={closeAlertModal}
             >
                 <Pressable
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 25,
-                    }}
+                    style={ModalStyle.modalOverlay}
                     onPress={closeAlertModal}
                 >
                     <Pressable
@@ -2811,6 +2851,6 @@ export default function BookingInvoice({ route, navigation }) {
                 </Pressable>
             </Modal>
 
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
