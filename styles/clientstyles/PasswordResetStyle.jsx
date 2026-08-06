@@ -61,10 +61,19 @@ const PasswordResetStyle = StyleSheet.create({
     fieldError: {
         width: 350,
         color: "#ff1616",
-        fontFamily: "Montserrat_400Regular",
         fontSize: 12,
         marginBottom: 5,
         marginTop: 3,
+        fontFamily: 'Montserrat_400Regular',
+    },
+    fieldErrorOTP: {
+        width: 250,
+        color: "#ff1616",
+        fontSize: 12,
+        marginBottom: 5,
+        marginTop: 3,
+        fontFamily: 'Montserrat_400Regular',
+        textAlign: 'center',
     },
     button: {
         alignItems: "center",

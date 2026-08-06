@@ -613,7 +613,7 @@ const verifyLoginOtp = async (req, res) => {
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
         if (user.otpBlockedUntil && user.otpBlockedUntil > Date.now()) {
-            return res.status(429).json({ success: false, message: "Too many attempts. Try again in 5 minutes." });
+            return res.status(429).json({ success: false, message: "Too many incorrect OTP attempts. Try again in 5 minutes." });
         }
 
         if (!user.verifyOtp || !user.verifyOtpExpireAt || user.verifyOtpExpireAt < Date.now()) {

@@ -62,6 +62,7 @@ const LoginStyle = StyleSheet.create({
         alignSelf: 'flex-start',
         marginBottom: 10,
         fontSize: 12,
+        fontFamily: 'Montserrat_400Regular',
     },
     // --- Links Container (Signup & Forgot Pass) ---
     loginLinksContainer: {

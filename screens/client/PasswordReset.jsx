@@ -196,7 +196,7 @@ export default function PasswordReset() {
                                 setErrorOtp("")
                             }}
                         />
-                        {errorOtp ? <Text style={[PasswordResetStyle.fieldError, { marginLeft: 0, textAlign: 'center' }]}>{errorOtp}</Text> : null}
+                        {errorOtp ? <Text style={[PasswordResetStyle.fieldErrorOTP, { marginLeft: 0, textAlign: 'center' }]}>{errorOtp}</Text> : null}
 
                         <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={loading}>
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Submit</Text>}

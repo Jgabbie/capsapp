@@ -28,7 +28,7 @@ const SignupStyle = StyleSheet.create({
         borderRadius: 8,
         borderColor: "#6d6d6d",
         paddingHorizontal: 15,
-        marginLeft: 10,
+        marginLeft: 7,
         marginBottom: 8,
         width: 350,
         height: 40,
@@ -39,7 +39,7 @@ const SignupStyle = StyleSheet.create({
     fullNameContainer: {
         flexDirection: "row",
         width: 350,
-        marginLeft: 10,
+        marginLeft: 7,
         justifyContent: "space-between"
     },
     nameInputs: {
@@ -61,7 +61,7 @@ const SignupStyle = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
-        marginLeft: 10,
+        marginLeft: 7,
         marginBottom: 8,
         width: 350,
         height: 40,
@@ -82,7 +82,7 @@ const SignupStyle = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         borderColor: "#6d6d6d",
-        marginLeft: 10,
+        marginLeft: 7,
         marginBottom: 8,
         width: 350,
         height: 40,
