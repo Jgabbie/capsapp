@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Alert, Pressable } from 'react-native';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import { useUser } from '../../context/UserContext';
 import { api } from '../../utils/api';
 
@@ -106,6 +107,24 @@ export default function QuotationForm1({ route, navigation }) {
     const packageTravelDate = latestPdfRevision?.travelDetails.travelDates || 'N/A';
 
     const [fullUserData, setFullUserData] = useState(null);
+
+    // Alert modal state
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'warning',
+    });
+
+    // Show custom alert modal
+    const showAlertModal = (title, message, type = 'warning') => {
+        setAlertModal({ visible: true, title, message, type });
+    };
+
+    // Close custom alert modal
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({ ...prev, visible: false }));
+    };
 
 
     //fetch full user profile data
@@ -213,7 +232,7 @@ export default function QuotationForm1({ route, navigation }) {
     //next function
     const handleNext = () => {
         if (!leadGuestInfo.title || !leadGuestInfo.contact || !leadGuestInfo.address) {
-            Alert.alert("Missing Information", "Please complete all Lead Guest fields.");
+            showAlertModal("Missing Information", "Please complete the lead guest information before proceeding.");
             return;
         }
 
@@ -221,17 +240,17 @@ export default function QuotationForm1({ route, navigation }) {
             const p = passengers[i];
 
             if (!p.title || !p.firstName || !p.lastName || !p.room || !p.bday || !p.age) {
-                Alert.alert("Missing Information", `Please go back to Uploads and complete the basic details for Passenger ${i + 1}.`);
+                showAlertModal("Missing Information", `Please go back to Uploads and complete the basic details for Passenger ${i + 1}.`);
                 return;
             }
 
             if (!isDomestic) {
                 if (!p.passport) {
-                    Alert.alert("Missing Information", `Please go back to Uploads and enter the passport number for Passenger ${i + 1}.`);
+                    showAlertModal("Missing Information", `Please go back to Uploads and enter the passport number for Passenger ${i + 1}.`);
                     return;
                 }
                 if (!p.expiry) {
-                    Alert.alert("Missing Information", `Please go back to Uploads and select the passport expiry for Passenger ${i + 1}.`);
+                    showAlertModal("Missing Information", `Please go back to Uploads and select the passport expiry for Passenger ${i + 1}.`);
                     return;
                 }
             }
@@ -422,6 +441,116 @@ export default function QuotationForm1({ route, navigation }) {
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
+                </Modal>
+
+                {/* Custom Alert Modal */}
+                <Modal
+                    visible={alertModal.visible}
+                    transparent
+                    animationType="fade"
+                    statusBarTranslucent
+                    onRequestClose={closeAlertModal}
+                >
+                    <Pressable
+                        style={ModalStyle.modalOverlay}
+                        onPress={closeAlertModal}
+                    >
+                        <Pressable
+                            style={ModalStyle.modalBox}
+                            onPress={event => event.stopPropagation()}
+                        >
+                            <View
+                                style={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: 32,
+                                    backgroundColor:
+                                        alertModal.type === 'error'
+                                            ? '#fee2e2'
+                                            : alertModal.type === 'warning'
+                                                ? '#fef3c7'
+                                                : alertModal.type === 'info'
+                                                    ? '#dbeafe'
+                                                    : '#d1fae5',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginBottom: 18,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 32,
+                                        fontFamily: 'Montserrat_700Bold',
+                                        color:
+                                            alertModal.type === 'error'
+                                                ? '#dc2626'
+                                                : alertModal.type === 'warning'
+                                                    ? '#d97706'
+                                                    : alertModal.type === 'info'
+                                                        ? '#305797'
+                                                        : '#059669',
+                                    }}
+                                >
+                                    {alertModal.type === 'error'
+                                        ? '×'
+                                        : alertModal.type === 'warning'
+                                            ? '!'
+                                            : alertModal.type === 'info'
+                                                ? 'i'
+                                                : '✓'}
+                                </Text>
+                            </View>
+
+                            <Text
+                                style={{
+                                    color: '#1f2937',
+                                    fontFamily: 'Montserrat_700Bold',
+                                    fontSize: 18,
+                                    lineHeight: 24,
+                                    textAlign: 'center',
+                                    marginBottom: 10,
+                                }}
+                            >
+                                {alertModal.title}
+                            </Text>
+
+                            <Text
+                                style={{
+                                    color: '#6b7280',
+                                    fontFamily: 'Montserrat_400Regular',
+                                    fontSize: 14,
+                                    lineHeight: 21,
+                                    textAlign: 'center',
+                                    marginBottom: 22,
+                                }}
+                            >
+                                {alertModal.message}
+                            </Text>
+
+                            <TouchableOpacity
+                                style={{
+                                    minWidth: 110,
+                                    backgroundColor: '#305797',
+                                    borderRadius: 10,
+                                    paddingHorizontal: 28,
+                                    paddingVertical: 12,
+                                    alignItems: 'center',
+                                }}
+                                activeOpacity={0.8}
+                                onPress={closeAlertModal}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#ffffff',
+                                        fontFamily: 'Montserrat_600SemiBold',
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    Got It
+                                </Text>
+                            </TouchableOpacity>
+                        </Pressable>
+                    </Pressable>
                 </Modal>
             </ScrollView>
         </SafeAreaView>

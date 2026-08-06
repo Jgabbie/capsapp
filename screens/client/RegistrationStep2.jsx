@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView, StatusBar, Modal, Pressable } from 'react-native';
 import RegistrationFormStyle from '../../styles/clientstyles/RegistrationFormStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import { useUser } from '../../context/UserContext';
 
 import {
@@ -507,27 +508,11 @@ export default function RegistrationStep2({ route, navigation }) {
                 onRequestClose={closeAlertModal}
             >
                 <Pressable
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 25,
-                    }}
+                    style={ModalStyle.modalOverlay}
                     onPress={closeAlertModal}
                 >
                     <Pressable
-                        style={{
-                            width: '100%',
-                            maxWidth: 340,
-                            backgroundColor: '#ffffff',
-                            borderRadius: 22,
-                            paddingHorizontal: 26,
-                            paddingTop: 24,
-                            paddingBottom: 22,
-                            alignItems: 'center',
-                            elevation: 8,
-                        }}
+                        style={ModalStyle.modalBox}
                         onPress={event => event.stopPropagation()}
                     >
                         <View

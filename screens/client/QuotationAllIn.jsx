@@ -91,23 +91,30 @@ export default function QuotationAllIn() {
     const [selectedSoloGrouped, setSelectedSoloGrouped] = useState("solo");
     const [counts, setCounts] = useState({ adult: 2, child: 0, infant: 0 });
 
-    //calculation Logic
+    // --- Calculation Logic ---
     const discountPercent = Number(pkg?.packageDiscountPercent || pkg?.discount || 0);
     const discountMultiplier = discountPercent > 0 ? 1 - (discountPercent / 100) : 1;
+    const dateSurcharge = Number(selectedDateRate) || 0;
 
-    //base rates INCLUDING the date surcharge BEFORE applying discounts
+
+    // Solo, Child, and Infant raw rates do NOT include the surcharge yet, so we add it for their original totals
+    const baseSoloRate = (pkg?.packageSoloRate || 0) + dateSurcharge;
+    const baseChildRate = (pkg?.packageChildRate || 0) + dateSurcharge;
+    const baseInfantRate = (pkg?.packageInfantRate || 0) + dateSurcharge;
+
+    // 2. Extract Pure Base Rates (Stripping surcharge so discount applies ONLY to the base price)
+    const pureSoloBase = pkg?.packageSoloRate || 0;
+    const pureChildBase = pkg?.packageChildRate || 0;
+    const pureInfantBase = pkg?.packageInfantRate || 0;
+
+    // 3. Discounted Rates (Discounted pure base + date surcharge)
     const basePackagePricePerPax = selectedDatePrice || pkg?.packagePricePerPax || pkg?.price || 0;
-    const baseSoloRate = (pkg?.packageSoloRate || 0) + (selectedDateRate || 0);
-    const baseChildRate = (pkg?.packageChildRate || 0) + (selectedDateRate || 0);
-    const baseInfantRate = (pkg?.packageInfantRate || 0) + (selectedDateRate || 0);
+    const packagePricePerPax = selectedDatePrice || pkg?.packagePricePerPax || pkg?.price || 0;
+    const soloRate = (pureSoloBase * discountMultiplier) + dateSurcharge;
+    const childRate = (pureChildBase * discountMultiplier) + dateSurcharge;
+    const infantRate = (pureInfantBase * discountMultiplier) + dateSurcharge;
 
-    //apply the discount
-    const packagePricePerPax = basePackagePricePerPax * discountMultiplier;
-    const soloRate = baseSoloRate * discountMultiplier;
-    const childRate = baseChildRate * discountMultiplier;
-    const infantRate = baseInfantRate * discountMultiplier;
-    const soloExtraRate = Math.max(0, soloRate - packagePricePerPax);
-    const dateSurcharge = selectedDateRate || 0;
+    const soloExtraRate = Math.max(0, soloRate - dateSurcharge); // Solo rate without surcharge for display purposes
 
     const maxAdults = pkg?.maxAdults || 20;
     const maxChildren = pkg?.maxChildren || 10;

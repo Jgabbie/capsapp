@@ -8,6 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import BookingUploadsStyle from '../../styles/clientstyles/BookingUploadsStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import QuotationFormStepStyle from '../../styles/clientstyles/QuotationFormStepStyle';
+import ModalStyle from "../../styles/componentstyles/ModalStyle";
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import { Image } from 'expo-image';
@@ -1200,29 +1201,8 @@ export default function BookingUploads({ route, navigation }) {
                 statusBarTranslucent
                 onRequestClose={closeAlertModal}
             >
-                <Pressable
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 25,
-                    }}
-                    onPress={closeAlertModal}
-                >
-                    <Pressable
-                        style={{
-                            width: '100%',
-                            maxWidth: 340,
-                            backgroundColor: '#ffffff',
-                            borderRadius: 22,
-                            paddingHorizontal: 26,
-                            paddingTop: 24,
-                            paddingBottom: 22,
-                            alignItems: 'center',
-                        }}
-                        onPress={event => event.stopPropagation()}
-                    >
+                <Pressable style={ModalStyle.modalOverlay} onPress={closeAlertModal}>
+                    <Pressable style={ModalStyle.modalBox} onPress={event => event.stopPropagation()}>
                         <View
                             style={{
                                 width: 64,

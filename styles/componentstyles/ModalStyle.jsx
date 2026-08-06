@@ -20,7 +20,7 @@ const ModalStyle = StyleSheet.create({
         shadowRadius: 4,
     },
     modalBoxEdit: {
-        width: 350,
+        width: 300,
         backgroundColor: "#fff",
         borderRadius: 15,
         padding: 20,
