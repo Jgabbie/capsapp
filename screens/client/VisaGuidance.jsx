@@ -97,7 +97,7 @@ export default function VisaGuidance() {
                     <TextInput
                         maxLength={40}
                         style={VisaGuidanceStyle.searchInput}
-                        placeholder="Search visa"
+                        placeholder="Search visa..."
                         placeholderTextColor="#9ca3af"
                         value={searchQuery}
                         autoCorrect={false}

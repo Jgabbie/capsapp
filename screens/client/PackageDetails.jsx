@@ -534,7 +534,7 @@ export default function PackageDetails({ route, navigation }) {
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }} keyboardShouldPersistTaps="handled">
+                <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
 
                     <View style={DestinationStyles.detailsHeader}>
                         <View style={DestinationStyles.titleRowHeader}>
@@ -934,7 +934,12 @@ export default function PackageDetails({ route, navigation }) {
                                         </View>
                                         {fullPkg.packageInclusions?.length > 0 ? fullPkg.packageInclusions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
-                                                <Text style={DestinationStyles.tabItemDot}>✓</Text>
+                                                <Ionicons
+                                                    name="checkmark"
+                                                    size={16}
+                                                    color="#305797"
+                                                    style={DestinationStyles.tabItemDot}
+                                                />
                                                 <Text style={DestinationStyles.sectionText}>
                                                     {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
                                                 </Text>
@@ -946,7 +951,12 @@ export default function PackageDetails({ route, navigation }) {
                                         </View>
                                         {fullPkg.packageExclusions?.length > 0 ? fullPkg.packageExclusions.map((item, i) => (
                                             <View key={i} style={DestinationStyles.tabItemRow}>
-                                                <Text style={DestinationStyles.tabItemDot}>✕</Text>
+                                                <Ionicons
+                                                    name="close"
+                                                    size={16}
+                                                    color="#b54747"
+                                                    style={DestinationStyles.tabItemDot}
+                                                />
                                                 <Text style={DestinationStyles.sectionText}>
                                                     {typeof item === 'object' ? (item.activity || item.optionalActivity || item.item) : item}
                                                 </Text>
@@ -1002,13 +1012,92 @@ export default function PackageDetails({ route, navigation }) {
                 </View>
             </Modal>
 
-            <Modal transparent animationType='fade' visible={isWishlistModalOpen} onRequestClose={() => setIsWishlistModalOpen(false)}>
-                <View style={ModalStyle.modalOverlay}>
-                    <View style={ModalStyle.modalBox}>
-                        <Text style={ModalStyle.modalTitle}>Success</Text>
-                        <Text style={ModalStyle.modalText}>Successfully added to your wishlist!</Text>
-                        <TouchableOpacity style={ModalStyle.modalButton} onPress={() => setIsWishlistModalOpen(false)}>
-                            <Text style={ModalStyle.modalButtonText}>OK</Text>
+            <Modal
+                visible={isWishlistModalOpen}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setIsWishlistModalOpen(false)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.45)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        padding: 20,
+                    }}
+                >
+                    <View
+                        style={{
+                            backgroundColor: "#fff",
+                            borderRadius: 18,
+                            width: "85%",
+                            padding: 25,
+                            alignItems: "center",
+                        }}
+                    >
+                        <View
+                            style={{
+                                width: 70,
+                                height: 70,
+                                borderRadius: 35,
+                                backgroundColor: "#e8f8ee",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={"heart-outline"}
+                                size={42}
+                                color={"#10b54f"}
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                fontSize: 22,
+                                fontFamily: "Montserrat_700Bold",
+                                color: "#222",
+                                marginBottom: 10,
+                                textAlign: "center",
+                            }}
+                        >
+
+                            Added!
+                        </Text>
+
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                color: "#666",
+                                fontFamily: "Montserrat_500Medium",
+                                marginBottom: 24,
+                                lineHeight: 22,
+                            }}
+                        >
+                            The package has been added to your wishlist
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={() => setIsWishlistModalOpen(false)}
+                            style={{
+                                backgroundColor: "#305797",
+                                paddingVertical: 12,
+                                width: "100%",
+                                borderRadius: 10,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: "#fff",
+                                    textAlign: "center",
+                                    fontFamily: "Montserrat_600SemiBold",
+                                    fontSize: 16,
+                                }}
+                            >
+                                OK
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>

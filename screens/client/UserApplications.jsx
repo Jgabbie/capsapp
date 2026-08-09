@@ -256,35 +256,95 @@ export default function UserApplications() {
 
                             <View style={{ flex: 1 }}>
                                 <Text style={UserApplicationsStyle.filterLabel}>Status</Text>
-                                <TouchableOpacity
-                                    style={UserApplicationsStyle.dropdownButton}
-                                    onPress={() => setShowStatusModal(true)}
-                                >
-                                    <Text style={UserApplicationsStyle.dropdownText}>
-                                        {statusFilter === 'All' ? 'Status' : statusFilter}
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={12} color="#9ca3af" />
-                                </TouchableOpacity>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <TouchableOpacity
+                                        style={[
+                                            UserApplicationsStyle.dropdownButton,
+                                            { flex: 1 }
+                                        ]}
+                                        onPress={() => setShowStatusModal(true)}
+                                    >
+                                        <Text
+                                            style={[
+                                                UserApplicationsStyle.dropdownText,
+                                                statusFilter !== 'Status' && {
+                                                    fontFamily: 'Montserrat_600SemiBold',
+                                                },
+                                            ]}
+                                        >
+                                            {statusFilter === 'All' ? 'Status' : statusFilter}
+                                        </Text>
+
+                                        <Ionicons
+                                            name="chevron-down"
+                                            size={12}
+                                            color="#9ca3af"
+                                        />
+                                    </TouchableOpacity>
+
+                                    {statusFilter !== 'Status' && statusFilter !== 'All' && (
+                                        <TouchableOpacity
+                                            onPress={() => setStatusFilter('Status')}
+                                            style={{ marginLeft: 5 }}
+                                        >
+                                            <Ionicons
+                                                name="close-circle"
+                                                size={18}
+                                                color="#999"
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
 
                             <View style={{ flex: 1 }}>
                                 <Text style={UserApplicationsStyle.filterLabel}>Date</Text>
-                                <TouchableOpacity
-                                    style={UserApplicationsStyle.dropdownButton}
-                                    onPress={openApplicationDatePicker}
-                                >
-                                    <Text style={UserApplicationsStyle.dropdownText}>
-                                        {applicationDateFilter
-                                            ? dayjs(applicationDateFilter).format('MMM DD')
-                                            : 'Application Date'}
-                                    </Text>
 
-                                    <Ionicons
-                                        name="calendar-outline"
-                                        size={14}
-                                        color="#9ca3af"
-                                    />
-                                </TouchableOpacity>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <TouchableOpacity
+                                        style={[
+                                            UserApplicationsStyle.dropdownButton,
+                                            { flex: 1 }
+                                        ]}
+                                        onPress={openApplicationDatePicker}
+                                    >
+                                        <Text
+                                            style={[
+                                                UserApplicationsStyle.dropdownText,
+                                                applicationDateFilter && {
+                                                    fontFamily: 'Montserrat_600SemiBold',
+                                                },
+                                            ]}
+                                        >
+                                            {applicationDateFilter
+                                                ? dayjs(applicationDateFilter).format('MMM DD')
+                                                : 'Application Date'}
+                                        </Text>
+
+                                        <Ionicons
+                                            name="calendar-outline"
+                                            size={14}
+                                            color="#9ca3af"
+                                        />
+                                    </TouchableOpacity>
+
+                                    {applicationDateFilter && (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setApplicationDateFilter(null);
+                                                setPendingApplicationDate(null);
+                                            }}
+                                            style={{ marginLeft: 5 }}
+                                        >
+                                            <Ionicons
+                                                name="close-circle"
+                                                size={18}
+                                                color="#999"
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
                         </View>
                     </View>

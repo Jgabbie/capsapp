@@ -108,12 +108,28 @@ const QuotationIncluExcluStyle = StyleSheet.create({
         color: "#1f2a44",
         marginBottom: 10,
     },
-    itemText: {
-        fontFamily: "Montserrat_400Regular",
-        fontSize: 12,
-        color: "#3c465a",
+    itemRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
         marginBottom: 5,
+        width: '100%',
     },
+
+    itemIcon: {
+        marginRight: 6,
+        marginTop: 2,
+    },
+
+    itemText: {
+        flex: 1,
+        minWidth: 0,
+        fontFamily: "Montserrat_400Regular",
+        fontSize: 10,
+        color: "#3c465a",
+        lineHeight: 18,
+    },
+
+
     policyCard: {
         backgroundColor: '#f9fafc',
         borderRadius: 16,

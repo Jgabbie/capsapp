@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import BookingReviewStyle from '../../styles/clientstyles/BookingReviewStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle'; // Reuse general buttons
 import Header from '../../components/Header';
@@ -165,19 +166,46 @@ export default function BookingReview({ route, navigation }) {
                     </View>
 
                     <View style={BookingReviewStyle.gridRow}>
-                        {/* Inclusions */}
                         <View style={BookingReviewStyle.gridCol}>
-                            <Text style={[BookingReviewStyle.gridTitle, { color: '#305797' }]}>Inclusions</Text>
+                            <Text style={[BookingReviewStyle.gridTitle, { color: '#305797' }]}>
+                                Inclusions
+                            </Text>
+
                             {pkg.packageInclusions?.map((item, i) => (
-                                <Text key={i} style={BookingReviewStyle.itemText}>✓ {item}</Text>
+                                <View
+                                    key={i}
+                                    style={BookingReviewStyle.itemRow}
+                                >
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={16}
+                                        color="#305797"
+                                        style={BookingReviewStyle.itemIcon}
+                                    />
+                                    <Text style={BookingReviewStyle.itemText}>
+                                        {item}
+                                    </Text>
+                                </View>
                             ))}
                         </View>
 
-                        {/* Exclusions */}
                         <View style={BookingReviewStyle.gridCol}>
-                            <Text style={[BookingReviewStyle.gridTitle, { color: '#b54747' }]}>Exclusions</Text>
+                            <Text style={[BookingReviewStyle.gridTitle, { color: '#b54747' }]}>
+                                Exclusions
+                            </Text>
+
                             {pkg.packageExclusions?.map((item, i) => (
-                                <Text key={i} style={BookingReviewStyle.itemText}>✕ {item}</Text>
+                                <View key={i} style={BookingReviewStyle.itemRow}>
+                                    <Ionicons
+                                        name="close"
+                                        size={16}
+                                        color="#b54747"
+                                        style={BookingReviewStyle.itemIcon}
+                                    />
+                                    <Text style={BookingReviewStyle.itemText}>
+                                        {item}
+                                    </Text>
+                                </View>
                             ))}
                         </View>
                     </View>

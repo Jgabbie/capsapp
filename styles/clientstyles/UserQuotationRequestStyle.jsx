@@ -11,7 +11,7 @@ const UserQuotationRequestStyle = StyleSheet.create({
     padding: 15,
     paddingTop: 24,
     flexGrow: 1,
-    paddingBottom: 305,
+    paddingBottom: 50,
   },
   loadingContainer: {
     flex: 1,

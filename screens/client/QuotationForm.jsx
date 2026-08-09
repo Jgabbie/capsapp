@@ -331,7 +331,7 @@ export default function QuotationForm({ route, navigation }) {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView style={QuotationFormStyle.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={QuotationFormStyle.container} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
 
                 <TouchableOpacity style={QuotationFormStyle.backButton} onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={16} color="#fff" />

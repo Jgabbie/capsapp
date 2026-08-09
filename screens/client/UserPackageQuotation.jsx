@@ -272,12 +272,16 @@ export default function UserPackageQuotation() {
 
                     <View style={UserPackageQuotationStyle.filterRow}>
 
-                        {/* Status Filter */}
                         <View style={{ flex: 1 }}>
                             <Text style={UserPackageQuotationStyle.filterLabel}>Status</Text>
                             <View style={UserPackageQuotationStyle.dropdownGroup}>
                                 <TouchableOpacity style={UserPackageQuotationStyle.dropdownButton} onPress={() => setShowStatusModal(true)}>
-                                    <Text style={[UserPackageQuotationStyle.dropdownText, statusFilter !== "Status" && UserPackageQuotationStyle.dropdownTextSelected]} numberOfLines={1}>
+                                    <Text
+                                        style={[UserPackageQuotationStyle.dropdownText,
+                                        statusFilter && {
+                                            fontFamily: 'Montserrat_600SemiBold',
+                                        },]} numberOfLines={1}
+                                    >
                                         {statusFilter}
                                     </Text>
                                     <Ionicons name="chevron-down" size={14} color={statusFilter !== "Status" ? "#305797" : "#999"} style={UserPackageQuotationStyle.dropdownIcon} />
@@ -291,7 +295,6 @@ export default function UserPackageQuotation() {
                         </View>
 
 
-                        {/* Requested Date Filter */}
                         <View style={{ flex: 1 }}>
                             <Text style={UserPackageQuotationStyle.filterLabel}>Date</Text>
                             <View style={UserPackageQuotationStyle.dropdownGroup}>
@@ -302,8 +305,9 @@ export default function UserPackageQuotation() {
                                     <Text
                                         style={[
                                             UserPackageQuotationStyle.dropdownText,
-                                            bookingDateFilter &&
-                                            UserPackageQuotationStyle.dropdownTextSelected
+                                            bookingDateFilter && {
+                                                fontFamily: 'Montserrat_600SemiBold',
+                                            },
                                         ]}
                                         numberOfLines={1}
                                     >

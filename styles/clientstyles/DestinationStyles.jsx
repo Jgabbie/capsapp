@@ -711,7 +711,7 @@ const DestinationStyles = StyleSheet.create({
 
   sectionBody: {
     padding: 16,
-    paddingBottom: 120,
+    paddingBottom: 15,
     marginHorizontal: 16,
     backgroundColor: '#fff',
     borderBottomLeftRadius: 12,

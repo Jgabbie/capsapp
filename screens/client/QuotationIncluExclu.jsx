@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import QuotationIncluExcluStyle from '../../styles/clientstyles/QuotationIncluExcluStyle';
 import QuotationAllInStyle from '../../styles/clientstyles/QuotationAllInStyle';
 import Header from '../../components/Header';
@@ -157,16 +158,62 @@ export default function QuotationIncluExclu({ route, navigation }) {
 
                     <View style={QuotationIncluExcluStyle.gridRow}>
                         <View style={QuotationIncluExcluStyle.gridCol}>
-                            <Text style={[QuotationIncluExcluStyle.gridTitle, { color: '#305797' }]}>Inclusions</Text>
+                            <Text
+                                style={[
+                                    QuotationIncluExcluStyle.gridTitle,
+                                    { color: '#305797' }
+                                ]}
+                            >
+                                Inclusions
+                            </Text>
+
                             {inclusions.map((item, i) => (
-                                <Text key={i} style={QuotationIncluExcluStyle.itemText}>✓ {item}</Text>
+                                <View
+                                    key={i}
+                                    style={QuotationIncluExcluStyle.itemRow}
+                                >
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={16}
+                                        color="#305797"
+                                        style={QuotationIncluExcluStyle.itemIcon}
+                                    />
+
+                                    <Text style={QuotationIncluExcluStyle.itemText}>
+                                        {item}
+                                    </Text>
+                                </View>
                             ))}
                         </View>
 
+
+                        {/* Exclusions */}
                         <View style={QuotationIncluExcluStyle.gridCol}>
-                            <Text style={[QuotationIncluExcluStyle.gridTitle, { color: '#b54747' }]}>Exclusions</Text>
+                            <Text
+                                style={[
+                                    QuotationIncluExcluStyle.gridTitle,
+                                    { color: '#b54747' }
+                                ]}
+                            >
+                                Exclusions
+                            </Text>
+
                             {exclusions.map((item, i) => (
-                                <Text key={i} style={QuotationIncluExcluStyle.itemText}>✕ {item}</Text>
+                                <View
+                                    key={i}
+                                    style={QuotationIncluExcluStyle.itemRow}
+                                >
+                                    <Ionicons
+                                        name="close"
+                                        size={16}
+                                        color="#b54747"
+                                        style={QuotationIncluExcluStyle.itemIcon}
+                                    />
+
+                                    <Text style={QuotationIncluExcluStyle.itemText}>
+                                        {item}
+                                    </Text>
+                                </View>
                             ))}
                         </View>
                     </View>

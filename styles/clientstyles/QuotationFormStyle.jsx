@@ -5,7 +5,7 @@ const { width } = Dimensions.get('window');
 const QuotationFormStyle = StyleSheet.create({
     container: {
         padding: 20,
-        paddingBottom: 100,
+        paddingBottom: 20,
         backgroundColor: "#f5f7fa",
         flexGrow: 1
     },

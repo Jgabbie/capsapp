@@ -932,35 +932,100 @@ export default function UserTransactions() {
 
                     <View style={UserTransactionStyle.dropdownGroup}>
 
+                        {/* Status Filter */}
                         <View style={{ flex: 1 }}>
                             <Text style={UserTransactionStyle.filterLabel}>Status</Text>
-                            <TouchableOpacity style={UserTransactionStyle.dropdownButton} onPress={() => setStatusModalVisible(true)}>
-                                <Text style={UserTransactionStyle.dropdownText}>{statusFilter}</Text>
-                                <Ionicons name="chevron-down" size={12} color="#305797" />
-                            </TouchableOpacity>
+
+                            <View style={UserTransactionStyle.dropdownGroup}>
+                                <TouchableOpacity
+                                    style={UserTransactionStyle.dropdownButton}
+                                    onPress={() => setStatusModalVisible(true)}
+                                >
+                                    <Text
+                                        style={[
+                                            UserTransactionStyle.dropdownText,
+                                            statusFilter !== 'Status' && {
+                                                fontFamily: 'Montserrat_600SemiBold',
+                                            },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {statusFilter}
+                                    </Text>
+
+                                    <Ionicons
+                                        name="chevron-down"
+                                        size={12}
+                                        color={statusFilter !== 'Status' ? '#305797' : '#999'}
+                                    />
+                                </TouchableOpacity>
+
+                                {/* Clear Status */}
+                                {statusFilter !== 'Status' && (
+                                    <TouchableOpacity
+                                        onPress={() => setStatusFilter('Status')}
+                                        style={{ marginLeft: 6 }}
+                                    >
+                                        <Ionicons
+                                            name="close-circle"
+                                            size={18}
+                                            color="#999"
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
+
+                        {/* Date Filter */}
                         <View style={{ flex: 1 }}>
                             <Text style={UserTransactionStyle.filterLabel}>
                                 Date
                             </Text>
 
-                            <TouchableOpacity
-                                style={UserTransactionStyle.dropdownButton}
-                                onPress={openTransactionDatePicker}
-                            >
-                                <Text style={UserTransactionStyle.dropdownText}>
-                                    {dateFilter
-                                        ? dayjs(dateFilter).format('MMM D, YYYY')
-                                        : 'Date'}
-                                </Text>
+                            <View style={UserTransactionStyle.dropdownGroup}>
+                                <TouchableOpacity
+                                    style={UserTransactionStyle.dropdownButton}
+                                    onPress={openTransactionDatePicker}
+                                >
+                                    <Text
+                                        style={[
+                                            UserTransactionStyle.dropdownText,
+                                            dateFilter && {
+                                                fontFamily: 'Montserrat_600SemiBold',
+                                            },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {dateFilter
+                                            ? dayjs(dateFilter).format('MMM D, YYYY')
+                                            : 'Date'}
+                                    </Text>
 
-                                <Ionicons
-                                    name="calendar-outline"
-                                    size={12}
-                                    color="#305797"
-                                />
-                            </TouchableOpacity>
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={12}
+                                        color={dateFilter ? '#305797' : '#999'}
+                                    />
+                                </TouchableOpacity>
+
+                                {/* Clear Date */}
+                                {dateFilter && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setDateFilter(null);
+                                            setPendingDateFilter(null);
+                                        }}
+                                        style={{ marginLeft: 6 }}
+                                    >
+                                        <Ionicons
+                                            name="close-circle"
+                                            size={18}
+                                            color="#999"
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
                     </View>
