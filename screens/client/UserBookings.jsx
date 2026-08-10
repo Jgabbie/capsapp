@@ -342,15 +342,10 @@ export default function UserBookings() {
                     ? 'image/png'
                     : 'image/jpeg';
 
-            const base64 = await FileSystem.readAsStringAsync(file.uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
-
             setCancelImage({
                 ...file,
                 fileName,
                 mimeType,
-                base64,
                 isPdf,
             });
 
@@ -358,6 +353,7 @@ export default function UserBookings() {
                 ...prev,
                 file: '',
             }));
+
         } catch (error) {
             console.error('Cancellation file picker error:', error);
 
@@ -438,20 +434,56 @@ export default function UserBookings() {
             return;
         }
 
-
         try {
             setLoadingCancel(true);
 
-            const finalReason = cancelReason === 'Other' ? cancelOtherReason : cancelReason;
+            const finalReason =
+                cancelReason === 'Other'
+                    ? cancelOtherReason
+                    : cancelReason;
+
+            const formData = new FormData();
+
+            formData.append('file', {
+                uri: cancelImage.uri,
+                name: cancelImage.fileName,
+                type: cancelImage.mimeType,
+            });
+
+            const uploadResponse = await api.post(
+                '/upload/upload-cancel-proof',
+                formData,
+                {
+                    ...withUserHeader(user._id),
+                    headers: {
+                        ...withUserHeader(user._id).headers,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+
+            const cloudinaryUrl = uploadResponse.data?.url;
+
+            if (!cloudinaryUrl) {
+                throw new Error('Cloudinary upload did not return a URL.');
+            }
+
+            console.log('Cancellation proof uploaded:', cloudinaryUrl);
+
             const payload = {
                 reason: finalReason,
                 comments: cancelComments || '',
-                imageProof: `data:${cancelImage.mimeType};base64,${cancelImage.base64}`,
+                imageProof: cloudinaryUrl,
                 fileName: cancelImage.fileName,
                 fileType: cancelImage.mimeType,
             };
 
-            await api.post(`/booking/cancel/${selectedBookingId}`, payload, withUserHeader(user._id));
+            await api.post(
+                `/booking/cancel/${selectedBookingId}`,
+                payload,
+                withUserHeader(user._id)
+            );
+
 
             setLoadingCancel(false);
             setCancelModalOpen(false);
@@ -472,16 +504,26 @@ export default function UserBookings() {
                 title: 'Request Submitted',
                 message: 'Your cancellation request was sent successfully.',
             });
+
             fetchBookings();
+
         } catch (error) {
+            console.error(
+                'Cancellation request error:',
+                error.response?.data || error.message
+            );
+
             setLoadingCancel(false);
+
             showFeedbackModal({
                 type: 'error',
                 title: 'Error',
-                message: 'Unable to cancel booking. Please try again.',
+                message:
+                    error.response?.data?.message ||
+                    'Unable to cancel booking. Please try again.',
             });
         }
-    }
+    };
 
 
 
