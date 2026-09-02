@@ -542,6 +542,7 @@ export default function Profile() {
                 return;
             }
 
+            setConfirmModalVisible(false);
             await saveProfileChanges();
 
         } catch (error) {
@@ -834,7 +835,12 @@ export default function Profile() {
     ];
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#f5f7fa' }} showsVerticalScrollIndicator={false}>
+        <ScrollView
+            style={{ flex: 1, backgroundColor: '#f5f7fa' }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+        >
             <Header openSidebar={() => { setSidebarVisible(true) }} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 

@@ -6,7 +6,7 @@ import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const getBackendBaseUrl = () => String(process.env.MOBILE_BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
+const getBackendBaseUrl = () => String(process.env.MOBILE_BACKEND_URL || process.env.API_URL).replace(/\/$/, "");
 const getFrontendBaseUrl = () => {
     return String(
         process.env.FRONTEND_URL ||
@@ -486,6 +486,15 @@ const updateUser = async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).select("-password -hashedPassword");
 
         if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
+
+        await logAction(
+            "USER_PROFILE_UPDATED",
+            updatedUser._id,
+            {
+                "Profile Updated": `User ${updatedUser.username} updated their profile`
+            }
+        );
+
         res.status(200).json({ success: true, user: updatedUser });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
