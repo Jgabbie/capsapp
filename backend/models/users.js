@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
     resetEmailOtpExpireAt: { type: Number, default: 0 },
     resetEmailOtpAttempts: { type: Number, default: 0 },
     resetEmailOtpBlockedUntil: { type: Number, default: 0 },
+    pendingEmail: { type: String, default: '' },
     otpAttempts: { type: Number, default: 0 },
     otpBlockedUntil: { type: Number, default: null },
     refreshToken: { type: String, default: "" },
