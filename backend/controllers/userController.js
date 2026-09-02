@@ -35,42 +35,50 @@ const isMobileDevice = (req) => {
 
 
 //generate verification email template function
-const generateVerificationEmailTemplate = (username, webVerifyLink) => {
+const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
     return `
-            <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
 
+            <p style="color:#555; font-size:16px;">
+                Hello <b>${username}</b>,
+            </p>
 
-                <p style="color:#555; font-size:16px;">
-                    Hello <b>${username}</b>,
-                </p>
+            <p style="color:#555; font-size:15px; line-height:1.6;">
+                Your account has been successfully created!
+            </p>
 
-                <p style="color:#555; font-size:15px; line-height:1.6;">
-                    Your account has been successfully created!
-                </p>
+            <p style="color:#555; font-size:15px; line-height:1.6;">
+                Kindly click the button below to verify your email address and activate your account.
+            </p>
 
-                <p style="color:#555; font-size:15px; line-height:1.6;">
-                    Kindly click the button below to verify your email address and activate your account.
-                </p>
+            <a href="${appDeepLink}"
+                style="
+                    display:inline-block;
+                    margin-top:25px;
+                    padding:12px 28px;
+                    background:#305797;
+                    color:#ffffff;
+                    text-decoration:none;
+                    border-radius:6px;
+                    font-weight:bold;
+                    font-size:14px;
+                ">
+                Verify Account
+            </a>
 
-                <a href="${webVerifyLink}"
-                    style="
-                        display:inline-block;
-                        margin-top:25px;
-                        padding:12px 28px;
-                        background:#305797;
-                        color:#ffffff;
-                        text-decoration:none;
-                        border-radius:6px;
-                        font-weight:bold;
-                        font-size:14px;
-                    ">
-                    Verify Account
-                </a>
+            <p style="color:#777; font-size:13px; margin-top:30px;">
+                If the button does not work, you may also verify using the website:
+            </p>
 
-                <p style="color:#777; font-size:13px; margin-top:30px;">
-                    If you did not create this account, please ignore this email.
-                </p>
-            </div>
+            <a href="${webVerifyLink}">
+                Verify on Website
+            </a>
+
+            <p style="color:#777; font-size:13px; margin-top:30px;">
+                If you did not create this account, please ignore this email.
+            </p>
+
+        </div>
     `;
 };
 
@@ -112,14 +120,20 @@ const createVerificationLink = async (user) => {
 
     user.emailVerifyToken = hashedToken;
     user.emailVerifyTokenExpireAt = Date.now() + 10 * 60 * 1000;
+
     user.isVerified = false;
     user.isAccountVerified = false;
 
     await user.save();
 
     const webVerifyLink =
-        `${getBackendBaseUrl()}/api/users/open-verify-email` +
-        `?token=${encodeURIComponent(rawToken)}` +
+        `${getBackendBaseUrl()}/api/users/auth/verify-email` +
+        `?token=${rawToken}` +
+        `&email=${encodeURIComponent(user.email)}`;
+
+    const appDeepLink =
+        `travex://verify` +
+        `?token=${rawToken}` +
         `&email=${encodeURIComponent(user.email)}`;
 
     const transporter = nodemailer.createTransport({
@@ -138,58 +152,17 @@ const createVerificationLink = async (user) => {
         subject: "Welcome to M&RC Travel and Tours",
         html: generateVerificationEmailTemplate(
             user.username,
+            appDeepLink,
             webVerifyLink
         )
     };
 
     await transporter.sendMail(mailOptions);
 
-    return webVerifyLink;
-};
-
-const buildVerifyEmailRedirectHtml = (
-    email,
-    token,
-    fallbackUrl = getFrontendBaseUrl()
-) => {
-    const appUrl =
-        `travex://verify-email` +
-        `?token=${encodeURIComponent(token)}` +
-        `&email=${encodeURIComponent(email)}`;
-
-    const webUrl =
-        `${fallbackUrl}/verify-email` +
-        `?token=${encodeURIComponent(token)}` +
-        `&email=${encodeURIComponent(email)}`;
-
-    return `
-        <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Opening Travex...</title>
-            </head>
-
-            <body
-                style="
-                    text-align:center;
-                    padding-top:50px;
-                    font-family:sans-serif;
-                    color:#305797;
-                "
-            >
-                <h2>Opening Travex...</h2>
-                <p>Please wait while we open the verification screen.</p>
-
-                <script>
-                    window.location.href = ${JSON.stringify(appUrl)};
-
-                    setTimeout(() => {
-                        window.location.href = ${JSON.stringify(webUrl)};
-                    }, 2500);
-                </script>
-            </body>
-        </html>
-    `;
+    return {
+        appDeepLink,
+        webVerifyLink
+    };
 };
 
 
@@ -211,36 +184,6 @@ const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUr
     </html>
 `;
 
-
-const openVerifyEmail = async (req, res) => {
-    const { email, token } = req.query;
-
-    if (!email || !token) {
-        return res.redirect(
-            302,
-            `${getFrontendBaseUrl()}/verify-email`
-        );
-    }
-
-    // Mobile device -> open VerifyEmail screen in Travex
-    if (isMobileDevice(req)) {
-        return res.send(
-            buildVerifyEmailRedirectHtml(
-                email,
-                token,
-                getFrontendBaseUrl()
-            )
-        );
-    }
-
-    // Desktop/Web -> open website VerifyEmail screen
-    const webUrl =
-        `${getFrontendBaseUrl()}/verify-email` +
-        `?token=${encodeURIComponent(token)}` +
-        `&email=${encodeURIComponent(email)}`;
-
-    return res.redirect(302, webUrl);
-};
 
 
 //send login OTP email function
@@ -408,16 +351,6 @@ const loginUser = async (req, res) => {
             role: canonicalRole(user.role),
             loginOnce: user.loginOnce
         });
-
-        logAction('CUSTOMER_LOGIN', user._id, { "Login": `User ${user.username} logged in successfully` });
-
-        res.status(200).json({
-            success: true,
-            userId: user._id,
-            username: user.username,
-            role: canonicalRole(user.role),
-            loginOnce: user.loginOnce
-        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -460,7 +393,6 @@ const updateUser = async (req, res) => {
         delete updateData.verifyOtp;
         delete updateData.resetOtp;
         delete updateData.emailVerifyToken;
-        delete updateData.verifyOtp;
         delete updateData.otpAttempts;
         delete updateData.otpBlockedUntil;
 
@@ -1312,7 +1244,6 @@ export {
     sendLoginOtp,
     verifyLoginOtp,
     redirectToApp,
-    openVerifyEmail,
     updateLoginOnce,
     checkPhoneNumberExists,
     sendEmailChangeOtp,
