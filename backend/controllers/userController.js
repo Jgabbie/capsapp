@@ -7,6 +7,14 @@ import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const getBackendBaseUrl = () => String(process.env.BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
+const getFrontendBaseUrl = () => {
+    return String(
+        process.env.FRONTEND_URL ||
+        process.env.WEB_URL ||
+        process.env.CLIENT_URL ||
+        "http://localhost:3000"
+    ).replace(/\/$/, "");
+};
 const getFrontendLoginUrl = () => {
     const fallback = process.env.FRONTEND_LOGIN_URL || process.env.FRONTEND_URL || process.env.WEB_URL || process.env.CLIENT_URL || "";
     return String(fallback).replace(/\/$/, "");
@@ -19,9 +27,15 @@ const canonicalRole = (value) => {
     return String(value || "").trim();
 };
 
+const isMobileDevice = (req) => {
+    const userAgent = String(req.get("user-agent") || "");
+
+    return /android|iphone|ipad|ipod/i.test(userAgent);
+};
+
 
 //generate verification email template function
-const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
+const generateVerificationEmailTemplate = (username, webVerifyLink) => {
     return `
             <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
 
@@ -38,7 +52,7 @@ const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink)
                     Kindly click the button below to verify your email address and activate your account.
                 </p>
 
-                <a href="${appDeepLink}"
+                <a href="${webVerifyLink}"
                     style="
                         display:inline-block;
                         margin-top:25px;
@@ -100,26 +114,38 @@ const createVerificationLink = async (user) => {
     user.emailVerifyTokenExpireAt = Date.now() + 10 * 60 * 1000;
     user.isVerified = false;
     user.isAccountVerified = false;
+
     await user.save();
 
-    const webVerifyLink = `${getBackendBaseUrl()}/api/users/auth/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
-    const appDeepLink = `travex://verify?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+    const webVerifyLink =
+        `${getFrontendBaseUrl()}/verify-email` +
+        `?token=${rawToken}` +
+        `&email=${encodeURIComponent(user.email)}` +
+        `&source=mobile`;
+
     const transporter = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
+        host: "smtp-relay.brevo.com",
         port: 587,
         secure: false,
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
     });
 
     const mailOptions = {
         from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
         to: user.email,
-        subject: 'Welcome to M&RC Travel and Tours',
-        html: generateVerificationEmailTemplate(user.username, appDeepLink, webVerifyLink)
+        subject: "Welcome to M&RC Travel and Tours",
+        html: generateVerificationEmailTemplate(
+            user.username,
+            webVerifyLink
+        )
     };
 
     await transporter.sendMail(mailOptions);
-    return { appDeepLink, webVerifyLink };
+
+    return webVerifyLink;
 };
 
 
@@ -676,36 +702,99 @@ const resetPassword = async (req, res) => {
 const verifyEmailLink = async (req, res) => {
     const { email, token } = req.query;
 
+    const redirectAfterVerification = (title, message, status = 200) => {
+        // MOBILE:
+        // Try opening the Travex app.
+        if (isMobileDevice(req)) {
+            return res
+                .status(status)
+                .send(
+                    buildLoginRedirectHtml(
+                        title,
+                        message,
+                        getFrontendLoginUrl()
+                    )
+                );
+        }
+
+        // WEB/DESKTOP:
+        // Do not attempt travex://.
+        // Simply open the website.
+        return res.redirect(302, getFrontendBaseUrl());
+    };
+
     try {
         if (!email || !token) {
-            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "The verification link is incomplete."));
+            return redirectAfterVerification(
+                "Verification Failed",
+                "The verification link is incomplete.",
+                400
+            );
         }
 
         const user = await User.findOne({ email });
+
         if (!user) {
-            return res.status(404).send(buildLoginRedirectHtml("Verification Failed", "We could not find this account."));
+            return redirectAfterVerification(
+                "Verification Failed",
+                "We could not find this account.",
+                404
+            );
         }
 
-        if (!user.emailVerifyToken || !user.emailVerifyTokenExpireAt || user.emailVerifyTokenExpireAt < Date.now()) {
-            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "This verification link has expired. Please request a new one."));
+        if (
+            !user.emailVerifyToken ||
+            !user.emailVerifyTokenExpireAt ||
+            user.emailVerifyTokenExpireAt < Date.now()
+        ) {
+            return redirectAfterVerification(
+                "Verification Failed",
+                "This verification link has expired. Please request a new one.",
+                400
+            );
         }
 
-        const tokenMatches = await bcrypt.compare(String(token), String(user.emailVerifyToken));
+        const tokenMatches = await bcrypt.compare(
+            String(token),
+            String(user.emailVerifyToken)
+        );
+
         if (!tokenMatches) {
-            return res.status(400).send(buildLoginRedirectHtml("Verification Failed", "This verification link is invalid."));
+            return redirectAfterVerification(
+                "Verification Failed",
+                "This verification link is invalid.",
+                400
+            );
         }
 
         user.isVerified = true;
         user.isAccountVerified = true;
         user.emailVerifyToken = "";
         user.emailVerifyTokenExpireAt = 0;
+
         await user.save();
 
-        logAction('VERIFY_ACCOUNT', user._id, { "Account Verified": `Email: ${user.email}` });
+        await logAction(
+            "VERIFY_ACCOUNT",
+            user._id,
+            {
+                "Account Verified": `Email: ${user.email}`
+            }
+        );
 
-        return res.status(200).send(buildLoginRedirectHtml("Account Verified", "Your account has been verified. Redirecting you to the login screen."));
+        return redirectAfterVerification(
+            "Account Verified",
+            "Your account has been verified. Redirecting you to the login screen."
+        );
+
     } catch (error) {
-        return res.status(500).send(buildLoginRedirectHtml("Verification Failed", error.message));
+        console.error("Email verification error:", error);
+
+        return redirectAfterVerification(
+            "Verification Failed",
+            "Unable to verify your account.",
+            500
+        );
     }
 };
 
