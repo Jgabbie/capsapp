@@ -381,21 +381,42 @@ const sendPassportPenaltyNotification = async (application, deadlineInfo) => {
     from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
     to: user.email,
     subject: `Passport Application On Penalty: ${applicationNumber}`,
-    html: `
-                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
- 
-                    <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Your passport application <b>${applicationNumber}</b> is on penalty because <b>${deadlineInfo.status}</b> was not completed on time.</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Penalty fee: <b>PHP ${PENALTY_AMOUNT.toLocaleString('en-PH')}</b></p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Pay within <b>1 day</b> to avoid rejection. Deadline: <b>${deadlineLabel}</b></p>
+    html: buildBrandedEmail({
+      title: 'Passport Application On Penalty',
 
-                    <a href="https://mrctravelandtours.com/home"
-                        style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                        Login to Your Account
-                    </a>
+      introHtml: `Hello <b>${displayName}</b>, your passport application <b>${applicationNumber}</b> is currently on penalty.`,
 
-                </div>
+      bodyHtml: `
+            <p style="margin:0 0 12px;">
+                The required step <b>${deadlineInfo.status}</b> was not completed within the given deadline.
+            </p>
+
+            <div style="background:#f8fafc; border:1px solid #dbe4f0; border-radius:14px; padding:14px 16px; margin:18px 0;">
+                <p style="margin:0 0 8px;">
+                    <strong>Application Number:</strong> ${applicationNumber}
+                </p>
+
+                <p style="margin:0 0 8px;">
+                    <strong>Incomplete Step:</strong> ${deadlineInfo.status}
+                </p>
+
+                <p style="margin:0 0 8px;">
+                    <strong>Penalty Fee:</strong> PHP ${PENALTY_AMOUNT.toLocaleString('en-PH')}
+                </p>
+
+                <p style="margin:0;">
+                    <strong>Payment Deadline:</strong> ${deadlineLabel}
+                </p>
+            </div>
+
+            <p style="margin:0;">
+                Please pay the penalty fee within <b>1 day</b> to avoid automatic rejection of your application.
+            </p>
         `,
+
+      ctaText: 'Login to Your Account',
+      ctaUrl: 'https://mrctravelandtours.com/home',
+    }),
   });
 
   return { sent: true, application };
@@ -464,20 +485,37 @@ const rejectPassportApplicationForDeadline = async (application, deadlineInfo, r
         from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
         to: user.email,
         subject: `Passport Application Automatically Rejected: ${application.applicationNumber || 'Application'}`,
-        html: `
-                        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+        html: buildBrandedEmail({
+          title: 'Passport Application Automatically Rejected',
 
-                            <p style="color:#555; font-size:16px;">Hello <b>${user.firstname || user.username || 'Customer'}</b>,</p>
-                            <p style="color:#555; font-size:15px; line-height:1.6;">Your passport application <b>${application.applicationNumber || ''}</b> was automatically rejected because ${reachedSecondDeadline ? 'the extra 3-day period after penalty payment expired' : 'the penalty fee was not paid within 1 day'}.</p>
-                            <p style="color:#555; font-size:15px; line-height:1.6;">Please contact our office if you need assistance or wish to submit a new application.</p>
+          introHtml: `Hello <b>${user.firstname || user.username || 'Customer'}</b>, your passport application <b>${application.applicationNumber || ''}</b> has been automatically rejected.`,
 
-                            <a href="https://mrctravelandtours.com/home"
-                                style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                                Login to Your Account
-                            </a>
+          bodyHtml: `
+            <p style="margin:0 0 12px;">
+                ${reachedSecondDeadline
+              ? 'The extra 3-day period provided after your penalty payment has expired.'
+              : 'The required penalty fee was not paid within the 1-day payment period.'
+            }
+            </p>
 
-                        </div>
-                `,
+            <div style="background:#f8fafc; border:1px solid #dbe4f0; border-radius:14px; padding:14px 16px; margin:18px 0;">
+                <p style="margin:0 0 8px;">
+                    <strong>Application Number:</strong> ${application.applicationNumber || ''}
+                </p>
+
+                <p style="margin:0;">
+                    <strong>Status:</strong> Rejected
+                </p>
+            </div>
+
+            <p style="margin:0;">
+                Please contact our office if you need assistance or wish to submit a new application.
+            </p>
+        `,
+
+          ctaText: 'Login to Your Account',
+          ctaUrl: 'https://mrctravelandtours.com/home',
+        }),
       });
     } catch (emailError) {
       console.error('Failed to send passport rejection email:', emailError);
@@ -636,21 +674,34 @@ export const sendPassportDeadlineWarning = async (application) => {
     from: `"M&RC Travel and Tours" <${process.env.SENDER_EMAIL}>`,
     to: user.email,
     subject: `Passport Deadline Reminder: ${statusLabel} due ${deadlineLabel}`,
-    html: `
-                <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+    html: buildBrandedEmail({
+      title: 'Passport Deadline Reminder',
 
-                    <p style="color:#555; font-size:16px;">Hello <b>${displayName}</b>,</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">One day remains to complete <b>${statusLabel}</b> for your passport application <b>${applicationNumber}</b>.</p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Deadline: <b>${deadlineLabel}</b></p>
-                    <p style="color:#555; font-size:15px; line-height:1.6;">Please log in and finish the required step to stay on track for your appointment date.</p>
+      introHtml: `Hello <b>${displayName}</b>, one day remains to complete <b>${statusLabel}</b> for your passport application.`,
 
-                    <a href="https://mrctravelandtours.com/home"
-                        style="display:inline-block; margin-top:26px; padding:12px 24px; background:#305797; color:#ffffff; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:1.8px; font-weight:700; text-transform:uppercase;">
-                        Login to Your Account
-                    </a>
+      bodyHtml: `
+            <div style="background:#f8fafc; border:1px solid #dbe4f0; border-radius:14px; padding:14px 16px; margin:18px 0;">
+                <p style="margin:0 0 8px;">
+                    <strong>Application Number:</strong> ${applicationNumber}
+                </p>
 
-                </div>
+                <p style="margin:0 0 8px;">
+                    <strong>Required Step:</strong> ${statusLabel}
+                </p>
+
+                <p style="margin:0;">
+                    <strong>Deadline:</strong> ${deadlineLabel}
+                </p>
+            </div>
+
+            <p style="margin:0;">
+                Please log in and finish the required step to stay on track for your appointment date.
+            </p>
         `,
+
+      ctaText: 'Login to Your Account',
+      ctaUrl: 'https://mrctravelandtours.com/home',
+    }),
   });
 
   application.deadlineWarnings = application.deadlineWarnings || [];
