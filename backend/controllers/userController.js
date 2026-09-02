@@ -60,7 +60,11 @@ const generateVerificationEmailTemplate = (
             </p>
 
             <p style="margin:0 0 22px;">
-                Kindly verify your email address to activate your account and start using Travex.
+                Kindly click the button below to verify your email address and activate your account.
+            </p>
+
+            <p style="margin:0 0 22px;">
+                If you did not create this account, please ignore this email.
             </p>
 
             <div style="text-align:center; margin:24px 0 18px;">
@@ -107,31 +111,6 @@ const generateVerificationEmailTemplate = (
                 >
                     Verify on Website
                 </a>
-            </div>
-
-            <div style="
-                background:#f8fafc;
-                border:1px solid #e2e8f0;
-                border-radius:10px;
-                padding:14px 16px;
-                margin-top:22px;
-            ">
-                <p style="
-                    margin:0 0 6px;
-                    font-size:13px;
-                    font-weight:700;
-                    color:#334155;
-                ">
-                    This verification link expires in 10 minutes.
-                </p>
-
-                <p style="
-                    margin:0;
-                    font-size:12px;
-                    color:#64748b;
-                ">
-                    If you did not create this account, you can safely ignore this email.
-                </p>
             </div>
         `,
 
