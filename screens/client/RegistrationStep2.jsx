@@ -348,7 +348,7 @@ export default function RegistrationStep2({ route, navigation }) {
                         </Text>
 
                         <View style={RegistrationFormStyle.row}>
-                            <Text style={{ fontSize: 9, flex: 1 }}>Do you agree to purchase a Travel Insurance from us?</Text>
+                            <Text style={{ fontSize: 9, flex: 1 }}>Do you already have a Travel Insurance?</Text>
                             <TouchableOpacity style={[RegistrationFormStyle.paperInput, { width: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#000' }]} onPress={() => setActiveDropdown('insurance1')}>
                                 <Text style={{ fontSize: 10 }}>{medicalData.insurance1 || 'Y / N'}</Text>
                             </TouchableOpacity>

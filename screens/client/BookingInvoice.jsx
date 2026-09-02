@@ -1387,14 +1387,31 @@ export default function BookingInvoice({ route, navigation }) {
                                 <div style="font-weight: bold; font-size: 10px; margin-bottom: 8px;">TRAVEL INSURANCE</div>
                                 <p style="font-size: 10px; margin-bottom: 12px;">We highly encourage <strong>ALL OUR CLIENTS</strong> to have and are covered with travel insurance for health, repatriation, loss of luggage/belongings and in case of cancellation, flight delays, and the like that is why purchasing of travel insurance together with our tour packages is compulsory for your convenience and peace of mind.</p>
                                 
+                                    
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <div style="width: 80%; font-size: 10px;">Do you agree to purchase a Travel Insurance from us?</div>
-                                    <div style="width: 15%; border: 1px solid #000; text-align: center; padding: 4px; font-weight: bold;">
+                                    <div style="width: 80%; font-size: 10px;">
+                                        Do you already have a Travel Insurance?
+                                    </div>
+
+                                    <div style="width: 30px; border: 1px solid #000; text-align: center; padding: 4px; font-weight: bold;">
                                         ${bookingDetails?.purchaseInsurance === 'Y' ? 'Y' : 'N'}
                                     </div>
                                 </div>
-                                <p style="font-style: italic; font-size: 10px; color: #555; margin-bottom: 12px;">Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.</p>
-                                
+
+                                <p style="font-style: italic; font-size: 10px; color: #555; margin-bottom: 12px;">
+                                    Note: Purchasing of travel insurance from our Travel & Tours company does not hold us liable for any claims and anything about the process of claims from the insurance company. We can only provide the documents from our suppliers, operators, and airlines' end if necessary.
+                                </p>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div style="width: 80%; font-size: 10px;">
+                                        Do you agree to purchase a Travel Insurance from us?
+                                    </div>
+
+                                    <div style="width: 30px; border: 1px solid #000; text-align: center; padding: 4px; font-weight: bold;">
+                                        ${bookingDetails?.ownInsurance === 'Y' ? 'Y' : 'N'}
+                                    </div>
+                                </div>
+
                                 <table style="margin: 0;">
                                     <tr>
                                         <td style="width: 40%; text-align: right; font-weight: bold; border: 1px solid #000;">If YES, please indicate details:</td>

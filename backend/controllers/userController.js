@@ -365,6 +365,23 @@ const updateUser = async (req, res) => {
 
         if (req.body.phonenum) updateData.phone = req.body.phonenum;
 
+        if (updateData.email) {
+            const existingEmail = await User.findOne({
+                email: {
+                    $regex: `^${escapeRegex(updateData.email.trim())}$`,
+                    $options: "i"
+                },
+                _id: { $ne: id }
+            });
+
+            if (existingEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Email already exists"
+                });
+            }
+        }
+
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).select("-password -hashedPassword");
 
         if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });

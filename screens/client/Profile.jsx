@@ -443,7 +443,7 @@ export default function Profile() {
             setErrorOtp("");
 
             const response = await api.post(
-                "/users/verify-email-change-otp",
+                "/users/auth/verify-email-change-otp",
                 {
                     email: originalData.email,
                     otp
@@ -474,7 +474,7 @@ export default function Profile() {
             setErrorOtp("");
 
             const response = await api.post(
-                "/users/send-email-change-otp",
+                "/users/auth/send-email-change-otp",
                 {
                     email: originalData.email,
                 }
@@ -517,7 +517,7 @@ export default function Profile() {
                 setConfirmModalVisible(false);
 
                 // Send OTP to the CURRENT/OLD email
-                const response = await api.post("/users/send-email-change-otp", {
+                const response = await api.post("/users/auth/send-email-change-otp", {
                     email: originalData.email,
                 });
 

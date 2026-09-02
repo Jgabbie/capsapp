@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions, ActivityIndicator, ToastAndroid, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
@@ -62,9 +62,26 @@ export default function Packages({ navigation, route }) {
     const [travelersValue, setTravelersValue] = useState("");
     const [visibleCount, setVisibleCount] = useState(10);
 
+    const [budgetFilterActive, setBudgetFilterActive] = useState(false);
+    const [tourTypeFilterActive, setTourTypeFilterActive] = useState(false);
+    const [travelersFilterActive, setTravelersFilterActive] = useState(false);
+    const [daysFilterActive, setDaysFilterActive] = useState(false);
+    const [tagsFilterActive, setTagsFilterActive] = useState(false);
+
 
     const [wishlistModalVisible, setWishlistModalVisible] = useState(false);
     const [wishlistAction, setWishlistAction] = useState("");
+
+    const scrollViewRef = useRef(null);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+
+
+    const scrollToTop = () => {
+        scrollViewRef.current?.scrollTo({
+            y: 0,
+            animated: true,
+        });
+    };
 
 
     //get availability status based on slots
@@ -80,24 +97,61 @@ export default function Packages({ navigation, route }) {
     useEffect(() => {
         if (route?.params) {
             const p = route.params;
-            if (p.searchQuery) setSearchText(p.searchQuery);
+
+            if (p.searchQuery) {
+                setSearchText(p.searchQuery);
+            }
+
             if (p.budgetRange) {
                 setBudgetRange(p.budgetRange);
                 setMinBudgetInput(String(p.budgetRange[0]));
                 setMaxBudgetInput(String(p.budgetRange[1]));
+
+                setBudgetFilterActive(true);
             }
-            if (p.tourType && p.tourType !== 'Tour Type' && p.tourType !== 'All Types') {
+
+            if (
+                p.tourType &&
+                p.tourType !== 'Tour Type' &&
+                p.tourType !== 'All Types' &&
+                p.tourType !== 'All'
+            ) {
                 setTourType(p.tourType);
+                setTourTypeFilterActive(true);
             }
-            if (p.travelers) setTravelersValue(p.travelers);
-            if (Array.isArray(p.selectedTags) && p.selectedTags.length > 0) {
+
+            if (p.travelers) {
+                setTravelersValue(String(p.travelers));
+                setTravelersFilterActive(true);
+            }
+
+            if (
+                Array.isArray(p.selectedTags) &&
+                p.selectedTags.length > 0
+            ) {
                 setSelectedTags(p.selectedTags);
-            } else if (p.selectedTag && p.selectedTag !== 'Select tags' && p.selectedTag !== 'All Tags') {
+                setTagsFilterActive(true);
+            } else if (
+                p.selectedTag &&
+                p.selectedTag !== 'Select tags' &&
+                p.selectedTag !== 'All Tags'
+            ) {
                 setSelectedTags([p.selectedTag]);
+                setTagsFilterActive(true);
             }
-            if (p.selectedDuration && p.selectedDuration !== 'Length of Stay' && p.selectedDuration !== 'All Durations') {
-                const dayNum = parseInt(p.selectedDuration); // Extracts "3" from "3 Days"
-                if (!isNaN(dayNum)) setDaysValue([dayNum]);
+
+            if (
+                p.selectedDuration &&
+                p.selectedDuration !== 'Length of Stay' &&
+                p.selectedDuration !== 'All Durations'
+            ) {
+                const dayNum = parseInt(p.selectedDuration);
+
+                if (!isNaN(dayNum)) {
+                    setDaysValue([dayNum]);
+                    setDaysInput(String(dayNum));
+                    setDaysFilterActive(true);
+                }
             }
         }
     }, [route?.params]);
@@ -108,12 +162,22 @@ export default function Packages({ navigation, route }) {
         setBudgetRange([0, 300000]);
         setMinBudgetInput('0');
         setMaxBudgetInput('300000');
+
         setTourType('All');
         setTravelersValue('');
+
         setDaysValue([maxDaysAvailable]);
         setDaysInput(String(maxDaysAvailable));
+
         setSelectedTags([]);
         setSearchText('');
+
+        // Disable all filters again
+        setBudgetFilterActive(false);
+        setTourTypeFilterActive(false);
+        setTravelersFilterActive(false);
+        setDaysFilterActive(false);
+        setTagsFilterActive(false);
     };
 
 
@@ -312,17 +376,74 @@ export default function Packages({ navigation, route }) {
     //filter the packages based on search text, budget range, selected tags, tour type, days, and travelers
     const filteredPackages = useMemo(() => {
         return packages.filter((item) => {
-            const q = searchText.toLowerCase();
-            const matchesSearch = !q || item.title.toLowerCase().includes(q) || item.packageTags.some(t => t.toLowerCase().includes(q));
-            const matchesBudget = item.discountedPrice >= budgetRange[0] && item.discountedPrice <= budgetRange[1];
-            const matchesTags = selectedTags.length === 0 || selectedTags.every(t => item.packageTags.includes(t));
-            const matchesType = tourType === 'All' || item.packageType.toLowerCase() === tourType.toLowerCase();
-            const matchesDays = item.packageDuration <= daysValue[0];
+            const q = searchText.trim().toLowerCase();
+
+            // Search only applies when user enters something
+            const matchesSearch =
+                !q ||
+                item.title.toLowerCase().includes(q) ||
+                item.packageTags.some(tag =>
+                    tag.toLowerCase().includes(q)
+                );
+
+            // Budget ignored until user edits it
+            const matchesBudget =
+                !budgetFilterActive ||
+                (
+                    item.discountedPrice >= budgetRange[0] &&
+                    item.discountedPrice <= budgetRange[1]
+                );
+
+            // Tags ignored until user selects one
+            const matchesTags =
+                !tagsFilterActive ||
+                selectedTags.length === 0 ||
+                selectedTags.every(tag =>
+                    item.packageTags.includes(tag)
+                );
+
+            // Tour type ignored until explicitly selected
+            const matchesType =
+                !tourTypeFilterActive ||
+                tourType === 'All' ||
+                item.packageType.toLowerCase() === tourType.toLowerCase();
+
+            // Days ignored until user edits it
+            const matchesDays =
+                !daysFilterActive ||
+                item.packageDuration <= daysValue[0];
+
             const tv = Number(travelersValue);
-            const matchesTravelers = !tv || item.slots >= tv;
-            return matchesSearch && matchesBudget && matchesTags && matchesType && matchesDays && matchesTravelers;
+
+            // Travelers ignored until user enters a value
+            const matchesTravelers =
+                !travelersFilterActive ||
+                !tv ||
+                item.slots >= tv;
+
+            return (
+                matchesSearch &&
+                matchesBudget &&
+                matchesTags &&
+                matchesType &&
+                matchesDays &&
+                matchesTravelers
+            );
         });
-    }, [packages, searchText, budgetRange, selectedTags, tourType, daysValue, travelersValue]);
+    }, [
+        packages,
+        searchText,
+        budgetRange,
+        selectedTags,
+        tourType,
+        daysValue,
+        travelersValue,
+        budgetFilterActive,
+        tourTypeFilterActive,
+        travelersFilterActive,
+        daysFilterActive,
+        tagsFilterActive
+    ]);
 
     const visiblePackages = useMemo(() => filteredPackages.slice(0, visibleCount), [filteredPackages, visibleCount]);
 
@@ -335,25 +456,43 @@ export default function Packages({ navigation, route }) {
 
     //handle changes to the budget input fields
     const handleBudgetInputChange = (type, value) => {
+        setBudgetFilterActive(true);
+
         const numericValue = value.replace(/[^0-9]/g, '');
+
         if (type === 'min') {
             setMinBudgetInput(numericValue);
+
             const num = Number(numericValue);
-            if (num <= budgetRange[1]) setBudgetRange([num, budgetRange[1]]);
+
+            if (num <= budgetRange[1]) {
+                setBudgetRange([num, budgetRange[1]]);
+            }
         } else {
             setMaxBudgetInput(numericValue);
+
             const num = Number(numericValue);
-            if (num >= budgetRange[0] && num <= 500000) setBudgetRange([budgetRange[0], num]);
+
+            if (num >= budgetRange[0] && num <= 500000) {
+                setBudgetRange([budgetRange[0], num]);
+            }
         }
     };
 
 
     //handle changes to the days input field, ensuring it remains within valid bounds
     const handleDaysInputChange = (value) => {
+        setDaysFilterActive(true);
+
         const numericValue = value.replace(/[^0-9]/g, '');
+
         setDaysInput(numericValue);
+
         const num = Number(numericValue);
-        if (num >= 1 && num <= maxDaysAvailable) setDaysValue([num]);
+
+        if (num >= 1 && num <= maxDaysAvailable) {
+            setDaysValue([num]);
+        }
     };
 
 
@@ -376,7 +515,18 @@ export default function Packages({ navigation, route }) {
             <Header openSidebar={() => setSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onClose={() => setSidebarVisible(false)} />
 
-            <ScrollView style={DestinationStyles.container} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                ref={scrollViewRef}
+                style={DestinationStyles.container}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+                scrollEventThrottle={16}
+                onScroll={(event) => {
+                    const scrollY = event.nativeEvent.contentOffset.y;
+
+                    setShowScrollTop(scrollY > 400);
+                }}
+            >
                 <View style={DestinationStyles.heroBanner}>
                     <Image
                         source={require('../../assets/images/Destination_BackgroundImage.jpg')}
@@ -660,6 +810,42 @@ export default function Packages({ navigation, route }) {
                 )}
             </ScrollView>
 
+            {showScrollTop && (
+                <TouchableOpacity
+                    onPress={scrollToTop}
+                    activeOpacity={0.8}
+                    style={{
+                        position: "absolute",
+                        right: 20,
+                        bottom: 90,
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        backgroundColor: "#305797",
+                        justifyContent: "center",
+                        alignItems: "center",
+
+                        // Android
+                        elevation: 6,
+
+                        // iOS
+                        shadowColor: "#000",
+                        shadowOffset: {
+                            width: 0,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                    }}
+                >
+                    <Ionicons
+                        name="arrow-up"
+                        size={26}
+                        color="#ffffff"
+                    />
+                </TouchableOpacity>
+            )}
+
             <Modal visible={isFilterModalVisible} animationType="slide" transparent={true}>
                 <View style={DestinationStyles.modalOverlay}>
                     <View style={[DestinationStyles.modalCard, { flex: 0.85 }]}>
@@ -691,6 +877,7 @@ export default function Packages({ navigation, route }) {
                                     values={budgetRange}
                                     sliderLength={width - 80}
                                     onValuesChange={(vals) => {
+                                        setBudgetFilterActive(true);
                                         setBudgetRange(vals);
                                         setMinBudgetInput(String(vals[0]));
                                         setMaxBudgetInput(String(vals[1]));
@@ -704,7 +891,15 @@ export default function Packages({ navigation, route }) {
                             <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tour Type</Text>
                             <View style={DestinationStyles.filterPillContainer}>
                                 {['All', 'Domestic', 'International'].map(t => (
-                                    <TouchableOpacity key={t} style={[DestinationStyles.filterPill, tourType === t && DestinationStyles.filterPillSelected]} onPress={() => setTourType(t)}>
+                                    <TouchableOpacity key={t} style={[DestinationStyles.filterPill, tourType === t && DestinationStyles.filterPillSelected]} onPress={() => {
+                                        setTourType(t);
+
+                                        if (t === 'All') {
+                                            setTourTypeFilterActive(false);
+                                        } else {
+                                            setTourTypeFilterActive(true);
+                                        }
+                                    }}>
                                         <Text style={[DestinationStyles.filterPillText, tourType === t && { color: '#000' }]}>{t}</Text>
                                     </TouchableOpacity>
                                 ))}
@@ -718,7 +913,12 @@ export default function Packages({ navigation, route }) {
                                 placeholderTextColor={"#999"}
                                 keyboardType="numeric"
                                 value={travelersValue}
-                                onChangeText={(text) => setTravelersValue(text.replace(/[^0-9]/g, ''))}
+                                onChangeText={(text) => {
+                                    const cleaned = text.replace(/[^0-9]/g, '');
+
+                                    setTravelersValue(cleaned);
+                                    setTravelersFilterActive(cleaned !== '');
+                                }}
                             />
                             <Text style={DestinationStyles.filterSubtext}>Show packages with available slots for your group size</Text>
 
@@ -738,6 +938,7 @@ export default function Packages({ navigation, route }) {
                                     values={daysValue}
                                     sliderLength={width - 80}
                                     onValuesChange={(vals) => {
+                                        setDaysFilterActive(true);
                                         setDaysValue(vals);
                                         setDaysInput(String(vals[0]));
                                     }}
@@ -752,9 +953,21 @@ export default function Packages({ navigation, route }) {
                                     <Text style={[DestinationStyles.filterLabel, { marginTop: 20 }]}>Tags / Activities</Text>
                                     <View style={DestinationStyles.filterPillContainer}>
                                         {tagOptions.map(tag => (
-                                            <TouchableOpacity key={tag} style={[DestinationStyles.filterPill, selectedTags.includes(tag) && DestinationStyles.filterPillSelected]} onPress={() => {
-                                                setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-                                            }}>
+                                            <TouchableOpacity
+                                                key={tag}
+                                                style={[DestinationStyles.filterPill, selectedTags.includes(tag) && DestinationStyles.filterPillSelected]}
+                                                onPress={() => {
+                                                    setSelectedTags(prev => {
+                                                        const updatedTags = prev.includes(tag)
+                                                            ? prev.filter(t => t !== tag)
+                                                            : [...prev, tag];
+
+                                                        setTagsFilterActive(updatedTags.length > 0);
+
+                                                        return updatedTags;
+                                                    });
+                                                }}
+                                            >
                                                 <Text style={[DestinationStyles.filterPillText, selectedTags.includes(tag) && { color: '#000' }]}>{tag}</Text>
                                             </TouchableOpacity>
                                         ))}
@@ -881,8 +1094,6 @@ export default function Packages({ navigation, route }) {
                 </View>
             </Modal>
 
-
-            <Chatbot />
         </View>
     );
 }
