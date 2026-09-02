@@ -120,7 +120,7 @@ export default function Signup() {
                 else if (!/[A-Z]/.test(value)) errorMsg = "Password must contain at least one uppercase letter.";
                 else if (!/[a-z]/.test(value)) errorMsg = "Password must contain at least one lowercase letter.";
                 else if (!/[0-9]/.test(value)) errorMsg = "Password must contain at least one number.";
-                else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) errorMsg = "Password must contain at least one special character.";
+                else if (!/[^\w\s]|_/.test(value)) errorMsg = "Password must contain at least one special character.";
                 break;
             case "confirmpassword":
                 if (!value) errorMsg = "Confirm Password is required.";
@@ -577,7 +577,8 @@ export default function Signup() {
                             <Text style={SignupStyle.termsParagraph}>
                                 By creating or accessing an account with M&RC
                                 Travel and Tours, you agree to comply with these
-                                Terms and Conditions.
+                                Terms and Conditions. If you do not agree with these terms,
+                                please do not create an account or use the platform.
                             </Text>
 
                             <Text style={SignupStyle.termsSectionTitle}>
@@ -607,7 +608,7 @@ export default function Signup() {
                             <Text style={SignupStyle.termsParagraph}>
                                 Cancellation and refund eligibility will depend on the
                                 applicable package, airline, hotel, embassy, or service
-                                provider policy.
+                                provider policy. Certain payments and processing fees may be non-refundable.
                             </Text>
 
                             <Text style={SignupStyle.termsSectionTitle}>
@@ -622,7 +623,18 @@ export default function Signup() {
                             </Text>
 
                             <Text style={SignupStyle.termsSectionTitle}>
-                                6. Privacy
+                                6. Passport and Visa Services
+                            </Text>
+
+                            <Text style={SignupStyle.termsParagraph}>
+                                Passport and visa processing times may depend on the
+                                Department of Foreign Affairs, embassies, consulates, and
+                                other government agencies. Approval of an application is
+                                determined solely by the appropriate government authority.
+                            </Text>
+
+                            <Text style={SignupStyle.termsSectionTitle}>
+                                7. Privacy
                             </Text>
 
                             <Text style={SignupStyle.termsParagraph}>
@@ -632,7 +644,7 @@ export default function Signup() {
                             </Text>
 
                             <Text style={SignupStyle.termsSectionTitle}>
-                                7. Changes to the Terms
+                                8. Changes to the Terms
                             </Text>
 
                             <Text style={SignupStyle.termsParagraph}>

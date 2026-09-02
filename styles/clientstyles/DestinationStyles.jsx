@@ -150,7 +150,7 @@ const DestinationStyles = StyleSheet.create({
     backgroundColor: "#305797",
     fontSize: 12,
     fontFamily: 'Montserrat_600SemiBold',
-    color: "#fff",
+    color: "#ffffff",
     borderRadius: 15,
     padding: 10,
   },

@@ -374,6 +374,157 @@ const updateUser = async (req, res) => {
     }
 };
 
+const sendEmailChangeOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const otp = String(
+            Math.floor(100000 + Math.random() * 900000)
+        );
+
+        const hashedOtp = await bcrypt.hash(otp, 10);
+
+        user.verifyOtp = hashedOtp;
+        user.verifyOtpExpireAt = Date.now() + 60 * 1000;
+        user.otpAttempts = 0;
+        user.otpBlockedUntil = 0;
+
+        await user.save();
+
+        const transporter = nodemailer.createTransport({
+            host: "smtp-relay.brevo.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        await transporter.sendMail({
+            from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
+            to: email,
+            subject: "M&RC Travel and Tours - Email Change OTP",
+            html: generateOTPEmailTemplate(otp, "verify")
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent to your current email address"
+        });
+
+    } catch (error) {
+        console.error("Email change OTP error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to send OTP."
+        });
+    }
+};
+
+const verifyEmailChangeOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and OTP are required"
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        if (
+            user.otpBlockedUntil &&
+            user.otpBlockedUntil > Date.now()
+        ) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many incorrect OTP attempts. Try again in 5 minutes."
+            });
+        }
+
+        if (
+            !user.verifyOtp ||
+            !user.verifyOtpExpireAt ||
+            user.verifyOtpExpireAt < Date.now()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP has expired. Please request a new one."
+            });
+        }
+
+        const otpMatches = await bcrypt.compare(
+            String(otp),
+            String(user.verifyOtp)
+        );
+
+        if (!otpMatches) {
+            user.otpAttempts = (user.otpAttempts || 0) + 1;
+
+            if (user.otpAttempts >= 3) {
+                user.otpBlockedUntil =
+                    Date.now() + 5 * 60 * 1000;
+
+                user.otpAttempts = 0;
+            }
+
+            await user.save();
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
+            });
+        }
+
+        user.verifyOtp = "";
+        user.verifyOtpExpireAt = 0;
+        user.otpAttempts = 0;
+        user.otpBlockedUntil = 0;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP verified successfully"
+        });
+
+    } catch (error) {
+        console.error("Verify email change OTP error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to verify OTP."
+        });
+    }
+};
+
 
 //request account verification function
 const sendResetOtp = async (req, res) => {
@@ -744,5 +895,7 @@ export {
     verifyLoginOtp,
     redirectToApp,
     updateLoginOnce,
-    checkPhoneNumberExists
+    checkPhoneNumberExists,
+    sendEmailChangeOtp,
+    verifyEmailChangeOtp
 }

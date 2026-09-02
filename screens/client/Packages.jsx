@@ -428,7 +428,20 @@ export default function Packages({ navigation, route }) {
 
                 {loading ? <ActivityIndicator size="large" color="#305797" style={{ marginTop: 50 }} /> : error ? <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{error}</Text> : (
                     <>
-                        {visiblePackages.map((item) => {
+                        {visiblePackages.length === 0 ? (
+                            <Text
+                                style={{
+                                    textAlign: "center",
+                                    marginTop: 40,
+                                    marginBottom: 40,
+                                    fontSize: 18,
+                                    fontFamily: "Montserrat_500Medium",
+                                    color: "#777",
+                                }}
+                            >
+                                No results
+                            </Text>
+                        ) : (visiblePackages.map((item) => {
                             const tv = Number(travelersValue);
 
                             const originalPrice =
@@ -628,7 +641,8 @@ export default function Packages({ navigation, route }) {
                                     </View>
                                 </View>
                             );
-                        })}
+                        })
+                        )}
 
                         {visibleCount > 10 && (
                             <TouchableOpacity onPress={handleSeeLess} style={{ alignSelf: 'center', marginVertical: 6 }}>

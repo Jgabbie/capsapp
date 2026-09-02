@@ -71,7 +71,7 @@ export default function ResetPassConfirm() {
         if (!/[A-Z]/.test(val)) return "Must contain 1 uppercase letter.";
         if (!/[a-z]/.test(val)) return "Must contain 1 lowercase letter.";
         if (!/[0-9]/.test(val)) return "Must contain 1 number.";
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(val)) return "Must contain 1 special character.";
+        if (!/[^\w\s]|_/.test(val)) return "Must contain 1 special character.";
         return "";
     }
 

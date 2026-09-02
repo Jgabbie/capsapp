@@ -50,6 +50,13 @@ export default function Profile() {
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [pendingBirthdate, setPendingBirthdate] = useState('')
 
+    const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [errorOtp, setErrorOtp] = useState("");
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [otpTimer, setOtpTimer] = useState(0);
+    const [pendingEmailChange, setPendingEmailChange] = useState(false);
+
     //user data states
     const [profileImage, setProfileImage] = useState('')
     const [selectedReviewToDelete, setSelectedReviewToDelete] = useState(null)
@@ -94,6 +101,24 @@ export default function Profile() {
     const [savingPreferences, setSavingPreferences] = useState(false)
     const [removedTagWarning, setRemovedTagWarning] = useState(false)
     const [deleteReviewModalVisible, setDeleteReviewModalVisible] = useState(false)
+
+
+    useEffect(() => {
+        if (otpTimer <= 0) return;
+
+        const timer = setInterval(() => {
+            setOtpTimer((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [otpTimer]);
 
 
     //fetch user data
@@ -361,14 +386,18 @@ export default function Profile() {
     }
 
 
-    //confirm save function that uploads profile image if changed and updates user data
-    const confirmSave = async () => {
+    const saveProfileChanges = async () => {
         try {
-            let profileImageUrl = typeof profileImage === 'string' ? profileImage : null;
+            let profileImageUrl =
+                typeof profileImage === "string" ? profileImage : null;
 
-            // if profileImage is an asset object (picked but not yet uploaded), upload it first
-            if (profileImage && typeof profileImage === 'object' && profileImage.uri) {
-                profileImageUrl = await uploadProfileImageToBackend(profileImage);
+            if (
+                profileImage &&
+                typeof profileImage === "object" &&
+                profileImage.uri
+            ) {
+                profileImageUrl =
+                    await uploadProfileImageToBackend(profileImage);
             }
 
             const response = await api.put(`/users/users/${user._id}`, {
@@ -376,28 +405,150 @@ export default function Profile() {
                 phone: userData.phonenum,
                 homeAddress: userData.address,
                 profileImage: profileImageUrl
-            })
+            });
 
             if (response.data.success || response.status === 200) {
-                setOriginalData(userData)
-                setEditing(false)
-                setConfirmModalVisible(false)
-                setSuccessModalVisible(true)
+                setOriginalData(userData);
+                setEditing(false);
+                setIsOTPModalOpen(false);
+                setPendingEmailChange(false);
+                setSuccessModalVisible(true);
 
                 updateUser({
                     firstname: userData.firstname,
                     lastname: userData.lastname,
                     email: userData.email,
                     profileImage: profileImageUrl
-                })
+                });
             }
         } catch (error) {
-            console.error("Update Error:", error.response?.data || error.message)
-            showMessage("Failed to update profile.")
-            setConfirmModalVisible(false)
-        }
-    }
+            console.error(
+                "Update Error:",
+                error.response?.data || error.message
+            );
 
+            showMessage("Failed to update profile.");
+        }
+    };
+
+
+    const handleVerifyOTP = async () => {
+        if (otp.length !== 6) {
+            setErrorOtp("Please enter the 6-digit OTP.");
+            return;
+        }
+
+        try {
+            setOtpLoading(true);
+            setErrorOtp("");
+
+            const response = await api.post(
+                "/users/verify-email-change-otp",
+                {
+                    email: originalData.email,
+                    otp
+                }
+            );
+
+            if (response.data.success) {
+                // OTP is correct — NOW save the new email
+                await saveProfileChanges();
+            }
+
+        } catch (error) {
+            setErrorOtp(
+                error.response?.data?.message ||
+                "Invalid OTP. Please try again."
+            );
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+
+    const resendOTP = async () => {
+        if (otpTimer > 0 || otpLoading) return;
+
+        try {
+            setOtpLoading(true);
+            setErrorOtp("");
+
+            const response = await api.post(
+                "/users/send-email-change-otp",
+                {
+                    email: originalData.email,
+                }
+            );
+
+            if (response.data.success) {
+                setOtp("");
+                setErrorOtp("");
+                setOtpTimer(60);
+
+                showMessage("A new OTP has been sent to your current email.");
+            }
+        } catch (error) {
+            console.error(
+                "Resend OTP Error:",
+                error.response?.data || error.message
+            );
+
+            setErrorOtp(
+                error.response?.data?.message ||
+                "Failed to resend OTP. Please try again."
+            );
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+
+    //confirm save function that uploads profile image if changed and updates user data
+    const confirmSave = async () => {
+        try {
+            const emailChanged =
+                String(userData.email).trim().toLowerCase() !==
+                String(originalData.email).trim().toLowerCase();
+
+            if (emailChanged) {
+                setOtpLoading(true);
+
+                // Close confirmation modal first
+                setConfirmModalVisible(false);
+
+                // Send OTP to the CURRENT/OLD email
+                const response = await api.post("/users/send-email-change-otp", {
+                    email: originalData.email,
+                });
+
+                if (response.data.success) {
+                    setPendingEmailChange(true);
+                    setOtp("");
+                    setErrorOtp("");
+                    setOtpTimer(60);
+                    setIsOTPModalOpen(true);
+                }
+
+                setOtpLoading(false);
+                return;
+            }
+
+            await saveProfileChanges();
+
+        } catch (error) {
+            console.error(
+                "Save Error:",
+                error.response?.data || error.message
+            );
+
+            setOtpLoading(false);
+            setConfirmModalVisible(false);
+            showMessage(
+                error.response?.data?.message ||
+                "Failed to process your changes."
+            );
+        }
+    };
 
     //cancel edit function that resets user data to original and clears errors
     const cancelEdit = () => {
@@ -1453,6 +1604,61 @@ export default function Profile() {
                                 </Text>
                             </TouchableOpacity>
 
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* OTP Verification Modal */}
+                <Modal transparent animationType='fade' visible={isOTPModalOpen}>
+                    <View style={ModalStyle.modalOverlay}>
+                        <View style={ModalStyle.modalBox}>
+                            <Text style={ModalStyle.modalTitle}>Verify Email Change</Text>
+                            <Text style={[ModalStyle.modalText, { marginBottom: 15 }]}>
+                                We've sent a one-time code to your current email address.
+                                Enter the code to confirm your new email address.
+                            </Text>
+
+                            <TextInput
+                                style={ProfileStyle.otpInput}
+                                keyboardType="numeric"
+                                maxLength={6}
+                                value={otp}
+                                onChangeText={(val) => {
+                                    setOtp(val.replace(/[^0-9]/g, ''))
+                                    setErrorOtp("")
+                                }}
+                            />
+                            {/* Change this line inside the Modal */}
+                            {errorOtp ? (
+                                <Text style={[
+                                    ProfileStyle.errorMessage,
+                                    {
+                                        marginLeft: 0,
+                                        marginBottom: 10,
+                                        textAlign: 'center',
+                                        width: '100%',     //  ADD THIS: Forces text to span the whole modal
+                                        alignSelf: 'center' //  ADD THIS: Extra insurance for centering
+                                    }
+                                ]}>
+                                    {errorOtp}
+                                </Text>
+                            ) : null}
+
+                            <TouchableOpacity style={[ModalStyle.modalButton, { width: 200 }]} onPress={handleVerifyOTP} disabled={otpLoading}>
+                                {otpLoading ? <ActivityIndicator color="#fff" /> : <Text style={ModalStyle.modalButtonText}>Verify</Text>}
+                            </TouchableOpacity>
+
+                            {otpTimer > 0 ? (
+                                <Text style={ProfileStyle.timerText}>Wait for <Text style={ProfileStyle.timerHighlight}>{otpTimer}</Text> sec to resend</Text>
+                            ) : (
+                                <TouchableOpacity onPress={resendOTP} style={{ marginTop: 15 }}>
+                                    <Text style={[ProfileStyle.loginLinks, { textDecorationLine: 'none' }]}>Didn't get the code? Click here</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity onPress={() => setIsOTPModalOpen(false)} style={{ marginTop: 20 }}>
+                                <Text style={[ProfileStyle.loginLinks, { color: '#992A46', textDecorationLine: 'none' }]}>Cancel</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>

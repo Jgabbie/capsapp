@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
 
 const ProfileStyle = StyleSheet.create({
     container: {
@@ -462,7 +464,73 @@ const ProfileStyle = StyleSheet.create({
         fontFamily: 'Montserrat_600SemiBold',
         fontSize: 13,
         color: '#ffffff'
-    }
+    },
+
+
+
+
+    // --- OTP Specific Styles ---
+    // --- Links Container (Signup & Forgot Pass) ---
+    loginLinksContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: width * 0.85,
+        maxWidth: 400,
+        marginBottom: 20,
+    },
+    loginLinks: {
+        fontFamily: "Montserrat_500Medium",
+        fontSize: 13,
+        color: "#305797",
+    },
+    loginLinksDivider: {
+        color: "#305797",
+        marginHorizontal: 10,
+    },
+    otpInput: {
+        fontSize: 24,
+        letterSpacing: 8,
+        textAlign: "center",
+        borderWidth: 1,
+        borderRadius: 10,
+        borderColor: "#305797",
+        width: 200,
+        height: 50,
+        marginBottom: 10,
+        backgroundColor: "#f9f9f9",
+        color: "#000"
+    },
+    timerText: {
+        fontSize: 14,
+        fontFamily: "Montserrat_400Regular",
+        color: "#333",
+        marginTop: 15
+    },
+    timerHighlight: {
+        color: "#992A46",
+        fontFamily: "Montserrat_700Bold"
+    },
+    //  NEW STYLES ADDED 
+    errorContainer: {
+        height: 15,
+        maxWidth: 550,
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
+    errorText: {
+        color: '#ff1616',
+        fontSize: 12,
+        textAlign: 'left',
+        fontFamily: 'Montserrat_400Regular',
+    },
+    //  RENAMED AND ADJUSTED FOR THE BOTTOM
+    bottomLogo: {
+        width: 140,
+        height: 80,
+        marginTop: 130,
+        marginBottom: 20,
+        alignSelf: 'center',
+    },
 });
 
 export default ProfileStyle;
