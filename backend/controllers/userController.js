@@ -42,51 +42,118 @@ const hashToken = (token) => {
 
 
 //generate verification email template function
-const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
-    return `
-        <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:0; padding:30px 32px; text-align:left;">
+const generateVerificationEmailTemplate = (
+    username,
+    appDeepLink,
+    webVerifyLink
+) => {
+    return buildBrandedEmail({
+        title: "Verify Your Account",
 
-            <p style="color:#555; font-size:16px;">
-                Hello <b>${username}</b>,
-            </p>
+        introHtml: `
+            Hello <strong>${username}</strong>,
+        `,
 
-            <p style="color:#555; font-size:15px; line-height:1.6;">
+        bodyHtml: `
+            <p style="margin:0 0 12px;">
                 Your account has been successfully created!
             </p>
 
-            <p style="color:#555; font-size:15px; line-height:1.6;">
-                Kindly click the button below to verify your email address and activate your account.
+            <p style="margin:0 0 22px;">
+                Kindly verify your email address to activate your account and start using Travex.
             </p>
 
-            <a href="${appDeepLink}"
-                style="
-                    display:inline-block;
-                    margin-top:25px;
-                    padding:12px 28px;
-                    background:#305797;
-                    color:#ffffff;
-                    text-decoration:none;
-                    border-radius:6px;
-                    font-weight:bold;
-                    font-size:14px;
+            <div style="text-align:center; margin:24px 0 18px;">
+                <a
+                    href="${appDeepLink}"
+                    style="
+                        display:inline-block;
+                        background:#305797;
+                        color:#ffffff;
+                        text-decoration:none;
+                        font-weight:700;
+                        font-size:14px;
+                        padding:13px 28px;
+                        border-radius:8px;
+                    "
+                >
+                    Verify in Travex App
+                </a>
+            </div>
+
+            <div style="
+                text-align:center;
+                margin:20px 0;
+                color:#94a3b8;
+                font-size:12px;
+            ">
+                ────────── OR ──────────
+            </div>
+
+            <div style="text-align:center; margin:18px 0 24px;">
+                <a
+                    href="${webVerifyLink}"
+                    style="
+                        display:inline-block;
+                        background:#ffffff;
+                        color:#305797;
+                        text-decoration:none;
+                        font-weight:700;
+                        font-size:14px;
+                        padding:12px 28px;
+                        border:1px solid #305797;
+                        border-radius:8px;
+                    "
+                >
+                    Verify on Website
+                </a>
+            </div>
+
+            <div style="
+                background:#f8fafc;
+                border:1px solid #e2e8f0;
+                border-radius:10px;
+                padding:14px 16px;
+                margin-top:22px;
+            ">
+                <p style="
+                    margin:0 0 6px;
+                    font-size:13px;
+                    font-weight:700;
+                    color:#334155;
                 ">
-                Verify Account
-            </a>
+                    This verification link expires in 10 minutes.
+                </p>
 
-            <p style="color:#777; font-size:13px; margin-top:30px;">
-                If you are not using your mobile device, you may verify using the website:
+                <p style="
+                    margin:0;
+                    font-size:12px;
+                    color:#64748b;
+                ">
+                    If you did not create this account, you can safely ignore this email.
+                </p>
+            </div>
+        `,
+
+        footerHtml: `
+            <p style="font-size:10px; margin:0 0 8px; color:#94a3b8;">
+                This is an automated security message. Please do not reply.
             </p>
 
-            <a href="${webVerifyLink}">
-                Verify on Website
-            </a>
-
-            <p style="color:#777; font-size:13px; margin-top:30px;">
-                If you did not create this account, please ignore this email.
+            <p style="margin:3px 0; font-weight:700; color:#334155;">
+                M&amp;RC Travel and Tours
             </p>
 
-        </div>
-    `;
+            <p style="margin:3px 0; color:#64748b;">
+                info1@mrctravels.com
+            </p>
+
+            <p style="margin:3px 0; color:#64748b;">
+                &copy; ${new Date().getFullYear()} M&amp;RC Travel and Tours.
+                All rights reserved.
+            </p>
+        `,
+    });
 };
 
 
