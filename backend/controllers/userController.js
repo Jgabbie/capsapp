@@ -33,6 +33,13 @@ const isMobileDevice = (req) => {
     return /android|iphone|ipad|ipod/i.test(userAgent);
 };
 
+const hashToken = (token) => {
+    return crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+};
+
 
 //generate verification email template function
 const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink) => {
@@ -116,10 +123,9 @@ const generateOTPEmailTemplate = (otp, type) => {
 //generate verification link function
 const createVerificationLink = async (user) => {
     const rawToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = await bcrypt.hash(rawToken, 10);
 
-    user.emailVerifyToken = hashedToken;
-    user.emailVerifyTokenExpireAt = Date.now() + 10 * 60 * 1000;
+    user.emailVerifyOtp = hashToken(rawToken);
+    user.emailVerifyExpireAt = Date.now() + 10 * 60 * 1000;
 
     user.isVerified = false;
     user.isAccountVerified = false;
@@ -857,10 +863,25 @@ const verifyEmailToken = async (req, res) => {
             });
         }
 
-        const tokenMatches = await bcrypt.compare(
-            token,
-            user.emailVerifyToken
+        const submittedTokenHash = hashToken(token);
+
+        const storedBuffer = Buffer.from(
+            user.emailVerifyOtp,
+            "hex"
         );
+
+        const submittedBuffer = Buffer.from(
+            submittedTokenHash,
+            "hex"
+        );
+
+        const tokenMatches =
+            storedBuffer.length === submittedBuffer.length &&
+            crypto.timingSafeEqual(
+                storedBuffer,
+                submittedBuffer
+            );
+
 
         if (!tokenMatches) {
             return res.status(400).json({
