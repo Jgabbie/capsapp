@@ -67,7 +67,7 @@ const generateVerificationEmailTemplate = (username, appDeepLink, webVerifyLink)
             </a>
 
             <p style="color:#777; font-size:13px; margin-top:30px;">
-                If the button does not work, you may also verify using the website:
+                If you are not using your mobile device, you may verify using the website:
             </p>
 
             <a href="${webVerifyLink}">
@@ -127,8 +127,8 @@ const createVerificationLink = async (user) => {
     await user.save();
 
     const webVerifyLink =
-        `${getBackendBaseUrl()}/api/users/auth/verify-email` +
-        `?token=${rawToken}` +
+        `${getFrontendBaseUrl()}/verify-email` +
+        `?token=${encodeURIComponent(rawToken)}` +
         `&email=${encodeURIComponent(user.email)}`;
 
     const appDeepLink =
