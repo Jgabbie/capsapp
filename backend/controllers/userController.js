@@ -698,13 +698,118 @@ const resetPassword = async (req, res) => {
 };
 
 
-//verify email link function
-const verifyEmailLink = async (req, res) => {
-    const { email, token } = req.query;
+const verifyEmailToken = async (req, res) => {
+    try {
+        const email = String(req.body.email || "").trim().toLowerCase();
+        const token = String(req.body.token || "").trim();
 
-    const redirectAfterVerification = (title, message, status = 200) => {
-        // MOBILE:
-        // Try opening the Travex app.
+        if (!email || !token) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and verification token are required"
+            });
+        }
+
+        const user = await User.findOne({
+            email: {
+                $regex: `^${escapeRegex(email)}$`,
+                $options: "i"
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired verification link"
+            });
+        }
+
+        // Already verified
+        if (user.isAccountVerified || user.isVerified) {
+            return res.status(200).json({
+                success: true,
+                message: "Account is already verified"
+            });
+        }
+
+        if (
+            !user.emailVerifyToken ||
+            !user.emailVerifyTokenExpireAt ||
+            user.emailVerifyTokenExpireAt < Date.now()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired verification link"
+            });
+        }
+
+        const tokenMatches = await bcrypt.compare(
+            token,
+            user.emailVerifyToken
+        );
+
+        if (!tokenMatches) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired verification link"
+            });
+        }
+
+        user.isVerified = true;
+        user.isAccountVerified = true;
+
+        user.emailVerifyToken = "";
+        user.emailVerifyTokenExpireAt = 0;
+
+        await user.save();
+
+        await logAction(
+            "VERIFY_ACCOUNT",
+            user._id,
+            {
+                "Account Verified": `Email: ${user.email}`
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Account verified successfully"
+        });
+
+    } catch (error) {
+        console.error("Verify email token error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to verify account"
+        });
+    }
+};
+
+
+//verify email link function
+// verify email link function
+const verifyEmailLink = async (req, res) => {
+    const { email, token, response } = req.query;
+
+    // When called from the website VerifyEmail screen,
+    // return JSON instead of redirecting.
+    const wantsJson = response === "json";
+
+    const sendResult = (
+        status,
+        success,
+        title,
+        message
+    ) => {
+        if (wantsJson) {
+            return res.status(status).json({
+                success,
+                message
+            });
+        }
+
+        // Open mobile app when opened directly on mobile.
         if (isMobileDevice(req)) {
             return res
                 .status(status)
@@ -717,28 +822,47 @@ const verifyEmailLink = async (req, res) => {
                 );
         }
 
-        // WEB/DESKTOP:
-        // Do not attempt travex://.
-        // Simply open the website.
+        // Desktop/browser fallback
         return res.redirect(302, getFrontendBaseUrl());
     };
 
     try {
         if (!email || !token) {
-            return redirectAfterVerification(
+            return sendResult(
+                400,
+                false,
                 "Verification Failed",
-                "The verification link is incomplete.",
-                400
+                "The verification link is incomplete."
             );
         }
 
-        const user = await User.findOne({ email });
+        const normalizedEmail = String(email)
+            .trim()
+            .toLowerCase();
+
+        const user = await User.findOne({
+            email: {
+                $regex: `^${escapeRegex(normalizedEmail)}$`,
+                $options: "i"
+            }
+        });
 
         if (!user) {
-            return redirectAfterVerification(
+            return sendResult(
+                400,
+                false,
                 "Verification Failed",
-                "We could not find this account.",
-                404
+                "Invalid or expired verification link."
+            );
+        }
+
+        // Already verified
+        if (user.isAccountVerified || user.isVerified) {
+            return sendResult(
+                200,
+                true,
+                "Account Verified",
+                "Account is already verified."
             );
         }
 
@@ -747,10 +871,11 @@ const verifyEmailLink = async (req, res) => {
             !user.emailVerifyTokenExpireAt ||
             user.emailVerifyTokenExpireAt < Date.now()
         ) {
-            return redirectAfterVerification(
+            return sendResult(
+                400,
+                false,
                 "Verification Failed",
-                "This verification link has expired. Please request a new one.",
-                400
+                "This verification link has expired. Please request a new one."
             );
         }
 
@@ -760,10 +885,11 @@ const verifyEmailLink = async (req, res) => {
         );
 
         if (!tokenMatches) {
-            return redirectAfterVerification(
+            return sendResult(
+                400,
+                false,
                 "Verification Failed",
-                "This verification link is invalid.",
-                400
+                "This verification link is invalid."
             );
         }
 
@@ -782,18 +908,21 @@ const verifyEmailLink = async (req, res) => {
             }
         );
 
-        return redirectAfterVerification(
+        return sendResult(
+            200,
+            true,
             "Account Verified",
-            "Your account has been verified. Redirecting you to the login screen."
+            "Your account has been verified successfully."
         );
 
     } catch (error) {
         console.error("Email verification error:", error);
 
-        return redirectAfterVerification(
+        return sendResult(
+            500,
+            false,
             "Verification Failed",
-            "Unable to verify your account.",
-            500
+            "Unable to verify your account."
         );
     }
 };
@@ -997,6 +1126,7 @@ export {
     sendVerifyOtp,
     verifyAccount,
     verifyEmailLink,
+    verifyEmailToken,
     sendLoginOtp,
     verifyLoginOtp,
     redirectToApp,

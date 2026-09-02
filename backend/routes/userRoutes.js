@@ -23,5 +23,6 @@ router.get("/redirect-to-app", userController.redirectToApp);
 router.post("/login-once", requireUser, userController.updateLoginOnce);
 router.post("/auth/send-email-change-otp", requireUser, userController.sendEmailChangeOtp);
 router.post("/auth/verify-email-change-otp", requireUser, userController.verifyEmailChangeOtp);
+router.post("/verify-email-token", userController.verifyEmailToken);
 
 export default router;

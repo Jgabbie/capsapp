@@ -400,12 +400,16 @@ export default function Profile() {
                     await uploadProfileImageToBackend(profileImage);
             }
 
-            const response = await api.put(`/users/users/${user._id}`, {
-                ...userData,
-                phone: userData.phonenum,
-                homeAddress: userData.address,
-                profileImage: profileImageUrl
-            });
+            const response = await api.put(
+                `/users/users/${user._id}`,
+                {
+                    ...userData,
+                    phone: userData.phonenum,
+                    homeAddress: userData.address,
+                    profileImage: profileImageUrl
+                },
+                withUserHeader(user._id)
+            );
 
             if (response.data.success || response.status === 200) {
                 setOriginalData(userData);
@@ -447,7 +451,8 @@ export default function Profile() {
                 {
                     email: originalData.email,
                     otp
-                }
+                },
+                withUserHeader(user._id)
             );
 
             if (response.data.success) {
@@ -477,7 +482,8 @@ export default function Profile() {
                 "/users/auth/send-email-change-otp",
                 {
                     email: originalData.email,
-                }
+                },
+                withUserHeader(user._id)
             );
 
             if (response.data.success) {
@@ -517,9 +523,13 @@ export default function Profile() {
                 setConfirmModalVisible(false);
 
                 // Send OTP to the CURRENT/OLD email
-                const response = await api.post("/users/auth/send-email-change-otp", {
-                    email: originalData.email,
-                });
+                const response = await api.post(
+                    "/users/auth/send-email-change-otp",
+                    {
+                        email: originalData.email,
+                    },
+                    withUserHeader(user._id)
+                );
 
                 if (response.data.success) {
                     setPendingEmailChange(true);
