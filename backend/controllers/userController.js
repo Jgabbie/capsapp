@@ -920,9 +920,9 @@ const verifyEmailToken = async (req, res) => {
         }
 
         if (
-            !user.emailVerifyToken ||
-            !user.emailVerifyTokenExpireAt ||
-            user.emailVerifyTokenExpireAt < Date.now()
+            !user.emailVerifyOtp ||
+            !user.emailVerifyExpireAt ||
+            user.emailVerifyExpireAt < Date.now()
         ) {
             return res.status(400).json({
                 success: false,
@@ -960,8 +960,8 @@ const verifyEmailToken = async (req, res) => {
         user.isVerified = true;
         user.isAccountVerified = true;
 
-        user.emailVerifyToken = "";
-        user.emailVerifyTokenExpireAt = 0;
+        user.emailVerifyOtp = "";
+        user.emailVerifyExpireAt = 0;
 
         await user.save();
 
@@ -994,8 +994,7 @@ const verifyEmailToken = async (req, res) => {
 const verifyEmailLink = async (req, res) => {
     const { email, token, response } = req.query;
 
-    // When called from the website VerifyEmail screen,
-    // return JSON instead of redirecting.
+    // Mobile / API requests can explicitly request JSON.
     const wantsJson = response === "json";
 
     const sendResult = (
@@ -1004,6 +1003,7 @@ const verifyEmailLink = async (req, res) => {
         title,
         message
     ) => {
+        // Used by mobile VerifyEmail screen
         if (wantsJson) {
             return res.status(status).json({
                 success,
@@ -1011,7 +1011,7 @@ const verifyEmailLink = async (req, res) => {
             });
         }
 
-        // Open mobile app when opened directly on mobile.
+        // Direct link opened from an email on mobile browser
         if (isMobileDevice(req)) {
             return res
                 .status(status)
@@ -1068,10 +1068,12 @@ const verifyEmailLink = async (req, res) => {
             );
         }
 
+        // IMPORTANT:
+        // These must match the fields used inside createVerificationLink()
         if (
-            !user.emailVerifyToken ||
-            !user.emailVerifyTokenExpireAt ||
-            user.emailVerifyTokenExpireAt < Date.now()
+            !user.emailVerifyOtp ||
+            !user.emailVerifyExpireAt ||
+            user.emailVerifyExpireAt < Date.now()
         ) {
             return sendResult(
                 400,
@@ -1081,10 +1083,37 @@ const verifyEmailLink = async (req, res) => {
             );
         }
 
-        const tokenMatches = await bcrypt.compare(
-            String(token),
-            String(user.emailVerifyToken)
+        // createVerificationLink() stores SHA-256 hash of raw token,
+        // so hash the submitted token the same way.
+        const submittedTokenHash = hashToken(
+            String(token).trim()
         );
+
+        const storedHash = String(user.emailVerifyOtp);
+
+        let tokenMatches = false;
+
+        try {
+            const storedBuffer = Buffer.from(
+                storedHash,
+                "hex"
+            );
+
+            const submittedBuffer = Buffer.from(
+                submittedTokenHash,
+                "hex"
+            );
+
+            tokenMatches =
+                storedBuffer.length === submittedBuffer.length &&
+                crypto.timingSafeEqual(
+                    storedBuffer,
+                    submittedBuffer
+                );
+
+        } catch (error) {
+            tokenMatches = false;
+        }
 
         if (!tokenMatches) {
             return sendResult(
@@ -1095,10 +1124,13 @@ const verifyEmailLink = async (req, res) => {
             );
         }
 
+        // Verification was actually successful
         user.isVerified = true;
         user.isAccountVerified = true;
-        user.emailVerifyToken = "";
-        user.emailVerifyTokenExpireAt = 0;
+
+        // Clear verification token
+        user.emailVerifyOtp = "";
+        user.emailVerifyExpireAt = 0;
 
         await user.save();
 
@@ -1118,7 +1150,10 @@ const verifyEmailLink = async (req, res) => {
         );
 
     } catch (error) {
-        console.error("Email verification error:", error);
+        console.error(
+            "Email verification error:",
+            error
+        );
 
         return sendResult(
             500,

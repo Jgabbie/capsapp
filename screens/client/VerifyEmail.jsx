@@ -44,30 +44,71 @@ export default function VerifyEmail() {
             try {
                 if (!token || !email) {
                     if (!isMounted) return;
+
                     setStatus('failed');
                     setMessage('Invalid verification link or missing credentials.');
                     setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
                     return;
                 }
 
-                const verifyUrl = `${API_BASE_URL}/users/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
-                const resp = await fetch(verifyUrl, { method: 'GET' });
+                const verifyUrl =
+                    `${API_BASE_URL}/users/auth/verify-email` +
+                    `?token=${encodeURIComponent(token)}` +
+                    `&email=${encodeURIComponent(email)}` +
+                    `&response=json`;
+
+                const resp = await fetch(verifyUrl, {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+
+                const data = await resp.json().catch(() => ({
+                    success: false,
+                    message: 'Invalid response from server.',
+                }));
 
                 if (!isMounted) return;
-                if (resp.ok) {
+
+                if (resp.ok && data.success === true) {
                     setStatus('success');
-                    setMessage('Your account has been successfully verified! You can now log in.');
-                    setTimeout(() => navigation.navigate('login'), 3500);
+
+                    setMessage(
+                        data.message ||
+                        'Your account has been successfully verified! You can now log in.'
+                    );
+
+                    setTimeout(() => {
+                        if (isMounted) {
+                            navigation.navigate('login');
+                        }
+                    }, 3500);
+
                 } else {
-                    const text = await resp.text();
                     setStatus('failed');
-                    setMessage(`Verification failed (Status Code: ${resp.status}).`);
-                    setDebugInfo(`API_BASE_URL: ${API_BASE_URL}\nResponse: ${text || 'No response body'}`);
+
+                    setMessage(
+                        data.message ||
+                        `Verification failed (Status Code: ${resp.status}).`
+                    );
+
+                    setDebugInfo(
+                        `API_BASE_URL: ${API_BASE_URL}\n` +
+                        `Status: ${resp.status}`
+                    );
                 }
+
             } catch (err) {
                 if (!isMounted) return;
+
                 setStatus('failed');
-                setMessage(err.message || 'An unexpected verification error occurred.');
+
+                setMessage(
+                    err.message ||
+                    'An unexpected verification error occurred.'
+                );
+
                 setDebugInfo(`API_BASE_URL: ${API_BASE_URL}`);
             }
         };
