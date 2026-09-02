@@ -525,7 +525,7 @@ export default function Profile() {
                 const response = await api.post(
                     "/users/auth/send-email-change-otp",
                     {
-                        email: originalData.email,
+                        newEmail: userData.email,
                     },
                     withUserHeader(user._id)
                 );

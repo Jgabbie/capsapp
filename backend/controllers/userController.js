@@ -6,7 +6,7 @@ import logAction from "../utils/logger.js";
 import { buildBrandedEmail } from "../utils/emailTemplate.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const getBackendBaseUrl = () => String(process.env.BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
+const getBackendBaseUrl = () => String(process.env.MOBILE_BACKEND_URL || process.env.API_URL || "http://localhost:5000").replace(/\/$/, "");
 const getFrontendBaseUrl = () => {
     return String(
         process.env.FRONTEND_URL ||
