@@ -24,5 +24,6 @@ router.post("/login-once", requireUser, userController.updateLoginOnce);
 router.post("/auth/send-email-change-otp", requireUser, userController.sendEmailChangeOtp);
 router.post("/auth/verify-email-change-otp", requireUser, userController.verifyEmailChangeOtp);
 router.post("/verify-email-token", userController.verifyEmailToken);
+router.get("/open-verify-email", userController.openVerifyEmail);
 
 export default router;

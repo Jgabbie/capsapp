@@ -118,10 +118,9 @@ const createVerificationLink = async (user) => {
     await user.save();
 
     const webVerifyLink =
-        `${getFrontendBaseUrl()}/verify-email` +
-        `?token=${rawToken}` +
-        `&email=${encodeURIComponent(user.email)}` +
-        `&source=mobile`;
+        `${getBackendBaseUrl()}/api/users/open-verify-email` +
+        `?token=${encodeURIComponent(rawToken)}` +
+        `&email=${encodeURIComponent(user.email)}`;
 
     const transporter = nodemailer.createTransport({
         host: "smtp-relay.brevo.com",
@@ -148,6 +147,51 @@ const createVerificationLink = async (user) => {
     return webVerifyLink;
 };
 
+const buildVerifyEmailRedirectHtml = (
+    email,
+    token,
+    fallbackUrl = getFrontendBaseUrl()
+) => {
+    const appUrl =
+        `travex://verify-email` +
+        `?token=${encodeURIComponent(token)}` +
+        `&email=${encodeURIComponent(email)}`;
+
+    const webUrl =
+        `${fallbackUrl}/verify-email` +
+        `?token=${encodeURIComponent(token)}` +
+        `&email=${encodeURIComponent(email)}`;
+
+    return `
+        <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Opening Travex...</title>
+            </head>
+
+            <body
+                style="
+                    text-align:center;
+                    padding-top:50px;
+                    font-family:sans-serif;
+                    color:#305797;
+                "
+            >
+                <h2>Opening Travex...</h2>
+                <p>Please wait while we open the verification screen.</p>
+
+                <script>
+                    window.location.href = ${JSON.stringify(appUrl)};
+
+                    setTimeout(() => {
+                        window.location.href = ${JSON.stringify(webUrl)};
+                    }, 2500);
+                </script>
+            </body>
+        </html>
+    `;
+};
+
 
 //generate login redirect HTML function
 const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUrl()) => `
@@ -166,6 +210,37 @@ const buildLoginRedirectHtml = (title, message, fallbackUrl = getFrontendLoginUr
         </body>
     </html>
 `;
+
+
+const openVerifyEmail = async (req, res) => {
+    const { email, token } = req.query;
+
+    if (!email || !token) {
+        return res.redirect(
+            302,
+            `${getFrontendBaseUrl()}/verify-email`
+        );
+    }
+
+    // Mobile device -> open VerifyEmail screen in Travex
+    if (isMobileDevice(req)) {
+        return res.send(
+            buildVerifyEmailRedirectHtml(
+                email,
+                token,
+                getFrontendBaseUrl()
+            )
+        );
+    }
+
+    // Desktop/Web -> open website VerifyEmail screen
+    const webUrl =
+        `${getFrontendBaseUrl()}/verify-email` +
+        `?token=${encodeURIComponent(token)}` +
+        `&email=${encodeURIComponent(email)}`;
+
+    return res.redirect(302, webUrl);
+};
 
 
 //send login OTP email function
@@ -419,21 +494,61 @@ const updateUser = async (req, res) => {
 
 const sendEmailChangeOtp = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { newEmail } = req.body;
+        const userId = req.userId;
 
-        if (!email) {
+        if (!userId) {
             return res.status(400).json({
                 success: false,
-                message: "Email is required"
+                message: "User ID is required"
             });
         }
 
-        const user = await User.findOne({ email });
+        if (!newEmail) {
+            return res.status(400).json({
+                success: false,
+                message: "New email is required"
+            });
+        }
+
+        const normalizedEmail = String(newEmail)
+            .trim()
+            .toLowerCase();
+
+        // Find logged-in user using the ID,
+        // NOT the new email because it isn't saved yet.
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
+            });
+        }
+
+        // Don't send OTP if it's actually the same email
+        if (
+            String(user.email).trim().toLowerCase() === normalizedEmail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "New email must be different from your current email"
+            });
+        }
+
+        // Check if another account already uses this email
+        const existingEmail = await User.findOne({
+            email: {
+                $regex: `^${escapeRegex(normalizedEmail)}$`,
+                $options: "i"
+            },
+            _id: { $ne: userId }
+        });
+
+        if (existingEmail) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
             });
         }
 
@@ -443,10 +558,14 @@ const sendEmailChangeOtp = async (req, res) => {
 
         const hashedOtp = await bcrypt.hash(otp, 10);
 
+        // Save OTP to the CURRENT user's account
         user.verifyOtp = hashedOtp;
         user.verifyOtpExpireAt = Date.now() + 60 * 1000;
         user.otpAttempts = 0;
         user.otpBlockedUntil = 0;
+
+        // Store the email that is being verified
+        user.pendingEmail = normalizedEmail;
 
         await user.save();
 
@@ -460,16 +579,18 @@ const sendEmailChangeOtp = async (req, res) => {
             }
         });
 
+        // IMPORTANT:
+        // Send OTP to the NEW email address
         await transporter.sendMail({
             from: `M&RC Travel and Tours <${process.env.SENDER_EMAIL}>`,
-            to: email,
-            subject: "M&RC Travel and Tours - Email Change OTP",
+            to: normalizedEmail,
+            subject: "M&RC Travel and Tours - Verify New Email",
             html: generateOTPEmailTemplate(otp, "verify")
         });
 
         return res.status(200).json({
             success: true,
-            message: "OTP sent to your current email address"
+            message: "OTP sent to your new email address"
         });
 
     } catch (error) {
@@ -482,23 +603,39 @@ const sendEmailChangeOtp = async (req, res) => {
     }
 };
 
+
 const verifyEmailChangeOtp = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { otp } = req.body;
+        const userId = req.userId;
 
-        if (!email || !otp) {
+        if (!userId) {
             return res.status(400).json({
                 success: false,
-                message: "Email and OTP are required"
+                message: "User ID is required"
             });
         }
 
-        const user = await User.findOne({ email });
+        if (!otp) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP is required"
+            });
+        }
+
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
+            });
+        }
+
+        if (!user.pendingEmail) {
+            return res.status(400).json({
+                success: false,
+                message: "No pending email change found"
             });
         }
 
@@ -508,7 +645,8 @@ const verifyEmailChangeOtp = async (req, res) => {
         ) {
             return res.status(429).json({
                 success: false,
-                message: "Too many incorrect OTP attempts. Try again in 5 minutes."
+                message:
+                    "Too many incorrect OTP attempts. Try again in 5 minutes."
             });
         }
 
@@ -519,7 +657,8 @@ const verifyEmailChangeOtp = async (req, res) => {
         ) {
             return res.status(400).json({
                 success: false,
-                message: "OTP has expired. Please request a new one."
+                message:
+                    "OTP has expired. Please request a new one."
             });
         }
 
@@ -529,7 +668,8 @@ const verifyEmailChangeOtp = async (req, res) => {
         );
 
         if (!otpMatches) {
-            user.otpAttempts = (user.otpAttempts || 0) + 1;
+            user.otpAttempts =
+                (user.otpAttempts || 0) + 1;
 
             if (user.otpAttempts >= 3) {
                 user.otpBlockedUntil =
@@ -546,6 +686,27 @@ const verifyEmailChangeOtp = async (req, res) => {
             });
         }
 
+        // Extra duplicate check before committing the email
+        const existingEmail = await User.findOne({
+            email: {
+                $regex: `^${escapeRegex(user.pendingEmail)}$`,
+                $options: "i"
+            },
+            _id: { $ne: user._id }
+        });
+
+        if (existingEmail) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
+        }
+
+        // OTP is valid.
+        // NOW change the user's email.
+        user.email = user.pendingEmail;
+
+        user.pendingEmail = "";
         user.verifyOtp = "";
         user.verifyOtpExpireAt = 0;
         user.otpAttempts = 0;
@@ -553,13 +714,25 @@ const verifyEmailChangeOtp = async (req, res) => {
 
         await user.save();
 
+        await logAction(
+            "EMAIL_CHANGED",
+            user._id,
+            {
+                "New Email": user.email
+            }
+        );
+
         return res.status(200).json({
             success: true,
-            message: "OTP verified successfully"
+            message: "Email verified and updated successfully",
+            email: user.email
         });
 
     } catch (error) {
-        console.error("Verify email change OTP error:", error);
+        console.error(
+            "Verify email change OTP error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
@@ -1130,6 +1303,7 @@ export {
     sendLoginOtp,
     verifyLoginOtp,
     redirectToApp,
+    openVerifyEmail,
     updateLoginOnce,
     checkPhoneNumberExists,
     sendEmailChangeOtp,

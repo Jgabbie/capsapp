@@ -449,7 +449,6 @@ export default function Profile() {
             const response = await api.post(
                 "/users/auth/verify-email-change-otp",
                 {
-                    email: originalData.email,
                     otp
                 },
                 withUserHeader(user._id)
@@ -481,7 +480,7 @@ export default function Profile() {
             const response = await api.post(
                 "/users/auth/send-email-change-otp",
                 {
-                    email: originalData.email,
+                    newEmail: userData.email,
                 },
                 withUserHeader(user._id)
             );
@@ -491,7 +490,7 @@ export default function Profile() {
                 setErrorOtp("");
                 setOtpTimer(60);
 
-                showMessage("A new OTP has been sent to your current email.");
+                showMessage("A new OTP has been sent to your new email.");
             }
         } catch (error) {
             console.error(
