@@ -1147,7 +1147,11 @@ export default function VisaProgress() {
     const hasDeliveryDate = Boolean(String(application?.deliveryDate || '').trim()) && String(application?.deliveryDate || '').toLowerCase() !== 'to be announced';
     const isDeliveryFeeUnavailable = deliveryFeeAmount <= 0 && !hasDeliveryDate;
     const isApplicationPaymentDisabled = servicePendingManualPayment;
-    const isDeliveryPaymentDisabled = deliveryFeePendingManualPayment;
+    const isDeliveryPaymentDisabled =
+        deliveryFeePendingManualPayment ||
+        isDeliveryFeeUnavailable ||
+        creatingPayment ||
+        paymentLoading;
     const isPenaltyPaymentDisabled = pendingManualPayment;
 
 
@@ -1279,8 +1283,19 @@ export default function VisaProgress() {
             return;
         }
 
-        if (isDeliveryPayment && deliveryFeeAmount <= 0) {
-            showAlertModal('Warning', 'Delivery fee is not available yet. Please wait for admin to send it.');
+        if (isDeliveryPayment && isDeliveryFeePaid) {
+            showAlertModal(
+                'Info',
+                'The delivery fee has already been paid.'
+            );
+            return;
+        }
+
+        if (isDeliveryPayment && isDeliveryFeeUnavailable) {
+            showAlertModal(
+                'Warning',
+                'Delivery fee is not available yet. Please wait for admin to send it.'
+            );
             return;
         }
 
@@ -2767,13 +2782,40 @@ export default function VisaProgress() {
                 {/* DELIVERY FEE */}
                 {isDeliveryFeeStage && !isDeliveryFeePaid && (
                     <View style={VisaProgressStyle.card}>
-                        <Text style={VisaProgressStyle.cardTitle}>Application Payment</Text>
-                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>Kindly pay the delivery fee of PHP {application.deliveryFee}.</Text>
-                        {isDeliveryPaymentDisabled && (
-                            <Text style={{ color: '#b45309', marginBottom: 12, fontSize: 13, fontFamily: 'Montserrat_600SemiBold' }}>
-                                A pending payment transaction already exists for this application.
+                        <Text style={VisaProgressStyle.cardTitle}>Delivery Fee Payment</Text>
+                        <Text style={{ color: '#6b7280', marginBottom: 12, fontSize: 13 }}>
+                            {isDeliveryFeeUnavailable
+                                ? 'The delivery fee is not available yet. Please wait for M&RC to provide it.'
+                                : `Kindly pay the delivery fee of PHP ${deliveryFeeAmount.toLocaleString()}.`}
+                        </Text>
+
+                        {deliveryFeePendingManualPayment && (
+                            <Text
+                                style={{
+                                    color: '#b45309',
+                                    marginBottom: 12,
+                                    fontSize: 13,
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                }}
+                            >
+                                A pending manual delivery-fee payment already exists.
+                                Please wait for verification.
                             </Text>
                         )}
+
+                        {isDeliveryFeeUnavailable && (
+                            <Text
+                                style={{
+                                    color: '#b45309',
+                                    marginBottom: 12,
+                                    fontSize: 13,
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                }}
+                            >
+                                Payment options will be enabled once the delivery fee is available.
+                            </Text>
+                        )}
+
 
                         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                             <TouchableOpacity

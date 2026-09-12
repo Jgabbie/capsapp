@@ -142,6 +142,26 @@ export default function BookingInvoice({ route, navigation }) {
         }));
     };
 
+    const handleGotIt = () => {
+        const isResubmissionSuccess =
+            alertModal.type === 'success' &&
+            alertModal.message === 'Documents Resubmitted successfully.';
+
+        // Close modal
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+
+        // Reload BookingInvoice only after document resubmission
+        if (isResubmissionSuccess) {
+            navigation.replace(route.name, {
+                booking: booking,
+                source: source,
+            });
+        }
+    };
+
 
 
     const bookingDetails = booking?.bookingDetails || {};
@@ -2279,34 +2299,44 @@ export default function BookingInvoice({ route, navigation }) {
                                     </View>
 
                                     <View style={BookingInvoiceStyle.docGrid}>
-                                        {traveler.passportFile ? (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
-                                                    <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
-                                                        View Passport / ID
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        ) : (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
-                                            </View>
+                                        {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                            traveler.passportFile ? (
+                                                <View style={BookingInvoiceStyle.docCol}>
+                                                    <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
+                                                    {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                                        <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
+                                                            <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                                View Passport / ID
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
+                                            ) : (
+                                                <View style={BookingInvoiceStyle.docCol}>
+                                                    <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
+                                                </View>
+                                            )
                                         )}
 
-                                        {traveler.photoFile ? (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
-                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
-                                                    <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
-                                                        View Photo
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        ) : (
-                                            <View style={BookingInvoiceStyle.docCol}>
-                                                <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
-                                            </View>
+                                        {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                            traveler.photoFile ? (
+
+                                                <View style={BookingInvoiceStyle.docCol}>
+                                                    <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
+
+                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
+                                                        <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                            View Photo
+                                                        </Text>
+                                                    </TouchableOpacity>
+
+                                                </View>
+
+                                            ) : (
+                                                <View style={BookingInvoiceStyle.docCol}>
+                                                    <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
+                                                </View>
+                                            )
                                         )}
                                     </View>
 
@@ -2841,7 +2871,7 @@ export default function BookingInvoice({ route, navigation }) {
                                 alignItems: 'center',
                             }}
                             activeOpacity={0.8}
-                            onPress={closeAlertModal}
+                            onPress={handleGotIt}
                         >
                             <Text
                                 style={{

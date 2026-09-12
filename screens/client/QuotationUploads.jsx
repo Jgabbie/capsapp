@@ -120,7 +120,7 @@ export default function QuotationUploads({ route, navigation }) {
     //use fullQuotation if available, otherwise fall back to passed quotation
     const activeQuotation = fullQuotation || quotation;
 
-    const counts = activeQuotation?.travelerCounts || { adult: 1, child: 0, infant: 0 };
+    const counts = activeQuotation?.quotationDetails?.travelers || { adult: 1, child: 0, infant: 0 };
     const totalTravelers = counts.adult + counts.child + counts.infant;
     const bookingType = activeQuotation?.bookingType || 'Solo Booking';
 
