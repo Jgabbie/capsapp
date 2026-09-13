@@ -278,19 +278,92 @@ export default function BookingInvoice({ route, navigation }) {
     const formatPesoNumber = (value) => `${(Number(value) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const formatPesoDisplay = (value) => `${formatPesoNumber(value)} PHP`;
 
-    const totalPrice = Math.round(Number(booking?.totalPrice || bookingDetails?.totalPrice || 0) * 100) / 100;
-    const computedPaidFromTxns = Math.round(transactions
-        .filter(txn => txn.status === "Paid" || txn.status === "Successful" || txn.status === "Fully Paid")
-        .reduce((sum, txn) => sum + Number(txn.amount || 0), 0) * 100) / 100;
+    const totalPrice =
+        Math.round(
+            Number(
+                booking?.totalPrice ||
+                bookingDetails?.totalPrice ||
+                0
+            ) * 100
+        ) / 100;
 
-    const isPaidStatus = booking?.status === "Fully Paid" || booking?.status === "Successful" || rawBooking?.status === "Fully Paid" || rawBooking?.computedStatus === "Fully Paid";
-    const fallbackPaidAmount = isPaidStatus ? totalPrice : Number(booking?.paidAmount || rawBooking?.paidAmount || 0);
 
-    const paidAmount = transactions.length > 0 ? computedPaidFromTxns : fallbackPaidAmount;
-    const remainingBalance = Math.max(totalPrice - paidAmount, 0);
+    // Late payment penalty stored by backend
+    const persistedPenalty = Math.max(
+        Number(
+            booking?.paymentPenaltyTotal ??
+            rawBooking?.paymentPenaltyTotal ??
+            0
+        ),
+        0
+    );
 
-    const transactionStatus = (transactions.length === 0 && paidAmount === 0)
-        ? "Not Paid" : (paidAmount >= totalPrice ? "Fully Paid" : "Partial");
+
+    // Booking total including all penalties that were assessed
+    const totalPriceWithPenalty =
+        totalPrice + persistedPenalty;
+
+
+    const successfulTransactions = transactions
+        .filter(
+            txn =>
+                txn.status === "Paid" ||
+                txn.status === "Successful" ||
+                txn.status === "Fully Paid"
+        )
+        .sort(
+            (a, b) =>
+                dayjs(a.createdAt).valueOf() -
+                dayjs(b.createdAt).valueOf()
+        );
+
+
+    const computedPaidFromTxns =
+        Math.round(
+            successfulTransactions.reduce(
+                (sum, txn) =>
+                    sum + Number(txn.amount || 0),
+                0
+            ) * 100
+        ) / 100;
+
+
+    const isPaidStatus =
+        booking?.status === "Fully Paid" ||
+        booking?.status === "Successful" ||
+        rawBooking?.status === "Fully Paid" ||
+        rawBooking?.computedStatus === "Fully Paid";
+
+
+    const fallbackPaidAmount = isPaidStatus
+        ? totalPriceWithPenalty
+        : Number(
+            booking?.paidAmount ||
+            rawBooking?.paidAmount ||
+            0
+        );
+
+
+    const paidAmount =
+        transactions.length > 0
+            ? computedPaidFromTxns
+            : fallbackPaidAmount;
+
+
+    // IMPORTANT:
+    // Penalty is part of the balance
+    const remainingBalance = Math.max(
+        totalPriceWithPenalty - paidAmount,
+        0
+    );
+
+
+    const transactionStatus =
+        transactions.length === 0 && paidAmount === 0
+            ? "Not Paid"
+            : paidAmount >= totalPriceWithPenalty
+                ? "Fully Paid"
+                : "Partial";
     const hasPendingTransaction = transactions.some(
         (txn) => String(txn?.status || "").trim().toLowerCase() === "pending"
     );
@@ -300,7 +373,7 @@ export default function BookingInvoice({ route, navigation }) {
     const getPaymentStatus = () => {
         // For Balance section: Always show payment status, not cancellation status
         // Determine payment status based on amounts (ignore Cancelled/Cancellation Requested)
-        if (transactionStatus === "Fully Paid" || transactionStatus === "Paid" || paidAmount >= totalPrice) return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
+        if (transactionStatus === "Fully Paid" || transactionStatus === "Paid" || paidAmount >= totalPriceWithPenalty) return { label: "Fully Paid", color: "#389e0d", bg: "#f6ffed" };
         if (transactionStatus === "Not Paid" || paidAmount === 0) return { label: "Not Paid", color: "#cf1322", bg: "#fff1f0" };
         return { label: "Balance Due", color: "#d48806", bg: "#fffbe6" };
     };
@@ -632,12 +705,107 @@ export default function BookingInvoice({ route, navigation }) {
     }
 
     // Use runInstallmentLogic for payment schedule calculation
-    const { paymentSchedule, nextUnpaid } = runInstallmentLogic(
+    // Generate the ORIGINAL schedule first.
+    // Penalty must NOT change the base installment amounts.
+    const baseInstallmentData = runInstallmentLogic(
         previewTotalAmount,
         bookingDetails,
-        paidAmount,
+        0,
         issueDate
     );
+
+
+    // Determine how much should have been paid WITHOUT penalties.
+    const expectedBasePaid = successfulTransactions.reduce(
+        (sum, txn, transactionIndex) => {
+
+            const rawInstallmentIndex =
+                Number(txn?.installmentIndex);
+
+            const scheduleIndex =
+                Number.isInteger(rawInstallmentIndex) &&
+                    rawInstallmentIndex >= 0
+                    ? rawInstallmentIndex
+                    : transactionIndex;
+
+            const scheduledPayment =
+                baseInstallmentData.paymentSchedule?.[
+                scheduleIndex
+                ];
+
+            if (!scheduledPayment) {
+                return sum;
+            }
+
+            return (
+                sum +
+                Number(scheduledPayment.amount || 0)
+            );
+        },
+        0
+    );
+
+
+    // Example:
+    //
+    // Expected payment = ₱1,000
+    // Actual payment   = ₱1,200
+    //
+    // Therefore ₱200 of the penalty was already paid.
+    const paidPenaltyAmount =
+        transactions.length > 0
+            ? Math.min(
+                persistedPenalty,
+                Math.max(
+                    paidAmount - expectedBasePaid,
+                    0
+                )
+            )
+            : 0;
+
+
+    // Only the UNPAID portion of the penalty
+    // should be added to the next payment.
+    const outstandingPenalty = Math.max(
+        persistedPenalty - paidPenaltyAmount,
+        0
+    );
+
+
+    // Remove penalty payments when checking
+    // which installment has actually been completed.
+    const paidBaseAmount = Math.max(
+        paidAmount - paidPenaltyAmount,
+        0
+    );
+
+
+    // Now calculate the real next installment.
+    const {
+        paymentSchedule,
+        nextUnpaid
+    } = runInstallmentLogic(
+        previewTotalAmount,
+        bookingDetails,
+        paidBaseAmount,
+        issueDate
+    );
+
+
+    // Amount the customer should pay RIGHT NOW
+    const amountToPayNow =
+        Math.round(
+            (
+                paymentMode === "Deposit"
+                    ? (
+                        nextUnpaid
+                            ? Number(nextUnpaid.amount || 0) +
+                            outstandingPenalty
+                            : remainingBalance
+                    )
+                    : remainingBalance
+            ) * 100
+        ) / 100;
 
     const lastScheduleItem = paymentSchedule.length ? paymentSchedule[paymentSchedule.length - 1] : null;
     const dueDateDisplay = lastScheduleItem?.date || fallbackDueDateDisplay;
@@ -870,7 +1038,7 @@ export default function BookingInvoice({ route, navigation }) {
                     return;
                 }
 
-                const amountToCharge = nextUnpaid ? Number(nextUnpaid.amount) : remainingBalance;
+                const amountToCharge = amountToPayNow;
                 const installmentIndex = nextUnpaid?.index ?? null;
 
                 const base64Image = `data:${proofImage.mimeType || 'image/jpeg'};base64,${proofImage.base64}`;
@@ -892,7 +1060,7 @@ export default function BookingInvoice({ route, navigation }) {
 
             } else {
                 // PayMongo / online - charge only the next unpaid installment
-                const amountToCharge = nextUnpaid ? Number(nextUnpaid.amount) : remainingBalance;
+                const amountToCharge = amountToPayNow;
                 const installmentIndex = nextUnpaid?.index ?? null;
 
                 const successDeepLink = Linking.createURL('paymentsuccess', { queryParams: { reference: reference, mode: 'online' } });
@@ -1888,17 +2056,62 @@ export default function BookingInvoice({ route, navigation }) {
                     </td>
                     <td style="width: 50%; vertical-align: top;">
                         <table style="width: 100%; border-collapse: collapse;">
+                            ${persistedPenalty > 0 ? `
+                                <tr class="total-row">
+                                    <td>ORIGINAL PRICE</td>
+                                    <td class="right">
+                                        PHP ${formatPesoNumber(previewTotalAmount)}
+                                    </td>
+                                </tr>
+
+                                <tr class="total-row">
+                                    <td style="color: #AD4E00; font-weight: bold;">
+                                        LATE PAYMENT PENALTY
+                                    </td>
+
+                                    <td
+                                        class="right"
+                                        style="color: #B91C1C; font-weight: bold;"
+                                    >
+                                        + PHP ${formatPesoNumber(persistedPenalty)}
+                                    </td>
+                                </tr>
+                            ` : ''}
+
                             <tr class="total-row">
-                                <td style="font-weight: bold;">TOTAL PRICE</td>
-                                <td class="right" style="font-weight: bold;">PHP ${formatPesoNumber(previewTotalAmount)}</td>
+                                <td style="font-weight: bold;">
+                                    TOTAL PRICE
+                                </td>
+
+                                <td
+                                    class="right"
+                                    style="font-weight: bold;"
+                                >
+                                    PHP ${formatPesoNumber(totalPriceWithPenalty)}
+                                </td>
                             </tr>
+
                             <tr class="total-row">
-                                <td style="font-weight: bold;">PAID TO DATE</td>
-                                <td class="right" style="font-weight: bold;">PHP ${formatPesoNumber(paidAmount)}</td>
+                                <td style="font-weight: bold;">
+                                    PAID TO DATE
+                                </td>
+
+                                <td
+                                    class="right"
+                                    style="font-weight: bold;"
+                                >
+                                    PHP ${formatPesoNumber(paidAmount)}
+                                </td>
                             </tr>
+
                             <tr class="total-row final">
-                                <td class="remaining">REMAINING BAL.</td>
-                                <td class="right remaining">PHP ${formatPesoNumber(Math.max(previewTotalAmount - paidAmount, 0))}</td>
+                                <td class="remaining">
+                                    REMAINING BAL.
+                                </td>
+
+                                <td class="right remaining">
+                                    PHP ${formatPesoNumber(remainingBalance)}
+                                </td>
                             </tr>
                         </table>
                         <div class="thank-you">THANK YOU.</div>
@@ -2035,7 +2248,25 @@ export default function BookingInvoice({ route, navigation }) {
                         <View style={BookingInvoiceStyle.statsRow}>
                             <View style={BookingInvoiceStyle.statCard}>
                                 <Text style={BookingInvoiceStyle.statLabel}>Total Price</Text>
-                                <Text style={BookingInvoiceStyle.statAmount}>{formatCurrency(totalPrice)}</Text>
+                                <Text style={BookingInvoiceStyle.statAmount}>
+                                    {formatCurrency(totalPriceWithPenalty)}
+                                </Text>
+
+                                {persistedPenalty > 0 && (
+                                    <Text
+                                        style={[
+                                            BookingInvoiceStyle.statLabel,
+                                            {
+                                                marginTop: 6,
+                                                color: '#b91c1c',
+                                            }
+                                        ]}
+                                    >
+                                        Late Payment Penalty:
+                                        {' +'}
+                                        {formatCurrency(persistedPenalty)}
+                                    </Text>
+                                )}
                             </View>
                             <View style={BookingInvoiceStyle.statCard}>
                                 <Text style={BookingInvoiceStyle.statLabel}>Paid Amount</Text>
@@ -2213,7 +2444,10 @@ export default function BookingInvoice({ route, navigation }) {
                             <View style={BookingInvoiceStyle.checkoutSection}>
                                 <Text style={BookingInvoiceStyle.checkoutTitle}>Amount to Pay</Text>
                                 <Text style={BookingInvoiceStyle.checkoutAmount}>
-                                    {hasPendingTransaction ? 'Pending Payments...' : formatCurrency(nextUnpaid ? nextUnpaid.amount : remainingBalance)}
+                                    {hasPendingTransaction
+                                        ? 'Pending Payments...'
+                                        : formatCurrency(amountToPayNow)
+                                    }
                                 </Text>
 
                                 <TouchableOpacity
@@ -2726,9 +2960,56 @@ export default function BookingInvoice({ route, navigation }) {
                                         <Text style={PaymentStyle.invMutedText}>ACCOUNT NUMBER: 006830132692</Text>
                                     </View>
                                     <View style={[PaymentStyle.invTotalContainer, { flex: 1.5 }]}>
+                                        {persistedPenalty > 0 && (
+                                            <>
+                                                <View style={PaymentStyle.invTotalRow}>
+                                                    <Text style={PaymentStyle.invTotalLabel}>
+                                                        ORIGINAL PRICE
+                                                    </Text>
+
+                                                    <Text style={PaymentStyle.invTotalValue}>
+                                                        PHP {formatPesoNumber(previewTotalAmount)}
+                                                    </Text>
+                                                </View>
+
+                                                <View
+                                                    style={[
+                                                        PaymentStyle.invTotalRow,
+                                                        {
+                                                            borderTopWidth: 0,
+                                                            backgroundColor: '#fff7e6',
+                                                        }
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            PaymentStyle.invTotalLabel,
+                                                            { color: '#ad4e00' }
+                                                        ]}
+                                                    >
+                                                        LATE PAYMENT PENALTY
+                                                    </Text>
+
+                                                    <Text
+                                                        style={[
+                                                            PaymentStyle.invTotalValue,
+                                                            { color: '#b91c1c' }
+                                                        ]}
+                                                    >
+                                                        + PHP {formatPesoNumber(persistedPenalty)}
+                                                    </Text>
+                                                </View>
+                                            </>
+                                        )}
+
                                         <View style={PaymentStyle.invTotalRow}>
-                                            <Text style={PaymentStyle.invTotalLabel}>TOTAL PRICE</Text>
-                                            <Text style={PaymentStyle.invTotalValue}>PHP {formatPesoNumber(previewTotalAmount)}</Text>
+                                            <Text style={PaymentStyle.invTotalLabel}>
+                                                TOTAL PRICE
+                                            </Text>
+
+                                            <Text style={PaymentStyle.invTotalValue}>
+                                                PHP {formatPesoNumber(totalPriceWithPenalty)}
+                                            </Text>
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { borderTopWidth: 0 }]}>
                                             <Text style={PaymentStyle.invTotalLabel}>PAID TO DATE</Text>
@@ -2736,7 +3017,7 @@ export default function BookingInvoice({ route, navigation }) {
                                         </View>
                                         <View style={[PaymentStyle.invTotalRow, { backgroundColor: '#f4f6f8', paddingHorizontal: 4, paddingVertical: 10 }]}>
                                             <Text style={[PaymentStyle.invTotalLabel, { color: '#b91c1c' }]}>REMAINING BAL.</Text>
-                                            <Text style={[PaymentStyle.invTotalValue, { color: '#b91c1c' }]}>PHP {formatPesoNumber(Math.max(previewTotalAmount - paidAmount, 0))}</Text>
+                                            PHP {formatPesoNumber(remainingBalance)}
                                         </View>
                                         <Text style={[PaymentStyle.invThankYou, { marginTop: 5 }]}>THANK YOU.</Text>
                                     </View>

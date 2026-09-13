@@ -72,10 +72,23 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const packageName = quotation?.packageId?.packageName || 'N/A'
     const totalAmount = travelDetails?.totalPrice || 0;
 
+    const travelerCounts = useMemo(() => {
+        const travelers = travelDetails?.travelers || {};
+
+        return {
+            adult: Number(travelers.adult) || 0,
+            child: Number(travelers.child) || 0,
+            infant: Number(travelers.infant) || 0,
+        };
+    }, [travelDetails?.travelers]);
+
     const travelerTotal = useMemo(() => {
-        const counts = travelDetails.travelers;
-        return counts.adult + counts.child + counts.infant;
-    }, [quotation]);
+        return (
+            travelerCounts.adult +
+            travelerCounts.child +
+            travelerCounts.infant
+        );
+    }, [travelerCounts]);
 
 
     //fetch invoice number
@@ -219,7 +232,23 @@ export default function QuotationPaymentMode({ route, navigation }) {
     const lastInstallmentDate = scheduleData.schedule.length > 0 ? dayjs(scheduleData.schedule[scheduleData.schedule.length - 1].date) : dayjs();
     const dueDateDisplay = paymentType === 'deposit' ? lastInstallmentDate : issueDate;
     const customerName = leadGuestInfo?.fullName || `${user?.firstname || ''} ${user?.lastname || ''}`.trim() || 'Customer';
-    const ratePerPax = travelerTotal > 0 ? totalAmount / travelerTotal : totalAmount;
+    const travelerRows = [
+        {
+            type: 'Adult',
+            quantity: travelerCounts.adult,
+            rate: Number(travelDetails?.totalRate) || 0,
+        },
+        {
+            type: 'Child',
+            quantity: travelerCounts.child,
+            rate: Number(travelDetails?.totalChildRate) || 0,
+        },
+        {
+            type: 'Infant',
+            quantity: travelerCounts.infant,
+            rate: Number(travelDetails?.totalInfantRate) || 0,
+        },
+    ].filter((traveler) => traveler.quantity > 0);
     const displayTravelDate = quotation?.selectedDate ? quotation.selectedDate : (quotation?.travelDate?.startDate ? `${dayjs(quotation.travelDate.startDate).format("MMM D, YYYY")} - ${dayjs(quotation.travelDate.endDate).format("MMM D, YYYY")}` : 'TBD');
 
     return (
@@ -407,14 +436,80 @@ export default function QuotationPaymentMode({ route, navigation }) {
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>RATE</Text>
                                         <Text style={[QuotationPaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>AMOUNT</Text>
                                     </View>
-                                    <View style={QuotationPaymentStyle.invTableRow}>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5 }]}>{issueDate.format('MM/DD/YYYY')}</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5 }]}>Adult</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 3 }]} numberOfLines={2}>{packageName}</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 1, textAlign: 'center' }]}>{travelerTotal}</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 1.5, textAlign: 'right' }]}>PHP {formatPesoNumber(ratePerPax)}</Text>
-                                        <Text style={[QuotationPaymentStyle.invCell, { flex: 2, textAlign: 'right' }]}>PHP {formatPesoNumber(totalAmount)}</Text>
-                                    </View>
+                                    {travelerRows.map((traveler) => {
+                                        const rowAmount = traveler.rate * traveler.quantity;
+
+                                        return (
+                                            <View
+                                                key={traveler.type}
+                                                style={QuotationPaymentStyle.invTableRow}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        { flex: 1.5 }
+                                                    ]}
+                                                >
+                                                    {issueDate.format('MM/DD/YYYY')}
+                                                </Text>
+
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        { flex: 1.5 }
+                                                    ]}
+                                                >
+                                                    {traveler.type}
+                                                </Text>
+
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        { flex: 3 }
+                                                    ]}
+                                                    numberOfLines={2}
+                                                >
+                                                    {packageName}
+                                                </Text>
+
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        {
+                                                            flex: 1,
+                                                            textAlign: 'center'
+                                                        }
+                                                    ]}
+                                                >
+                                                    {traveler.quantity}
+                                                </Text>
+
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        {
+                                                            flex: 1.5,
+                                                            textAlign: 'right'
+                                                        }
+                                                    ]}
+                                                >
+                                                    PHP {formatPesoNumber(traveler.rate)}
+                                                </Text>
+
+                                                <Text
+                                                    style={[
+                                                        QuotationPaymentStyle.invCell,
+                                                        {
+                                                            flex: 2,
+                                                            textAlign: 'right'
+                                                        }
+                                                    ]}
+                                                >
+                                                    PHP {formatPesoNumber(rowAmount)}
+                                                </Text>
+                                            </View>
+                                        );
+                                    })}
                                 </View>
 
                                 <View style={QuotationPaymentStyle.invFooter}>

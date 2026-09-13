@@ -251,10 +251,16 @@ export default function QuotationPaymentMethod({ route, navigation }) {
 
             else {
                 // New booking flow (same as PaymentMethod copy)
-                const safeAdultCount = parseInt(travelDetails?.adult) || (passengers ? passengers.length : 1);
-                const safeChildCount = parseInt(travelDetails?.child) || 0;
-                const safeInfantCount = parseInt(travelDetails?.infant) || 0;
-                const calculatedTravelersCount = safeAdultCount + safeChildCount + safeInfantCount;
+                const quotationTravelers = travelDetails?.travelers || {};
+
+                const safeAdultCount = Number(quotationTravelers.adult) || 0;
+                const safeChildCount = Number(quotationTravelers.child) || 0;
+                const safeInfantCount = Number(quotationTravelers.infant) || 0;
+
+                const calculatedTravelersCount =
+                    safeAdultCount +
+                    safeChildCount +
+                    safeInfantCount;
 
                 const depositAmount = (travelDetails.totalDeposit || 0) * calculatedTravelersCount;
 
