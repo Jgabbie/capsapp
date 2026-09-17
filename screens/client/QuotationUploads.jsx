@@ -371,11 +371,351 @@ export default function QuotationUploads({ route, navigation }) {
         }
     };
 
-    const currentYear = new Date().getFullYear();
-    const maxBirthDate = new Date();
-    const minExpiryYear = currentYear === 2026 ? 2027 : currentYear + 1;
-    const minExpiryDate = new Date(minExpiryYear, 0, 1);
+    // Allow passport expiry dates starting today.
+    // Validation below determines whether the passport is valid for travel.
+    const minExpiryDate = dayjs().startOf('day').toDate();
 
+
+    // Get quotation travel start date.
+    // Handles dates such as:
+    // "February 16, 2027 - February 20, 2027"
+    const travelStartDate = useMemo(() => {
+
+        const monthMap = {
+            jan: 1,
+            january: 1,
+
+            feb: 2,
+            february: 2,
+
+            mar: 3,
+            march: 3,
+
+            apr: 4,
+            april: 4,
+
+            may: 5,
+
+            jun: 6,
+            june: 6,
+
+            jul: 7,
+            july: 7,
+
+            aug: 8,
+            august: 8,
+
+            sep: 9,
+            sept: 9,
+            september: 9,
+
+            oct: 10,
+            october: 10,
+
+            nov: 11,
+            november: 11,
+
+            dec: 12,
+            december: 12
+        };
+
+
+        const parseTravelDateValue = (value) => {
+
+            if (!value) {
+                return null;
+            }
+
+
+            // ARRAY
+            if (Array.isArray(value)) {
+
+                for (const item of value) {
+
+                    const parsed =
+                        parseTravelDateValue(item);
+
+                    if (parsed) {
+                        return parsed;
+                    }
+                }
+
+                return null;
+            }
+
+
+            // OBJECT
+            if (typeof value === 'object') {
+
+                const possibleValues = [
+                    value.startDate,
+                    value.start,
+                    value.from,
+
+                    value.date,
+
+                    value.travelDate,
+                    value.travelDates,
+
+                    value.preferredDate,
+                    value.preferredDates,
+
+                    value.selectedDate,
+                    value.departureDate
+                ];
+
+
+                for (const candidate of possibleValues) {
+
+                    const parsed =
+                        parseTravelDateValue(
+                            candidate
+                        );
+
+                    if (parsed) {
+                        return parsed;
+                    }
+                }
+
+
+                return null;
+            }
+
+
+            // STRING ONLY FROM HERE
+            if (typeof value !== 'string') {
+                return null;
+            }
+
+
+            let dateText =
+                value.trim();
+
+
+            if (!dateText) {
+                return null;
+            }
+
+
+            const rangeParts =
+                dateText.split(
+                    /\s[-–—]\s|\s+to\s+/i
+                );
+
+
+            dateText =
+                rangeParts[0].trim();
+
+            const isoMatch =
+                dateText.match(
+                    /^(\d{4})-(\d{1,2})-(\d{1,2})/
+                );
+
+
+            if (isoMatch) {
+
+                const year =
+                    Number(isoMatch[1]);
+
+                const month =
+                    Number(isoMatch[2]);
+
+                const day =
+                    Number(isoMatch[3]);
+
+
+                const isoDate =
+                    `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+
+                const parsedDate =
+                    dayjs(isoDate);
+
+
+                return parsedDate.isValid()
+                    ? parsedDate.startOf('day')
+                    : null;
+            }
+
+
+            const monthMatch =
+                dateText.match(
+                    /^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})$/
+                );
+
+
+            if (!monthMatch) {
+                return null;
+            }
+
+
+            const monthName =
+                monthMatch[1]
+                    .toLowerCase()
+                    .replace('.', '');
+
+
+            const day =
+                Number(monthMatch[2]);
+
+            const year =
+                Number(monthMatch[3]);
+
+
+            const month =
+                monthMap[monthName];
+
+
+            if (!month) {
+                return null;
+            }
+
+
+            const isoDate =
+                `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            const parsedDate =
+                dayjs(isoDate);
+
+
+            if (!parsedDate.isValid()) {
+                return null;
+            }
+
+
+            return parsedDate.startOf('day');
+        };
+
+
+        const candidates = [
+
+            activeQuotation
+                ?.quotationDetails
+                ?.travelDate,
+
+            activeQuotation
+                ?.quotationDetails
+                ?.preferredDate,
+
+            activeQuotation
+                ?.quotationDetails
+                ?.preferredDates,
+
+
+            activeQuotation
+                ?.travelDetails
+                ?.travelDate,
+
+            activeQuotation
+                ?.travelDetails
+                ?.preferredDate,
+
+            activeQuotation
+                ?.travelDetails
+                ?.preferredDates,
+
+
+            activeQuotation
+                ?.latestPdfRevision
+                ?.travelDetails
+                ?.travelDate,
+
+            activeQuotation
+                ?.latestPdfRevision
+                ?.travelDetails
+                ?.preferredDate,
+
+            activeQuotation
+                ?.latestPdfRevision
+                ?.travelDetails
+                ?.preferredDates,
+
+
+            activeQuotation?.travelDate,
+            activeQuotation?.preferredDate,
+            activeQuotation?.preferredDates
+        ];
+
+
+        for (const candidate of candidates) {
+
+            const parsed =
+                parseTravelDateValue(
+                    candidate
+                );
+
+
+            if (parsed) {
+                return parsed;
+            }
+        }
+        return null;
+
+    }, [activeQuotation]);
+
+
+    // Passport expiry validation
+    const getPassportExpiryStatus = (passportExpiry) => {
+
+        // Domestic package doesn't require passport
+        if (isDomestic) {
+            return 'valid';
+        }
+
+
+        if (!passportExpiry) {
+            return 'invalid';
+        }
+
+
+        if (!travelStartDate) {
+            return 'missing-travel-date';
+        }
+
+
+        const expiryDate =
+            dayjs(passportExpiry).startOf('day');
+
+
+        if (!expiryDate.isValid()) {
+            return 'invalid';
+        }
+
+
+        // HARD STOP:
+        // Passport expires BEFORE travel date
+        if (
+            expiryDate.isBefore(
+                travelStartDate,
+                'day'
+            )
+        ) {
+            return 'expired-before-travel';
+        }
+
+
+        // WARNING:
+        // Passport expires within six months
+        const sixMonthsAfterTravel =
+            travelStartDate.add(6, 'month');
+
+
+        if (
+            expiryDate.isBefore(
+                sixMonthsAfterTravel,
+                'day'
+            ) ||
+            expiryDate.isSame(
+                sixMonthsAfterTravel,
+                'day'
+            )
+        ) {
+            return 'within-six-months';
+        }
+
+
+        return 'valid';
+    };
 
     //get birthday limits for a specific traveler
     const getBirthdayLimits = (travelerIndex) => {
@@ -432,10 +772,116 @@ export default function QuotationUploads({ route, navigation }) {
     const confirmPickerDate = () => {
         if (!datePickerConfig.currentDate) return;
 
+        const {
+            index,
+            type,
+            currentDate
+        } = datePickerConfig;
+
+
+        // ==================================
+        // PASSPORT EXPIRY
+        // ==================================
+        if (type === 'passportExpiry') {
+
+            const status =
+                getPassportExpiryStatus(
+                    currentDate
+                );
+
+
+            // Travel date could not be found
+            if (
+                status === 'missing-travel-date'
+            ) {
+
+                setShowDatePicker(false);
+
+                showAlertModal(
+                    'Travel Date Error',
+                    'Unable to validate the passport expiry because the quotation travel date could not be determined.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            // Invalid expiry
+            if (status === 'invalid') {
+
+                setShowDatePicker(false);
+
+                showAlertModal(
+                    'Invalid Passport Expiry',
+                    `Please select a valid passport expiry date for Traveler ${index + 1}.`,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            // HARD STOP
+            if (
+                status ===
+                'expired-before-travel'
+            ) {
+
+                setShowDatePicker(false);
+
+                showAlertModal(
+                    'Invalid Passport Expiry',
+                    `Traveler ${index + 1}'s passport expires on ${dayjs(
+                        currentDate
+                    ).format(
+                        'MMMM D, YYYY'
+                    )}, before the travel date of ${travelStartDate.format(
+                        'MMMM D, YYYY'
+                    )}. You cannot proceed with this passport.`,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            // Save expiry
+            updateTraveler(
+                index,
+                type,
+                currentDate
+            );
+
+            setShowDatePicker(false);
+
+
+            // WARNING ONLY
+            if (
+                status === 'within-six-months'
+            ) {
+
+                showAlertModal(
+                    'Passport Expiry Warning',
+                    `Traveler ${index + 1}'s passport expires on ${dayjs(
+                        currentDate
+                    ).format(
+                        'MMMM D, YYYY'
+                    )}, which is within 6 months of the travel date. We recommend renewing the passport before the trip.`,
+                    'warning'
+                );
+            }
+
+
+            return;
+        }
+
+
+        // Normal birthdate handling
         updateTraveler(
-            datePickerConfig.index,
-            datePickerConfig.type,
-            datePickerConfig.currentDate
+            index,
+            type,
+            currentDate
         );
 
         setShowDatePicker(false);
@@ -471,7 +917,9 @@ export default function QuotationUploads({ route, navigation }) {
 
     const datePickerSubtitle = isBirthdatePicker
         ? `Choose a valid birthdate for this ${activeTravelerType.toLowerCase()}.`
-        : `The passport must expire on or after ${dayjs(activeMinimumDate).format('MMMM D, YYYY')}.`;
+        : travelStartDate
+            ? `Passport should remain valid for at least 6 months after the travel date (${travelStartDate.format('MMMM D, YYYY')}).`
+            : 'Choose the passport expiry date.';
 
 
     //validate passport number format function
@@ -559,6 +1007,88 @@ export default function QuotationUploads({ route, navigation }) {
             }
         }
 
+        if (!isDomestic) {
+
+            // Never bypass passport validation
+            // if travel date cannot be found.
+            if (!travelStartDate) {
+
+                showAlertModal(
+                    'Travel Date Error',
+                    'Unable to determine the quotation travel date. Please go back and review the quotation travel date.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            for (
+                let index = 0;
+                index < travelersData.length;
+                index++
+            ) {
+
+                const traveler =
+                    travelersData[index];
+
+
+                const status =
+                    getPassportExpiryStatus(
+                        traveler.passportExpiry
+                    );
+
+
+                // HARD STOP
+                if (
+                    status ===
+                    'expired-before-travel'
+                ) {
+
+                    showAlertModal(
+                        'Passport Expiry Invalid',
+                        `Traveler ${index + 1}'s passport expires on ${dayjs(
+                            traveler.passportExpiry
+                        ).format(
+                            'MMMM D, YYYY'
+                        )}, before the travel date of ${travelStartDate.format(
+                            'MMMM D, YYYY'
+                        )}. Please renew the passport before proceeding.`,
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (status === 'invalid') {
+
+                    showAlertModal(
+                        'Invalid Passport Expiry',
+                        `Please select a valid passport expiry date for Traveler ${index + 1}.`,
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    status ===
+                    'missing-travel-date'
+                ) {
+
+                    showAlertModal(
+                        'Travel Date Error',
+                        'Unable to validate the passport because the quotation travel date could not be determined.',
+                        'error'
+                    );
+
+                    return;
+                }
+            }
+        }
+
         // Validate passport/valid ID and 2x2 photo uploads
         for (let index = 0; index < totalTravelers; index++) {
             const travelerUpload = uploads[index];
@@ -607,8 +1137,99 @@ export default function QuotationUploads({ route, navigation }) {
 
     //confirm continue function after verification
     const handleConfirmContinue = () => {
+
+        // FINAL PASSPORT VALIDATION
+        if (!isDomestic) {
+
+            if (!travelStartDate) {
+
+                setShowVerifyModal(false);
+
+                showAlertModal(
+                    'Travel Date Error',
+                    'Unable to validate passport expiry because the quotation travel date could not be determined.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            for (
+                let index = 0;
+                index < travelersData.length;
+                index++
+            ) {
+
+                const traveler =
+                    travelersData[index];
+
+
+                const status =
+                    getPassportExpiryStatus(
+                        traveler.passportExpiry
+                    );
+
+
+                // HARD STOP
+                if (
+                    status ===
+                    'expired-before-travel'
+                ) {
+
+                    setShowVerifyModal(false);
+
+                    showAlertModal(
+                        'Passport Expiry Invalid',
+                        `Traveler ${index + 1}'s passport expires on ${dayjs(
+                            traveler.passportExpiry
+                        ).format(
+                            'MMMM D, YYYY'
+                        )}, before the travel date of ${travelStartDate.format(
+                            'MMMM D, YYYY'
+                        )}. You cannot proceed with this passport.`,
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    status === 'invalid' ||
+                    status ===
+                    'missing-travel-date'
+                ) {
+
+                    setShowVerifyModal(false);
+
+                    showAlertModal(
+                        'Invalid Passport Expiry',
+                        `Please check Traveler ${index + 1}'s passport expiry date.`,
+                        'error'
+                    );
+
+                    return;
+                }
+            }
+        }
+
+
         setShowVerifyModal(false);
-        navigation.navigate("quotationform1", { quotation: activeQuotation, travelerUploads: uploads, travelersData });
+
+
+        navigation.navigate(
+            "quotationform1",
+            {
+                quotation:
+                    activeQuotation,
+
+                travelerUploads:
+                    uploads,
+
+                travelersData
+            }
+        );
     };
 
 
@@ -752,6 +1373,27 @@ export default function QuotationUploads({ route, navigation }) {
                                             </Text>
                                             <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
                                         </TouchableOpacity>
+
+                                        {t.passportExpiry &&
+                                            getPassportExpiryStatus(
+                                                t.passportExpiry
+                                            ) === 'within-six-months' && (
+
+                                                <Text
+                                                    style={{
+                                                        marginTop: 6,
+                                                        fontSize: 11,
+                                                        lineHeight: 16,
+                                                        color: '#d97706',
+                                                        fontFamily:
+                                                            'Montserrat_500Medium',
+                                                    }}
+                                                >
+                                                    Passport expires within 6 months
+                                                    of the travel date. Renewal is
+                                                    recommended.
+                                                </Text>
+                                            )}
                                     </View>
                                 </View>
                             )}

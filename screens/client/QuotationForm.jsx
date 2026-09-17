@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback } from "react-native";
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Pressable } from "react-native";
 import { Image } from 'expo-image';
 import { Ionicons } from "@expo/vector-icons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
@@ -112,7 +112,7 @@ export default function QuotationForm({ route, navigation }) {
     const [showCustomHotelInput, setShowCustomHotelInput] = useState(false);
 
     const [travelerType, setTravelerType] = useState('solo');
-    const [adultCount, setAdultCount] = useState(2);
+    const [adultCount, setAdultCount] = useState(1);
     const [childCount, setChildCount] = useState(0);
     const [infantCount, setInfantCount] = useState(0);
 
@@ -138,12 +138,33 @@ export default function QuotationForm({ route, navigation }) {
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
     const [isMissingInfoModalVisible, setMissingInfoModalVisible] = useState(false);
 
-    //auto-adjust group minimum
-    useEffect(() => {
-        if (travelerType === 'group' && adultCount < 2) {
-            setAdultCount(2);
-        }
-    }, [travelerType, adultCount]);
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        type: 'warning',
+        title: '',
+        message: '',
+    });
+
+    const showAlertModal = (
+        title,
+        message,
+        type = 'warning'
+    ) => {
+        setAlertModal({
+            visible: true,
+            type,
+            title,
+            message,
+        });
+    };
+
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
 
     //maximum allowed passengers, it depends on selected slot capacity (default to 20 if none selected)
     const maxAllowed = useMemo(() => Number(selectedSlotCapacity || 20), [selectedSlotCapacity]);
@@ -165,7 +186,7 @@ export default function QuotationForm({ route, navigation }) {
         let nextInfant = infantCount;
 
         if (nextAdult + nextChild + nextInfant > limit) {
-            nextAdult = Math.max(2, Math.min(nextAdult, limit));
+            nextAdult = Math.max(1, Math.min(nextAdult, limit));
             let remaining = Math.max(0, limit - nextAdult);
 
             nextChild = Math.min(nextChild, remaining);
@@ -197,10 +218,26 @@ export default function QuotationForm({ route, navigation }) {
     const validate = () => {
         let newErrors = {};
 
-        const totalTravelers = travelerType === 'solo' ? 1 : Math.max(0, adultCount) + Math.max(0, childCount) + Math.max(0, infantCount);
+        const totalTravelers =
+            travelerType === 'solo'
+                ? 1
+                : Math.max(0, adultCount) +
+                Math.max(0, childCount) +
+                Math.max(0, infantCount);
 
-        if (!totalTravelers || totalTravelers < 1) newErrors.travelers = "Please enter the number of travelers";
-        if (totalTravelers > maxAllowed) newErrors.travelers = `Total travelers exceed allowed maximum (${maxAllowed}).`;
+        if (!totalTravelers || totalTravelers < 1) {
+            newErrors.travelers = "Please enter the number of travelers";
+        }
+
+        if (travelerType === 'group' && totalTravelers < 2) {
+            newErrors.travelers =
+                "Group Booking requires a minimum of 2 travelers.";
+        }
+
+        if (totalTravelers > maxAllowed) {
+            newErrors.travelers =
+                `Total travelers exceed allowed maximum (${maxAllowed}).`;
+        }
 
         // Preferred Airlines
         if (packageCategory !== "Land Arrangement") {
@@ -244,6 +281,28 @@ export default function QuotationForm({ route, navigation }) {
 
     //submit quotation form
     const handleSubmit = async () => {
+
+        const totalTravelers =
+            travelerType === 'solo'
+                ? 1
+                : Math.max(0, adultCount) +
+                Math.max(0, childCount) +
+                Math.max(0, infantCount);
+
+        // Group Booking requires at least 2 total travelers
+        if (
+            travelerType === 'group' &&
+            totalTravelers < 2
+        ) {
+            showAlertModal(
+                "Minimum Travelers Required",
+                "Group Booking requires a minimum of 2 travelers. Please add at least one more traveler before submitting your quotation request.",
+                "warning"
+            );
+
+            return;
+        }
+
         if (!validate()) {
             setMissingInfoModalVisible(true);
             return;
@@ -438,7 +497,7 @@ export default function QuotationForm({ route, navigation }) {
                             <View style={QuotationFormStyle.travelerCounterRow}>
                                 <Text style={QuotationFormStyle.travelerCounterLabel}>Adult</Text>
                                 <View style={QuotationFormStyle.travelerCounterControls}>
-                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setAdultCount(Math.max(2, adultCount - 1))}>
+                                    <TouchableOpacity style={QuotationFormStyle.travelerCounterBtn} onPress={() => setAdultCount(Math.max(1, adultCount - 1))} disabled={adultCount <= 1}>
                                         <Text style={QuotationFormStyle.travelerCounterBtnText}>-</Text>
                                     </TouchableOpacity>
                                     <Text style={QuotationFormStyle.travelerCounterValue}>{adultCount}</Text>
@@ -1010,6 +1069,115 @@ export default function QuotationForm({ route, navigation }) {
                         </TouchableOpacity>
                     </View>
                 </View>
+            </Modal>
+
+            {/* CUSTOM ALERT MODAL */}
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={ModalStyle.modalOverlay}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={ModalStyle.modalBox}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : alertModal.type === 'info'
+                                                ? '#dbeafe'
+                                                : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : alertModal.type === 'info'
+                                                ? 'information-outline'
+                                                : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : alertModal.type === 'info'
+                                                ? '#305797'
+                                                : '#059669'
+                                }
+                            />
+                        </View>
+
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Montserrat_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
 
         </KeyboardAvoidingView>

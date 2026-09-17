@@ -578,6 +578,7 @@ export default function BookingInvoice({ route, navigation }) {
         };
     });
 
+
     const paymentMode = bookingDetails?.paymentMode || (bookingDetails?.paymentDetails?.paymentType === 'deposit' ? 'Deposit' : 'Full Payment');
     const paymentFrequency = bookingDetails?.paymentDetails?.frequency || 'Every 2 weeks';
     const travelDateStart = booking?.travelDate?.startDate
@@ -2515,184 +2516,380 @@ export default function BookingInvoice({ route, navigation }) {
                         {travelersWithDocs.length === 0 ? (
                             <Text style={{ color: '#888' }}>No traveler information available yet.</Text>
                         ) : (
-                            travelersWithDocs.map((traveler, index) => (
-                                <View key={index} style={BookingInvoiceStyle.travelerDocSection}>
-                                    <Text style={BookingInvoiceStyle.travelerName}>
-                                        Traveler {index + 1}: {traveler.firstName} {traveler.lastName}
-                                    </Text>
-                                    <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 12 }]}>Please confirm the traveler's details below. Update any incorrect information before finalizing.</Text>
+                            travelersWithDocs.map((traveler, index) => {
 
-                                    <View style={BookingInvoiceStyle.travelerDetailsRow}>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Title: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.title}</Text></Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Room: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.roomType}</Text></Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Birthday: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.birthday)}</Text></Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Age: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.age}</Text></Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passenger Type: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passengerType}</Text></Text>
-                                        <Text style={BookingInvoiceStyle.travelerDetailText}>Passport #: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passportNo}</Text></Text>
-                                        <Text style={[BookingInvoiceStyle.travelerDetailText, { width: '100%' }]}>Expiry: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.passportExpiry)}</Text></Text>
-                                    </View>
+                                const getPassportSixMonthWarning = (passportExpiry) => {
 
-                                    <View style={BookingInvoiceStyle.docGrid}>
-                                        {!documentsResubmissionTravelerIndexes.includes(index) && (
-                                            traveler.passportFile ? (
-                                                <View style={BookingInvoiceStyle.docCol}>
-                                                    <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
-                                                    {!documentsResubmissionTravelerIndexes.includes(index) && (
-                                                        <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
-                                                            <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
-                                                                View Passport / ID
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </View>
-                                            ) : (
-                                                <View style={BookingInvoiceStyle.docCol}>
-                                                    <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
-                                                </View>
-                                            )
-                                        )}
+                                    // No passport warning for domestic packages
+                                    if (packageType.includes('domestic')) {
+                                        return null;
+                                    }
 
-                                        {!documentsResubmissionTravelerIndexes.includes(index) && (
-                                            traveler.photoFile ? (
+                                    if (
+                                        !passportExpiry ||
+                                        passportExpiry === 'N/A' ||
+                                        !dayjs(passportExpiry).isValid()
+                                    ) {
+                                        return null;
+                                    }
 
-                                                <View style={BookingInvoiceStyle.docCol}>
-                                                    <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
+                                    // Get travel start date
+                                    const travelStartValue =
+                                        booking?.bookingDetails?.travelDate?.startDate;
 
-                                                    <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
-                                                        <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
-                                                            View Photo
-                                                        </Text>
-                                                    </TouchableOpacity>
 
-                                                </View>
+                                    if (!travelStartValue || !passportExpiry) {
+                                        return null;
+                                    }
 
-                                            ) : (
-                                                <View style={BookingInvoiceStyle.docCol}>
-                                                    <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
-                                                </View>
-                                            )
-                                        )}
-                                    </View>
+                                    // "Feb 16, 2027"
+                                    const travelDateStart = dayjs(
+                                        travelStartValue,
+                                        "MMM D, YYYY",
+                                        true
+                                    ).startOf("day");
 
-                                    {traveler.visaFile && (
-                                        <View style={{ marginTop: 16 }}>
-                                            <Text style={BookingInvoiceStyle.docLabel}>Visa File</Text>
-                                            <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)}>
-                                                <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
-                                                    View Visa
-                                                </Text>
-                                            </TouchableOpacity>
+                                    // "2027-03-18"
+                                    const expiryDate = dayjs(
+                                        passportExpiry,
+                                        "YYYY-MM-DD",
+                                        true
+                                    ).startOf("day");
+
+
+                                    if (!travelDateStart.isValid() || !expiryDate.isValid()) {
+                                        return null;
+                                    }
+
+                                    const sixMonthsAfterTravel =
+                                        travelDateStart.add(6, "month");
+
+
+                                    // RED WARNING:
+                                    // Passport expires before the travel start date
+                                    if (expiryDate.isBefore(travelDateStart, 'day')) {
+                                        return {
+                                            type: 'before-travel',
+                                            expiryDate,
+                                            travelDateStart
+                                        };
+                                    }
+
+
+                                    // YELLOW WARNING:
+                                    // Passport expires on/after travel date,
+                                    // but does not have 6 months validity
+                                    if (
+                                        expiryDate.isSame(travelDateStart, 'day') ||
+                                        expiryDate.isBefore(sixMonthsAfterTravel, 'day')
+                                    ) {
+                                        return {
+                                            type: 'within-six-months',
+                                            expiryDate,
+                                            travelDateStart,
+                                            sixMonthsAfterTravel
+                                        };
+                                    }
+
+                                    return null;
+                                };
+
+                                return (
+
+                                    <View key={index} style={BookingInvoiceStyle.travelerDocSection}>
+                                        <Text style={BookingInvoiceStyle.travelerName}>
+                                            Traveler {index + 1}: {traveler.firstName} {traveler.lastName}
+                                        </Text>
+                                        <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 12 }]}>Please confirm the traveler's details below. Update any incorrect information before finalizing.</Text>
+
+                                        <View style={BookingInvoiceStyle.travelerDetailsRow}>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Title: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.title}</Text></Text>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Room: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.roomType}</Text></Text>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Birthday: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.birthday)}</Text></Text>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Age: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.age}</Text></Text>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Passenger Type: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passengerType}</Text></Text>
+                                            <Text style={BookingInvoiceStyle.travelerDetailText}>Passport #: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{traveler.passportNo}</Text></Text>
+                                            <Text style={[BookingInvoiceStyle.travelerDetailText, { width: '100%' }]}>Expiry: <Text style={{ fontFamily: 'Roboto_500Medium', color: '#333' }}>{safeDate(traveler.passportExpiry)}</Text></Text>
                                         </View>
-                                    )}
 
-                                    {documentsResubmissionRequired && documentsResubmissionTravelerIndexes.includes(index) && (
-                                        <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
-                                            <Text style={[BookingInvoiceStyle.cardTitle, { color: '#ef4444', marginBottom: 12 }]}>Document Resubmission Required</Text>
-                                            <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16, color: '#666' }]}>Please upload updated documents for this traveler.</Text>
+                                        {(() => {
 
-                                            <View style={{ gap: 12 }}>
-                                                <View>
-                                                    <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Passport / ID</Text>
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
-                                                        <TouchableOpacity
-                                                            onPress={() => pickDocumentImage(index, 'passport')}
-                                                            disabled={submittingTravelerIndex === index}
-                                                            style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
-                                                        >
-                                                            <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
-                                                                {passportUploadLists[index] ? 'Change File' : 'Select File'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                        {passportUploadLists[index] && (
-                                                            <TouchableOpacity
-                                                                onPress={() => previewDocument(passportUploadLists[index])}
-                                                                style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
-                                                            >
-                                                                <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                            const passportWarning =
+                                                getPassportSixMonthWarning(
+                                                    traveler.passportExpiry
+                                                );
+
+                                            if (!passportWarning) {
+                                                return null;
+                                            }
+
+                                            const isBeforeTravel =
+                                                passportWarning.type === 'before-travel';
+
+                                            return (
+                                                <View
+                                                    style={{
+                                                        marginTop: 14,
+                                                        marginBottom: 10,
+
+                                                        backgroundColor: isBeforeTravel
+                                                            ? '#fff2f0'
+                                                            : '#fffbe6',
+
+                                                        borderWidth: 1,
+
+                                                        borderColor: isBeforeTravel
+                                                            ? '#ffccc7'
+                                                            : '#ffe58f',
+
+                                                        borderLeftWidth: 5,
+
+                                                        borderLeftColor: isBeforeTravel
+                                                            ? '#ff4d4f'
+                                                            : '#faad14',
+
+                                                        borderRadius: 8,
+                                                        padding: 12
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: 'Montserrat_700Bold',
+
+                                                            color: isBeforeTravel
+                                                                ? '#cf1322'
+                                                                : '#ad6800',
+
+                                                            fontSize: 14,
+                                                            marginBottom: 5
+                                                        }}
+                                                    >
+                                                        {isBeforeTravel
+                                                            ? 'Passport Expiry Warning'
+                                                            : 'Passport Expiry Notice'}
+                                                    </Text>
+
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: 'Montserrat_400Regular',
+
+                                                            color: isBeforeTravel
+                                                                ? '#cf1322'
+                                                                : '#ad6800',
+
+                                                            fontSize: 13,
+                                                            lineHeight: 19
+                                                        }}
+                                                    >
+                                                        {isBeforeTravel
+                                                            ? 'This passport expires before the travel start date. Please renew the passport before the trip.'
+                                                            : 'Your Passport is about to expire in less than 6 months from the travel start date. We recommend a renewal.'}
+                                                    </Text>
+
+
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: 'Montserrat_500Medium',
+
+                                                            color: isBeforeTravel
+                                                                ? '#cf1322'
+                                                                : '#ad6800',
+
+                                                            fontSize: 12,
+                                                            marginTop: 7
+                                                        }}
+                                                    >
+                                                        Passport Expiry:{' '}
+                                                        {passportWarning.expiryDate.format(
+                                                            'MMMM D, YYYY'
+                                                        )}
+                                                    </Text>
+
+
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: 'Montserrat_500Medium',
+
+                                                            color: isBeforeTravel
+                                                                ? '#cf1322'
+                                                                : '#ad6800',
+
+                                                            fontSize: 12,
+                                                            marginTop: 3
+                                                        }}
+                                                    >
+                                                        Travel Start Date:{' '}
+                                                        {passportWarning.travelDateStart.format(
+                                                            'MMMM D, YYYY'
+                                                        )}
+                                                    </Text>
+
+                                                </View>
+                                            );
+                                        })()}
+
+                                        <View style={BookingInvoiceStyle.docGrid}>
+                                            {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                                traveler.passportFile ? (
+                                                    <View style={BookingInvoiceStyle.docCol}>
+                                                        <Text style={BookingInvoiceStyle.docLabel}>Passport / ID</Text>
+                                                        {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                                            <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.passportFile)}>
+                                                                <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                                    View Passport / ID
+                                                                </Text>
                                                             </TouchableOpacity>
                                                         )}
                                                     </View>
-                                                    {passportUploadLists[index] && (
-                                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
-                                                            {passportUploadLists[index].fileName || 'passport.jpg'}
-                                                        </Text>
-                                                    )}
-                                                </View>
+                                                ) : (
+                                                    <View style={BookingInvoiceStyle.docCol}>
+                                                        <Text style={{ color: '#aaa', fontSize: 12 }}>No Passport Uploaded</Text>
+                                                    </View>
+                                                )
+                                            )}
 
-                                                <View>
-                                                    <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>2x2 Photo</Text>
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
-                                                        <TouchableOpacity
-                                                            onPress={() => pickDocumentImage(index, 'photo')}
-                                                            disabled={submittingTravelerIndex === index}
-                                                            style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
-                                                        >
-                                                            <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
-                                                                {photoUploadLists[index] ? 'Change File' : 'Select File'}
+                                            {!documentsResubmissionTravelerIndexes.includes(index) && (
+                                                traveler.photoFile ? (
+
+                                                    <View style={BookingInvoiceStyle.docCol}>
+                                                        <Text style={BookingInvoiceStyle.docLabel}>2x2 Photo</Text>
+
+                                                        <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.photoFile)}>
+                                                            <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                                View Photo
                                                             </Text>
                                                         </TouchableOpacity>
-                                                        {photoUploadLists[index] && (
-                                                            <TouchableOpacity
-                                                                onPress={() => previewDocument(photoUploadLists[index])}
-                                                                style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
-                                                            >
-                                                                <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
-                                                            </TouchableOpacity>
-                                                        )}
-                                                    </View>
-                                                    {photoUploadLists[index] && (
-                                                        <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
-                                                            {photoUploadLists[index].fileName || 'photo.jpg'}
-                                                        </Text>
-                                                    )}
-                                                </View>
 
-                                                {shouldShowVisaUpload && (
+                                                    </View>
+
+                                                ) : (
+                                                    <View style={BookingInvoiceStyle.docCol}>
+                                                        <Text style={{ color: '#aaa', fontSize: 12 }}>No Photo Uploaded</Text>
+                                                    </View>
+                                                )
+                                            )}
+                                        </View>
+
+                                        {traveler.visaFile && (
+                                            <View style={{ marginTop: 16 }}>
+                                                <Text style={BookingInvoiceStyle.docLabel}>Visa File</Text>
+                                                <TouchableOpacity onPress={() => openDocumentInBrowser(traveler.visaFile)}>
+                                                    <Text style={{ marginTop: 8, color: '#305797', fontFamily: 'Montserrat_600SemiBold', textDecorationLine: 'underline' }}>
+                                                        View Visa
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+
+                                        {documentsResubmissionRequired && documentsResubmissionTravelerIndexes.includes(index) && (
+                                            <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
+                                                <Text style={[BookingInvoiceStyle.cardTitle, { color: '#ef4444', marginBottom: 12 }]}>Document Resubmission Required</Text>
+                                                <Text style={[BookingInvoiceStyle.pageSubtitle, { marginBottom: 16, color: '#666' }]}>Please upload updated documents for this traveler.</Text>
+
+                                                <View style={{ gap: 12 }}>
                                                     <View>
-                                                        <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Visa File</Text>
+                                                        <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Passport / ID</Text>
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                                                             <TouchableOpacity
-                                                                onPress={() => pickDocumentImage(index, 'visa')}
+                                                                onPress={() => pickDocumentImage(index, 'passport')}
                                                                 disabled={submittingTravelerIndex === index}
                                                                 style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
                                                             >
                                                                 <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
-                                                                    {visaUploadLists[index] ? 'Change File' : 'Select File'}
+                                                                    {passportUploadLists[index] ? 'Change File' : 'Select File'}
                                                                 </Text>
                                                             </TouchableOpacity>
-                                                            {visaUploadLists[index] && (
+                                                            {passportUploadLists[index] && (
                                                                 <TouchableOpacity
-                                                                    onPress={() => previewDocument(visaUploadLists[index])}
+                                                                    onPress={() => previewDocument(passportUploadLists[index])}
                                                                     style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
                                                                 >
                                                                     <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
                                                                 </TouchableOpacity>
                                                             )}
                                                         </View>
-                                                        {visaUploadLists[index] && (
+                                                        {passportUploadLists[index] && (
                                                             <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
-                                                                {visaUploadLists[index].fileName || 'visa.jpg'}
+                                                                {passportUploadLists[index].fileName || 'passport.jpg'}
                                                             </Text>
                                                         )}
                                                     </View>
-                                                )}
-                                            </View>
 
-                                            <TouchableOpacity
-                                                style={{ marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#305797', borderRadius: 8, alignItems: 'center', opacity: submittingTravelerIndex === index ? 0.7 : 1 }}
-                                                onPress={() => handleSubmitTravelerResubmission(index)}
-                                                disabled={submittingTravelerIndex === index}
-                                            >
-                                                {submittingTravelerIndex === index ? (
-                                                    <ActivityIndicator color="#fff" />
-                                                ) : (
-                                                    <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Submit Documents</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-                                </View>
-                            ))
+                                                    <View>
+                                                        <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>2x2 Photo</Text>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                                                            <TouchableOpacity
+                                                                onPress={() => pickDocumentImage(index, 'photo')}
+                                                                disabled={submittingTravelerIndex === index}
+                                                                style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
+                                                            >
+                                                                <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
+                                                                    {photoUploadLists[index] ? 'Change File' : 'Select File'}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                            {photoUploadLists[index] && (
+                                                                <TouchableOpacity
+                                                                    onPress={() => previewDocument(photoUploadLists[index])}
+                                                                    style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
+                                                                >
+                                                                    <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                                </TouchableOpacity>
+                                                            )}
+                                                        </View>
+                                                        {photoUploadLists[index] && (
+                                                            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
+                                                                {photoUploadLists[index].fileName || 'photo.jpg'}
+                                                            </Text>
+                                                        )}
+                                                    </View>
+
+                                                    {shouldShowVisaUpload && (
+                                                        <View>
+                                                            <Text style={[BookingInvoiceStyle.docLabel, { marginBottom: 8 }]}>Visa File</Text>
+                                                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                                                                <TouchableOpacity
+                                                                    onPress={() => pickDocumentImage(index, 'visa')}
+                                                                    disabled={submittingTravelerIndex === index}
+                                                                    style={{ paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#eef2ff', borderRadius: 8, opacity: submittingTravelerIndex === index ? 0.7 : 1, alignItems: 'center', alignSelf: 'flex-start' }}
+                                                                >
+                                                                    <Text style={{ color: '#305797', fontFamily: 'Montserrat_600SemiBold', fontSize: 13 }}>
+                                                                        {visaUploadLists[index] ? 'Change File' : 'Select File'}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                                {visaUploadLists[index] && (
+                                                                    <TouchableOpacity
+                                                                        onPress={() => previewDocument(visaUploadLists[index])}
+                                                                        style={{ marginLeft: 'auto', paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#dbe4f0', alignItems: 'center', alignSelf: 'flex-start' }}
+                                                                    >
+                                                                        <Text style={{ color: '#305797', fontSize: 12, fontFamily: 'Montserrat_600SemiBold' }}>Preview</Text>
+                                                                    </TouchableOpacity>
+                                                                )}
+                                                            </View>
+                                                            {visaUploadLists[index] && (
+                                                                <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }} numberOfLines={1}>
+                                                                    {visaUploadLists[index].fileName || 'visa.jpg'}
+                                                                </Text>
+                                                            )}
+                                                        </View>
+                                                    )}
+                                                </View>
+
+                                                <TouchableOpacity
+                                                    style={{ marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#305797', borderRadius: 8, alignItems: 'center', opacity: submittingTravelerIndex === index ? 0.7 : 1 }}
+                                                    onPress={() => handleSubmitTravelerResubmission(index)}
+                                                    disabled={submittingTravelerIndex === index}
+                                                >
+                                                    {submittingTravelerIndex === index ? (
+                                                        <ActivityIndicator color="#fff" />
+                                                    ) : (
+                                                        <Text style={{ color: '#fff', fontFamily: 'Montserrat_600SemiBold', fontSize: 14 }}>Submit Documents</Text>
+                                                    )}
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </View>
+                                )
+                            })
                         )}
                     </View>
 

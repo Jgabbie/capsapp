@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform, Modal, BackHandler } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform, Modal, BackHandler, Pressable } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -46,6 +46,33 @@ export default function QuotationAllIn() {
     const [isSidebarVisible, setSidebarVisible] = useState(false);
     const [isGoBackModalOpen, setIsGoBackModalOpen] = useState(false);
 
+    const [alertModal, setAlertModal] = useState({
+        visible: false,
+        type: 'warning',
+        title: '',
+        message: '',
+    });
+
+    const showAlertModal = (
+        title,
+        message,
+        type = 'warning'
+    ) => {
+        setAlertModal({
+            visible: true,
+            type,
+            title,
+            message,
+        });
+    };
+
+    const closeAlertModal = () => {
+        setAlertModal(prev => ({
+            ...prev,
+            visible: false,
+        }));
+    };
+
     //only intercept hardware back while this screen is focused
     useFocusEffect(
         useCallback(() => {
@@ -89,7 +116,7 @@ export default function QuotationAllIn() {
 
     //local State for Selection
     const [selectedSoloGrouped, setSelectedSoloGrouped] = useState("solo");
-    const [counts, setCounts] = useState({ adult: 2, child: 0, infant: 0 });
+    const [counts, setCounts] = useState({ adult: 1, child: 0, infant: 0 });
 
     // --- Calculation Logic ---
     const discountPercent = Number(pkg?.packageDiscountPercent || pkg?.discount || 0);
@@ -135,31 +162,54 @@ export default function QuotationAllIn() {
     }, [selectedSoloGrouped, counts]);
 
 
-    //set counts based on selection and available slots whenever the selection changes
+    // Set counts based on booking type and available slots
     useEffect(() => {
         if (selectedSoloGrouped === 'solo') {
-            setCounts({ adult: 1, child: 0, infant: 0 });
+            setCounts({
+                adult: 1,
+                child: 0,
+                infant: 0
+            });
             return;
         }
 
+        // Group booking starts with 1 adult by default
         if (availableSlots < 2) {
-            setCounts({ adult: 2, child: 0, infant: 0 });
+            setCounts({
+                adult: 1,
+                child: 0,
+                infant: 0
+            });
             return;
         }
 
         setCounts(prev => {
             const nextCounts = {
-                adult: Math.max(2, Math.min(prev.adult, effectiveMaxAdults)),
-                child: Math.max(0, Math.min(prev.child, effectiveMaxChildren)),
-                infant: Math.max(0, Math.min(prev.infant, effectiveMaxInfants)),
+                adult: Math.max(
+                    1,
+                    Math.min(prev.adult, effectiveMaxAdults)
+                ),
+                child: Math.max(
+                    0,
+                    Math.min(prev.child, effectiveMaxChildren)
+                ),
+                infant: Math.max(
+                    0,
+                    Math.min(prev.infant, effectiveMaxInfants)
+                ),
             };
 
-            let total = nextCounts.adult + nextCounts.child + nextCounts.infant;
+            let total =
+                nextCounts.adult +
+                nextCounts.child +
+                nextCounts.infant;
+
             if (total <= maxTravelersFromSlots) {
                 return nextCounts;
             }
 
             let overflow = total - maxTravelersFromSlots;
+
             let child = nextCounts.child;
             let infant = nextCounts.infant;
             let adult = nextCounts.adult;
@@ -173,12 +223,23 @@ export default function QuotationAllIn() {
             overflow -= reduceInfant;
 
             if (overflow > 0) {
-                adult = Math.max(2, adult - overflow);
+                adult = Math.max(1, adult - overflow);
             }
 
-            return { adult, child, infant };
+            return {
+                adult,
+                child,
+                infant
+            };
         });
-    }, [selectedSoloGrouped, availableSlots, effectiveMaxAdults, effectiveMaxChildren, effectiveMaxInfants, maxTravelersFromSlots]);
+    }, [
+        selectedSoloGrouped,
+        availableSlots,
+        effectiveMaxAdults,
+        effectiveMaxChildren,
+        effectiveMaxInfants,
+        maxTravelersFromSlots
+    ]);
 
 
     //calculate Original Total (Before Discount)
@@ -212,10 +273,10 @@ export default function QuotationAllIn() {
             let newVal = action === 'inc' ? prev[type] + 1 : prev[type] - 1;
 
             if (type === 'adult') {
-                newVal = Math.max(2, Math.min(newVal, effectiveMaxAdults));
+                newVal = Math.max(1, Math.min(newVal, effectiveMaxAdults));
                 // If this would exceed total slots, cap it
                 if (prev.child + prev.infant + newVal > maxTravelersFromSlots) {
-                    newVal = Math.max(2, Math.min(newVal, maxTravelersFromSlots - prev.child - prev.infant));
+                    newVal = Math.max(1, Math.min(newVal, maxTravelersFromSlots - prev.child - prev.infant));
                 }
             } else if (type === 'child') {
                 newVal = Math.max(0, Math.min(newVal, effectiveMaxChildren));
@@ -238,6 +299,19 @@ export default function QuotationAllIn() {
 
     //proceed to booking review screen with all necessary data
     const handleProceed = () => {
+        if (
+            selectedSoloGrouped === 'group' &&
+            totalTravelers < 2
+        ) {
+            showAlertModal(
+                "Minimum Travelers Required",
+                "Group Booking requires a minimum of 2 travelers. Please add at least one more traveler before proceeding.",
+                "warning"
+            );
+
+            return;
+        }
+
         const { image, images, ...cleanPkg } = pkg; // Strip heavy images
 
         const bookingSetupData = {
@@ -451,7 +525,7 @@ export default function QuotationAllIn() {
                             <Text style={QuotationAllInStyle.travelerDetailText}>Ages 12 and above</Text>
 
                             <View style={[QuotationAllInStyle.counterControls, { marginTop: 12 }]}>
-                                <TouchableOpacity onPress={() => updateCount('adult', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult <= 2}><Ionicons name="remove" size={18} color={counts.adult <= 2 ? "#ccc" : "#305797"} /></TouchableOpacity>
+                                <TouchableOpacity onPress={() => updateCount('adult', 'dec')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult <= 1}><Ionicons name="remove" size={18} color={counts.adult <= 1 ? "#ccc" : "#305797"} /></TouchableOpacity>
                                 <Text style={QuotationAllInStyle.counterValue}>{counts.adult}</Text>
                                 <TouchableOpacity onPress={() => updateCount('adult', 'inc')} style={QuotationAllInStyle.counterBtn} disabled={counts.adult >= effectiveMaxAdults}><Ionicons name="add" size={18} color={counts.adult >= effectiveMaxAdults ? "#ccc" : "#305797"} /></TouchableOpacity>
                             </View>
@@ -535,6 +609,125 @@ export default function QuotationAllIn() {
                         </TouchableOpacity>
                     </View>
                 </View>
+            </Modal>
+
+            <Modal
+                visible={alertModal.visible}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={closeAlertModal}
+            >
+                <Pressable
+                    style={QuotationAllInStyle.modalOverlay}
+                    onPress={closeAlertModal}
+                >
+                    <Pressable
+                        style={[
+                            QuotationAllInStyle.modalCard,
+                            {
+                                alignItems: 'center',
+                                paddingHorizontal: 24,
+                                paddingVertical: 28,
+                            }
+                        ]}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        {/* Icon Circle */}
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor:
+                                    alertModal.type === 'error'
+                                        ? '#fee2e2'
+                                        : alertModal.type === 'warning'
+                                            ? '#fef3c7'
+                                            : alertModal.type === 'info'
+                                                ? '#dbeafe'
+                                                : '#d1fae5',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name={
+                                    alertModal.type === 'error'
+                                        ? 'close'
+                                        : alertModal.type === 'warning'
+                                            ? 'warning-outline'
+                                            : alertModal.type === 'info'
+                                                ? 'information-outline'
+                                                : 'checkmark'
+                                }
+                                size={36}
+                                color={
+                                    alertModal.type === 'error'
+                                        ? '#dc2626'
+                                        : alertModal.type === 'warning'
+                                            ? '#d97706'
+                                            : alertModal.type === 'info'
+                                                ? '#305797'
+                                                : '#059669'
+                                }
+                            />
+                        </View>
+
+                        {/* Title */}
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            {alertModal.title}
+                        </Text>
+
+                        {/* Message */}
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Montserrat_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 22,
+                            }}
+                        >
+                            {alertModal.message}
+                        </Text>
+
+                        {/* Got It Button */}
+                        <TouchableOpacity
+                            style={{
+                                minWidth: 110,
+                                backgroundColor: '#305797',
+                                borderRadius: 10,
+                                paddingHorizontal: 28,
+                                paddingVertical: 12,
+                                alignItems: 'center',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={closeAlertModal}
+                        >
+                            <Text
+                                style={{
+                                    color: '#ffffff',
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    fontSize: 14,
+                                }}
+                            >
+                                Got It
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
             </Modal>
         </SafeAreaView>
     );

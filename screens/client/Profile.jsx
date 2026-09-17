@@ -571,16 +571,37 @@ export default function Profile() {
     //preference handlers
     const togglePreference = (key, value, limit) => {
         if (!editingPreferences) return;
+
         setPreferences(prev => {
             const current = prev[key] || [];
+
+            // Tour type: ONLY allow one selection
+            if (key === 'tours') {
+                return {
+                    ...prev,
+                    tours: current.includes(value) ? [] : [value]
+                };
+            }
+
+            // Moods: keep existing multiple-selection behavior
             const exists = current.includes(value);
 
-            if (!exists && limit && current.length >= limit) return prev;
+            if (!exists && limit && current.length >= limit) {
+                return prev;
+            }
 
-            const next = exists ? current.filter(item => item !== value) : [...current, value];
-            // If user modifies moods, clear any removed-tag warning
-            if (key === 'moods') setRemovedTagWarning(false);
-            return { ...prev, [key]: next };
+            const next = exists
+                ? current.filter(item => item !== value)
+                : [...current, value];
+
+            if (key === 'moods') {
+                setRemovedTagWarning(false);
+            }
+
+            return {
+                ...prev,
+                [key]: next
+            };
         });
     };
 
@@ -1254,7 +1275,7 @@ export default function Profile() {
 
                     {/* Tour Type Section */}
                     <Text style={[ProfileStyle.prefSectionTitle, { marginTop: 20 }]}>What type of tour do you like?</Text>
-                    <Text style={ProfileStyle.prefSubText}>Pick as many as you want.</Text>
+                    <Text style={ProfileStyle.prefSubText}>Choose 1</Text>
                     <View style={ProfileStyle.chipGrid}>
                         {tourOptions.map(option => {
                             const isSelected = preferences.tours.includes(option);

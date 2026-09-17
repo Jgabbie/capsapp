@@ -52,18 +52,33 @@ export default function UserPreference() {
     const toggleSelection = (key, value, limit) => {
         setSelections((prev) => {
             const current = prev[key];
+
+            // Tour type: only ONE selection allowed
+            if (key === 'tours') {
+                return {
+                    ...prev,
+                    tours: current.includes(value) ? [] : [value]
+                };
+            }
+
             const exists = current.includes(value);
 
-            // Limit check (e.g., max 3 moods)
+            // Limit check for moods
             if (!exists && limit && current.length >= limit) return prev;
 
-            const next = exists ? current.filter((item) => item !== value) : [...current, value];
-            return { ...prev, [key]: next };
+            const next = exists
+                ? current.filter((item) => item !== value)
+                : [...current, value];
+
+            return {
+                ...prev,
+                [key]: next
+            };
         });
     };
 
     const totalMoodSelections = selections.moods.length;
-    const canContinue = totalMoodSelections === 3 && selections.tours.length >= 1;
+    const canContinue = totalMoodSelections === 3 && selections.tours.length === 1;
 
 
     //show message function for both Android and iOS
@@ -152,7 +167,7 @@ export default function UserPreference() {
 
                 <View style={UserPreferenceStyle.card}>
                     <Text style={UserPreferenceStyle.questionTitle}>What type of tour do you like?</Text>
-                    <Text style={UserPreferenceStyle.questionSubtitle}>Pick Domestic, International, or both.</Text>
+                    <Text style={UserPreferenceStyle.questionSubtitle}>Choose 1 tour type.</Text>
 
                     <View style={UserPreferenceStyle.chipGrid}>
                         {tourOptions.map((option) => {
@@ -175,7 +190,7 @@ export default function UserPreference() {
             </ScrollView>
 
             <View style={UserPreferenceStyle.footer}>
-                <Text style={UserPreferenceStyle.footerNote}>Pick 3 mood tags and at least 1 tour type to continue.</Text>
+                <Text style={UserPreferenceStyle.footerNote}>Pick 3 mood tags and 1 tour type to continue.</Text>
                 <TouchableOpacity
                     style={[UserPreferenceStyle.ctaButton, !canContinue && UserPreferenceStyle.ctaButtonDisabled]}
                     disabled={!canContinue || isLoading}
