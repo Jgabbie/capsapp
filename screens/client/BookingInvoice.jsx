@@ -2525,49 +2525,46 @@ export default function BookingInvoice({ route, navigation }) {
                                         return null;
                                     }
 
-                                    if (
-                                        !passportExpiry ||
-                                        passportExpiry === 'N/A' ||
-                                        !dayjs(passportExpiry).isValid()
-                                    ) {
+                                    if (!passportExpiry || passportExpiry === 'N/A') {
                                         return null;
                                     }
 
-                                    // Get travel start date
+                                    // IMPORTANT:
+                                    // Check all possible travel date locations
                                     const travelStartValue =
-                                        booking?.bookingDetails?.travelDate?.startDate;
+                                        booking?.travelDate?.startDate ||
+                                        booking?.bookingDetails?.travelDate?.startDate ||
+                                        bookingDetails?.travelDate?.startDate ||
+                                        rawBooking?.travelDate?.startDate ||
+                                        rawBooking?.bookingDetails?.travelDate?.startDate ||
+                                        null;
 
-
-                                    if (!travelStartValue || !passportExpiry) {
+                                    if (!travelStartValue) {
+                                        console.log("No travel start date found");
                                         return null;
                                     }
 
+                                    // DO NOT force a specific format.
+                                    // Your dates may be:
                                     // "Feb 16, 2027"
-                                    const travelDateStart = dayjs(
-                                        travelStartValue,
-                                        "MMM D, YYYY",
-                                        true
-                                    ).startOf("day");
-
-                                    // "2027-03-18"
-                                    const expiryDate = dayjs(
-                                        passportExpiry,
-                                        "YYYY-MM-DD",
-                                        true
-                                    ).startOf("day");
-
+                                    // "2027-02-16"
+                                    // ISO date strings
+                                    const travelDateStart = dayjs(travelStartValue).startOf('day');
+                                    const expiryDate = dayjs(passportExpiry).startOf('day');
 
                                     if (!travelDateStart.isValid() || !expiryDate.isValid()) {
+                                        console.log("Invalid travel or passport date");
                                         return null;
                                     }
 
                                     const sixMonthsAfterTravel =
-                                        travelDateStart.add(6, "month");
+                                        travelDateStart.add(6, 'month');
 
 
-                                    // RED WARNING:
-                                    // Passport expires before the travel start date
+                                    // RED:
+                                    // Passport expires BEFORE travel starts
                                     if (expiryDate.isBefore(travelDateStart, 'day')) {
+
                                         return {
                                             type: 'before-travel',
                                             expiryDate,
@@ -2575,14 +2572,11 @@ export default function BookingInvoice({ route, navigation }) {
                                         };
                                     }
 
+                                    // YELLOW:
+                                    // Passport is valid for travel date,
+                                    // but expires before 6 months after travel starts
+                                    if (expiryDate.isBefore(sixMonthsAfterTravel, 'day')) {
 
-                                    // YELLOW WARNING:
-                                    // Passport expires on/after travel date,
-                                    // but does not have 6 months validity
-                                    if (
-                                        expiryDate.isSame(travelDateStart, 'day') ||
-                                        expiryDate.isBefore(sixMonthsAfterTravel, 'day')
-                                    ) {
                                         return {
                                             type: 'within-six-months',
                                             expiryDate,
