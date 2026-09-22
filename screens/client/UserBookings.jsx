@@ -56,12 +56,16 @@ export default function UserBookings() {
     // Cancellation Modal States
     const [isCancelPolicyModalOpen, setCancelPolicyModalOpen] = useState(false)
     const [isCancelModalOpen, setCancelModalOpen] = useState(false)
+    const [isFinalCancelConfirmOpen, setFinalCancelConfirmOpen] = useState(false)
+
     const [selectedBookingId, setSelectedBookingId] = useState(null)
     const [cancelReason, setCancelReason] = useState('')
     const [cancelOtherReason, setCancelOtherReason] = useState('')
     const [cancelComments, setCancelComments] = useState('')
     const [cancelImage, setCancelImage] = useState(null)
     const [showCancelReasonDropdown, setShowCancelReasonDropdown] = useState(false)
+
+
 
     // Feedback Modal State
     const [feedbackModal, setFeedbackModal] = useState({
@@ -434,6 +438,19 @@ export default function UserBookings() {
             return;
         }
 
+        // Close current cancellation modal first
+        setCancelModalOpen(false);
+
+        // Then show final confirmation modal
+        setTimeout(() => {
+            setFinalCancelConfirmOpen(true);
+        }, 250);
+    };
+
+
+    const submitCancellation = async () => {
+        setFinalCancelConfirmOpen(false);
+
         try {
             setLoadingCancel(true);
 
@@ -465,10 +482,15 @@ export default function UserBookings() {
             const cloudinaryUrl = uploadResponse.data?.url;
 
             if (!cloudinaryUrl) {
-                throw new Error('Cloudinary upload did not return a URL.');
+                throw new Error(
+                    'Cloudinary upload did not return a URL.'
+                );
             }
 
-            console.log('Cancellation proof uploaded:', cloudinaryUrl);
+            console.log(
+                'Cancellation proof uploaded:',
+                cloudinaryUrl
+            );
 
             const payload = {
                 reason: finalReason,
@@ -483,7 +505,6 @@ export default function UserBookings() {
                 payload,
                 withUserHeader(user._id)
             );
-
 
             setLoadingCancel(false);
             setCancelModalOpen(false);
@@ -502,7 +523,8 @@ export default function UserBookings() {
             showFeedbackModal({
                 type: 'success',
                 title: 'Request Submitted',
-                message: 'Your cancellation request was sent successfully.',
+                message:
+                    'Your cancellation request was sent successfully.',
             });
 
             fetchBookings();
@@ -521,6 +543,7 @@ export default function UserBookings() {
                 message:
                     error.response?.data?.message ||
                     'Unable to cancel booking. Please try again.',
+                reopenCancelModal: true,
             });
         }
     };
@@ -1386,6 +1409,151 @@ export default function UserBookings() {
                         </View>
                     </TouchableWithoutFeedback>
                 </TouchableOpacity>
+            </Modal>
+
+
+            {/* FINAL CANCELLATION CONFIRMATION MODAL */}
+            <Modal
+                visible={isFinalCancelConfirmOpen}
+                transparent
+                animationType="fade"
+                statusBarTranslucent
+                onRequestClose={() => {
+                    setFinalCancelConfirmOpen(false);
+
+                    setTimeout(() => {
+                        setCancelModalOpen(true);
+                    }, 250);
+                }}
+            >
+                <Pressable
+                    style={ModalStyle.modalOverlay}
+                    onPress={() => {
+                        setFinalCancelConfirmOpen(false);
+
+                        setTimeout(() => {
+                            setCancelModalOpen(true);
+                        }, 250);
+                    }}
+                >
+                    <Pressable
+                        style={ModalStyle.modalBox}
+                        onPress={event => event.stopPropagation()}
+                    >
+                        {/* Warning Icon */}
+                        <View
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                backgroundColor: '#fef3c7',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <Ionicons
+                                name="warning-outline"
+                                size={36}
+                                color="#d97706"
+                            />
+                        </View>
+
+                        {/* Title */}
+                        <Text
+                            style={{
+                                color: '#1f2937',
+                                fontFamily: 'Montserrat_700Bold',
+                                fontSize: 18,
+                                lineHeight: 24,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            Confirm Booking Cancellation
+                        </Text>
+
+                        {/* Message */}
+                        <Text
+                            style={{
+                                color: '#6b7280',
+                                fontFamily: 'Montserrat_400Regular',
+                                fontSize: 14,
+                                lineHeight: 21,
+                                textAlign: 'center',
+                                marginBottom: 10,
+                            }}
+                        >
+                            This cancellation request cannot be UNDONE, do you still want to proceed with this cancellation of booking?
+                        </Text>
+
+                        {/* Buttons */}
+                        <View
+                            style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                gap: 10,
+                            }}
+                        >
+
+
+                            {/* Confirm Cancellation */}
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: '#305797',
+                                    borderRadius: 10,
+                                    paddingHorizontal: 14,
+                                    paddingVertical: 12,
+                                    alignItems: 'center',
+                                }}
+                                activeOpacity={0.8}
+                                onPress={submitCancellation}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#ffffff',
+                                        fontFamily: 'Montserrat_600SemiBold',
+                                        fontSize: 13,
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    Yes, Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Go Back */}
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: '#8B0000',
+                                    borderRadius: 10,
+                                    paddingHorizontal: 14,
+                                    paddingVertical: 12,
+                                    alignItems: 'center',
+                                }}
+                                activeOpacity={0.8}
+                                onPress={() => {
+                                    setFinalCancelConfirmOpen(false);
+
+                                    setTimeout(() => {
+                                        setCancelModalOpen(true);
+                                    }, 250);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#ffffff',
+                                        fontFamily: 'Montserrat_600SemiBold',
+                                        fontSize: 13,
+                                    }}
+                                >
+                                    Go Back
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
             </Modal>
 
             <Modal
